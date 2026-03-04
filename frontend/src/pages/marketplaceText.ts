@@ -69,6 +69,8 @@ export interface MarketplaceText {
   loadMoreHint: string;
   loadMoreLoadingHint: string;
   loadMoreSuccessHint: string;
+  loadMoreFinishedTitle: string;
+  loadMoreFinishedHint: string;
   noResultsTitle: string;
   noResultsHint: string;
   previous: string;
@@ -145,6 +147,8 @@ export function buildMarketplaceText(t: TFunction): MarketplaceText {
     loadMoreHint: t("marketplace.loadMoreHint"),
     loadMoreLoadingHint: t("marketplace.loadMoreLoadingHint"),
     loadMoreSuccessHint: t("marketplace.loadMoreSuccessHint"),
+    loadMoreFinishedTitle: t("marketplace.loadMoreFinishedTitle"),
+    loadMoreFinishedHint: t("marketplace.loadMoreFinishedHint"),
     noResultsTitle: t("marketplace.noResultsTitle"),
     noResultsHint: t("marketplace.noResultsHint"),
     previous: t("marketplace.previous"),

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { MarketplaceQueryParams, MarketplaceSkill, PublicMarketplaceResponse } from "../lib/api";
 import {
   buildHomeQuerySignature,
+  canArmAutoLoadFromScrollState,
   computeVirtualRowWindow,
   mergeMarketplacePayloadForHomeAutoLoad,
   normalizeUnavailableLiveMarketplacePayload
@@ -282,5 +283,40 @@ describe("computeVirtualRowWindow", () => {
       paddingTop: 0,
       paddingBottom: 0
     });
+  });
+});
+
+describe("canArmAutoLoadFromScrollState", () => {
+  it("returns true after user has scrolled down", () => {
+    const ready = canArmAutoLoadFromScrollState({
+      scrollTop: 12,
+      scrollHeight: 1800,
+      viewportHeight: 900,
+      triggerDistancePx: 150
+    });
+
+    expect(ready).toBe(true);
+  });
+
+  it("returns true when content does not exceed viewport threshold", () => {
+    const ready = canArmAutoLoadFromScrollState({
+      scrollTop: 0,
+      scrollHeight: 980,
+      viewportHeight: 900,
+      triggerDistancePx: 100
+    });
+
+    expect(ready).toBe(true);
+  });
+
+  it("returns false when user has not scrolled and content is taller than threshold", () => {
+    const ready = canArmAutoLoadFromScrollState({
+      scrollTop: 0,
+      scrollHeight: 1700,
+      viewportHeight: 900,
+      triggerDistancePx: 120
+    });
+
+    expect(ready).toBe(false);
   });
 });

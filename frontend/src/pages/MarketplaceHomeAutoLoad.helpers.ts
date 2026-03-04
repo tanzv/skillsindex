@@ -15,6 +15,13 @@ interface ComputeVirtualRowWindowInput {
   viewportBottom: number;
 }
 
+interface AutoLoadScrollReadinessInput {
+  scrollTop: number;
+  scrollHeight: number;
+  viewportHeight: number;
+  triggerDistancePx: number;
+}
+
 export interface VirtualRowWindowState {
   startIndex: number;
   endIndex: number;
@@ -263,4 +270,22 @@ export function computeVirtualRowWindow({
     paddingTop,
     paddingBottom
   };
+}
+
+export function canArmAutoLoadFromScrollState({
+  scrollTop,
+  scrollHeight,
+  viewportHeight,
+  triggerDistancePx
+}: AutoLoadScrollReadinessInput): boolean {
+  const normalizedScrollTop = Math.max(0, Number(scrollTop || 0));
+  if (normalizedScrollTop > 0) {
+    return true;
+  }
+
+  const normalizedViewportHeight = Math.max(0, Number(viewportHeight || 0));
+  const normalizedScrollHeight = Math.max(0, Number(scrollHeight || 0));
+  const normalizedTriggerDistance = Math.max(0, Number(triggerDistancePx || 0));
+
+  return normalizedScrollHeight <= normalizedViewportHeight + normalizedTriggerDistance;
 }

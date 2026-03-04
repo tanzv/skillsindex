@@ -2,7 +2,7 @@ import { CSSProperties, useEffect, useMemo, useReducer, useRef, useState } from 
 import { PrototypeCardEntry } from "./MarketplaceHomePage.helpers";
 import type { MarketplaceAutoLoadConfig } from "./MarketplaceHomePage.config";
 import { MarketplaceText } from "./marketplaceText";
-import { computeVirtualRowWindow, groupCardsIntoRows } from "./MarketplaceHomeAutoLoad.helpers";
+import { canArmAutoLoadFromScrollState, computeVirtualRowWindow, groupCardsIntoRows } from "./MarketplaceHomeAutoLoad.helpers";
 import type { VirtualRowWindowState } from "./MarketplaceHomeAutoLoad.helpers";
 import { resolveLatestRowsWindow, virtualizedRowThreshold } from "./MarketplaceHomeResultsContent.virtualization";
 import MarketplaceHomeResultsEmptyState from "./MarketplaceHomeResultsEmptyState";
@@ -192,8 +192,15 @@ export default function MarketplaceHomeResultsContent({
       setAutoLoadProgress(0);
       return;
     }
-    const { scrollTop } = readScrollMetrics();
-    if (scrollTop > 0) {
+    const { scrollTop, scrollHeight, viewportHeight } = readScrollMetrics();
+    if (
+      canArmAutoLoadFromScrollState({
+        scrollTop,
+        scrollHeight,
+        viewportHeight,
+        triggerDistancePx
+      })
+    ) {
       autoLoadHasScrolledRef.current = true;
     }
     if (!autoLoadHasScrolledRef.current) {
@@ -418,6 +425,8 @@ export default function MarketplaceHomeResultsContent({
 
   const autoLoadState = autoLoadVisualStateRef.current;
   const autoLoadProgressValue = Number(autoLoadProgressRef.current.toFixed(3));
+  const hasReachedLastPage = currentPage >= totalPages;
+  const showNoMoreDataHint = !hasNoLatestCards && hasReachedLastPage;
   const autoLoadProgressStyle = {
     "--marketplace-auto-load-progress": String(autoLoadProgressValue)
   } as CSSProperties;
@@ -516,6 +525,16 @@ export default function MarketplaceHomeResultsContent({
           <div className="marketplace-pagination-empty-hint" data-testid="marketplace-pagination-empty-hint" role="status" aria-live="polite">
             <strong>{text.noResultsTitle}</strong>
             <span>{text.noResultsHint}</span>
+          </div>
+        ) : showNoMoreDataHint ? (
+          <div
+            className="marketplace-pagination-empty-hint"
+            data-testid="marketplace-pagination-finished-hint"
+            role="status"
+            aria-live="polite"
+          >
+            <strong>{text.loadMoreFinishedTitle}</strong>
+            <span>{text.loadMoreFinishedHint}</span>
           </div>
         ) : (
           <div
