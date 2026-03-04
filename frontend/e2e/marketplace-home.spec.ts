@@ -57,10 +57,10 @@ test.describe("Marketplace home interactions", () => {
     await expect(page.locator(".marketplace-results-list .marketplace-results-row")).toHaveCount(4);
   });
 
-  test("quick filter action navigates to results with tag query", async ({ page }) => {
-    await page.goto(HOME_PATH);
+  test("quick filter action opens results and keeps current query", async ({ page }) => {
+    await page.goto("/?q=repo");
     await page.locator(selectors.searchFilterBtn).click();
-    await expect(page).toHaveURL(/\/results\?tags=automation\+testing$/);
+    await expect(page).toHaveURL(/\/results\?q=repo$/);
   });
 
   test("search action updates URL query state", async ({ page }) => {
