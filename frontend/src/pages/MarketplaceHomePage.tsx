@@ -512,9 +512,6 @@ export default function MarketplaceHomePage({
             </div>
             <div className="marketplace-search-utility-right">
               <span className="is-queue">{text.queueLabel}</span>
-              <button type="button" className="is-open-queue" onClick={() => onNavigate(toPublicPath("/workspace"))}>
-                {text.openQueue}
-              </button>
             </div>
           </div>
         </section>

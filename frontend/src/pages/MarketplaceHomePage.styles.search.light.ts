@@ -116,9 +116,4 @@ export const marketplaceHomeSearchLightStyles = css`
     background: #e5e7eb;
     color: #111827;
   }
-
-  .marketplace-home.is-light-theme .marketplace-search-utility-right .is-open-queue {
-    background: #111111;
-    color: #ffffff;
-  }
 `;

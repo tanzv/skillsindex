@@ -219,37 +219,4 @@ export const marketplaceHomeSearchUtilityStyles = css`
     background: #2a2c31;
     color: #eceff3;
   }
-
-  .marketplace-home .marketplace-search-utility-right button.is-open-queue {
-    border: 0;
-    height: 30px;
-    height: var(--marketplace-search-open-queue-height, 30px);
-    border-radius: 8px;
-    border-radius: var(--marketplace-search-utility-pill-radius, 8px);
-    padding: 0 12px;
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-    font-size: 11px;
-    font-size: var(--marketplace-search-utility-pill-font-size, 11px);
-    font-weight: 700;
-    font-family: "Noto Sans SC", "Noto Sans", sans-serif;
-    color: #111111;
-    background: #f3f4f6;
-    cursor: pointer;
-    transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
-  }
-
-  .marketplace-home .marketplace-search-utility-right button.is-open-queue:hover {
-    background: #ffffff;
-  }
-
-  .marketplace-home .marketplace-search-utility-right button.is-open-queue:active {
-    transform: translateY(1px);
-  }
-
-  .marketplace-home .marketplace-search-utility-right button.is-open-queue:focus-visible {
-    outline: 2px solid #e5e7eb;
-    outline-offset: 1px;
-  }
 `;

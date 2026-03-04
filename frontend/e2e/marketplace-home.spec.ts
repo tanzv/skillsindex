@@ -24,7 +24,6 @@ const selectors = {
   topbarLocaleSwitch: ".marketplace-topbar-locale-switch",
   topbarThemeSwitch: ".marketplace-topbar-theme-switch",
   searchSubmit: ".marketplace-search-submit",
-  openQueue: ".marketplace-search-utility-right .is-open-queue",
   loadMoreButton: ".marketplace-pagination-load-more",
   pagination: ".marketplace-pagination, [aria-label='pagination']",
   paginationPrev: ".marketplace-pagination .is-nav:first-of-type, [aria-label='pagination'] .is-nav:first-of-type",
@@ -329,15 +328,12 @@ test.describe("Marketplace home interactions", () => {
     await expect(page).toHaveURL(/\/\?q=odoo&page=109$/);
   });
 
-  test("topbar and utility actions navigate to auth-protected routes", async ({ page }) => {
+  test("topbar sign-in action navigates to auth-protected route", async ({ page }) => {
     await page.goto(HOME_PATH);
 
     await page.locator(selectors.topbarCta).click();
     await expect(page).toHaveURL(/\/login$/);
-
-    await page.goto(HOME_PATH);
-    await page.locator(selectors.openQueue).click();
-    await expect(page).toHaveURL(/\/workspace$/);
+    await expect(page.locator(".marketplace-search-utility-right .is-open-queue")).toHaveCount(0);
   });
 
   test("default home topbar shows category and download ranking navigation", async ({ page }) => {
