@@ -1,0 +1,4 @@
+# Ralph Progress
+
+- Feature: home-canonical-prototype-normalization
+- Status: not-started

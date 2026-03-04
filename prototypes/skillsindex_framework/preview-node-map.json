@@ -1,0 +1,356 @@
+{
+  "generated_at": "2026-02-25T11:10:12.415024",
+  "manifest_count": 70,
+  "mapping": [
+    {
+      "path": "marketplace_home",
+      "node_id": "j0pbU",
+      "preview": "previews/marketplace_home.png"
+    },
+    {
+      "path": "skill_detail",
+      "node_id": "hEu3i",
+      "preview": "previews/skill_detail.png"
+    },
+    {
+      "path": "admin_dashboard",
+      "node_id": "95uPl",
+      "preview": "previews/admin_dashboard.png"
+    },
+    {
+      "path": "skill_compare",
+      "node_id": "9sq0k",
+      "preview": "previews/skill_compare.png"
+    },
+    {
+      "path": "install_rollout",
+      "node_id": "phuBz",
+      "preview": "previews/install_rollout.png"
+    },
+    {
+      "path": "team_workspace",
+      "node_id": "8fERA",
+      "preview": "previews/team_workspace.png"
+    },
+    {
+      "path": "governance_center",
+      "node_id": "SIIOt",
+      "preview": "previews/governance_center.png"
+    },
+    {
+      "path": "login_page_prototype",
+      "node_id": "YYmVe",
+      "preview": "previews/login_page_prototype.png"
+    },
+    {
+      "path": "marketplace_home_light",
+      "node_id": "EbJ9a",
+      "preview": "previews/marketplace_home_light.png"
+    },
+    {
+      "path": "skill_detail_light",
+      "node_id": "idgqT",
+      "preview": "previews/skill_detail_light.png"
+    },
+    {
+      "path": "admin_dashboard_light",
+      "node_id": "4uI2f",
+      "preview": "previews/admin_dashboard_light.png"
+    },
+    {
+      "path": "skill_compare_light",
+      "node_id": "jCKys",
+      "preview": "previews/skill_compare_light.png"
+    },
+    {
+      "path": "install_rollout_light",
+      "node_id": "mbfPP",
+      "preview": "previews/install_rollout_light.png"
+    },
+    {
+      "path": "team_workspace_light",
+      "node_id": "IOoGJ",
+      "preview": "previews/team_workspace_light.png"
+    },
+    {
+      "path": "governance_center_light",
+      "node_id": "de8jd",
+      "preview": "previews/governance_center_light.png"
+    },
+    {
+      "path": "login_page_prototype_light",
+      "node_id": "nBjrt",
+      "preview": "previews/login_page_prototype_light.png"
+    },
+    {
+      "path": "login_page_prototype_mobile",
+      "node_id": "WYhYr",
+      "preview": "previews/login_page_prototype_mobile.png"
+    },
+    {
+      "path": "login_page_prototype_mobile_light",
+      "node_id": "y0FXe",
+      "preview": "previews/login_page_prototype_mobile_light.png"
+    },
+    {
+      "path": "access_management",
+      "node_id": "nyHEe",
+      "preview": "previews/access_management.png"
+    },
+    {
+      "path": "integration_settings",
+      "node_id": "K943K",
+      "preview": "previews/integration_settings.png"
+    },
+    {
+      "path": "incident_recovery",
+      "node_id": "hahZ8",
+      "preview": "previews/incident_recovery.png"
+    },
+    {
+      "path": "access_management_light",
+      "node_id": "lUYVK",
+      "preview": "previews/access_management_light.png"
+    },
+    {
+      "path": "account_management_list",
+      "node_id": "1AHaM",
+      "preview": "previews/account_management_list.png"
+    },
+    {
+      "path": "account_configuration_form",
+      "node_id": "TjCgh",
+      "preview": "previews/account_configuration_form.png"
+    },
+    {
+      "path": "role_management_list",
+      "node_id": "QPMwn",
+      "preview": "previews/role_management_list.png"
+    },
+    {
+      "path": "role_configuration_form",
+      "node_id": "B5hwC",
+      "preview": "previews/role_configuration_form.png"
+    },
+    {
+      "path": "account_management_list_light",
+      "node_id": "QytKJ",
+      "preview": "previews/account_management_list_light.png"
+    },
+    {
+      "path": "account_configuration_form_light",
+      "node_id": "VnXd5",
+      "preview": "previews/account_configuration_form_light.png"
+    },
+    {
+      "path": "role_management_list_light",
+      "node_id": "5SPsP",
+      "preview": "previews/role_management_list_light.png"
+    },
+    {
+      "path": "role_configuration_form_light",
+      "node_id": "SibVw",
+      "preview": "previews/role_configuration_form_light.png"
+    },
+    {
+      "path": "integration_connector_list",
+      "node_id": "EC25R",
+      "preview": "previews/integration_connector_list.png"
+    },
+    {
+      "path": "integration_configuration_form",
+      "node_id": "mgMT2",
+      "preview": "previews/integration_configuration_form.png"
+    },
+    {
+      "path": "webhook_delivery_logs",
+      "node_id": "gimRr",
+      "preview": "previews/webhook_delivery_logs.png"
+    },
+    {
+      "path": "incident_management_list",
+      "node_id": "lSWwe",
+      "preview": "previews/incident_management_list.png"
+    },
+    {
+      "path": "incident_response_console",
+      "node_id": "QNq52",
+      "preview": "previews/incident_response_console.png"
+    },
+    {
+      "path": "incident_postmortem_detail",
+      "node_id": "oCpV4",
+      "preview": "previews/incident_postmortem_detail.png"
+    },
+    {
+      "path": "integration_settings_light",
+      "node_id": "xWuAh",
+      "preview": "previews/integration_settings_light.png"
+    },
+    {
+      "path": "incident_recovery_light",
+      "node_id": "PZuxg",
+      "preview": "previews/incident_recovery_light.png"
+    },
+    {
+      "path": "integration_connector_list_light",
+      "node_id": "6TdtI",
+      "preview": "previews/integration_connector_list_light.png"
+    },
+    {
+      "path": "integration_configuration_form_light",
+      "node_id": "HaDLR",
+      "preview": "previews/integration_configuration_form_light.png"
+    },
+    {
+      "path": "webhook_delivery_logs_light",
+      "node_id": "n5GZM",
+      "preview": "previews/webhook_delivery_logs_light.png"
+    },
+    {
+      "path": "incident_management_list_light",
+      "node_id": "hhChl",
+      "preview": "previews/incident_management_list_light.png"
+    },
+    {
+      "path": "incident_response_console_light",
+      "node_id": "2AtTH",
+      "preview": "previews/incident_response_console_light.png"
+    },
+    {
+      "path": "incident_postmortem_detail_light",
+      "node_id": "4I1Pa",
+      "preview": "previews/incident_postmortem_detail_light.png"
+    },
+    {
+      "path": "sync_export_center",
+      "node_id": "sNW38",
+      "preview": "previews/sync_export_center.png"
+    },
+    {
+      "path": "sync_export_center_light",
+      "node_id": "GBDSq",
+      "preview": "previews/sync_export_center_light.png"
+    },
+    {
+      "path": "ingestion_manual",
+      "node_id": "nzHmQ",
+      "preview": "previews/ingestion_manual.png"
+    },
+    {
+      "path": "ingestion_zip",
+      "node_id": "D9L7Q",
+      "preview": "previews/ingestion_zip.png"
+    },
+    {
+      "path": "ingestion_repository",
+      "node_id": "T1LsV",
+      "preview": "previews/ingestion_repository.png"
+    },
+    {
+      "path": "ingestion_skillmp",
+      "node_id": "7WR7g",
+      "preview": "previews/ingestion_skillmp.png"
+    },
+    {
+      "path": "import_operation_records",
+      "node_id": "4sVDF",
+      "preview": "previews/import_operation_records.png"
+    },
+    {
+      "path": "sync_operation_records",
+      "node_id": "3JYyI",
+      "preview": "previews/sync_operation_records.png"
+    },
+    {
+      "path": "ingestion_manual_light",
+      "node_id": "5m0sj",
+      "preview": "previews/ingestion_manual_light.png"
+    },
+    {
+      "path": "ingestion_zip_light",
+      "node_id": "N5JDq",
+      "preview": "previews/ingestion_zip_light.png"
+    },
+    {
+      "path": "ingestion_repository_light",
+      "node_id": "GTYH2",
+      "preview": "previews/ingestion_repository_light.png"
+    },
+    {
+      "path": "ingestion_skillmp_light",
+      "node_id": "gR5Q5",
+      "preview": "previews/ingestion_skillmp_light.png"
+    },
+    {
+      "path": "import_operation_records_light",
+      "node_id": "ws5gl",
+      "preview": "previews/import_operation_records_light.png"
+    },
+    {
+      "path": "sync_operation_records_light",
+      "node_id": "BShPb",
+      "preview": "previews/sync_operation_records_light.png"
+    },
+    {
+      "path": "state_loading",
+      "node_id": "EOqtK",
+      "preview": "previews/state_loading.png"
+    },
+    {
+      "path": "state_empty",
+      "node_id": "cNClt",
+      "preview": "previews/state_empty.png"
+    },
+    {
+      "path": "state_error",
+      "node_id": "cFKnN",
+      "preview": "previews/state_error.png"
+    },
+    {
+      "path": "state_permission",
+      "node_id": "UVa13",
+      "preview": "previews/state_permission.png"
+    },
+    {
+      "path": "state_loading_light",
+      "node_id": "35DqW",
+      "preview": "previews/state_loading_light.png"
+    },
+    {
+      "path": "state_empty_light",
+      "node_id": "KNTJu",
+      "preview": "previews/state_empty_light.png"
+    },
+    {
+      "path": "state_error_light",
+      "node_id": "WKIUj",
+      "preview": "previews/state_error_light.png"
+    },
+    {
+      "path": "state_permission_light",
+      "node_id": "humkU",
+      "preview": "previews/state_permission_light.png"
+    },
+    {
+      "path": "marketplace_home_en",
+      "node_id": "jzcgv",
+      "preview": "previews/marketplace_home_en.png"
+    },
+    {
+      "path": "marketplace_home_light_en",
+      "node_id": "ExU6G",
+      "preview": "previews/marketplace_home_light_en.png"
+    },
+    {
+      "path": "marketplace_home_tablet_light_en",
+      "node_id": "bsLlO",
+      "preview": "previews/marketplace_home_tablet_light_en.png"
+    },
+    {
+      "path": "marketplace_home_mobile_light_en",
+      "node_id": "D7Uul",
+      "preview": "previews/marketplace_home_mobile_light_en.png"
+    }
+  ]
+}

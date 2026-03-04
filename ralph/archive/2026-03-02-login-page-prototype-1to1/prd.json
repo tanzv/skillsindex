@@ -1,0 +1,52 @@
+{
+  "project": "SkillsIndex Frontend",
+  "branchName": "ralph/login-page-prototype-1to1",
+  "description": "Align login page to prototype with pixel-accurate dark/light variants and responsive behavior.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Rebuild login layout geometry to prototype metrics",
+      "description": "As a platform user, I want the login page container, top bar, and two-column panels to match the prototype so that the page has consistent visual structure.",
+      "acceptanceCriteria": [
+        "Top bar uses fixed prototype geometry and typography for brand/nav/locale text",
+        "Main login area uses prototype dimensions, panel widths, paddings, and corner radii",
+        "Dark and light layout skeleton use prototype background and surface colors",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Align form controls and OAuth area to prototype",
+      "description": "As a user, I want input fields, sign-in button, helper text, and OAuth entry layout to match the prototype so that login interactions feel consistent.",
+      "acceptanceCriteria": [
+        "Username/password fields and submit button match prototype heights, radii, and spacing",
+        "OAuth area uses icon-circle plus caption layout instead of rectangular provider buttons",
+        "Form title, note, labels, helper text, and hints match prototype typography scales",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Fix light-route classing and responsive prototype variants",
+      "description": "As a user, I want /light/login and mobile breakpoints to map to the intended prototype variants so that each route renders the correct theme and structure.",
+      "acceptanceCriteria": [
+        "Body class toggles dark and light login variants based on route prefix",
+        "ConfigProvider algorithm follows route variant for login page",
+        "Tablet and mobile breakpoints reflect prototype structure and spacing",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

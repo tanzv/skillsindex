@@ -1,0 +1,108 @@
+{
+  "project": "SkillsIndex Frontend",
+  "branchName": "ralph/prototype-1to1-replica",
+  "description": "Deliver pixel-accurate prototype replication for core public pages with dark and light route variants.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Establish prototype route and node traceability baseline",
+      "description": "As a frontend engineer, I want a stable route-to-prototype mapping so that each page implementation can be verified against the correct source node.",
+      "acceptanceCriteria": [
+        "Define route-to-prototype mapping for /login, /, /skills/:id, /compare, and /docs in implementation notes or config",
+        "Reference prototype node IDs and target screenshots for dark and light variants",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Create shared public-page style tokens for dark and light variants",
+      "description": "As a developer, I want centralized tokens and sizing primitives so that multiple pages can be aligned consistently and maintained safely.",
+      "acceptanceCriteria": [
+        "Add reusable token groups for typography, spacing, radii, and color surfaces used by public pages",
+        "Support route-driven dark/light style switching without duplicated hardcoded values",
+        "No new hard max-lines violations introduced by this story",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Align login page to prototype in dark and light",
+      "description": "As a user, I want the login page to match the prototype layout and components so that sign-in experience is visually consistent.",
+      "acceptanceCriteria": [
+        "Login top bar, two-column panels, typography, form controls, and OAuth block match prototype geometry",
+        "Dark and /light/login variants both render with their target palette and component hierarchy",
+        "Primary CTA, locale switch, and provider actions remain functional",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Align marketplace home page to prototype in dark and light",
+      "description": "As a visitor, I want the marketplace home page to replicate prototype sections so that information density and hierarchy are consistent.",
+      "acceptanceCriteria": [
+        "Top navigation, hero, search workbench, filter panel, and results panel match prototype spacing and sizes",
+        "Dark and /light variants align with corresponding prototype screenshots",
+        "Core interactions keep working: navigation buttons, pagination, and CTA links",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Align skill detail page to prototype in dark and light",
+      "description": "As a visitor, I want skill detail visual structure to match prototype so that metadata, actions, and comparison context are easy to scan.",
+      "acceptanceCriteria": [
+        "Header section, metadata cards, action bar, and content modules match prototype layout",
+        "Dark and /light skill detail routes use correct typography and color hierarchy",
+        "Install and related action buttons remain functional",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Align compare and docs public pages to prototype style system",
+      "description": "As a visitor, I want compare and docs pages to follow the same prototype language so that all public flows feel cohesive.",
+      "acceptanceCriteria": [
+        "Compare page and docs page use shared token system and match target prototype style",
+        "Dark and light route variants are both supported for these pages",
+        "No broken navigation between public pages after style alignment",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Add visual verification checklist and screenshot evidence for public routes",
+      "description": "As a maintainer, I want repeatable visual checks so that prototype alignment regressions are caught quickly.",
+      "acceptanceCriteria": [
+        "Capture baseline screenshots for /login, /light/login, /, /light, /skills/:id, and /light/skills/:id",
+        "Document pass/fail alignment notes per route in progress tracking notes",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+package bootstrap
+
+import (
+	"bytes"
+	"log"
+	"strings"
+	"testing"
+
+	"skillsindex/internal/config"
+)
+
+func TestNormalizeAPIConfigSetsDefaults(t *testing.T) {
+	cfg := config.Config{
+		AppEnv: "development",
+	}
+
+	normalized := NormalizeRuntimeConfig(cfg, RunOptions{})
+
+	if normalized.APIOnly {
+		t.Fatalf("expected APIOnly to keep configured value when not forced")
+	}
+	if len(normalized.CORSAllowedOrigins) != 1 {
+		t.Fatalf("expected exactly one default cors origin, got %d", len(normalized.CORSAllowedOrigins))
+	}
+	if normalized.CORSAllowedOrigins[0] != "http://localhost:5173" {
+		t.Fatalf("unexpected default cors origin: %s", normalized.CORSAllowedOrigins[0])
+	}
+}
+
+func TestNormalizeAPIConfigPreservesConfiguredOrigins(t *testing.T) {
+	cfg := config.Config{
+		AppEnv:             "development",
+		CORSAllowedOrigins: []string{"https://app.example.com"},
+	}
+
+	normalized := NormalizeRuntimeConfig(cfg, RunOptions{})
+
+	if len(normalized.CORSAllowedOrigins) != 1 {
+		t.Fatalf("expected configured cors origins to be preserved")
+	}
+	if normalized.CORSAllowedOrigins[0] != "https://app.example.com" {
+		t.Fatalf("unexpected configured cors origin: %s", normalized.CORSAllowedOrigins[0])
+	}
+}
+
+func TestNormalizeRuntimeConfigForcesAPIOnlyForAPICommand(t *testing.T) {
+	cfg := config.Config{
+		AppEnv:  "development",
+		APIOnly: false,
+	}
+
+	normalized := NormalizeRuntimeConfig(cfg, RunOptions{ForceAPIOnly: true})
+
+	if !normalized.APIOnly {
+		t.Fatalf("expected APIOnly to be true when forced")
+	}
+}
+
+func TestNormalizeRuntimeConfigSkipsDefaultCORSInProduction(t *testing.T) {
+	cfg := config.Config{
+		AppEnv: "production",
+	}
+
+	normalized := NormalizeRuntimeConfig(cfg, RunOptions{})
+
+	if len(normalized.CORSAllowedOrigins) != 0 {
+		t.Fatalf("expected no implicit cors origin in production")
+	}
+}
+
+func TestValidateSecurityDefaultsRejectsProductionDefaultSessionSecret(t *testing.T) {
+	cfg := config.Config{
+		AppEnv:        "production",
+		SessionSecret: "change-me-in-production",
+		AdminPassword: "custom-strong-password",
+	}
+
+	err := ValidateSecurityDefaults(cfg)
+	if err == nil {
+		t.Fatalf("expected session secret validation error")
+	}
+	if !strings.Contains(err.Error(), "SESSION_SECRET") {
+		t.Fatalf("expected session secret error message, got %v", err)
+	}
+}
+
+func TestValidateSecurityDefaultsRejectsProductionDefaultAdminPassword(t *testing.T) {
+	cfg := config.Config{
+		AppEnv:        "production",
+		SessionSecret: "custom-session-secret",
+		AdminPassword: "Admin123456!",
+	}
+
+	err := ValidateSecurityDefaults(cfg)
+	if err == nil {
+		t.Fatalf("expected admin password validation error")
+	}
+	if !strings.Contains(err.Error(), "ADMIN_PASSWORD") {
+		t.Fatalf("expected admin password error message, got %v", err)
+	}
+}
+
+func TestValidateSecurityDefaultsAllowsDevelopmentDefaults(t *testing.T) {
+	cfg := config.Config{
+		AppEnv:        "development",
+		SessionSecret: "change-me-in-production",
+		AdminPassword: "Admin123456!",
+	}
+
+	if err := ValidateSecurityDefaults(cfg); err != nil {
+		t.Fatalf("expected defaults to be allowed in development, got %v", err)
+	}
+}
+
+func TestLogAPIKeyWarningWhenUnset(t *testing.T) {
+	var output bytes.Buffer
+	logger := log.New(&output, "", 0)
+
+	LogAPIKeyWarning(logger, config.Config{})
+
+	if !strings.Contains(output.String(), "API_KEYS is empty") {
+		t.Fatalf("expected missing api key warning to be logged")
+	}
+}
+
+func TestLogAPIKeyWarningSkipsWhenConfigured(t *testing.T) {
+	var output bytes.Buffer
+	logger := log.New(&output, "", 0)
+
+	LogAPIKeyWarning(logger, config.Config{APIKeys: []string{"k1"}})
+
+	if output.Len() != 0 {
+		t.Fatalf("expected no warning log when api keys are configured")
+	}
+}

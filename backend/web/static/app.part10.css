@@ -1,0 +1,500 @@
+
+/* Marketplace home prototype reconstruction for /. */
+body.page-home {
+    background: #050c18;
+    color: #eaf2ff;
+}
+
+.page-home .container {
+    width: min(1412px, calc(100% - 1rem));
+}
+
+.page-home .main-content {
+    padding: 0.75rem 0 0.75rem;
+}
+
+.home-topbar-shell {
+    border-bottom: 0;
+    background: transparent;
+}
+
+.home-topbar {
+    min-height: 86px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 18px 26px;
+    border-radius: 14px;
+    background: #0b1b37;
+}
+
+.home-topbar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.62rem;
+    color: #f8fbff;
+    min-width: 0;
+}
+
+.home-topbar-brand:hover {
+    color: #f8fbff;
+}
+
+.home-topbar-brand-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    background: #1d4ed8;
+    color: #e8f0ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    flex: 0 0 30px;
+}
+
+.home-topbar-brand-copy {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.home-topbar-brand-copy strong {
+    font-family: "Sora", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 1.08rem;
+    line-height: 1.1;
+    color: #f8fbff;
+}
+
+.home-topbar-brand-copy small {
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #8ea8cc;
+    line-height: 1.25;
+}
+
+.home-topbar-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-self: center;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.home-topbar-nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.36rem;
+    min-height: 28px;
+    padding: 0.1rem 0.2rem;
+    color: #b8c7de;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.home-topbar-nav a:hover {
+    color: #d7e6fb;
+}
+
+.home-topbar-nav a.is-active {
+    color: #67c7ff;
+    font-weight: 700;
+}
+
+.home-topbar-nav-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: #0e8aa0;
+    flex: 0 0 10px;
+}
+
+.home-topbar-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.48rem;
+}
+
+.home-topbar-status {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9px;
+    background: #153a72;
+    color: #cde2ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.34rem 0.62rem;
+    white-space: nowrap;
+}
+
+.home-topbar-cta {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: #0e8aa0;
+    border: 1px solid #0e8aa0;
+    color: #e9fffd;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.34rem 0.68rem;
+    white-space: nowrap;
+}
+
+.home-topbar-cta:hover {
+    color: #e9fffd;
+    background: #0c7588;
+    border-color: #0c7588;
+}
+
+.home-prototype {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.home-prototype-hero {
+    width: 100%;
+    min-height: 288px;
+    display: grid;
+    grid-template-columns: minmax(0, 860px) minmax(320px, 420px);
+    justify-content: space-between;
+    gap: 0.75rem;
+    border-radius: 24px;
+    background: #112b52;
+    padding: 22px 26px;
+}
+
+.home-prototype-hero-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.home-prototype-kicker {
+    color: #56c1ff;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.home-prototype-headline {
+    margin: 0;
+    max-width: 23ch;
+    color: #f8fafc;
+    font-family: "Sora", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: clamp(2rem, 3vw, 2.5rem);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+}
+
+.home-prototype-summary {
+    max-width: 67ch;
+    color: #d8e6ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.94rem;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.home-prototype-hero-tags {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.46rem;
+    margin-top: 0.2rem;
+}
+
+.home-prototype-hero-tags span {
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 8px;
+    background: #1a3d71;
+    color: #d5e8ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.69rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.34rem 0.62rem;
+}
+
+.home-prototype-hero-side {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.home-prototype-metric-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.home-prototype-metric {
+    min-height: 94px;
+    border-radius: 14px;
+    background: #1b3b69;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.24rem;
+    justify-content: flex-start;
+}
+
+.home-prototype-metric.is-primary {
+    background: #1e40af;
+}
+
+.home-prototype-metric.is-accent {
+    background: #0e8aa0;
+}
+
+.home-prototype-metric h3 {
+    margin: 0;
+    color: #dbeafe;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.74rem;
+    font-weight: 600;
+}
+
+.home-prototype-metric strong {
+    color: #f8fafc;
+    font-family: var(--mono);
+    font-size: 1.74rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.home-prototype-hero-links {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.48rem;
+}
+
+.home-prototype-hero-links a {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9px;
+    background: #153a72;
+    color: #d6e8ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.34rem 0.72rem;
+}
+
+.home-prototype-hero-links a:hover {
+    color: #eff6ff;
+    background: #19427f;
+}
+
+.home-prototype-search {
+    border-radius: 18px;
+    background: #0f2447;
+    min-height: 146px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.48rem;
+    padding: 14px 18px;
+}
+
+.home-prototype-search-head {
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+}
+
+.home-prototype-search-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.home-prototype-search-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    background: #0e8aa0;
+    flex: 0 0 18px;
+}
+
+.home-prototype-search-title h2 {
+    margin: 0;
+    color: #eaf2ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.home-prototype-search-chips {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.34rem;
+}
+
+.home-prototype-search-chips span {
+    min-height: 26px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 8px;
+    background: #1a3d71;
+    color: #cfe4ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.64rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.25rem 0.48rem;
+}
+
+.home-prototype-search-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.52rem;
+}
+
+.home-prototype-search-input-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: end;
+}
+
+.home-prototype-input-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.home-prototype-input-field span {
+    color: #9db6d7;
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.home-prototype-input-field input {
+    min-height: 34px;
+    border: 1px solid #275282;
+    border-radius: 10px;
+    background: #1a3764;
+    color: #cfe4ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 0.48rem 0.64rem;
+}
+
+.home-prototype-input-field input::placeholder {
+    color: #89a9d5;
+}
+
+.home-prototype-input-field input:focus {
+    border-color: #3c6da5;
+    box-shadow: 0 0 0 3px rgba(60, 109, 165, 0.22);
+}
+
+.home-prototype-search-submit {
+    min-height: 34px;
+    border: 1px solid #0e8aa0;
+    border-radius: 10px;
+    background: #0e8aa0;
+    color: #e9fffd;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 0.34rem 0.78rem;
+}
+
+.home-prototype-search-submit:hover {
+    background: #0c7588;
+    border-color: #0c7588;
+    color: #e9fffd;
+}
+
+.home-prototype-search-filter-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.home-prototype-search-filter-row label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    color: #9db6d7;
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.home-prototype-search-filter-row select {
+    min-height: 30px;
+    border: 1px solid #2b5b8f;
+    border-radius: 8px;
+    background: #1e3a70;
+    color: #e6eef8;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.28rem 0.48rem;
+}
+
+.home-prototype-body {
+    min-height: 392px;
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 14px;
+}
+
+.home-prototype-filters {
+    border-radius: 14px;
+    background: #102a4f;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.46rem;
+}
+
+.home-prototype-filters h2 {
+    margin: 0;
+    color: #eaf2ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.home-prototype-filter-row {
+    min-height: 28px;
+    border-radius: 8px;
+    background: #153a72;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.3rem 0.62rem;
+}
+

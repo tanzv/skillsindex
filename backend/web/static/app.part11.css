@@ -1,0 +1,490 @@
+.home-prototype-filter-row span {
+    color: #bfd8ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+
+.home-prototype-filter-row strong {
+    color: #bfd8ff;
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-align: right;
+}
+
+.home-prototype-filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.34rem;
+    margin-top: 0.2rem;
+}
+
+.home-prototype-filter-tags a {
+    min-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 7px;
+    background: #163e71;
+    color: #cfe4ff;
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    padding: 0.2rem 0.4rem;
+}
+
+.home-prototype-filter-tags a:hover {
+    color: #eff6ff;
+    background: #1b497f;
+}
+
+.home-prototype-filter-empty {
+    margin: 0;
+    color: #9db6d7;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.7rem;
+}
+
+.home-prototype-filter-actions {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.home-prototype-apply-btn,
+.home-prototype-reset-btn {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.3rem 0.72rem;
+}
+
+.home-prototype-apply-btn {
+    border: 1px solid #0e8aa0;
+    background: #0e8aa0;
+    color: #e9fffd;
+    cursor: pointer;
+}
+
+.home-prototype-apply-btn:hover {
+    background: #0c7588;
+    border-color: #0c7588;
+}
+
+.home-prototype-reset-btn {
+    border: 1px solid #1a4b88;
+    background: #1a4b88;
+    color: #cfe4ff;
+}
+
+.home-prototype-reset-btn:hover {
+    color: #eaf2ff;
+    background: #20599e;
+    border-color: #20599e;
+}
+
+.home-prototype-results {
+    border-radius: 14px;
+    background: #102a4f;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.62rem;
+    min-width: 0;
+}
+
+.home-prototype-results-head {
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.home-prototype-results-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.home-prototype-results-title h2 {
+    margin: 0;
+    color: #eaf2ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.87rem;
+    font-weight: 700;
+}
+
+.home-prototype-results-title span {
+    color: #dce8ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+.home-prototype-results-meta {
+    color: #7cb9ff;
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.home-prototype-results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 302px;
+    overflow: auto;
+    padding-right: 0.2rem;
+}
+
+.home-prototype-results-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.home-prototype-results-list::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #1f4675;
+}
+
+.home-prototype-skill-card {
+    border-radius: 14px;
+    background: #18437c;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+}
+
+.home-prototype-skill-card:nth-child(2n) {
+    background: #163e71;
+}
+
+.home-prototype-skill-card:nth-child(3n) {
+    background: #123864;
+}
+
+.home-prototype-skill-top {
+    min-height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.56rem;
+}
+
+.home-prototype-skill-name {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+}
+
+.home-prototype-skill-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    background: #0e8aa0;
+    flex: 0 0 12px;
+}
+
+.home-prototype-skill-name a {
+    color: #eaf2ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-prototype-skill-name a:hover {
+    color: #f8fbff;
+}
+
+.home-prototype-skill-state {
+    min-height: 22px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #e9fffd;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 0.16rem 0.44rem;
+    white-space: nowrap;
+}
+
+.home-prototype-skill-state.is-stable {
+    background: #0e8aa0;
+}
+
+.home-prototype-skill-state.is-growing {
+    background: #1a4b88;
+    color: #cfe4ff;
+}
+
+.home-prototype-skill-state.is-risk {
+    background: #8a5b1a;
+    color: #fef3c7;
+}
+
+.home-prototype-skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.home-prototype-skill-tags span {
+    min-height: 20px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 7px;
+    background: #1a3d71;
+    color: #cfe4ff;
+    font-family: var(--mono);
+    font-size: 0.56rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.15rem 0.38rem;
+}
+
+.home-prototype-skill-foot {
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.home-prototype-skill-foot > span {
+    color: #afc7ee;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-prototype-skill-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+}
+
+.home-prototype-skill-actions a {
+    min-height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    background: #123864;
+    color: #cfe4ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.56rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.1rem 0.34rem;
+    white-space: nowrap;
+}
+
+.home-prototype-skill-actions a:hover {
+    color: #eaf2ff;
+    background: #154378;
+}
+
+.home-prototype-empty {
+    margin: 0;
+    border-radius: 10px;
+    border: 1px dashed #2a578a;
+    background: #12345d;
+    color: #bfd8ff;
+    font-size: 0.8rem;
+    padding: 0.8rem;
+}
+
+.home-prototype-results-foot {
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.home-prototype-pagination {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.home-prototype-pagination a,
+.home-prototype-pagination span {
+    color: #7cb9ff;
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    font-weight: 600;
+}
+
+.home-prototype-pagination a:hover {
+    color: #a9d4ff;
+}
+
+.home-prototype-result-actions {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.34rem;
+}
+
+.home-prototype-result-actions a {
+    min-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: #123864;
+    color: #cfe4ff;
+    font-family: "Noto Sans SC", "Manrope", "Microsoft YaHei", sans-serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 0.2rem 0.52rem;
+    white-space: nowrap;
+}
+
+.home-prototype-result-actions a:hover {
+    color: #eaf2ff;
+    background: #154378;
+}
+
+.home-prototype-result-actions a.is-primary {
+    background: #0e8aa0;
+    color: #e9fffd;
+}
+
+.home-prototype-result-actions a.is-primary:hover {
+    background: #0c7588;
+    color: #e9fffd;
+}
+
+@media (max-width: 1180px) {
+    .home-topbar {
+        grid-template-columns: 1fr;
+        gap: 0.65rem;
+        justify-items: start;
+    }
+
+    .home-topbar-nav {
+        justify-self: start;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+    }
+
+    .home-topbar-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .home-prototype-hero {
+        grid-template-columns: 1fr;
+        min-height: 0;
+        gap: 0.8rem;
+    }
+
+    .home-prototype-body {
+        grid-template-columns: 1fr;
+        min-height: 0;
+    }
+
+    .home-prototype-results-list {
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
+    }
+}
+
+@media (max-width: 840px) {
+    .page-home .container {
+        width: min(1412px, calc(100% - 0.75rem));
+    }
+
+    .home-topbar {
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .home-topbar-brand-copy strong {
+        font-size: 0.98rem;
+    }
+
+    .home-topbar-brand-copy small {
+        font-size: 0.62rem;
+    }
+
+    .home-topbar-nav a {
+        font-size: 0.78rem;
+    }
+
+    .home-prototype-hero,
+    .home-prototype-search,
+    .home-prototype-filters,
+    .home-prototype-results {
+        border-radius: 12px;
+    }
+
+    .home-prototype-hero {
+        padding: 14px;
+    }
+
+    .home-prototype-headline {
+        font-size: clamp(1.66rem, 7.6vw, 2.2rem);
+    }
+
+    .home-prototype-summary {
+        font-size: 0.82rem;
+    }
+
+    .home-prototype-metric strong {
+        font-size: 1.34rem;
+    }
+
+    .home-prototype-search {
+        padding: 12px;
+    }
+
+    .home-prototype-search-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .home-prototype-search-input-row {
+        grid-template-columns: 1fr;
+    }
+
+    .home-prototype-search-submit {
+        width: 100%;
+    }
+
+    .home-prototype-search-filter-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .home-prototype-results {
+        padding: 10px;
+    }
+
+    .home-prototype-results-head,
+    .home-prototype-results-foot {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

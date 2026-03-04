@@ -1,0 +1,83 @@
+# 原型真实截图重建报告
+
+- 时间: 2026-02-25 11:10:12
+- 范围: `prototypes/skillsindex_framework/manifest.json` 中全部导出页面
+- 方式: 从 MCP 会话日志提取 `get_screenshot` 的 `data:image/png;base64`，重建 `previews/{path}.png`
+
+## 结果总览
+- manifest 页面数: **66**
+- 预览缺失数: **0**
+- manifest 范围内重复哈希组数: **0**
+- 最大重复组大小: **1**
+
+## 映射清单（path -> nodeId）
+- `marketplace_home` -> `j0pbU`
+- `skill_detail` -> `hEu3i`
+- `admin_dashboard` -> `95uPl`
+- `skill_compare` -> `9sq0k`
+- `install_rollout` -> `phuBz`
+- `team_workspace` -> `8fERA`
+- `governance_center` -> `SIIOt`
+- `login_page_prototype` -> `YYmVe`
+- `marketplace_home_light` -> `EbJ9a`
+- `skill_detail_light` -> `idgqT`
+- `admin_dashboard_light` -> `4uI2f`
+- `skill_compare_light` -> `jCKys`
+- `install_rollout_light` -> `mbfPP`
+- `team_workspace_light` -> `IOoGJ`
+- `governance_center_light` -> `de8jd`
+- `login_page_prototype_light` -> `nBjrt`
+- `login_page_prototype_mobile` -> `WYhYr`
+- `login_page_prototype_mobile_light` -> `y0FXe`
+- `access_management` -> `nyHEe`
+- `integration_settings` -> `K943K`
+- `incident_recovery` -> `hahZ8`
+- `access_management_light` -> `lUYVK`
+- `account_management_list` -> `1AHaM`
+- `account_configuration_form` -> `TjCgh`
+- `role_management_list` -> `QPMwn`
+- `role_configuration_form` -> `B5hwC`
+- `account_management_list_light` -> `QytKJ`
+- `account_configuration_form_light` -> `VnXd5`
+- `role_management_list_light` -> `5SPsP`
+- `role_configuration_form_light` -> `SibVw`
+- `integration_connector_list` -> `EC25R`
+- `integration_configuration_form` -> `mgMT2`
+- `webhook_delivery_logs` -> `gimRr`
+- `incident_management_list` -> `lSWwe`
+- `incident_response_console` -> `QNq52`
+- `incident_postmortem_detail` -> `oCpV4`
+- `integration_settings_light` -> `xWuAh`
+- `incident_recovery_light` -> `PZuxg`
+- `integration_connector_list_light` -> `6TdtI`
+- `integration_configuration_form_light` -> `HaDLR`
+- `webhook_delivery_logs_light` -> `n5GZM`
+- `incident_management_list_light` -> `hhChl`
+- `incident_response_console_light` -> `2AtTH`
+- `incident_postmortem_detail_light` -> `4I1Pa`
+- `sync_export_center` -> `sNW38`
+- `sync_export_center_light` -> `GBDSq`
+- `ingestion_manual` -> `nzHmQ`
+- `ingestion_zip` -> `D9L7Q`
+- `ingestion_repository` -> `T1LsV`
+- `ingestion_skillmp` -> `7WR7g`
+- `import_operation_records` -> `4sVDF`
+- `sync_operation_records` -> `3JYyI`
+- `ingestion_manual_light` -> `5m0sj`
+- `ingestion_zip_light` -> `N5JDq`
+- `ingestion_repository_light` -> `GTYH2`
+- `ingestion_skillmp_light` -> `gR5Q5`
+- `import_operation_records_light` -> `ws5gl`
+- `sync_operation_records_light` -> `BShPb`
+- `state_loading` -> `EOqtK`
+- `state_empty` -> `cNClt`
+- `state_error` -> `cFKnN`
+- `state_permission` -> `UVa13`
+- `state_loading_light` -> `35DqW`
+- `state_empty_light` -> `KNTJu`
+- `state_error_light` -> `WKIUj`
+- `state_permission_light` -> `humkU`
+
+## 产物
+- 映射文件: `prototypes/skillsindex_framework/preview-node-map.json`
+- 报告文件: `docs/design-requirements/overview/prototype-screenshot-rebuild-report-20260225_111012.md`

@@ -1,0 +1,241 @@
+import { useEffect, useMemo, useState } from "react";
+import { AdminOpsMetricsResponse, OpsMetrics, fetchAdminOpsMetrics } from "../lib/api";
+
+type OpsMetricKey = keyof OpsMetrics;
+type Severity = "normal" | "warning" | "critical";
+
+interface MetricDefinition {
+  key: OpsMetricKey;
+  label: string;
+  description: string;
+  warningAt: number;
+  criticalAt: number;
+}
+
+const metricDefinitions: MetricDefinition[] = [
+  { key: "open_incidents", label: "Open Incidents", description: "Active incidents pending closure.", warningAt: 3, criticalAt: 7 },
+  { key: "pending_moderation_cases", label: "Pending Moderation", description: "Backlog waiting for review.", warningAt: 8, criticalAt: 20 },
+  { key: "unresolved_jobs", label: "Unresolved Jobs", description: "Background jobs requiring intervention.", warningAt: 5, criticalAt: 12 },
+  { key: "failed_sync_runs_24h", label: "Failed Syncs (24h)", description: "Integration sync failures in the last day.", warningAt: 2, criticalAt: 6 },
+  { key: "disabled_accounts", label: "Disabled Accounts", description: "Accounts blocked by policy or anomaly.", warningAt: 10, criticalAt: 25 },
+  { key: "stale_integrations", label: "Stale Integrations", description: "Connectors with delayed heartbeats.", warningAt: 3, criticalAt: 8 }
+];
+
+function toSafeCount(value: unknown): number {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return 0;
+  }
+  return Math.max(0, Math.floor(numericValue));
+}
+
+function getSeverity(value: number, warningAt: number, criticalAt: number): Severity {
+  if (value >= criticalAt) {
+    return "critical";
+  }
+  if (value >= warningAt) {
+    return "warning";
+  }
+  return "normal";
+}
+
+const severityPalette: Record<Severity, { tone: string; border: string; background: string }> = {
+  normal: { tone: "#0f8a62", border: "rgba(15, 138, 98, 0.35)", background: "rgba(15, 138, 98, 0.08)" },
+  warning: { tone: "#b26b00", border: "rgba(178, 107, 0, 0.35)", background: "rgba(178, 107, 0, 0.1)" },
+  critical: { tone: "#b42318", border: "rgba(180, 35, 24, 0.38)", background: "rgba(180, 35, 24, 0.1)" }
+};
+
+export default function AdminOpsMetricsPage() {
+  const [data, setData] = useState<AdminOpsMetricsResponse | null>(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [requestVersion, setRequestVersion] = useState(0);
+  const [lastLoadedAt, setLastLoadedAt] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError("");
+
+    fetchAdminOpsMetrics()
+      .then((payload) => {
+        if (!active) {
+          return;
+        }
+        setData(payload);
+        setLastLoadedAt(new Date().toLocaleString());
+      })
+      .catch((fetchError) => {
+        if (!active) {
+          return;
+        }
+        setError(fetchError instanceof Error ? fetchError.message : "Failed to load metrics");
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [requestVersion]);
+
+  const metrics = useMemo(() => {
+    const item = data?.item;
+    if (!item) {
+      return [];
+    }
+    return metricDefinitions.map((definition) => {
+      const value = toSafeCount(item[definition.key]);
+      const severity = getSeverity(value, definition.warningAt, definition.criticalAt);
+      return { ...definition, value, severity };
+    });
+  }, [data]);
+
+  const summary = useMemo(() => {
+    const critical = metrics.filter((metric) => metric.severity === "critical").length;
+    const warning = metrics.filter((metric) => metric.severity === "warning").length;
+    const total = metrics.reduce((accumulator, metric) => accumulator + metric.value, 0);
+    return { critical, warning, total };
+  }, [metrics]);
+
+  const quickContextCards = useMemo(() => {
+    const valueByKey = new Map(metrics.map((metric) => [metric.key, metric.value]));
+    const incidentPressure = (valueByKey.get("open_incidents") || 0) + (valueByKey.get("pending_moderation_cases") || 0);
+    const pipelineFriction = (valueByKey.get("unresolved_jobs") || 0) + (valueByKey.get("failed_sync_runs_24h") || 0);
+    const platformTrust = (valueByKey.get("disabled_accounts") || 0) + (valueByKey.get("stale_integrations") || 0);
+    return [
+      { label: "Incident Pressure", value: incidentPressure, target: "Contain unresolved reliability signals." },
+      { label: "Pipeline Friction", value: pipelineFriction, target: "Restore flow for automated jobs and sync." },
+      { label: "Platform Trust Risk", value: platformTrust, target: "Review account controls and integration health." }
+    ];
+  }, [metrics]);
+
+  const retryFetch = () => {
+    setRequestVersion((version) => version + 1);
+  };
+
+  if (loading) {
+    return <div className="panel loading">Loading operations dashboard...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="panel error">
+        <h3 style={{ marginTop: 0 }}>Unable to load operations metrics</h3>
+        <p style={{ marginBottom: 16 }}>{error}</p>
+        <button type="button" onClick={retryFetch} style={{ padding: "8px 14px", borderRadius: 8, cursor: "pointer" }}>
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!data?.item || metrics.length === 0) {
+    return (
+      <div className="panel">
+        <h3 style={{ marginTop: 0 }}>No metrics available</h3>
+        <p>The metrics endpoint returned an empty payload. Retry after telemetry pipelines complete a full cycle.</p>
+        <button type="button" onClick={retryFetch} style={{ padding: "8px 14px", borderRadius: 8, cursor: "pointer" }}>
+          Refresh
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-grid" style={{ gap: 18 }}>
+      <section
+        className="panel panel-hero"
+        style={{ background: "linear-gradient(120deg, rgba(13, 55, 95, 0.95), rgba(22, 106, 114, 0.92))", color: "#f8fafc" }}
+      >
+        <h2 style={{ marginBottom: 8 }}>Operations Command Dashboard</h2>
+        <p style={{ marginTop: 0, opacity: 0.92 }}>
+          Live baseline for reliability, moderation capacity, and integration stability. Use the risk queue to prioritize response.
+        </p>
+        <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", marginTop: 14 }}>
+          <article style={{ border: "1px solid rgba(255,255,255,0.32)", borderRadius: 12, padding: "10px 12px", background: "rgba(255,255,255,0.08)" }}>
+            <span style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Critical Signals</span>
+            <strong style={{ fontSize: 22 }}>{summary.critical}</strong>
+          </article>
+          <article style={{ border: "1px solid rgba(255,255,255,0.32)", borderRadius: 12, padding: "10px 12px", background: "rgba(255,255,255,0.08)" }}>
+            <span style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Warning Signals</span>
+            <strong style={{ fontSize: 22 }}>{summary.warning}</strong>
+          </article>
+          <article style={{ border: "1px solid rgba(255,255,255,0.32)", borderRadius: 12, padding: "10px 12px", background: "rgba(255,255,255,0.08)" }}>
+            <span style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Tracked Events</span>
+            <strong style={{ fontSize: 22 }}>{summary.total}</strong>
+          </article>
+        </div>
+      </section>
+
+      <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+        {quickContextCards.map((card) => (
+          <article key={card.label} className="panel" style={{ borderLeft: "4px solid #0c6475" }}>
+            <span style={{ display: "block", color: "var(--text-subtle)" }}>{card.label}</span>
+            <strong style={{ fontSize: 26, lineHeight: 1.25 }}>{card.value}</strong>
+            <p style={{ marginBottom: 0, fontSize: 13 }}>{card.target}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="panel">
+        <h3 style={{ marginTop: 0 }}>Risk Queue</h3>
+        <p style={{ marginTop: 0, color: "var(--text-subtle)" }}>
+          {summary.critical > 0 ? "Immediate intervention needed on critical metrics." : "No critical blockers detected."}
+        </p>
+        <div style={{ display: "grid", gap: 10 }}>
+          {metrics
+            .filter((metric) => metric.severity !== "normal")
+            .map((metric) => (
+              <article
+                key={`queue-${metric.key}`}
+                style={{
+                  border: `1px solid ${severityPalette[metric.severity].border}`,
+                  background: severityPalette[metric.severity].background,
+                  borderRadius: 10,
+                  padding: "10px 12px"
+                }}
+              >
+                <strong style={{ display: "block", color: severityPalette[metric.severity].tone }}>{metric.label}</strong>
+                <span>{metric.value} records require response.</span>
+              </article>
+            ))}
+          {summary.critical === 0 && summary.warning === 0 ? (
+            <article style={{ border: "1px dashed rgba(35, 80, 120, 0.45)", borderRadius: 10, padding: "10px 12px" }}>
+              All monitored metrics are currently within normal operating thresholds.
+            </article>
+          ) : null}
+        </div>
+      </section>
+
+      <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+        {metrics.map((metric) => (
+          <article
+            key={metric.key}
+            className="panel"
+            style={{ borderTop: `4px solid ${severityPalette[metric.severity].tone}`, background: severityPalette[metric.severity].background }}
+          >
+            <span style={{ display: "block", color: "var(--text-subtle)", marginBottom: 8 }}>{metric.label}</span>
+            <strong style={{ fontSize: 30, lineHeight: 1.1 }}>{metric.value}</strong>
+            <p style={{ marginBottom: 0, marginTop: 8 }}>{metric.description}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="panel" style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <h3 style={{ marginTop: 0, marginBottom: 8 }}>Operational Notes</h3>
+          <p style={{ margin: 0, color: "var(--text-subtle)" }}>
+            Last refresh: {lastLoadedAt || "Unavailable"}.
+          </p>
+        </div>
+        <button type="button" onClick={retryFetch} style={{ padding: "8px 14px", borderRadius: 8, cursor: "pointer", height: 38 }}>
+          Refresh Metrics
+        </button>
+      </section>
+    </div>
+  );
+}
