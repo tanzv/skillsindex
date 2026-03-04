@@ -70,11 +70,13 @@ export const marketplaceHomeSearchLightStyles = css`
   }
 
   .marketplace-home.is-light-theme .marketplace-search-main-row {
-    min-height: 52px;
+    min-height: 58px;
+    min-height: var(--marketplace-search-main-row-height, 58px);
   }
 
   .marketplace-home.is-light-theme .marketplace-search-input {
-    height: 52px;
+    height: 56px;
+    height: var(--marketplace-search-input-height, 56px);
     border: 1px solid #d1d5db;
     border-radius: 12px;
     background: #ffffff;

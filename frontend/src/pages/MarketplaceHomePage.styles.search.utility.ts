@@ -3,19 +3,20 @@ import { css } from "@emotion/react";
 export const marketplaceHomeSearchUtilityStyles = css`
   .marketplace-home .marketplace-top-recommend-row {
     width: 100%;
-    min-height: 30px;
+    min-height: 36px;
+    min-height: var(--marketplace-top-recommend-row-height, 36px);
     padding: 0 2px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
   }
 
   .marketplace-home .marketplace-top-recommend-label {
     color: #b3b8c1;
     font-family: "JetBrains Mono", monospace;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
     white-space: nowrap;
   }
 
@@ -24,7 +25,7 @@ export const marketplaceHomeSearchUtilityStyles = css`
     flex: 1;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -35,13 +36,15 @@ export const marketplaceHomeSearchUtilityStyles = css`
 
   .marketplace-home .marketplace-top-recommend-chips button {
     border: 0;
-    height: 26px;
+    height: 34px;
+    height: var(--marketplace-top-recommend-chip-height, 34px);
     border-radius: 999px;
-    padding: 0 12px;
+    padding: 0 16px;
     background: rgba(255, 255, 255, 0.08);
     color: #f3f4f6;
     font-family: "Noto Sans SC", "Noto Sans", sans-serif;
-    font-size: 10px;
+    font-size: 12px;
+    font-size: var(--marketplace-top-recommend-chip-font-size, 12px);
     font-weight: 700;
     line-height: 1;
     white-space: nowrap;
@@ -64,20 +67,23 @@ export const marketplaceHomeSearchUtilityStyles = css`
 
   .marketplace-home .marketplace-search-main-row {
     width: 100%;
-    min-height: 52px;
+    min-height: 58px;
+    min-height: var(--marketplace-search-main-row-height, 58px);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
   }
 
   .marketplace-home .marketplace-search-input {
     min-width: 0;
     flex: 1;
-    height: 52px;
-    border-radius: 12px;
+    height: 56px;
+    height: var(--marketplace-search-input-height, 56px);
+    border-radius: 14px;
+    border-radius: var(--marketplace-search-input-radius, 14px);
     border: 0;
     background: rgba(255, 255, 255, 0.06);
-    padding: 0 16px;
+    padding: 0 18px;
     display: inline-flex;
     align-items: center;
   }
@@ -89,7 +95,8 @@ export const marketplaceHomeSearchUtilityStyles = css`
     background: transparent;
     color: #f3f4f6;
     font-family: "Noto Sans SC", "Noto Sans", sans-serif;
-    font-size: 15px;
+    font-size: 16px;
+    font-size: var(--marketplace-search-input-font-size, 16px);
     font-weight: 600;
     line-height: 1;
   }
@@ -107,8 +114,10 @@ export const marketplaceHomeSearchUtilityStyles = css`
 
   .marketplace-home .marketplace-search-submit,
   .marketplace-home .marketplace-search-filter-btn {
-    height: 40px;
-    border-radius: 9px;
+    height: 46px;
+    height: var(--marketplace-search-action-height, 46px);
+    border-radius: 11px;
+    border-radius: var(--marketplace-search-action-radius, 11px);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -118,23 +127,25 @@ export const marketplaceHomeSearchUtilityStyles = css`
   }
 
   .marketplace-home .marketplace-search-submit {
-    padding: 0 14px;
+    padding: 0 18px;
     border: 0;
     background: #f3f4f6;
     color: #111111;
     font-family: "JetBrains Mono", monospace;
-    font-size: 11px;
+    font-size: 13px;
+    font-size: var(--marketplace-search-action-font-size, 13px);
     font-weight: 700;
     line-height: 1;
   }
 
   .marketplace-home .marketplace-search-filter-btn {
-    padding: 0 14px;
+    padding: 0 18px;
     border: 0;
     background: #1d1f24;
     color: #e5e7eb;
     font-family: "Noto Sans SC", "Noto Sans", sans-serif;
-    font-size: 12px;
+    font-size: 13px;
+    font-size: var(--marketplace-search-action-font-size, 13px);
     font-weight: 700;
     line-height: 1;
   }
@@ -162,30 +173,34 @@ export const marketplaceHomeSearchUtilityStyles = css`
 
   .marketplace-home .marketplace-search-utility-row {
     width: 100%;
-    height: 28px;
+    height: 34px;
+    height: var(--marketplace-search-utility-row-height, 34px);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 10px;
   }
 
   .marketplace-home .marketplace-search-utility-left,
   .marketplace-home .marketplace-search-utility-right {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
   }
 
   .marketplace-home .marketplace-search-utility-left span,
   .marketplace-home .marketplace-search-utility-right span {
-    height: 24px;
-    border-radius: 7px;
-    padding: 0 10px;
+    height: 28px;
+    height: var(--marketplace-search-utility-pill-height, 28px);
+    border-radius: 8px;
+    border-radius: var(--marketplace-search-utility-pill-radius, 8px);
+    padding: 0 12px;
     display: inline-flex;
     align-items: center;
     white-space: nowrap;
-    font-size: 10px;
+    font-size: 11px;
+    font-size: var(--marketplace-search-utility-pill-font-size, 11px);
     font-weight: 700;
     font-family: "JetBrains Mono", monospace;
   }
@@ -207,13 +222,16 @@ export const marketplaceHomeSearchUtilityStyles = css`
 
   .marketplace-home .marketplace-search-utility-right button.is-open-queue {
     border: 0;
-    height: 24px;
-    border-radius: 7px;
-    padding: 0 10px;
+    height: 30px;
+    height: var(--marketplace-search-open-queue-height, 30px);
+    border-radius: 8px;
+    border-radius: var(--marketplace-search-utility-pill-radius, 8px);
+    padding: 0 12px;
     display: inline-flex;
     align-items: center;
     white-space: nowrap;
-    font-size: 10px;
+    font-size: 11px;
+    font-size: var(--marketplace-search-utility-pill-font-size, 11px);
     font-weight: 700;
     font-family: "Noto Sans SC", "Noto Sans", sans-serif;
     color: #111111;

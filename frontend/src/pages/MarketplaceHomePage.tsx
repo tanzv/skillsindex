@@ -275,13 +275,17 @@ export default function MarketplaceHomePage({
     return navigator.toPublic(path);
   }
 
+  function normalizeQueryText(rawValue: string): string {
+    return String(rawValue || "").trim().replace(/\s+/g, " ");
+  }
+
   function normalizeFilterFormQuery(nextForm: MarketplaceFilterForm): MarketplaceQueryParams {
     return {
       ...nextForm,
-      q: String(nextForm.q || "").trim(),
-      tags: String(nextForm.tags || "").trim(),
-      category: String(nextForm.category || "").trim(),
-      subcategory: String(nextForm.subcategory || "").trim()
+      q: normalizeQueryText(nextForm.q),
+      tags: normalizeQueryText(nextForm.tags),
+      category: normalizeQueryText(nextForm.category),
+      subcategory: normalizeQueryText(nextForm.subcategory)
     };
   }
 
@@ -300,7 +304,7 @@ export default function MarketplaceHomePage({
   }
 
   function handleSearchEntryOpen() {
-    commitQuery({ ...form, page: 1 }, "results");
+    commitQuery({ ...normalizeFilterFormQuery(form), page: 1 }, "results");
   }
 
   function handleSearchInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -531,7 +535,6 @@ export default function MarketplaceHomePage({
 
         {isResultsPage ? (
           <MarketplaceResultsPage
-            locale={locale}
             text={text}
             form={form}
             resultItems={items}

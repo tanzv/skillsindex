@@ -103,14 +103,16 @@ export const marketplaceHomeResultsStyles = css`
   }
 
   .marketplace-home .marketplace-results-row {
-    height: 184px;
+    height: 196px;
+    height: var(--marketplace-results-row-height, 196px);
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px;
   }
 
   .marketplace-home .marketplace-latest-row {
-    height: 186px;
+    height: 198px;
+    height: var(--marketplace-latest-row-height, 198px);
   }
 
   .marketplace-home .marketplace-latest-row.is-new-row {
@@ -121,18 +123,21 @@ export const marketplaceHomeResultsStyles = css`
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.06);
     background: linear-gradient(180deg, rgba(16, 17, 19, 0.34) 0%, rgba(12, 13, 16, 0.2) 100%);
-    padding: 12px 14px;
+    padding: 14px 16px;
+    padding: var(--marketplace-skill-row-padding-y, 14px) var(--marketplace-skill-row-padding-x, 16px);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     justify-content: space-between;
     min-height: 0;
     transition: border-color 180ms ease, background-color 180ms ease, box-shadow 220ms ease, transform 220ms ease;
   }
 
   .marketplace-home .marketplace-card-head {
-    width: 56px;
-    height: 32px;
+    width: 72px;
+    width: var(--marketplace-card-head-width, 72px);
+    height: 42px;
+    height: var(--marketplace-card-head-height, 42px);
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -140,16 +145,20 @@ export const marketplaceHomeResultsStyles = css`
 
   .marketplace-home .marketplace-card-cover {
     position: relative;
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    width: var(--marketplace-card-thumb-size, 40px);
+    height: 40px;
+    height: var(--marketplace-card-thumb-size, 40px);
     display: inline-flex;
     align-items: flex-end;
     justify-content: flex-end;
   }
 
   .marketplace-home .marketplace-card-cover-thumb {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    width: var(--marketplace-card-thumb-size, 40px);
+    height: 40px;
+    height: var(--marketplace-card-thumb-size, 40px);
     border-radius: 999px;
     background: #2a2a2a;
     background-size: cover;
@@ -160,15 +169,17 @@ export const marketplaceHomeResultsStyles = css`
 
   .marketplace-home .marketplace-card-cover-chip {
     position: absolute;
-    right: -4px;
-    bottom: -2px;
-    height: 16px;
+    right: -6px;
+    bottom: -3px;
+    height: 18px;
+    height: var(--marketplace-card-cover-chip-height, 18px);
     border-radius: 999px;
-    padding: 0 6px;
+    padding: 0 7px;
     background: #111111;
     color: #f3f4f6;
     font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
+    font-size: 10px;
+    font-size: var(--marketplace-card-cover-chip-font-size, 10px);
     font-weight: 700;
     line-height: 1;
     display: inline-flex;
@@ -187,7 +198,8 @@ export const marketplaceHomeResultsStyles = css`
     padding: 0;
     color: #f8fafc;
     font-family: "Noto Sans SC", "Noto Sans", sans-serif;
-    font-size: 14px;
+    font-size: 15px;
+    font-size: var(--marketplace-card-title-size, 15px);
     font-weight: 700;
     line-height: 1.2;
     text-align: left;
@@ -216,15 +228,16 @@ export const marketplaceHomeResultsStyles = css`
     margin: 0;
     color: #d1d5db;
     font-family: "Noto Sans SC", "Noto Sans", sans-serif;
-    font-size: 11px;
+    font-size: 12px;
+    font-size: var(--marketplace-card-description-size, 12px);
     font-weight: 500;
-    line-height: 1.4;
+    line-height: 1.45;
   }
 
   .marketplace-home .marketplace-skill-secondary {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
   }
 
   .marketplace-home .marketplace-skill-chip-row {
@@ -234,14 +247,16 @@ export const marketplaceHomeResultsStyles = css`
   }
 
   .marketplace-home .marketplace-skill-chip-row span {
-    height: 18px;
+    height: 20px;
+    height: var(--marketplace-card-tag-height, 20px);
     border-radius: 999px;
-    padding: 0 8px;
+    padding: 0 9px;
     background: rgba(255, 255, 255, 0.06);
     border: 0;
     color: #d2d6de;
     font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
+    font-size: 10px;
+    font-size: var(--marketplace-card-tag-font-size, 10px);
     font-weight: 700;
     line-height: 1;
     display: inline-flex;
@@ -251,13 +266,14 @@ export const marketplaceHomeResultsStyles = css`
   .marketplace-home .marketplace-skill-row-foot {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex-wrap: wrap;
   }
 
   .marketplace-home .marketplace-skill-row-foot span {
     color: #cfd4dd;
-    font-size: 10px;
+    font-size: 11px;
+    font-size: var(--marketplace-card-foot-font-size, 11px);
     font-weight: 600;
     font-family: "JetBrains Mono", monospace;
     line-height: 1.2;
@@ -286,7 +302,8 @@ export const marketplaceHomeResultsStyles = css`
     border: 1px solid rgba(186, 191, 201, 0.36);
     border-radius: 16px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(246, 247, 250, 0.5) 100%);
-    padding: 11px 13px;
+    padding: 14px 16px;
+    padding: var(--marketplace-skill-row-padding-y, 14px) var(--marketplace-skill-row-padding-x, 16px);
     gap: 8px;
     backdrop-filter: blur(1px);
   }

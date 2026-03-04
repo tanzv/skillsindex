@@ -182,8 +182,8 @@ describe("Marketplace homepage pen alignment", () => {
       "min-height: 398px"
     ]);
     expect(marketplaceHomeSearchStyles.styles).toContain(".marketplace-top-stats-trend-chart");
-    expectContainsAny(marketplaceHomeResultsStyles.styles, ["height: 166px", "height: 184px", "height: 186px"]);
-    expectContainsAny(marketplaceHomeResultsStyles.styles, ["height: 168px", "height: 184px", "height: 186px"]);
+    expectContainsAny(marketplaceHomeResultsStyles.styles, ["height: 166px", "height: 184px", "height: 186px", "height: 196px", "height: 198px"]);
+    expectContainsAny(marketplaceHomeResultsStyles.styles, ["height: 168px", "height: 184px", "height: 186px", "height: 196px", "height: 198px"]);
     expectContainsAny(marketplaceHomeResultsStyles.styles, ["min-height: 56px", "min-height: 40px"]);
     expectContainsAny(marketplaceHomeResultsStyles.styles, [
       "background: #1f1f1f",
@@ -345,7 +345,7 @@ describe("Marketplace homepage pen alignment", () => {
     expectModalWidthToken(marketplaceHomeResultsPageStyles.styles);
     expect(marketplaceHomeResultsPageStyles.styles).toContain("border-radius: 16px");
     expect(marketplaceHomeResultsPageStyles.styles).toContain("border: 1px solid #d6d6d6");
-    expect(marketplaceHomeResultsPageStyles.styles).toContain("height: 30px");
+    expectContainsAny(marketplaceHomeResultsPageStyles.styles, ["height: 30px", "height: 34px"]);
     expect(marketplaceHomeResultsPageStyles.styles).toContain("background: #f3f4f6");
   });
 });

@@ -1,7 +1,7 @@
 import { KeyboardEvent, useLayoutEffect, useMemo, useRef } from "react";
 import { MarketplaceSkill } from "../lib/api";
-import { AppLocale } from "../lib/i18n";
 import { MarketplaceFilterForm } from "./MarketplaceHomePage.helpers";
+import type { MarketplaceText } from "./marketplaceText";
 
 interface HomeChipFilter {
   id: string;
@@ -17,7 +17,7 @@ interface ModalResultItem {
 }
 
 interface MarketplaceResultsPageProps {
-  locale: AppLocale;
+  text: MarketplaceText;
   form: MarketplaceFilterForm;
   resultItems: MarketplaceSkill[];
   resultTotal: number;
@@ -34,33 +34,40 @@ interface MarketplaceResultsPageProps {
 function formatSkillUpdatedAt(rawValue: string): string {
   const parsedDate = new Date(rawValue);
   if (Number.isNaN(parsedDate.getTime())) {
-    return "N/A";
+    return "--";
   }
   return parsedDate.toISOString().slice(0, 10);
 }
 
-function mapSkillToModalItem(skill: MarketplaceSkill): ModalResultItem {
-  const tagText = skill.tags.length > 0 ? skill.tags.slice(0, 2).join(" / ") : "general";
-  const scoreText = Number.isFinite(skill.quality_score) ? skill.quality_score.toFixed(1) : "N/A";
+function interpolateLabelTemplate(template: string, values: Record<string, string | number>): string {
+  return Object.entries(values).reduce((nextValue, [key, rawValue]) => {
+    return nextValue.replaceAll(`{${key}}`, String(rawValue));
+  }, template);
+}
+
+function mapSkillToModalItem(skill: MarketplaceSkill, text: MarketplaceText): ModalResultItem {
+  const tagText = skill.tags.length > 0 ? skill.tags.slice(0, 2).join(" / ") : "--";
+  const scoreText = Number.isFinite(skill.quality_score) ? skill.quality_score.toFixed(1) : "--";
   const updatedText = formatSkillUpdatedAt(skill.updated_at);
   return {
     skillID: skill.id,
     title: skill.name,
-    meta: `Tags: ${tagText} · Score ${scoreText} · Updated ${updatedText}`,
-    action: "View details · Add to queue"
+    meta: `${text.resultsCardMetaTagsLabel}: ${tagText} · ${text.resultsCardMetaScoreLabel} ${scoreText} · ${text.resultsCardMetaUpdatedLabel} ${updatedText}`,
+    action: text.resultsCardAction
   };
 }
 
-function buildResultsModalItems(skills: MarketplaceSkill[]): ModalResultItem[] {
-  return skills.slice(0, 4).map((item) => mapSkillToModalItem(item));
+function buildResultsModalItems(skills: MarketplaceSkill[], text: MarketplaceText): ModalResultItem[] {
+  return skills.slice(0, 4).map((item) => mapSkillToModalItem(item, text));
 }
 
-function buildQuickFilterLabels(filters: HomeChipFilter[]): string[] {
-  const fallbackLabels = ["Automation Testing", "Sync Orchestration", "Permission Management"];
+function buildQuickFilterLabels(filters: HomeChipFilter[], text: MarketplaceText): string[] {
+  const fallbackLabels = [text.hotAutomation, text.hotRepository, text.hotRelease];
   return fallbackLabels.map((defaultLabel, index) => filters[index]?.label || defaultLabel);
 }
 
 export default function MarketplaceResultsPage({
+  text,
   form,
   resultItems,
   resultTotal,
@@ -77,9 +84,9 @@ export default function MarketplaceResultsPage({
   const modalRef = useRef<HTMLElement | null>(null);
   const previousFocusedElementRef = useRef<HTMLElement | null>(null);
 
-  const modalItems = useMemo(() => buildResultsModalItems(resultItems), [resultItems]);
+  const modalItems = useMemo(() => buildResultsModalItems(resultItems, text), [resultItems, text]);
   const quickFilterBindings = useMemo(() => hotFilters.slice(0, 3), [hotFilters]);
-  const quickFilterLabels = useMemo(() => buildQuickFilterLabels(quickFilterBindings), [quickFilterBindings]);
+  const quickFilterLabels = useMemo(() => buildQuickFilterLabels(quickFilterBindings, text), [quickFilterBindings, text]);
   const activeQuickFilterIndex = useMemo(() => {
     const normalizedTagQuery = String(form.tags || "").trim().toLowerCase();
     if (!normalizedTagQuery) {
@@ -90,17 +97,22 @@ export default function MarketplaceResultsPage({
 
   const shownCount = modalItems.length;
   const totalMatchedCount = Math.max(resultTotal, resultItems.length);
-  const resultsTitle = "Search Center · Modal Mode";
-  const closeLabel = "Esc Close";
-  const modalQueryPlaceholder = "Enter keyword, e.g. playwright regression";
-  const semanticPlaceholder = "Semantic: find high-rating reusable";
-  const filterLabel = "Filter";
-  const searchLabel = "Search";
-  const shortcutHint = "Shortcut: Ctrl/Cmd + K open, Enter run, Esc close";
-  const footerLeft = `${totalMatchedCount} results total, showing first ${shownCount}`;
-  const footerRight = "Tab switch filters · Enter search";
-  const statMatched = `Matched ${totalMatchedCount}`;
-  const statLatency = "Avg latency 120ms";
+  const resultsTitle = text.resultsModalTitle;
+  const closeLabel = text.resultsClose;
+  const modalQueryPlaceholder = text.resultsModalKeywordPlaceholder;
+  const semanticPlaceholder = text.resultsModalSemanticPlaceholder;
+  const filterLabel = text.resultsFilter;
+  const searchLabel = text.search;
+  const shortcutHint = text.resultsShortcutHint;
+  const footerLeft = interpolateLabelTemplate(text.resultsFooterLeftTemplate, {
+    total: totalMatchedCount,
+    shown: shownCount
+  });
+  const footerRight = text.resultsFooterRight;
+  const statMatched = interpolateLabelTemplate(text.resultsStatMatchedTemplate, {
+    total: totalMatchedCount
+  });
+  const statLatency = text.resultsStatLatency;
 
   function getFocusableModalElements(): HTMLElement[] {
     if (!modalRef.current) {
@@ -180,7 +192,7 @@ export default function MarketplaceResultsPage({
         type="button"
         className="marketplace-results-floating-mask"
         data-testid="marketplace-results-floating-mask"
-        aria-label="Close results backdrop"
+        aria-label={closeLabel}
         onClick={onClose}
       />
 
@@ -191,7 +203,7 @@ export default function MarketplaceResultsPage({
             className="marketplace-results-modal"
             role="dialog"
             aria-modal="true"
-            aria-label="Search modal"
+            aria-label={resultsTitle}
             onClick={(event) => event.stopPropagation()}
           >
             <header className="marketplace-results-modal-header">
@@ -200,7 +212,7 @@ export default function MarketplaceResultsPage({
                 type="button"
                 className="marketplace-results-close marketplace-results-floating-close"
                 data-testid="marketplace-results-floating-close"
-                aria-label="Close results panel"
+                aria-label={closeLabel}
                 onClick={onClose}
               >
                 {closeLabel}
@@ -210,7 +222,7 @@ export default function MarketplaceResultsPage({
             <section className="marketplace-results-modal-search-row">
               <label className="marketplace-results-modal-input is-query">
                 <input
-                  aria-label="Modal keyword query"
+                  aria-label={text.queryKeyword}
                   type="text"
                   value={form.q}
                   placeholder={modalQueryPlaceholder}
@@ -220,7 +232,7 @@ export default function MarketplaceResultsPage({
               </label>
               <label className="marketplace-results-modal-input is-semantic">
                 <input
-                  aria-label="Modal semantic query"
+                  aria-label={text.querySemantic}
                   type="text"
                   value={form.tags}
                   placeholder={semanticPlaceholder}
@@ -259,8 +271,8 @@ export default function MarketplaceResultsPage({
             <section className="marketplace-results-modal-list">
               {modalItems.length === 0 ? (
                 <article className="marketplace-results-modal-card">
-                  <h3>No matching skills</h3>
-                  <p>Try adjusting keyword or semantic filters.</p>
+                  <h3>{text.noResultsTitle}</h3>
+                  <p>{text.noResultsHint}</p>
                 </article>
               ) : (
                 modalItems.map((item) => (
