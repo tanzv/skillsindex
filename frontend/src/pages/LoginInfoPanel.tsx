@@ -1,49 +1,32 @@
 import { LoginInfoPanelConfig } from "./loginInfoPanelConfig";
+import { buildLoginInfoPanelViewModel } from "./loginInfoPanelModel";
 
 interface LoginInfoPanelProps {
   config: LoginInfoPanelConfig;
 }
 
-const defaultInfoItems = [
-  "Enterprise SSO verifies member identity before sign-in.",
-  "Role-based access protects internal skill assets.",
-  "Audit events are retained for compliance tracing."
-];
-
-function resolveCompactHint(config: LoginInfoPanelConfig): string {
-  if (config.title.trim()) {
-    return config.title;
-  }
-  if (config.kicker.trim()) {
-    return config.kicker;
-  }
-  return config.lead.trim();
-}
-
 export default function LoginInfoPanel({ config }: LoginInfoPanelProps) {
-  const compactHint = resolveCompactHint(config);
-  const keyPoints = (config.keyPoints || []).map((item) => item.trim()).filter((item) => item.length > 0);
-  const resolvedItems = keyPoints.length > 0 ? keyPoints : defaultInfoItems;
-  const heroImageSrc = config.heroImageSrc || "/brand/login-promo-illustration.svg";
+  const panelViewModel = buildLoginInfoPanelViewModel(config);
 
   return (
     <article className="auth-visual-panel login-visual-panel">
-      {compactHint ? (
-        <p className="auth-compact-hint" data-testid="login-info-hint">
-          {compactHint}
-        </p>
-      ) : null}
-      <div className="login-info-hero" data-testid="login-info-hero" aria-hidden="true">
-        <img className="login-info-hero-image" src={heroImageSrc} alt="" />
-      </div>
-      <ul className="login-info-points" data-testid="login-info-points">
-        {resolvedItems.map((item) => (
-          <li key={item}>
-            <span className="login-info-point-icon" aria-hidden="true" />
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
+      <section className="login-info-glass-card" data-testid="login-info-card">
+        {panelViewModel.headline ? (
+          <h2 className="login-info-headline" data-testid="login-info-hint">
+            {panelViewModel.headline}
+          </h2>
+        ) : null}
+        {panelViewModel.description ? <p className="login-info-description">{panelViewModel.description}</p> : null}
+        {panelViewModel.points.length > 0 ? (
+          <ul className="login-info-points" data-testid="login-info-points">
+            {panelViewModel.points.map((point) => (
+              <li key={point.id}>
+                <span className="login-info-point-body">{point.body}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
     </article>
   );
 }

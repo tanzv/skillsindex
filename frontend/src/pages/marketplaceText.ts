@@ -12,6 +12,7 @@ export interface MarketplaceText {
   statsDeltaRight: string;
   signedIn: string;
   signIn: string;
+  signOut: string;
   openWorkspace: string;
   categoryNav: string;
   downloadRankingNav: string;
@@ -21,6 +22,8 @@ export interface MarketplaceText {
   updatedLabel: string;
   pressHintLabel: string;
   latestTitle: string;
+  resultsTitle: string;
+  categoryResultsTitle: string;
   latestSortLabel: string;
   batchInstallLabel: string;
   compareLabel: string;
@@ -90,6 +93,7 @@ export function buildMarketplaceText(t: TFunction): MarketplaceText {
     statsDeltaRight: t("marketplace.statsDeltaRight"),
     signedIn: t("marketplace.signedIn"),
     signIn: t("marketplace.signIn"),
+    signOut: t("marketplace.signOut"),
     openWorkspace: t("marketplace.openWorkspace"),
     categoryNav: t("marketplace.categoryNav"),
     downloadRankingNav: t("marketplace.downloadRankingNav"),
@@ -99,6 +103,8 @@ export function buildMarketplaceText(t: TFunction): MarketplaceText {
     updatedLabel: t("marketplace.updatedLabel"),
     pressHintLabel: t("marketplace.pressHintLabel"),
     latestTitle: t("marketplace.latestTitle"),
+    resultsTitle: t("marketplace.resultsTitle"),
+    categoryResultsTitle: t("marketplace.categoryResultsTitle"),
     latestSortLabel: t("marketplace.latestSortLabel"),
     batchInstallLabel: t("marketplace.batchInstallLabel"),
     compareLabel: t("marketplace.compareLabel"),

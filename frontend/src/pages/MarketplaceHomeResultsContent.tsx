@@ -5,23 +5,20 @@ import { MarketplaceText } from "./marketplaceText";
 import { canArmAutoLoadFromScrollState, computeVirtualRowWindow, groupCardsIntoRows } from "./MarketplaceHomeAutoLoad.helpers";
 import type { VirtualRowWindowState } from "./MarketplaceHomeAutoLoad.helpers";
 import { resolveLatestRowsWindow, virtualizedRowThreshold } from "./MarketplaceHomeResultsContent.virtualization";
+import { isResultsRoutePath, resolveResultsToolbarTitle } from "./MarketplaceHomeResultsContent.route";
 import MarketplaceHomeResultsEmptyState from "./MarketplaceHomeResultsEmptyState";
+import MarketplaceSkillCardRows from "./MarketplaceSkillCardRows";
 
 interface MarketplaceHomeResultsContentProps {
   isResultsPage: boolean;
   text: MarketplaceText;
   currentPage: number;
   totalPages: number;
-  latestCards: PrototypeCardEntry[];
+  resultCards: PrototypeCardEntry[];
   featuredCards: PrototypeCardEntry[];
   autoLoadConfig: MarketplaceAutoLoadConfig;
   onPageChange: (page: number) => void;
   renderSkillCard: (card: PrototypeCardEntry, key: string) => JSX.Element;
-}
-
-function isResultsRoutePath(pathname: string): boolean {
-  const normalizedPath = (String(pathname || "").trim().toLowerCase() || "/").replace(/\/+$/, "") || "/";
-  return normalizedPath === "/results" || normalizedPath.endsWith("/results");
 }
 
 type AutoLoadVisualState = "idle" | "loading" | "completed";
@@ -33,7 +30,7 @@ export default function MarketplaceHomeResultsContent({
   text,
   currentPage,
   totalPages,
-  latestCards,
+  resultCards,
   featuredCards,
   autoLoadConfig,
   onPageChange,
@@ -63,9 +60,9 @@ export default function MarketplaceHomeResultsContent({
     paddingBottom: 0
   });
   const [newRowStartIndex, setNewRowStartIndex] = useState<number | null>(null);
-  const latestRows = useMemo(() => groupCardsIntoRows(latestCards, 3), [latestCards]);
-  const hasNoLatestCards = latestCards.length === 0;
-  const shouldVirtualizeRows = !isResultsPage && latestRows.length > virtualizedRowThreshold;
+  const resultRows = useMemo(() => groupCardsIntoRows(resultCards, 3), [resultCards]);
+  const hasNoResultCards = resultCards.length === 0;
+  const shouldVirtualizeRows = !isResultsPage && resultRows.length > virtualizedRowThreshold;
 
   function setAutoLoadVisualState(nextState: AutoLoadVisualState) {
     if (autoLoadVisualStateRef.current === nextState) {
@@ -155,7 +152,7 @@ export default function MarketplaceHomeResultsContent({
     if (isResultsPage || isResultsRoutePath(window.location.pathname)) {
       return false;
     }
-    if (hasNoLatestCards) {
+    if (hasNoResultCards) {
       return false;
     }
     if (fromPage >= totalPages) {
@@ -184,7 +181,7 @@ export default function MarketplaceHomeResultsContent({
       setAutoLoadProgress(0);
       return;
     }
-    if (hasNoLatestCards) {
+    if (hasNoResultCards) {
       autoLoadUnlockRef.current = false;
       autoLoadTriggeredPageRef.current = null;
       autoLoadHasScrolledRef.current = false;
@@ -241,10 +238,10 @@ export default function MarketplaceHomeResultsContent({
   }
 
   function resolveVirtualWindow() {
-    if (!shouldVirtualizeRows || latestRows.length === 0) {
+    if (!shouldVirtualizeRows || resultRows.length === 0) {
       setVirtualWindow({
         startIndex: 0,
-        endIndex: latestRows.length,
+        endIndex: resultRows.length,
         paddingTop: 0,
         paddingBottom: 0
       });
@@ -260,7 +257,7 @@ export default function MarketplaceHomeResultsContent({
     const viewportTop = window.scrollY - absoluteTop;
     const viewportBottom = window.scrollY + window.innerHeight - absoluteTop;
     const nextWindow = computeVirtualRowWindow({
-      totalRows: latestRows.length,
+      totalRows: resultRows.length,
       rowHeight: 168,
       rowGap: 14,
       overscanRows: 4,
@@ -281,7 +278,7 @@ export default function MarketplaceHomeResultsContent({
   }
 
   useEffect(() => {
-    if (isResultsPage || hasNoLatestCards || isResultsRoutePath(window.location.pathname)) {
+    if (isResultsPage || hasNoResultCards || isResultsRoutePath(window.location.pathname)) {
       return;
     }
 
@@ -294,7 +291,7 @@ export default function MarketplaceHomeResultsContent({
     return () => {
       window.removeEventListener("scroll", handleScrollAutoLoad);
     };
-  }, [isResultsPage, hasNoLatestCards, currentPage, totalPages]);
+  }, [isResultsPage, hasNoResultCards, currentPage, totalPages]);
 
   useEffect(
     () => () => {
@@ -305,7 +302,7 @@ export default function MarketplaceHomeResultsContent({
   );
 
   useEffect(() => {
-    if (!hasNoLatestCards) {
+    if (!hasNoResultCards) {
       return;
     }
     clearAutoLoadVisualStateReset();
@@ -313,10 +310,10 @@ export default function MarketplaceHomeResultsContent({
     autoLoadUnlockRef.current = false;
     autoLoadHasScrolledRef.current = false;
     resetAutoLoadVisualState();
-  }, [hasNoLatestCards]);
+  }, [hasNoResultCards]);
 
   useEffect(() => {
-    if (isResultsPage || hasNoLatestCards || isResultsRoutePath(window.location.pathname)) {
+    if (isResultsPage || hasNoResultCards || isResultsRoutePath(window.location.pathname)) {
       return;
     }
     const triggeredPage = autoLoadTriggeredPageRef.current;
@@ -330,38 +327,38 @@ export default function MarketplaceHomeResultsContent({
     autoLoadUnlockRef.current = true;
     clearAutoLoadVisualStateReset();
     scheduleAutoLoadVisualStateReset(remainingLoadingMs);
-  }, [isResultsPage, hasNoLatestCards, currentPage, minimumAutoLoadLoadingDurationMs]);
+  }, [isResultsPage, hasNoResultCards, currentPage, minimumAutoLoadLoadingDurationMs]);
 
   useEffect(() => {
     if (isResultsPage) {
       setNewRowStartIndex(null);
-      previousRowCountRef.current = latestRows.length;
+      previousRowCountRef.current = resultRows.length;
       return;
     }
 
     const previousRowCount = previousRowCountRef.current;
     if (previousRowCount === null) {
-      previousRowCountRef.current = latestRows.length;
+      previousRowCountRef.current = resultRows.length;
       return;
     }
 
-    if (latestRows.length > previousRowCount) {
+    if (resultRows.length > previousRowCount) {
       setNewRowStartIndex(previousRowCount);
       clearRowTransitionReset();
       rowTransitionTimeoutRef.current = window.setTimeout(() => {
         rowTransitionTimeoutRef.current = null;
         setNewRowStartIndex(null);
       }, rowEnterAnimationDurationMs);
-    } else if (latestRows.length < previousRowCount) {
+    } else if (resultRows.length < previousRowCount) {
       setNewRowStartIndex(null);
       clearRowTransitionReset();
     }
 
-    previousRowCountRef.current = latestRows.length;
-  }, [isResultsPage, latestRows.length]);
+    previousRowCountRef.current = resultRows.length;
+  }, [isResultsPage, resultRows.length]);
 
   useEffect(() => {
-    if (isResultsPage || hasNoLatestCards || currentPage >= totalPages || isResultsRoutePath(window.location.pathname)) {
+    if (isResultsPage || hasNoResultCards || currentPage >= totalPages || isResultsRoutePath(window.location.pathname)) {
       if (
         currentPage >= totalPages &&
         autoLoadVisualStateRef.current !== "loading" &&
@@ -399,11 +396,11 @@ export default function MarketplaceHomeResultsContent({
     return () => {
       observer.disconnect();
     };
-  }, [isResultsPage, hasNoLatestCards, currentPage, totalPages, onPageChange]);
+  }, [isResultsPage, hasNoResultCards, currentPage, totalPages, onPageChange]);
 
   useEffect(() => {
     resolveVirtualWindow();
-  }, [shouldVirtualizeRows, latestRows.length]);
+  }, [shouldVirtualizeRows, resultRows.length]);
 
   useEffect(() => {
     if (!shouldVirtualizeRows) {
@@ -421,12 +418,12 @@ export default function MarketplaceHomeResultsContent({
       window.removeEventListener("scroll", handleVirtualWindowUpdate);
       window.removeEventListener("resize", handleVirtualWindowUpdate);
     };
-  }, [shouldVirtualizeRows, latestRows.length]);
+  }, [shouldVirtualizeRows, resultRows.length]);
 
   const autoLoadState = autoLoadVisualStateRef.current;
   const autoLoadProgressValue = Number(autoLoadProgressRef.current.toFixed(3));
   const hasReachedLastPage = currentPage >= totalPages;
-  const showNoMoreDataHint = !hasNoLatestCards && hasReachedLastPage;
+  const showNoMoreDataHint = !hasNoResultCards && hasReachedLastPage;
   const autoLoadProgressStyle = {
     "--marketplace-auto-load-progress": String(autoLoadProgressValue)
   } as CSSProperties;
@@ -439,31 +436,28 @@ export default function MarketplaceHomeResultsContent({
   const latestRowsWindow = resolveLatestRowsWindow({
     isResultsPage,
     shouldVirtualizeRows,
-    latestRowsLength: latestRows.length,
+    latestRowsLength: resultRows.length,
     virtualWindow
   });
-  const visibleLatestRows = latestRows.slice(latestRowsWindow.startIndex, latestRowsWindow.endIndex);
+  const visibleResultRows = resultRows.slice(latestRowsWindow.startIndex, latestRowsWindow.endIndex);
   const virtualPaddingTop = latestRowsWindow.paddingTop;
   const virtualPaddingBottom = latestRowsWindow.paddingBottom;
-
-  function renderLatestRow(rowCards: PrototypeCardEntry[], rowIndex: number, keyPrefix: "latest-row" | "results-row") {
-    const isNewRow = !isResultsPage && newRowStartIndex !== null && rowIndex >= newRowStartIndex;
-    return (
-      <div
-        key={`${keyPrefix}-${rowIndex}`}
-        className={`marketplace-results-row marketplace-latest-row row-${(rowIndex % 4) + 1}${isNewRow ? " is-new-row" : ""}`}
-      >
-        {rowCards.map((card, cardIndex) => renderSkillCard(card, `${keyPrefix}-${rowIndex + 1}-${card.title}-${cardIndex}`))}
-      </div>
-    );
-  }
+  const toolbarTitle = resolveResultsToolbarTitle({
+    isResultsPage,
+    pathname: window.location.pathname,
+    labels: {
+      latestTitle: text.latestTitle,
+      resultsTitle: text.resultsTitle,
+      categoryResultsTitle: text.categoryResultsTitle
+    }
+  });
 
   return (
     <>
       {isResultsPage ? (
         <>
           <section className="marketplace-results-toolbar">
-            <h2>{text.latestTitle}</h2>
+            <h2>{toolbarTitle}</h2>
             <div className="marketplace-toolbar-chips">
               <span className="is-active">{text.latestSortLabel}</span>
               <span>{text.batchInstallLabel}</span>
@@ -472,10 +466,16 @@ export default function MarketplaceHomeResultsContent({
           </section>
 
           <section className="marketplace-results-list" aria-label="results list">
-            {hasNoLatestCards ? (
+            {hasNoResultCards ? (
               <MarketplaceHomeResultsEmptyState title={text.noResultsTitle} hint={text.noResultsHint} />
             ) : (
-              latestRows.map((rowCards, rowIndex) => renderLatestRow(rowCards, rowIndex, "results-row"))
+              <MarketplaceSkillCardRows
+                rows={resultRows}
+                keyPrefix="results-row"
+                isResultsPage={isResultsPage}
+                newRowStartIndex={newRowStartIndex}
+                renderSkillCard={renderSkillCard}
+              />
             )}
           </section>
         </>
@@ -505,14 +505,19 @@ export default function MarketplaceHomeResultsContent({
           </section>
 
           <section ref={latestListRef} className="marketplace-results-list" aria-label="results list">
-            {hasNoLatestCards ? (
+            {hasNoResultCards ? (
               <MarketplaceHomeResultsEmptyState title={text.noResultsTitle} hint={text.noResultsHint} />
             ) : (
               <>
                 {virtualPaddingTop > 0 ? <div style={{ height: `${virtualPaddingTop}px` }} aria-hidden="true" /> : null}
-                {visibleLatestRows.map((rowCards, rowIndex) =>
-                  renderLatestRow(rowCards, latestRowsWindow.startIndex + rowIndex, "latest-row")
-                )}
+                <MarketplaceSkillCardRows
+                  rows={visibleResultRows}
+                  keyPrefix="latest-row"
+                  startRowIndex={latestRowsWindow.startIndex}
+                  isResultsPage={isResultsPage}
+                  newRowStartIndex={newRowStartIndex}
+                  renderSkillCard={renderSkillCard}
+                />
                 {virtualPaddingBottom > 0 ? <div style={{ height: `${virtualPaddingBottom}px` }} aria-hidden="true" /> : null}
               </>
             )}
@@ -521,7 +526,7 @@ export default function MarketplaceHomeResultsContent({
       )}
 
       <section className="marketplace-pagination-shell">
-        {hasNoLatestCards ? (
+        {hasNoResultCards ? (
           <div className="marketplace-pagination-empty-hint" data-testid="marketplace-pagination-empty-hint" role="status" aria-live="polite">
             <strong>{text.noResultsTitle}</strong>
             <span>{text.noResultsHint}</span>

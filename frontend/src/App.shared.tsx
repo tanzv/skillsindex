@@ -22,6 +22,7 @@ export function isProtectedRoute(route: AppRoute): route is ProtectedRoute {
     route !== "/compare" &&
     route !== "/docs" &&
     route !== "/categories" &&
+    route !== "/categories/:slug" &&
     route !== "/rankings" &&
     route !== "/skills/:id" &&
     route !== "/prototype"

@@ -41,7 +41,31 @@ const scenarios = {
           status: 200,
           contentType: "application/json",
           body: JSON.stringify({
-            items: []
+            filters: {
+              q: "",
+              tags: "",
+              category: "",
+              subcategory: "",
+              sort: "recent",
+              mode: "keyword"
+            },
+            stats: {
+              total_skills: 0,
+              matching_skills: 0
+            },
+            pagination: {
+              page: 1,
+              page_size: 24,
+              total_items: 0,
+              total_pages: 1,
+              prev_page: 0,
+              next_page: 0
+            },
+            categories: [],
+            top_tags: [],
+            items: [],
+            session_user: null,
+            can_access_dashboard: false
           })
         });
       });

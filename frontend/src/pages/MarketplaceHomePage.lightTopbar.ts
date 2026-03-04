@@ -40,6 +40,8 @@ interface BuildLightTopbarUtilityActionsInput {
   onNavigate: (path: string) => void;
   toPublicPath: (path: string) => string;
   hasSessionUser: boolean;
+  authActionLabel?: string;
+  onAuthAction?: () => void;
   labels?: Pick<BuildLightTopbarLabels, "globalSearchNav" | "recentJobsNav" | "profileNav">;
   extraUtilityActions?: TopbarActionItem[];
 }
@@ -195,6 +197,8 @@ export function buildLightTopbarUtilityActions({
   onNavigate,
   toPublicPath,
   hasSessionUser,
+  authActionLabel,
+  onAuthAction,
   labels,
   extraUtilityActions
 }: BuildLightTopbarUtilityActionsInput): TopbarActionItem[] {
@@ -218,5 +222,16 @@ export function buildLightTopbarUtilityActions({
       onClick: () => onNavigate(hasSessionUser ? "/account/profile" : toPublicPath("/login"))
     }
   ];
+
+  if (authActionLabel && onAuthAction) {
+    utilityActions.push({
+      id: "auth-action",
+      label: authActionLabel,
+      tone: "highlight",
+      className: "is-auth-action",
+      onClick: onAuthAction
+    });
+  }
+
   return withExtraActions(utilityActions, extraUtilityActions);
 }

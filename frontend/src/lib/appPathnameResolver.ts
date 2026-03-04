@@ -8,6 +8,7 @@ export type PublicRoute =
   | "/compare"
   | "/docs"
   | "/categories"
+  | "/categories/:slug"
   | "/rankings"
   | "/skills/:id"
   | "/prototype";
@@ -39,6 +40,19 @@ export function extractSkillID(pathname: string): number | null {
   return Math.round(parsed);
 }
 
+export function extractCategorySlug(pathname: string): string | null {
+  const matched = pathname.match(/^\/(?:mobile\/(?:light\/)?|light\/)?categories\/([^/?#]+)(?:\/)?$/);
+  if (!matched || !matched[1]) {
+    return null;
+  }
+  try {
+    const decodedSlug = decodeURIComponent(matched[1]).trim();
+    return decodedSlug || null;
+  } catch {
+    return String(matched[1]).trim() || null;
+  }
+}
+
 export function normalizeAppRoute(
   pathname: string,
   dependencies: AppPathnameResolverDependencies = defaultDependencies
@@ -61,6 +75,9 @@ export function normalizeAppRoute(
   }
   if (trimmed === "/light/categories" || trimmed === "/mobile/categories" || trimmed === "/mobile/light/categories") {
     return "/categories";
+  }
+  if (extractCategorySlug(trimmed)) {
+    return "/categories/:slug";
   }
   if (trimmed === "/light/rankings" || trimmed === "/mobile/rankings" || trimmed === "/mobile/light/rankings") {
     return "/rankings";

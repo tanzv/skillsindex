@@ -112,6 +112,18 @@ func TestHandleAPIPublicMarketplaceReturnsExpectedPayload(t *testing.T) {
 	if !strings.Contains(body, `"react"`) {
 		t.Fatalf("missing top tags payload: %s", body)
 	}
+	if !strings.Contains(body, `"filter_options"`) {
+		t.Fatalf("missing filter_options payload: %s", body)
+	}
+	if !strings.Contains(body, `"value":"recent"`) || !strings.Contains(body, `"value":"ai"`) {
+		t.Fatalf("missing expected default filter option values: %s", body)
+	}
+	if !strings.Contains(body, `"category_overrides"`) {
+		t.Fatalf("missing category_overrides payload: %s", body)
+	}
+	if !strings.Contains(body, `"category_slug":"devops"`) {
+		t.Fatalf("missing expected devops category override payload: %s", body)
+	}
 }
 
 func TestHandleAPIPublicMarketplaceIncludesSessionUserContext(t *testing.T) {

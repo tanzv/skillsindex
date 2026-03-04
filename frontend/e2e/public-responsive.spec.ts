@@ -70,12 +70,14 @@ test.describe("Public pages responsive and functional", () => {
 
     await page.goto("/");
     await expect(page.locator(".marketplace-home")).toHaveClass(/is-mobile/);
-    await expect(page.locator(".marketplace-search-submit")).toBeVisible();
+    await expect(page.locator(".marketplace-search-input.is-query input")).toBeVisible();
 
-    await page.locator(".marketplace-search-submit").click();
+    await page.locator(".marketplace-search-input.is-query input").click();
+    await expect(page.locator(".marketplace-results-floating-container")).toBeVisible();
+    await page.locator(".marketplace-results-modal-search").click();
     await expect(page).toHaveURL(/\/results$/);
 
-    await page.locator(".marketplace-results-modal-card button").first().click();
+    await page.locator(".marketplace-results-list .marketplace-skill-name button").first().click();
     await expect(page).toHaveURL(/\/skills\/\d+$/);
   });
 
@@ -99,11 +101,11 @@ test.describe("Public pages responsive and functional", () => {
 
     await page.goto("/rankings");
     await expect(page.getByRole("heading", { name: "Top Skills Ranking", exact: true })).toBeVisible();
-    await page.locator(".ant-table .ant-btn-link").first().click();
+    await page.getByTestId("ranking-highlight-skill-button").first().click();
     await expect(page).toHaveURL(/\/skills\/\d+$/);
 
     await page.goto("/categories");
-    await expect(page.getByRole("heading", { name: "Category Overview", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Categories", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Open Rankings", exact: true }).first().click();
     await expect(page).toHaveURL(/\/rankings$/);
   });

@@ -1,32 +1,26 @@
-import { Alert, Button, Card, Segmented, Space, Tag, Typography, message } from "antd";
+import { Typography, message } from "antd";
 import { useEffect, useMemo, useState } from "react";
+
 import { SessionUser } from "../lib/api";
 import { AppLocale } from "../lib/i18n";
+import MarketplaceHomePageStyles from "./MarketplaceHomePage.styles";
+import { buildLightTopbarPrimaryActions, buildLightTopbarUtilityActions, type TopbarActionItem } from "./MarketplaceHomePage.lightTopbar";
+import PublicStandardTopbar from "./PublicStandardTopbar";
 import { loadMarketplaceWithFallback, resolvePrototypeDataMode } from "./prototypeDataFallback";
+import { PrototypeUtilityShell } from "./prototypeCssInJs";
+import { isLightPrototypePath } from "./prototypePageTheme";
+import { createPublicPageNavigator } from "./publicPageNavigation";
 import { getWorkspaceCenterCopy } from "./WorkspaceCenterPage.copy";
+import { buildWorkspaceCommandPreview, buildWorkspaceSnapshot, filterWorkspaceQueue } from "./WorkspaceCenterPage.helpers";
+import { buildWorkspaceSidebarNavigation, type WorkspaceSidebarItem } from "./WorkspaceCenterPage.navigation";
+import WorkspaceCenterPageContent from "./WorkspaceCenterPageContent";
 import {
-  PrototypeCodeBlock,
-  PrototypeDeckColumns,
-  PrototypeFieldLabel,
-  PrototypeHeaderLayout,
-  PrototypeList,
-  PrototypeListActions,
-  PrototypeListMain,
-  PrototypeListRow,
-  PrototypeMetricGrid,
-  PrototypePageGrid,
-  PrototypeSideLinks,
-  PrototypeSplitRow,
-  PrototypeStack
-} from "./prototypeCssInJs";
-import { createPrototypePalette, isLightPrototypePath, resolveAdminBase, resolvePublicBase, toPublicRoute } from "./prototypePageTheme";
-import {
-  buildWorkspaceCommandPreview,
-  buildWorkspaceSnapshot,
-  filterWorkspaceQueue,
-  formatWorkspaceDate,
-  workspaceStatusColor
-} from "./WorkspaceCenterPage.helpers";
+  WorkspaceContentLayout,
+  WorkspaceSidebarCard,
+  WorkspaceSidebarGroup,
+  WorkspaceSidebarGroupTitle,
+  WorkspaceSidebarItemButton
+} from "./WorkspaceCenterPage.styles";
 import { WorkspaceQueueFilter } from "./WorkspaceCenterPage.types";
 
 interface WorkspaceCenterPageProps {
@@ -37,12 +31,14 @@ interface WorkspaceCenterPageProps {
 }
 
 export default function WorkspaceCenterPage({ locale, currentPath, onNavigate, sessionUser }: WorkspaceCenterPageProps) {
-  const text = getWorkspaceCenterCopy(locale);
-  const lightMode = useMemo(() => isLightPrototypePath(currentPath), [currentPath]);
-  const palette = useMemo(() => createPrototypePalette(lightMode), [lightMode]);
-  const adminBase = useMemo(() => resolveAdminBase(currentPath), [currentPath]);
-  const publicBase = useMemo(() => resolvePublicBase(currentPath), [currentPath]);
+  const text = useMemo(() => getWorkspaceCenterCopy(locale), [locale]);
+  const isLightTheme = useMemo(() => isLightPrototypePath(currentPath), [currentPath]);
   const dataMode = useMemo(() => resolvePrototypeDataMode(import.meta.env.VITE_MARKETPLACE_HOME_MODE), []);
+  const pageNavigator = useMemo(() => createPublicPageNavigator(currentPath), [currentPath]);
+  const [viewport, setViewport] = useState(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight
+  }));
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -50,6 +46,21 @@ export default function WorkspaceCenterPage({ locale, currentPath, onNavigate, s
   const [payload, setPayload] = useState<Awaited<ReturnType<typeof loadMarketplaceWithFallback>>["payload"] | null>(null);
   const [queueFilter, setQueueFilter] = useState<WorkspaceQueueFilter>("all");
   const [selectedQueueID, setSelectedQueueID] = useState<number>(0);
+  const [activeSidebarItemID, setActiveSidebarItemID] = useState("section-overview");
+
+  useEffect(() => {
+    function handleResize() {
+      setViewport({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -106,280 +117,171 @@ export default function WorkspaceCenterPage({ locale, currentPath, onNavigate, s
     setSelectedQueueID(selectedQueueEntry.id);
   }, [selectedQueueEntry, selectedQueueID]);
 
-  async function copyCommandPreview(): Promise<void> {
+  const topbarPrimaryActions = useMemo<TopbarActionItem[]>(
+    () =>
+      buildLightTopbarPrimaryActions({
+        onNavigate,
+        toPublicPath: pageNavigator.toPublic,
+        labels: {
+          categoryNav: text.navCategories,
+          downloadRankingNav: text.navRankings,
+          workspaceNav: text.navWorkspace,
+          executionNav: text.navRollout,
+          syncNav: text.navGovernance,
+          securityNav: text.navCategories,
+          developerNav: text.navRankings
+        },
+        activeActionID: "workspace",
+        primaryActionSpecs: [
+          { id: "workspace", label: text.navWorkspace, routePath: "/workspace", tone: "highlight" },
+          { id: "category", label: text.navCategories, routePath: "/categories", tone: "subtle", className: "is-category-action" },
+          {
+            id: "download-ranking",
+            label: text.navRankings,
+            routePath: "/rankings",
+            tone: "default",
+            className: "is-download-ranking-action",
+            badge: "TOP"
+          },
+          { id: "rollout", label: text.navRollout, routePath: "/rollout", tone: "default" },
+          { id: "governance", label: text.navGovernance, routePath: "/governance", tone: "subtle" }
+        ]
+      }),
+    [
+      onNavigate,
+      pageNavigator.toPublic,
+      text.navCategories,
+      text.navGovernance,
+      text.navRankings,
+      text.navRollout,
+      text.navWorkspace
+    ]
+  );
+
+  const topbarUtilityActions = useMemo(
+    () =>
+      buildLightTopbarUtilityActions({
+        onNavigate,
+        toPublicPath: pageNavigator.toPublic,
+        hasSessionUser: Boolean(sessionUser)
+      }),
+    [onNavigate, pageNavigator.toPublic, sessionUser]
+  );
+
+  const sidebarGroups = useMemo(
+    () =>
+      buildWorkspaceSidebarNavigation({
+        text,
+        toPublicPath: pageNavigator.toPublic,
+        toAdminPath: pageNavigator.toAdmin
+      }),
+    [text, pageNavigator.toPublic, pageNavigator.toAdmin]
+  );
+
+  async function handleCopyCommandPreview(): Promise<void> {
     try {
-      await navigator.clipboard.writeText(commandPreview);
+      await window.navigator.clipboard.writeText(commandPreview);
       void message.success(text.copySuccess);
     } catch {
       void message.error(text.copyFailed);
     }
   }
 
+  function handleSidebarItemSelect(item: WorkspaceSidebarItem): void {
+    setActiveSidebarItemID(item.id);
+
+    if (item.kind === "route") {
+      onNavigate(item.target);
+      return;
+    }
+
+    const sectionElement = document.getElementById(item.target);
+    if (!sectionElement) {
+      return;
+    }
+    sectionElement.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  const isCompactLayout = viewport.width <= 900 && viewport.height >= 500;
+  const isMobileLayout = isCompactLayout || /^\/mobile(\/|$)/.test(currentPath);
+  const shellClassName = `prototype-shell marketplace-home-stage${isMobileLayout ? " is-mobile-stage" : ""}${isLightTheme ? " is-light-stage" : ""}`;
+  const rootClassName = `marketplace-home${isLightTheme ? " is-light-theme" : ""}${isMobileLayout ? " is-mobile" : ""}`;
+
   return (
-    <PrototypePageGrid>
-      <Card
-        variant="borderless"
-        style={{ borderRadius: 16, border: `1px solid ${palette.headerBorder}`, background: palette.headerBackground }}
-        styles={{ body: { padding: "14px 16px" } }}
-      >
-        <PrototypeHeaderLayout>
-          <div>
-            <Typography.Title
-              level={2}
-              style={{ margin: 0, color: palette.headerTitle, fontFamily: "\"Syne\", sans-serif", fontSize: "clamp(1.1rem, 2.3vw, 1.5rem)", lineHeight: 1.2 }}
-            >
-              {text.title}
-            </Typography.Title>
-            <Typography.Paragraph style={{ margin: "6px 0 0", color: palette.headerSubtitle, fontSize: "0.8rem" }}>
-              {text.subtitle}
-            </Typography.Paragraph>
-          </div>
-          <Space wrap>
-            <Button onClick={() => onNavigate(toPublicRoute(publicBase, "/"))}>{text.openMarketplace}</Button>
-            <Button onClick={() => onNavigate(toPublicRoute(publicBase, "/compare"))}>{text.openCompare}</Button>
-            <Button type="primary" onClick={() => onNavigate(sessionUser ? `${adminBase}/overview` : "/login")}>
-              {sessionUser ? text.openDashboard : text.signIn}
-            </Button>
-          </Space>
-        </PrototypeHeaderLayout>
-      </Card>
+    <div className={shellClassName}>
+      <MarketplaceHomePageStyles />
 
-      {loading ? (
-        <Card
-          variant="borderless"
-          style={{ borderRadius: 12, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-          styles={{ body: { padding: 12 } }}
-        >
-          <Typography.Text style={{ color: palette.cardText, fontSize: "0.8rem" }}>{text.loading}</Typography.Text>
-        </Card>
-      ) : null}
+      <div className={rootClassName}>
+        <PublicStandardTopbar
+          shellClassName="animated-fade-down"
+          dataAnimated
+          brandTitle="SkillsIndex"
+          brandSubtitle={text.brandSubtitle}
+          onBrandClick={() => onNavigate(pageNavigator.toPublic("/"))}
+          isLightTheme={isLightTheme}
+          primaryActions={topbarPrimaryActions}
+          utilityActions={topbarUtilityActions}
+          statusLabel={sessionUser ? "Signed In" : "Signed Out"}
+          ctaLabel={sessionUser ? text.openDashboard : text.signIn}
+          onCtaClick={() => onNavigate(sessionUser ? pageNavigator.toAdmin("/admin/overview") : pageNavigator.toPublic("/login"))}
+        />
 
-      {!loading && error ? <Alert type="error" showIcon message={error} /> : null}
-      {!loading && degradedMessage ? <Alert type="warning" showIcon message={degradedMessage || text.degradedData} /> : null}
-
-      {!loading && !error ? (
-        <>
-          <PrototypeMetricGrid>
-            <Card
-              variant="borderless"
-              style={{ borderRadius: 12, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-              styles={{ body: { padding: 10, display: "grid", gap: 5 } }}
-            >
-              <Typography.Text style={{ color: palette.metricLabel, fontSize: "0.68rem", letterSpacing: "0.03em", textTransform: "uppercase" }}>
-                {text.installed}
-              </Typography.Text>
-              <Typography.Text strong style={{ color: palette.metricValue, fontSize: "1.06rem" }}>
-                {snapshot.metrics.installedSkills}
-              </Typography.Text>
-            </Card>
-            <Card
-              variant="borderless"
-              style={{ borderRadius: 12, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-              styles={{ body: { padding: 10, display: "grid", gap: 5 } }}
-            >
-              <Typography.Text style={{ color: palette.metricLabel, fontSize: "0.68rem", letterSpacing: "0.03em", textTransform: "uppercase" }}>
-                {text.runsToday}
-              </Typography.Text>
-              <Typography.Text strong style={{ color: palette.metricValue, fontSize: "1.06rem" }}>
-                {snapshot.metrics.automationRuns}
-              </Typography.Text>
-            </Card>
-            <Card
-              variant="borderless"
-              style={{ borderRadius: 12, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-              styles={{ body: { padding: 10, display: "grid", gap: 5 } }}
-            >
-              <Typography.Text style={{ color: palette.metricLabel, fontSize: "0.68rem", letterSpacing: "0.03em", textTransform: "uppercase" }}>
-                {text.healthScore}
-              </Typography.Text>
-              <Typography.Text strong style={{ color: palette.metricValue, fontSize: "1.06rem" }}>
-                {snapshot.metrics.healthScore.toFixed(1)}
-              </Typography.Text>
-            </Card>
-            <Card
-              variant="borderless"
-              style={{ borderRadius: 12, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-              styles={{ body: { padding: 10, display: "grid", gap: 5 } }}
-            >
-              <Typography.Text style={{ color: palette.metricLabel, fontSize: "0.68rem", letterSpacing: "0.03em", textTransform: "uppercase" }}>
-                {text.alerts}
-              </Typography.Text>
-              <Typography.Text strong style={{ color: palette.metricValue, fontSize: "1.06rem" }}>
-                {snapshot.metrics.alerts}
-              </Typography.Text>
-            </Card>
-          </PrototypeMetricGrid>
-
-          <PrototypeDeckColumns>
-            <PrototypeStack>
-              <Card
-                variant="borderless"
-                style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-                styles={{ body: { padding: 12, display: "grid", gap: 10 } }}
-              >
-                <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-                  {text.activityFeed}
+        <PrototypeUtilityShell>
+          <WorkspaceContentLayout>
+            <WorkspaceSidebarCard aria-label={text.sidebarMenuTitle}>
+              <div style={{ display: "grid", gap: 4 }}>
+                <Typography.Title level={5} style={{ margin: 0, color: "var(--si-color-text-primary)" }}>
+                  {text.sidebarMenuTitle}
                 </Typography.Title>
-                <PrototypeList>
-                  {snapshot.queueEntries.slice(0, 8).map((entry) => (
-                    <PrototypeListRow
-                      key={entry.id}
-                      style={{ background: lightMode ? "#e6edf7" : "#102a4f", borderColor: lightMode ? "#cbd6e4" : "#2d4f82" }}
-                    >
-                      <PrototypeListMain>
-                        <Typography.Text strong style={{ color: palette.cardTitle, fontSize: "0.8rem" }}>
-                          {entry.name}
-                        </Typography.Text>
-                        <Typography.Text style={{ color: palette.cardText, fontSize: "0.74rem", lineHeight: 1.45 }}>
-                          {entry.category} / {entry.subcategory}
-                        </Typography.Text>
-                        <PrototypeListActions>
-                          <Tag color={workspaceStatusColor(entry.status)}>{entry.status}</Tag>
-                          <Typography.Text style={{ color: palette.cardText, fontSize: "0.72rem" }}>
-                            {text.queueUpdated}: {formatWorkspaceDate(entry.updatedAt, locale)}
-                          </Typography.Text>
-                        </PrototypeListActions>
-                      </PrototypeListMain>
-                      <Button size="small" onClick={() => onNavigate(toPublicRoute(publicBase, `/skills/${entry.id}`))}>
-                        {text.openDetail}
-                      </Button>
-                    </PrototypeListRow>
-                  ))}
-                </PrototypeList>
-              </Card>
+                <Typography.Paragraph style={{ margin: 0, color: "var(--si-color-text-secondary)", fontSize: "0.78rem" }}>
+                  {text.sidebarMenuHint}
+                </Typography.Paragraph>
+              </div>
 
-              <Card
-                variant="borderless"
-                style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-                styles={{ body: { padding: 12, display: "grid", gap: 10 } }}
-              >
-                <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-                  {text.policySummary}
-                </Typography.Title>
-                {snapshot.policySignals.map((signal) => (
-                  <PrototypeSplitRow key={signal.key}>
-                    <Typography.Text style={{ color: palette.cardText, fontSize: "0.78rem" }}>{signal.label}</Typography.Text>
-                    <Typography.Text strong style={{ color: palette.cardTitle, fontSize: "0.78rem" }}>
-                      {signal.value}
-                    </Typography.Text>
-                  </PrototypeSplitRow>
-                ))}
-                <PrototypeFieldLabel>{text.topTags}</PrototypeFieldLabel>
-                <Space wrap>
-                  {snapshot.topTags.length > 0
-                    ? snapshot.topTags.map((tag) => (
-                        <Tag key={tag.name} color="blue">
-                          {tag.name} ({tag.count})
-                        </Tag>
-                      ))
-                    : [<Tag key="none">{text.queueTagNone}</Tag>]}
-                </Space>
-              </Card>
-            </PrototypeStack>
+              {sidebarGroups.map((group) => (
+                <WorkspaceSidebarGroup key={group.id}>
+                  <WorkspaceSidebarGroupTitle>{group.title}</WorkspaceSidebarGroupTitle>
+                  <div style={{ display: "grid", gap: 6 }}>
+                    {group.items.map((item) => (
+                      <WorkspaceSidebarItemButton
+                        key={item.id}
+                        type="button"
+                        $active={activeSidebarItemID === item.id}
+                        onClick={() => handleSidebarItemSelect(item)}
+                        aria-current={activeSidebarItemID === item.id ? "page" : undefined}
+                      >
+                        {item.label}
+                      </WorkspaceSidebarItemButton>
+                    ))}
+                  </div>
+                </WorkspaceSidebarGroup>
+              ))}
+            </WorkspaceSidebarCard>
 
-            <PrototypeStack>
-              <Card
-                variant="borderless"
-                style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-                styles={{ body: { padding: 12, display: "grid", gap: 10 } }}
-              >
-                <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-                  {text.queuePanel}
-                </Typography.Title>
-                <Space wrap>
-                  <Tag>{text.queueAll}: {snapshot.queueCounts.all}</Tag>
-                  <Tag color="gold">{text.queuePending}: {snapshot.queueCounts.pending}</Tag>
-                  <Tag color="cyan">{text.queueRunning}: {snapshot.queueCounts.running}</Tag>
-                  <Tag color="red">{text.queueRisk}: {snapshot.queueCounts.risk}</Tag>
-                </Space>
-                <Segmented
-                  block
-                  value={queueFilter}
-                  options={[
-                    { label: text.queueAll, value: "all" },
-                    { label: text.queuePending, value: "pending" },
-                    { label: text.queueRunning, value: "running" },
-                    { label: text.queueRisk, value: "risk" }
-                  ]}
-                  onChange={(value) => setQueueFilter(value as WorkspaceQueueFilter)}
-                />
-                <Typography.Text style={{ color: palette.cardText, fontSize: "0.74rem" }}>{text.queueSelectHint}</Typography.Text>
-                <PrototypeList>
-                  {filteredQueue.length > 0 ? (
-                    filteredQueue.slice(0, 6).map((entry) => {
-                      const isSelected = selectedQueueEntry?.id === entry.id;
-                      return (
-                        <PrototypeListRow
-                          key={entry.id}
-                          style={{
-                            background: isSelected ? (lightMode ? "#dce6f3" : "#17406f") : lightMode ? "#e6edf7" : "#102a4f",
-                            borderColor: isSelected ? (lightMode ? "#b3c5d7" : "#3f78b7") : lightMode ? "#cbd6e4" : "#2d4f82"
-                          }}
-                        >
-                          <PrototypeListMain>
-                            <Typography.Text strong style={{ color: palette.cardTitle, fontSize: "0.8rem" }}>
-                              {entry.name}
-                            </Typography.Text>
-                            <Typography.Text style={{ color: palette.cardText, fontSize: "0.74rem", lineHeight: 1.45 }}>
-                              {entry.summary}
-                            </Typography.Text>
-                            <Space wrap size={4}>
-                              <Tag color={workspaceStatusColor(entry.status)}>{entry.status}</Tag>
-                              <Tag>{text.queueOwner}: {entry.owner}</Tag>
-                            </Space>
-                          </PrototypeListMain>
-                          <PrototypeListActions>
-                            <Button size="small" onClick={() => setSelectedQueueID(entry.id)}>
-                              {text.queueStatus}
-                            </Button>
-                            <Button size="small" onClick={() => onNavigate(toPublicRoute(publicBase, `/skills/${entry.id}`))}>
-                              {text.openDetail}
-                            </Button>
-                          </PrototypeListActions>
-                        </PrototypeListRow>
-                      );
-                    })
-                  ) : (
-                    <Typography.Text style={{ color: palette.cardText, fontSize: "0.78rem" }}>{text.emptyQueue}</Typography.Text>
-                  )}
-                </PrototypeList>
-              </Card>
-
-              <Card
-                variant="borderless"
-                style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-                styles={{ body: { padding: 12, display: "grid", gap: 8 } }}
-              >
-                <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-                  {text.runbook}
-                </Typography.Title>
-                <PrototypeCodeBlock>{commandPreview}</PrototypeCodeBlock>
-                <Space wrap>
-                  <Button onClick={copyCommandPreview}>{text.copyScript}</Button>
-                  <Button onClick={() => onNavigate(toPublicRoute(publicBase, "/rollout"))}>{text.openRollout}</Button>
-                </Space>
-              </Card>
-
-              <Card
-                variant="borderless"
-                style={{ borderRadius: 13, border: `1px solid ${palette.sideHighlightBorder}`, background: palette.sideHighlightBackground }}
-                styles={{ body: { padding: 12, display: "grid", gap: 8 } }}
-              >
-                <Typography.Title level={4} style={{ margin: 0, color: "#f3fbff", fontSize: "0.95rem" }}>
-                  {text.quickActions}
-                </Typography.Title>
-                <PrototypeSideLinks>
-                  <Button block onClick={() => onNavigate(toPublicRoute(publicBase, "/compare"))}>{text.openQueueCompare}</Button>
-                  <Button block onClick={() => onNavigate(toPublicRoute(publicBase, "/rollout"))}>{text.openQueueRollout}</Button>
-                  <Button block onClick={() => onNavigate(`${adminBase}/skills`)}>{text.openSkills}</Button>
-                  <Button block onClick={() => onNavigate(toPublicRoute(publicBase, "/docs"))}>{text.openDocs}</Button>
-                  <Button block onClick={() => onNavigate(`${adminBase}/ops/audit-export`)}>{text.openAudit}</Button>
-                </PrototypeSideLinks>
-              </Card>
-            </PrototypeStack>
-          </PrototypeDeckColumns>
-        </>
-      ) : null}
-    </PrototypePageGrid>
+            <WorkspaceCenterPageContent
+              text={text}
+              locale={locale}
+              loading={loading}
+              error={error}
+              degradedMessage={degradedMessage}
+              sessionUser={sessionUser}
+              snapshot={snapshot}
+              queueFilter={queueFilter}
+              filteredQueue={filteredQueue}
+              selectedQueueEntry={selectedQueueEntry}
+              commandPreview={commandPreview}
+              onNavigate={onNavigate}
+              toPublicPath={pageNavigator.toPublic}
+              toAdminPath={pageNavigator.toAdmin}
+              onQueueFilterChange={setQueueFilter}
+              onQueueSelect={setSelectedQueueID}
+              onCopyCommandPreview={() => {
+                void handleCopyCommandPreview();
+              }}
+            />
+          </WorkspaceContentLayout>
+        </PrototypeUtilityShell>
+      </div>
+    </div>
   );
 }

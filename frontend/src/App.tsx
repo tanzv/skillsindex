@@ -1,14 +1,8 @@
-import { Button, ConfigProvider, theme } from "antd";
-import { GlobalOutlined, TranslationOutlined } from "@ant-design/icons";
+import { ConfigProvider, theme } from "antd";
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  LocaleSwitchButton,
   PublicLocaleSwitchMode,
-  QuickJumpActions,
-  QuickJumpLabel,
-  QuickJumpSection,
-  SideLocaleSwitch,
   isAccountRoute,
   isAdminRoute,
   isProtectedRoute,
@@ -16,8 +10,9 @@ import {
   resolvePublicLocaleSwitchMode
 } from "./App.shared";
 import PublicGlobalControls from "./components/PublicGlobalControls";
+import BackendWorkbenchShell from "./components/BackendWorkbenchShell";
 import { SessionUser, getSessionUser, login, logout } from "./lib/api";
-import { extractSkillID, normalizeAppRoute } from "./lib/appPathnameResolver";
+import { extractCategorySlug, extractSkillID, normalizeAppRoute } from "./lib/appPathnameResolver";
 import { AppLocale, changeLocale, resolveActiveLocale } from "./lib/i18n";
 import {
   matchPrototypeCatalog,
@@ -74,14 +69,12 @@ export default function App() {
   );
   const themeMode = useMemo<ThemeMode>(() => resolveThemeMode(window.location.pathname), [locationKey]);
   const skillID = useMemo(() => extractSkillID(window.location.pathname), [locationKey]);
+  const categorySlug = useMemo(() => extractCategorySlug(window.location.pathname), [locationKey]);
   const prototypeMatch = useMemo(() => matchPrototypeCatalog(window.location.pathname), [locationKey]);
   const text = useMemo(
     () => ({
       brandName: t("app.brandName"),
       brandTitle: t("app.brandTitle"),
-      navMarketplace: t("app.navMarketplace"),
-      navAdmin: t("app.navAdmin"),
-      navAccount: t("app.navAccount"),
       home: t("app.home"),
       homeSubtitle: t("app.homeSubtitle"),
       signOut: t("app.signOut"),
@@ -231,6 +224,7 @@ export default function App() {
       route === "/compare" ||
       route === "/docs" ||
       route === "/categories" ||
+      route === "/categories/:slug" ||
       route === "/rankings" ||
       route === "/skills/:id" ||
       route === "/prototype"
@@ -288,11 +282,18 @@ export default function App() {
     route === "/compare" ||
     route === "/docs" ||
     route === "/categories" ||
+    route === "/categories/:slug" ||
     route === "/rankings" ||
     route === "/skills/:id" ||
     route === "/prototype"
   ) {
-    const showPublicGlobalControls = route !== "/" && route !== "/results" && route !== "/skills/:id";
+    const showPublicGlobalControls =
+      route !== "/" &&
+      route !== "/results" &&
+      route !== "/skills/:id" &&
+      route !== "/categories" &&
+      route !== "/categories/:slug" &&
+      route !== "/rankings";
     return (
       <ConfigProvider theme={publicTheme}>
         {showPublicGlobalControls ? (
@@ -306,17 +307,19 @@ export default function App() {
             onThemeModeChange={handleThemeModeChange}
           />
         ) : null}
-        {route === "/" || route === "/results" ? (
+        {route === "/" || route === "/results" || route === "/categories/:slug" ? (
           <MarketplaceHomePage
             locale={locale}
             sessionUser={sessionUser}
             onNavigate={navigate}
+            onLogout={handleLogout}
             onThemeModeChange={handleThemeModeChange}
             onLocaleChange={(nextLocale) => {
               void handleLocaleChange(nextLocale);
             }}
             locationKey={locationKey}
-            isResultsPage={route === "/results"}
+            isResultsPage={route === "/results" || route === "/categories/:slug"}
+            defaultCategorySlug={route === "/categories/:slug" ? categorySlug : null}
           />
         ) : null}
         {route === "/compare" ? (
@@ -329,10 +332,26 @@ export default function App() {
         ) : null}
         {route === "/docs" ? <PublicDocsPage locale={locale} onNavigate={navigate} sessionUser={sessionUser} /> : null}
         {route === "/categories" ? (
-          <PublicCategoriesPage locale={locale} onNavigate={navigate} sessionUser={sessionUser} />
+          <PublicCategoriesPage
+            locale={locale}
+            onNavigate={navigate}
+            onThemeModeChange={handleThemeModeChange}
+            onLocaleChange={(nextLocale) => {
+              void handleLocaleChange(nextLocale);
+            }}
+            sessionUser={sessionUser}
+          />
         ) : null}
         {route === "/rankings" ? (
-          <PublicRankingPage locale={locale} onNavigate={navigate} sessionUser={sessionUser} />
+          <PublicRankingPage
+            locale={locale}
+            onNavigate={navigate}
+            onThemeModeChange={handleThemeModeChange}
+            onLocaleChange={(nextLocale) => {
+              void handleLocaleChange(nextLocale);
+            }}
+            sessionUser={sessionUser}
+          />
         ) : null}
         {route === "/skills/:id" ? (
           <PublicSkillDetailPage
@@ -405,14 +424,31 @@ export default function App() {
     );
   }
 
-  const adminNav = navItems.filter((item) => item.section === "admin");
-  const accountNav = navItems.filter((item) => item.section === "account");
-
   const quickRoutes: ProtectedRoute[] = isProtectedRoute(route)
     ? isAdminRoute(route)
       ? adminQuickRoutes
       : accountQuickRoutes
     : [];
+  const protectedRoute = route as ProtectedRoute;
+  const protectedContent = isAdminRoute(protectedRoute) ? (
+    protectedRoute === "/admin/integrations" ? (
+      <AdminIntegrationsPage />
+    ) : protectedRoute === "/admin/ops/metrics" ? (
+      <AdminOpsMetricsPage />
+    ) : protectedRoute === "/admin/organizations" ? (
+      <OrganizationCenterPage locale={locale} onNavigate={navigate} />
+    ) : isAdminCatalogRoute(protectedRoute) ? (
+      <AdminCatalogPage route={protectedRoute} />
+    ) : isAdminSecurityRoute(protectedRoute) ? (
+      <AdminSecurityPage route={protectedRoute} />
+    ) : isAdminOpsControlRoute(protectedRoute) ? (
+      <AdminOpsControlPage route={protectedRoute} />
+    ) : (
+      <AdminWorkbenchPage route={protectedRoute} />
+    )
+  ) : isAccountRoute(protectedRoute) ? (
+    <AccountCenterPage locale={locale} route={protectedRoute} onNavigate={navigate} />
+  ) : null;
 
   return (
     <ConfigProvider
@@ -424,135 +460,26 @@ export default function App() {
         }
       }}
     >
-      <div className="app-shell">
-        <aside className="side-nav">
-          <div className="brand-block">
-            <span className="brand-kicker">{text.brandName}</span>
-            <h1>{text.brandTitle}</h1>
-          </div>
-
-          <nav className="side-nav-groups">
-            <div className="side-nav-group">
-              <p className="side-nav-group-title">{text.navMarketplace}</p>
-              <button className="nav-item" onClick={() => navigate("/")} type="button">
-                <strong>{text.home}</strong>
-                <span>{text.homeSubtitle}</span>
-              </button>
-            </div>
-
-            <div className="side-nav-group">
-              <p className="side-nav-group-title">{text.navAdmin}</p>
-              {adminNav.map((item) => (
-                <button
-                  key={item.path}
-                  className={item.path === route ? "nav-item active" : "nav-item"}
-                  onClick={() => navigate(item.path)}
-                  type="button"
-                >
-                  <strong>{item.title}</strong>
-                  <span>{item.subtitle}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="side-nav-group">
-              <p className="side-nav-group-title">{text.navAccount}</p>
-              {accountNav.map((item) => (
-                <button
-                  key={item.path}
-                  className={item.path === route ? "nav-item active" : "nav-item"}
-                  onClick={() => navigate(item.path)}
-                  type="button"
-                >
-                  <strong>{item.title}</strong>
-                  <span>{item.subtitle}</span>
-                </button>
-              ))}
-            </div>
-          </nav>
-
-          <div className="user-block">
-            <SideLocaleSwitch role="group" aria-label="Sidebar locale switch">
-              <LocaleSwitchButton
-                type="button"
-                data-testid="sidebar-locale-switch-en"
-                onClick={() => {
-                  void handleLocaleChange("en");
-                }}
-                $active={locale === "en"}
-                disabled={locale === "en"}
-                aria-label="Switch to English locale"
-                title="English locale"
-              >
-                <GlobalOutlined />
-              </LocaleSwitchButton>
-              <LocaleSwitchButton
-                type="button"
-                data-testid="sidebar-locale-switch-zh"
-                onClick={() => {
-                  void handleLocaleChange("zh");
-                }}
-                $active={locale === "zh"}
-                disabled={locale === "zh"}
-                aria-label="Switch to Chinese locale"
-                title="Chinese locale"
-              >
-                <TranslationOutlined />
-              </LocaleSwitchButton>
-            </SideLocaleSwitch>
-            <p>{sessionUser.username}</p>
-            <small>{sessionUser.role}</small>
-            <button className="ghost" onClick={handleLogout} disabled={submitLoading} type="button">
-              {text.signOut}
-            </button>
-          </div>
-        </aside>
-
-        <main className="main-panel">
-          <header className="main-header">
-            <h2>{currentNavItem?.title || text.controlCenter}</h2>
-            <p>{currentNavItem?.subtitle || text.architecture}</p>
-          </header>
-
-          {quickRoutes.length > 0 ? (
-            <QuickJumpSection aria-label="quick route jump">
-              <QuickJumpLabel>{text.quickJump}</QuickJumpLabel>
-              <QuickJumpActions>
-                {quickRoutes.map((path) => (
-                  <Button
-                    key={path}
-                    type={path === route ? "primary" : "default"}
-                    size="small"
-                    onClick={() => navigate(path)}
-                  >
-                    {navByPath.get(path)?.title || path}
-                  </Button>
-                ))}
-              </QuickJumpActions>
-            </QuickJumpSection>
-          ) : null}
-
-          {isProtectedRoute(route) && isAdminRoute(route) ? (
-            route === "/admin/integrations" ? (
-              <AdminIntegrationsPage />
-            ) : route === "/admin/ops/metrics" ? (
-              <AdminOpsMetricsPage />
-            ) : route === "/admin/organizations" ? (
-              <OrganizationCenterPage locale={locale} onNavigate={navigate} />
-            ) : isAdminCatalogRoute(route) ? (
-              <AdminCatalogPage route={route} />
-            ) : isAdminSecurityRoute(route) ? (
-              <AdminSecurityPage route={route} />
-            ) : isAdminOpsControlRoute(route) ? (
-              <AdminOpsControlPage route={route} />
-            ) : (
-              <AdminWorkbenchPage route={route} />
-            )
-          ) : isProtectedRoute(route) && isAccountRoute(route) ? (
-            <AccountCenterPage locale={locale} route={route} onNavigate={navigate} />
-          ) : null}
-        </main>
-      </div>
+      <BackendWorkbenchShell
+        route={protectedRoute}
+        locale={locale}
+        submitLoading={submitLoading}
+        sessionUser={sessionUser}
+        currentNavItem={currentNavItem}
+        navItems={navItems}
+        navByPath={navByPath}
+        quickRoutes={quickRoutes}
+        text={text}
+        onNavigate={navigate}
+        onLocaleChange={(nextLocale) => {
+          void handleLocaleChange(nextLocale);
+        }}
+        onLogout={() => {
+          void handleLogout();
+        }}
+      >
+        {protectedContent}
+      </BackendWorkbenchShell>
     </ConfigProvider>
   );
 }

@@ -79,18 +79,18 @@ export default function PublicStandardTopbar({
 
         {isLightTheme ? (
           <div className="marketplace-topbar-light-utility" role="group" aria-label="Top utility">
-            {utilityActions.map((action) => renderActionButton(action, "utility"))}
             {localeThemeSwitch}
+            {utilityActions.map((action) => renderActionButton(action, "utility"))}
           </div>
         ) : (
           <div className="marketplace-topbar-actions">
             {statusLabel ? <span className="marketplace-topbar-status">{statusLabel}</span> : null}
+            {localeThemeSwitch}
             {ctaLabel && onCtaClick ? (
               <button type="button" className="marketplace-topbar-cta" onClick={onCtaClick}>
                 {ctaLabel}
               </button>
             ) : null}
-            {localeThemeSwitch}
           </div>
         )}
       </div>

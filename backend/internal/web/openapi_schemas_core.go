@@ -48,6 +48,44 @@ func openAPISchemasCore() map[string]any {
 				"count": map[string]any{"type": "integer"},
 			},
 		},
+		"MarketplaceFilterOptionItem": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"value": map[string]any{"type": "string"},
+				"label": map[string]any{"type": "string"},
+			},
+		},
+		"MarketplaceCategoryFilterOptions": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"category_slug": map[string]any{"type": "string"},
+				"sort": map[string]any{
+					"type":  "array",
+					"items": map[string]any{"$ref": "#/components/schemas/MarketplaceFilterOptionItem"},
+				},
+				"mode": map[string]any{
+					"type":  "array",
+					"items": map[string]any{"$ref": "#/components/schemas/MarketplaceFilterOptionItem"},
+				},
+			},
+		},
+		"MarketplaceFilterOptions": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"sort": map[string]any{
+					"type":  "array",
+					"items": map[string]any{"$ref": "#/components/schemas/MarketplaceFilterOptionItem"},
+				},
+				"mode": map[string]any{
+					"type":  "array",
+					"items": map[string]any{"$ref": "#/components/schemas/MarketplaceFilterOptionItem"},
+				},
+				"category_overrides": map[string]any{
+					"type":  "array",
+					"items": map[string]any{"$ref": "#/components/schemas/MarketplaceCategoryFilterOptions"},
+				},
+			},
+		},
 		"PublicMarketplaceFilters": map[string]any{
 			"type": "object",
 			"properties": map[string]any{
@@ -92,6 +130,9 @@ func openAPISchemasCore() map[string]any {
 				"top_tags": map[string]any{
 					"type":  "array",
 					"items": map[string]any{"$ref": "#/components/schemas/MarketplaceTagItem"},
+				},
+				"filter_options": map[string]any{
+					"$ref": "#/components/schemas/MarketplaceFilterOptions",
 				},
 				"items": map[string]any{
 					"type":  "array",

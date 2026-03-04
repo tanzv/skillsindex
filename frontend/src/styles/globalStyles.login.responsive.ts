@@ -1,8 +1,9 @@
 export const globalLoginStylesResponsive = `
 @media (max-width: 1400px) {
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-layout {
-    width: min(1360px, 100%);
-    grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+    width: min(1120px, 100%);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 500px);
+    align-items: center;
   }
 
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-compact-hint,

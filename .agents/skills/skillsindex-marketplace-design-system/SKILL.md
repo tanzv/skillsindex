@@ -1,9 +1,9 @@
 ---
-name: skillsindex-home-design-system
-description: Use when implementing or restyling public marketplace pages in this repo to match the existing homepage language, including style direction, component composition, tokens, and verification for routes like /, /results, /categories, and /rankings.
+name: skillsindex-marketplace-design-system
+description: Use when implementing or restyling public marketplace pages in this repo to match the existing marketplace design language, including style direction, component composition, tokens, and verification for routes like /, /results, /categories, and /rankings.
 ---
 
-# SkillsIndex Home Design System
+# SkillsIndex Marketplace Design System
 
 Use this skill for UI work that must stay visually and behaviorally aligned with the current public marketplace homepage and its related pages.
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extractSkillID, normalizeAppRoute } from "./appPathnameResolver";
+import { extractCategorySlug, extractSkillID, normalizeAppRoute } from "./appPathnameResolver";
 
 describe("extractSkillID", () => {
   it("returns skill id for canonical and light/mobile routes", () => {
@@ -16,6 +16,20 @@ describe("extractSkillID", () => {
   });
 });
 
+describe("extractCategorySlug", () => {
+  it("returns category slug for canonical and light/mobile category routes", () => {
+    expect(extractCategorySlug("/categories/testing-automation")).toBe("testing-automation");
+    expect(extractCategorySlug("/light/categories/testing-automation/")).toBe("testing-automation");
+    expect(extractCategorySlug("/mobile/light/categories/release%20gates")).toBe("release gates");
+  });
+
+  it("returns null for invalid category detail paths", () => {
+    expect(extractCategorySlug("/categories")).toBeNull();
+    expect(extractCategorySlug("/categories/")).toBeNull();
+    expect(extractCategorySlug("/categories/testing/automation")).toBeNull();
+  });
+});
+
 describe("normalizeAppRoute", () => {
   it("normalizes known public aliases", () => {
     expect(normalizeAppRoute("/light")).toBe("/");
@@ -24,6 +38,7 @@ describe("normalizeAppRoute", () => {
     expect(normalizeAppRoute("/mobile/light/results")).toBe("/results");
     expect(normalizeAppRoute("/light/docs")).toBe("/docs");
     expect(normalizeAppRoute("/mobile/categories")).toBe("/categories");
+    expect(normalizeAppRoute("/mobile/light/categories/testing-automation")).toBe("/categories/:slug");
     expect(normalizeAppRoute("/mobile/light/rankings")).toBe("/rankings");
   });
 

@@ -300,9 +300,6 @@ export default function LoginPage({
               </Button>
             </Form>
 
-            <p className="auth-helper-text">{text.helper}</p>
-            <p className="auth-provider-divider">{text.providerDivider}</p>
-
             <div className="oauth-grid" role="list">
               {oauthProviders.map((provider) => (
                 <button
@@ -316,8 +313,6 @@ export default function LoginPage({
                 </button>
               ))}
             </div>
-
-            <p className="auth-create-hint">{text.createHint}</p>
           </article>
         </section>
       </div>

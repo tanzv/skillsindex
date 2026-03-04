@@ -123,10 +123,15 @@ test.describe("Public route prefix navigation", () => {
     await mockAnonymousAuth(page);
 
     await page.goto("/mobile/light/rankings");
-    await page.getByTestId("public-theme-switch-dark").click();
+    await expect(page.getByTestId("public-global-controls")).toHaveCount(0);
+    await expect(page.getByTestId("topbar-theme-switch-dark")).toBeVisible();
+    await expect(page.getByTestId("topbar-theme-switch-light")).toBeVisible();
+    await expect(page.getByTestId("topbar-locale-switch-zh")).toBeVisible();
+    await expect(page.getByTestId("topbar-locale-switch-en")).toBeVisible();
+    await page.getByTestId("topbar-theme-switch-dark").click();
     await expect(page).toHaveURL("/mobile/rankings");
 
-    await page.getByTestId("public-theme-switch-light").click();
+    await page.getByTestId("topbar-theme-switch-light").click();
     await expect(page).toHaveURL("/mobile/light/rankings");
 
     await page.goto("/light/rankings");

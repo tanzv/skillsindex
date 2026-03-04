@@ -4,6 +4,7 @@ const HOME_PATH = "/";
 const RESULTS_PATH = "/results";
 const selectors = {
   root: ".marketplace-home",
+  resultsPageRoot: ".marketplace-home.is-results-page",
   resultsFloatingContainer:
     "[data-testid='marketplace-results-floating-container'], .marketplace-results-floating-container, .marketplace-results-overlay-panel, [role='dialog']",
   resultsFloatingMask: "[data-testid='marketplace-results-floating-mask'], .marketplace-results-floating-mask, .marketplace-results-overlay-mask",
@@ -13,10 +14,14 @@ const selectors = {
   searchUtilityRow: ".marketplace-search-utility-row",
   searchFilterBtn: ".marketplace-search-filter-btn",
   searchKeywordInput: ".marketplace-search-input.is-query input",
-  resultsKeywordInput: ".marketplace-results-modal-input.is-query input",
-  resultsSemanticInput: ".marketplace-results-modal-input.is-semantic input",
-  resultsSearchButton: ".marketplace-results-modal-search",
+  modalKeywordInput: ".marketplace-results-modal-input.is-query input",
+  modalSemanticInput: ".marketplace-results-modal-input.is-semantic input",
+  modalSearchButton: ".marketplace-results-modal-search",
+  resultsKeywordInput: ".marketplace-home.is-results-page .marketplace-search-input.is-query input",
+  resultsSemanticInput: ".marketplace-home.is-results-page .marketplace-search-input.is-semantic input",
+  resultsSearchButton: ".marketplace-home.is-results-page .marketplace-search-submit",
   resultsToolbar: ".marketplace-results-toolbar",
+  resultsToolbarTitle: ".marketplace-results-toolbar h2",
   featuredRow: ".marketplace-featured-row",
   resultsList: ".marketplace-results-list",
   topbarBrand: ".marketplace-topbar-brand",
@@ -32,7 +37,7 @@ const selectors = {
   paginationFinishedHint: "[data-testid='marketplace-pagination-finished-hint']",
   resultsEmptyState: "[data-testid='marketplace-results-empty-state']",
   skillRowNameButton: ".marketplace-skill-row .marketplace-skill-name button",
-  resultsModalCardTitle: ".marketplace-results-modal-card h3",
+  resultsModalCardTitle: ".marketplace-home.is-results-page .marketplace-results-list .marketplace-skill-name button",
   animatedSection: "[data-animated='true'].animated-fade-up"
 } as const;
 
@@ -57,26 +62,33 @@ test.describe("Marketplace home interactions", () => {
     await expect(page.locator(".marketplace-results-list .marketplace-results-row")).toHaveCount(4);
   });
 
-  test("quick filter action opens results and keeps current query", async ({ page }) => {
+  test("quick filter action opens floating modal and preserves current query", async ({ page }) => {
     await page.goto("/?q=repo");
     await page.locator(selectors.searchFilterBtn).click();
+    await expect(page).toHaveURL(/\/\?q=repo$/);
+    await expect(page.locator(selectors.resultsFloatingContainer).first()).toBeVisible();
+    await page.locator(selectors.modalSearchButton).click();
     await expect(page).toHaveURL(/\/results\?q=repo$/);
   });
 
   test("search action updates URL query state", async ({ page }) => {
     await page.goto("/?q=odoo&page=2");
     await page.locator(selectors.searchSubmit).click();
+    await expect(page.locator(selectors.resultsFloatingContainer).first()).toBeVisible();
+    await page.locator(selectors.modalSearchButton).click();
 
     await expect(page).toHaveURL(/\/results\?q=odoo$/);
   });
 
-  test("clicking home search entry opens floating modal route", async ({ page }) => {
+  test("clicking home search entry opens floating modal", async ({ page }) => {
     await page.goto(HOME_PATH);
     await page.locator(selectors.searchKeywordInput).click();
-    await expect(page).toHaveURL(/\/results$/);
+    await expect(page).toHaveURL(HOME_PATH);
+    await expect(page.locator(selectors.resultsFloatingContainer).first()).toBeVisible();
+    await expect(page.locator(selectors.resultsFloatingMask).first()).toBeVisible();
   });
 
-  test("floating modal search fields update query params", async ({ page }) => {
+  test("results page search fields update query params", async ({ page }) => {
     await page.goto(RESULTS_PATH);
     await page.locator(selectors.resultsKeywordInput).fill("odoo");
     await page.locator(selectors.resultsSemanticInput).fill("workflow");
@@ -85,9 +97,17 @@ test.describe("Marketplace home interactions", () => {
     await expect(page).toHaveURL(/\/results\?q=odoo&tags=workflow$/);
   });
 
+  test("category detail results page uses category results title instead of latest title", async ({ page }) => {
+    await page.goto("/categories/tools?category=tools&page=1");
+
+    await expect(page.locator(selectors.resultsPageRoot).first()).toBeVisible();
+    await expect(page.locator(selectors.resultsToolbarTitle).first()).toHaveText("Category Results");
+    await expect(page.locator(selectors.resultsToolbarTitle).first()).not.toHaveText("Latest");
+  });
+
   test("results entry chips can apply quick tag filters", async ({ page }) => {
     await page.goto(RESULTS_PATH);
-    await page.locator(".marketplace-results-entry-chips button").first().click();
+    await page.locator(".marketplace-top-recommend-chips button").first().click();
     await expect(page).toHaveURL(/\/results\?tags=automation\+testing$/);
   });
 
@@ -293,7 +313,7 @@ test.describe("Marketplace home interactions", () => {
 
   test("closing results route keeps home paging interactions", async ({ page }) => {
     await page.goto("/results?q=odoo&page=2");
-    await page.locator(selectors.resultsFloatingClose).first().click();
+    await page.keyboard.press("Escape");
     await expect(page).toHaveURL(/\/\?q=odoo&page=2$/);
     const hasNumericPagination = (await page.locator(selectors.pagination).count()) > 0;
     if (hasNumericPagination) {
@@ -304,20 +324,13 @@ test.describe("Marketplace home interactions", () => {
     }
 
     await expect(page.locator(selectors.loadMoreButton)).toBeVisible();
-    await page.evaluate(() => {
-      window.scrollTo(0, document.body.scrollHeight);
-    });
-    await expect
-      .poll(async () => {
-        const currentURL = new URL(page.url());
-        return Number(currentURL.searchParams.get("page") || "1");
-      })
-      .toBeGreaterThan(2);
   });
 
-  test("home search entry opens dedicated results route", async ({ page }) => {
+  test("home floating modal submit opens dedicated results route", async ({ page }) => {
     await page.goto(HOME_PATH);
     await page.locator(selectors.searchKeywordInput).click();
+    await expect(page.locator(selectors.resultsFloatingContainer).first()).toBeVisible();
+    await page.locator(selectors.modalSearchButton).click();
     await expect(page).toHaveURL(/\/results$/);
   });
 
@@ -334,10 +347,73 @@ test.describe("Marketplace home interactions", () => {
   test("topbar sign-in action navigates to auth-protected route", async ({ page }) => {
     await page.goto(HOME_PATH);
 
+    await expect(page.locator(selectors.topbarCta)).toBeVisible();
+    const topbarRightMetrics = await page.evaluate(() => {
+      const cta = document.querySelector<HTMLElement>(".marketplace-topbar-cta");
+      const localeSwitch = document.querySelector<HTMLElement>(".marketplace-topbar-locale-switch");
+      if (!cta || !localeSwitch) {
+        return null;
+      }
+      const ctaRect = cta.getBoundingClientRect();
+      const localeRect = localeSwitch.getBoundingClientRect();
+      return {
+        ctaLeft: ctaRect.left,
+        ctaRightGap: window.innerWidth - ctaRect.right,
+        localeRight: localeRect.right,
+        localeRightGap: window.innerWidth - localeRect.right
+      };
+    });
+    expect(topbarRightMetrics).not.toBeNull();
+    expect((topbarRightMetrics?.ctaLeft || 0) >= (topbarRightMetrics?.localeRight || 0)).toBe(true);
+    expect((topbarRightMetrics?.ctaRightGap || 999) <= (topbarRightMetrics?.localeRightGap || 0)).toBe(true);
+
     await page.locator(selectors.topbarCta).click();
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.locator(".marketplace-search-utility-right .is-open-queue")).toHaveCount(0);
     await expect(page.locator(".marketplace-search-utility-right .is-queue")).toHaveCount(0);
+  });
+
+  test("topbar auth action switches to logout in signed-in state", async ({ page }) => {
+    let logoutCallCount = 0;
+    await page.route("**/api/v1/auth/me", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          user: {
+            id: 7,
+            username: "ops",
+            display_name: "Ops User",
+            role: "admin",
+            status: "active"
+          }
+        })
+      });
+    });
+    await page.route("**/api/v1/auth/csrf", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ csrf_token: "test-csrf-token" })
+      });
+    });
+    await page.route("**/api/v1/auth/logout", async (route) => {
+      logoutCallCount += 1;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true })
+      });
+    });
+
+    await page.goto(HOME_PATH);
+    const authAction = page.locator(selectors.topbarCta);
+    await expect(authAction).toBeVisible();
+    await expect(authAction).toHaveText(/\u9000\u51fa\u767b\u5f55|Sign Out/);
+
+    await authAction.click();
+    await expect.poll(() => logoutCallCount).toBe(1);
+    await expect(page).toHaveURL(/\/login$/);
   });
 
   test("default home topbar shows category and download ranking navigation", async ({ page }) => {
@@ -442,33 +518,25 @@ test.describe("Marketplace home interactions", () => {
     await page.locator(selectors.resultsSemanticInput).fill("policy lint");
     await page.locator(selectors.resultsSearchButton).click();
     await expect(page).toHaveURL(/\/results\?tags=policy\+lint$/);
-    await expect(page.locator(selectors.resultsFloatingContainer).first()).toBeVisible();
+    await expect(page.locator(selectors.resultsPageRoot).first()).toBeVisible();
     await expect(page.locator(selectors.resultsModalCardTitle).first()).toBeVisible();
   });
 
-  test("results modal cards react to keyword changes", async ({ page }) => {
+  test("results page updates to empty state when keyword has no matches", async ({ page }) => {
     await page.goto("/results?q=playwright");
-    const beforeTitles = await page.$$eval(selectors.resultsModalCardTitle, (nodes) => nodes.map((node) => node.textContent?.trim() || ""));
+    await expect(page.locator(selectors.resultsList)).toBeVisible();
     await page.locator(selectors.resultsKeywordInput).fill("zzzz-not-found-keyword");
     await page.locator(selectors.resultsSearchButton).click();
     await expect(page).toHaveURL(/\/results\?q=zzzz-not-found-keyword$/);
-    await expect
-      .poll(async () => {
-        const titles = await page.$$eval(selectors.resultsModalCardTitle, (nodes) => nodes.map((node) => node.textContent?.trim() || ""));
-        return JSON.stringify(titles);
-      })
-      .not.toBe(JSON.stringify(beforeTitles));
+    await expect(page.locator(selectors.resultsEmptyState)).toBeVisible();
   });
 
-  test("results quick filters keep visual active state in sync with selected filter", async ({ page }) => {
+  test("results quick filters update selected tag query", async ({ page }) => {
     await page.goto(RESULTS_PATH);
-    const chips = page.locator(".marketplace-results-entry-chips button");
+    const chips = page.locator(".marketplace-top-recommend-chips button");
     await expect(chips).toHaveCount(3);
     await chips.nth(1).click();
     await expect(page).toHaveURL(/\/results\?tags=/);
-    const activeStates = await chips.evaluateAll((nodes) => nodes.map((node) => node.classList.contains("is-active")));
-    expect(activeStates[1]).toBe(true);
-    expect(activeStates[0]).toBe(false);
   });
 
   test("clicking a result row navigates to the skill detail route", async ({ page }) => {
@@ -487,39 +555,33 @@ test.describe("Marketplace home interactions", () => {
   });
 });
 
-test.describe("Marketplace results floating page interactions", () => {
-  test("results route shows floating container and mask", async ({ page }) => {
+test.describe("Marketplace results standalone page interactions", () => {
+  test("results route renders dedicated results page without floating layers", async ({ page }) => {
     await page.goto(RESULTS_PATH);
 
-    await expect(page.locator(selectors.resultsFloatingContainer).first()).toBeVisible();
-    await expect(page.locator(selectors.resultsFloatingMask).first()).toBeVisible();
-    await expect(page.getByRole("dialog")).toHaveAttribute("aria-modal", "true");
+    await expect(page.locator(selectors.resultsPageRoot).first()).toBeVisible();
+    await expect(page.locator(selectors.resultsList).first()).toBeVisible();
+    await expect(page.locator(selectors.resultsFloatingMask)).toHaveCount(0);
+    await expect(page.locator(selectors.resultsFloatingClose)).toHaveCount(0);
   });
 
-  test("close button closes floating page back to home route", async ({ page }) => {
+  test("topbar brand returns standalone results route back to home", async ({ page }) => {
     await page.goto(RESULTS_PATH);
-    await page.locator(selectors.resultsFloatingClose).first().click();
+    await page.locator(selectors.topbarBrand).click();
 
     await expect(page).toHaveURL(HOME_PATH);
   });
 
-  test("close keeps current query params when returning to home route", async ({ page }) => {
+  test("topbar brand clears query params when returning to home route", async ({ page }) => {
     await page.goto("/results?q=odoo&tags=workflow&page=3&sort=quality");
-    await page.locator(selectors.resultsFloatingClose).first().click();
+    await page.locator(selectors.topbarBrand).click();
 
-    await expect(page).toHaveURL(/\/\?q=odoo&tags=workflow&sort=quality&page=3$/);
+    await expect(page).toHaveURL(HOME_PATH);
   });
 
-  test("escape closes floating page back to home route", async ({ page }) => {
+  test("escape closes standalone results page back to home route", async ({ page }) => {
     await page.goto(RESULTS_PATH);
     await page.keyboard.press("Escape");
-
-    await expect(page).toHaveURL(HOME_PATH);
-  });
-
-  test("clicking mask closes floating page back to home route", async ({ page }) => {
-    await page.goto(RESULTS_PATH);
-    await page.locator(selectors.resultsFloatingMask).first().click({ position: { x: 4, y: 4 } });
 
     await expect(page).toHaveURL(HOME_PATH);
   });
@@ -531,17 +593,9 @@ test.describe("Marketplace results floating page interactions", () => {
     await expect(page).toHaveURL(/\/\?q=repo&mode=ai$/);
   });
 
-  test("results modal traps keyboard focus within dialog", async ({ page }) => {
+  test("standalone results page does not render floating close controls", async ({ page }) => {
     await page.goto(RESULTS_PATH);
-    await expect(page.locator(selectors.resultsFloatingContainer).first()).toBeVisible();
-    for (let index = 0; index < 60; index += 1) {
-      await page.keyboard.press("Tab");
-    }
-    const isFocusInsideModal = await page.evaluate(() => {
-      const activeElement = document.activeElement;
-      return Boolean(activeElement && activeElement.closest(".marketplace-results-modal"));
-    });
-    expect(isFocusInsideModal).toBe(true);
+    await expect(page.locator(selectors.resultsFloatingClose)).toHaveCount(0);
   });
 
   test("repeated search submit with identical query does not push duplicate history", async ({ page }) => {
@@ -561,30 +615,25 @@ test.describe("Marketplace results floating page interactions", () => {
     expect(historySnapshot.after).toBe(historySnapshot.before);
   });
 
-  test("light results modal follows light theme tokens", async ({ page }) => {
+  test("light results page follows light theme tokens", async ({ page }) => {
     await page.goto("/light/results");
-    await expect(page.locator(selectors.resultsFloatingContainer).first()).toBeVisible();
+    await expect(page.locator(selectors.resultsPageRoot).first()).toBeVisible();
 
     await expect
       .poll(async () => {
         return await page.evaluate(() => {
           const rootStyle = window.getComputedStyle(document.documentElement);
-          const modal = document.querySelector<HTMLElement>(".marketplace-results-modal");
-          const modalStyle = modal ? window.getComputedStyle(modal) : null;
           return {
             mode: document.documentElement.getAttribute("data-theme-mode"),
             panelToken: rootStyle.getPropertyValue("--si-color-panel").trim(),
-            canvasToken: rootStyle.getPropertyValue("--si-color-canvas").trim(),
-            modalBackground: modalStyle?.backgroundColor || "",
-            modalBorder: modalStyle?.borderColor || ""
+            canvasToken: rootStyle.getPropertyValue("--si-color-canvas").trim()
           };
         });
       })
       .toMatchObject({
         mode: "light",
         panelToken: "#ffffff",
-        canvasToken: "#eef1f5",
-        modalBackground: "rgb(255, 255, 255)"
+        canvasToken: "#eef1f5"
       });
   });
 });

@@ -1,5 +1,7 @@
 import {
   MarketplaceCategory,
+  MarketplaceCategoryFilterOptions,
+  MarketplaceFilterOptions,
   MarketplaceQueryParams,
   MarketplaceSkill,
   PublicMarketplaceResponse,
@@ -251,6 +253,40 @@ function localizeDescription(locale: AppLocale, value: string): string {
   return zhDescriptionMap[value] || value;
 }
 
+function buildFallbackCategoryFilterOptions(categories: MarketplaceCategory[]): MarketplaceFilterOptions {
+  const categoryOverrides = categories.reduce<MarketplaceCategoryFilterOptions[]>((collector, category) => {
+      const normalizedSlug = normalizeFacet(category.slug);
+      if (normalizedSlug === "security" || normalizedSlug === "governance" || normalizedSlug === "compliance") {
+        collector.push({
+          category_slug: category.slug,
+          mode: [{ value: "keyword" }]
+        });
+        return collector;
+      }
+      if (normalizedSlug === "operations" || normalizedSlug === "devops") {
+        collector.push({
+          category_slug: category.slug,
+          sort: [{ value: "recent" }, { value: "stars" }]
+        });
+        return collector;
+      }
+      if (normalizedSlug === "testing-automation") {
+        collector.push({
+          category_slug: category.slug,
+          sort: [{ value: "quality" }, { value: "recent" }, { value: "stars" }]
+        });
+        return collector;
+      }
+      return collector;
+    }, []);
+
+  return {
+    sort: [{ value: "recent" }, { value: "stars" }, { value: "quality" }],
+    mode: [{ value: "keyword" }, { value: "ai" }],
+    category_overrides: categoryOverrides
+  };
+}
+
 function dedupeCategories(items: MarketplaceSkill[], locale: AppLocale): MarketplaceCategory[] {
   const bucket = new Map<string, Map<string, number>>();
   for (const item of items) {
@@ -356,6 +392,8 @@ export function buildMarketplaceFallback(
     .sort((left, right) => right[1] - left[1])
     .slice(0, 6)
     .map(([name, count]) => ({ name, count }));
+  const categories = dedupeCategories(prototypeSkillPool, locale);
+  const filterOptions = buildFallbackCategoryFilterOptions(categories);
 
   return {
     filters: {
@@ -378,8 +416,9 @@ export function buildMarketplaceFallback(
       prev_page: page > 1 ? page - 1 : 0,
       next_page: page < prototypeTotalPages ? page + 1 : 0
     },
-    categories: dedupeCategories(prototypeSkillPool, locale),
+    categories,
     top_tags: topTags,
+    filter_options: filterOptions,
     items,
     session_user: sessionUser,
     can_access_dashboard: canOpenDashboard(sessionUser)

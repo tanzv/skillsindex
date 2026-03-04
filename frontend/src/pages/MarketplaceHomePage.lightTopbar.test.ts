@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildLightTopbarPrimaryActions } from "./MarketplaceHomePage.lightTopbar";
+import { buildLightTopbarPrimaryActions, buildLightTopbarUtilityActions } from "./MarketplaceHomePage.lightTopbar";
 
 describe("MarketplaceHomePage light topbar actions", () => {
   it("includes category and download ranking actions with localized labels", () => {
@@ -85,5 +85,36 @@ describe("MarketplaceHomePage light topbar actions", () => {
       "developer"
     ]);
     expect(actions.find((action) => action.id === "workspace")?.active).toBe(true);
+  });
+
+  it("appends auth action as the last utility button when configured", () => {
+    const onNavigate = vi.fn();
+    const onAuthAction = vi.fn();
+    const toPublicPath = (path: string) => `/light${path}`;
+
+    const actions = buildLightTopbarUtilityActions({
+      onNavigate,
+      toPublicPath,
+      hasSessionUser: false,
+      authActionLabel: "Sign In",
+      onAuthAction
+    });
+
+    expect(actions.map((action) => action.id)).toEqual(["global-search", "recent-jobs", "profile", "auth-action"]);
+    actions[3]?.onClick();
+    expect(onAuthAction).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps utility actions unchanged when auth action is not provided", () => {
+    const onNavigate = vi.fn();
+    const toPublicPath = (path: string) => `/light${path}`;
+
+    const actions = buildLightTopbarUtilityActions({
+      onNavigate,
+      toPublicPath,
+      hasSessionUser: true
+    });
+
+    expect(actions.map((action) => action.id)).toEqual(["global-search", "recent-jobs", "profile"]);
   });
 });

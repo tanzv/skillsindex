@@ -90,6 +90,23 @@ export interface MarketplaceFilters {
   mode: string;
 }
 
+export interface MarketplaceFilterOption {
+  value: string;
+  label?: string;
+}
+
+export interface MarketplaceCategoryFilterOptions {
+  category_slug: string;
+  sort?: MarketplaceFilterOption[];
+  mode?: MarketplaceFilterOption[];
+}
+
+export interface MarketplaceFilterOptions {
+  sort?: MarketplaceFilterOption[];
+  mode?: MarketplaceFilterOption[];
+  category_overrides?: MarketplaceCategoryFilterOptions[];
+}
+
 export interface MarketplaceStats {
   total_skills: number;
   matching_skills: number;
@@ -110,6 +127,7 @@ export interface PublicMarketplaceResponse {
   pagination: MarketplacePagination;
   categories: MarketplaceCategory[];
   top_tags: MarketplaceTag[];
+  filter_options?: MarketplaceFilterOptions;
   items: MarketplaceSkill[];
   session_user: SessionUser | null;
   can_access_dashboard: boolean;

@@ -1,6 +1,186 @@
 import { css } from "@emotion/react";
 
 export const marketplaceHomeSearchUtilityStyles = css`
+  .marketplace-home .marketplace-category-heading {
+    width: 100%;
+    display: grid;
+    gap: 4px;
+    padding: 0 2px;
+  }
+
+  .marketplace-home .marketplace-category-heading-overline {
+    color: #9ca3af;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .marketplace-home .marketplace-category-heading h2 {
+    margin: 0;
+    color: #f8fafc;
+    font-family: "Noto Sans SC", "Noto Sans", sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .marketplace-home .marketplace-subcategory-row {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 2px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .marketplace-home .marketplace-subcategory-label {
+    color: #d1d5db;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .marketplace-home .marketplace-subcategory-chips {
+    min-width: 0;
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .marketplace-home .marketplace-subcategory-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .marketplace-home .marketplace-subcategory-chips button {
+    border: 0;
+    height: 30px;
+    border-radius: 999px;
+    padding: 0 12px;
+    background: rgba(148, 163, 184, 0.18);
+    color: #e2e8f0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 180ms ease, color 180ms ease;
+  }
+
+  .marketplace-home .marketplace-subcategory-chips button:hover {
+    background: rgba(148, 163, 184, 0.3);
+  }
+
+  .marketplace-home .marketplace-subcategory-chips button.is-active {
+    background: #f3f4f6;
+    color: #111111;
+  }
+
+  .marketplace-home .marketplace-subcategory-chips button:focus-visible {
+    outline: 2px solid #f3f4f6;
+    outline-offset: 1px;
+  }
+
+  .marketplace-home .marketplace-category-filter-row {
+    width: 100%;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 0 2px;
+  }
+
+  .marketplace-home .marketplace-category-filter-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .marketplace-home .marketplace-category-filter-group button {
+    border: 0;
+    height: 30px;
+    border-radius: 999px;
+    padding: 0 12px;
+    background: rgba(51, 65, 85, 0.72);
+    color: #e2e8f0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 180ms ease, color 180ms ease;
+  }
+
+  .marketplace-home .marketplace-category-filter-group button:hover {
+    background: rgba(71, 85, 105, 0.86);
+  }
+
+  .marketplace-home .marketplace-category-filter-group button.is-active {
+    background: #f3f4f6;
+    color: #111111;
+  }
+
+  .marketplace-home .marketplace-category-filter-group button:focus-visible {
+    outline: 2px solid #f3f4f6;
+    outline-offset: 1px;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-category-heading-overline {
+    color: #64748b;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-category-heading h2 {
+    color: #0f172a;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-subcategory-label {
+    color: #334155;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-subcategory-chips button {
+    background: rgba(203, 213, 225, 0.82);
+    color: #334155;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-subcategory-chips button:hover {
+    background: rgba(148, 163, 184, 0.46);
+  }
+
+  .marketplace-home.is-light-theme .marketplace-subcategory-chips button.is-active {
+    background: #111111;
+    color: #f8fafc;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-subcategory-chips button:focus-visible {
+    outline-color: #1f2937;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-category-filter-group button {
+    background: rgba(203, 213, 225, 0.82);
+    color: #334155;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-category-filter-group button:hover {
+    background: rgba(148, 163, 184, 0.46);
+  }
+
+  .marketplace-home.is-light-theme .marketplace-category-filter-group button.is-active {
+    background: #111111;
+    color: #f8fafc;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-category-filter-group button:focus-visible {
+    outline-color: #1f2937;
+  }
+
   .marketplace-home .marketplace-top-recommend-row {
     width: 100%;
     min-height: 36px;

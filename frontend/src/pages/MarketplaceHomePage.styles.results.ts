@@ -284,6 +284,27 @@ export const marketplaceHomeResultsStyles = css`
     font-weight: 700;
   }
 
+  .marketplace-home .marketplace-category-row .marketplace-skill-name button {
+    color: #f8fafc;
+  }
+
+  .marketplace-home .marketplace-category-row .marketplace-skill-description {
+    color: #e2e8f0;
+  }
+
+  .marketplace-home .marketplace-category-row .marketplace-skill-chip-row span {
+    background: rgba(148, 163, 184, 0.22);
+    color: #e2e8f0;
+  }
+
+  .marketplace-home .marketplace-category-row .marketplace-skill-row-foot span {
+    color: #e2e8f0;
+  }
+
+  .marketplace-home .marketplace-category-row .marketplace-skill-row-foot span.is-primary {
+    color: #f8fafc;
+  }
+
   .marketplace-home.is-light-theme .marketplace-results-toolbar h2 {
     color: #111111;
   }
@@ -368,6 +389,27 @@ export const marketplaceHomeResultsStyles = css`
 
   .marketplace-home.is-light-theme .marketplace-featured-row .marketplace-skill-row-foot span {
     color: #2a2a2a;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-category-row .marketplace-skill-name button {
+    color: #0f172a;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-category-row .marketplace-skill-description {
+    color: #334155;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-category-row .marketplace-skill-chip-row span {
+    background: rgba(226, 232, 240, 0.9);
+    color: #334155;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-category-row .marketplace-skill-row-foot span {
+    color: #334155;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-category-row .marketplace-skill-row-foot span.is-primary {
+    color: #0f172a;
   }
 
 `;

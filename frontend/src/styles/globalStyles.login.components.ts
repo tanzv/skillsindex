@@ -7,14 +7,15 @@ export const globalLoginStylesComponents = `
 
 .login-form-panel {
   background: var(--login-panel-form-bg);
-  padding: clamp(18px, 1.8vw, 26px);
+  padding: clamp(20px, 1.9vw, 30px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  justify-content: center;
 }
 
 .login-form-brand {
-  width: 404px;
+  width: min(100%, 404px);
   min-height: 30px;
   display: inline-flex;
   align-items: center;
@@ -56,15 +57,15 @@ export const globalLoginStylesComponents = `
 
 .auth-form-note {
   margin: 0;
-  width: 392px;
+  width: min(100%, 404px);
   color: var(--login-hint);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   line-height: 1.45;
 }
 
 .login-stack-form {
-  width: 404px;
+  width: min(100%, 404px);
   display: grid;
   gap: 8px;
 }
@@ -85,13 +86,13 @@ export const globalLoginStylesComponents = `
 }
 
 .login-stack-form .ant-form-item {
-  width: 404px;
+  width: 100%;
   margin-bottom: 0;
 }
 
 .login-stack-form .ant-input,
 .login-stack-form .ant-input-affix-wrapper {
-  width: 404px;
+  width: 100%;
   min-height: 48px;
   border: 1px solid var(--login-input-border);
   border-radius: 12px;
@@ -124,7 +125,7 @@ export const globalLoginStylesComponents = `
 }
 
 .login-form-row {
-  width: 404px;
+  width: 100%;
   min-height: 24px;
   display: flex;
   align-items: center;
@@ -148,7 +149,7 @@ export const globalLoginStylesComponents = `
 }
 
 .auth-error {
-  width: 404px;
+  width: 100%;
   margin: 0;
   color: var(--login-error);
   font-size: 11px;
@@ -156,7 +157,7 @@ export const globalLoginStylesComponents = `
 }
 
 .auth-submit.ant-btn {
-  width: 404px;
+  width: 100%;
   min-height: 50px;
   border-radius: 12px;
   border-color: var(--login-btn-border);
@@ -190,7 +191,7 @@ export const globalLoginStylesComponents = `
 }
 
 .oauth-grid {
-  width: 392px;
+  width: min(100%, 404px);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;

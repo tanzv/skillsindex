@@ -490,6 +490,7 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 		},
 		"categories":           mapCategoryCardsToAPI(categoryCards),
 		"top_tags":             topTags,
+		"filter_options":       buildMarketplaceFilterOptions(categoryCards),
 		"items":                resultToAPIItems(items),
 		"session_user":         sessionUser,
 		"can_access_dashboard": canAccessDashboard,

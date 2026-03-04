@@ -252,6 +252,76 @@ func normalizeMarketplaceMode(raw string) string {
 	}
 }
 
+func buildMarketplaceFilterOptionValues(values ...string) []map[string]string {
+	options := make([]map[string]string, 0, len(values))
+	for _, value := range values {
+		normalizedValue := strings.ToLower(strings.TrimSpace(value))
+		if normalizedValue == "" {
+			continue
+		}
+		options = append(options, map[string]string{"value": normalizedValue})
+	}
+	return options
+}
+
+func resolveMarketplaceCategoryFilterOverride(
+	categorySlug string,
+) (sortOptions []map[string]string, modeOptions []map[string]string, ok bool) {
+	switch strings.ToLower(strings.TrimSpace(categorySlug)) {
+	case "security", "governance", "compliance":
+		return nil, buildMarketplaceFilterOptionValues("keyword"), true
+	case "operations", "devops":
+		return buildMarketplaceFilterOptionValues("recent", "stars"), nil, true
+	case "testing-automation":
+		return buildMarketplaceFilterOptionValues("quality", "recent", "stars"), nil, true
+	default:
+		return nil, nil, false
+	}
+}
+
+func buildMarketplaceCategoryFilterOverrides(cards []CategoryCard) []map[string]any {
+	overrides := make([]map[string]any, 0, len(cards))
+	seen := make(map[string]struct{}, len(cards))
+	for _, card := range cards {
+		cleanSlug := strings.TrimSpace(card.Slug)
+		normalizedSlug := strings.ToLower(cleanSlug)
+		if normalizedSlug == "" {
+			continue
+		}
+		if _, exists := seen[normalizedSlug]; exists {
+			continue
+		}
+		seen[normalizedSlug] = struct{}{}
+		sortOptions, modeOptions, hasOverride := resolveMarketplaceCategoryFilterOverride(normalizedSlug)
+		if !hasOverride {
+			continue
+		}
+		override := map[string]any{
+			"category_slug": cleanSlug,
+		}
+		if len(sortOptions) > 0 {
+			override["sort"] = sortOptions
+		}
+		if len(modeOptions) > 0 {
+			override["mode"] = modeOptions
+		}
+		overrides = append(overrides, override)
+	}
+	return overrides
+}
+
+func buildMarketplaceFilterOptions(cards []CategoryCard) map[string]any {
+	filterOptions := map[string]any{
+		"sort": buildMarketplaceFilterOptionValues("recent", "stars", "quality"),
+		"mode": buildMarketplaceFilterOptionValues("keyword", "ai"),
+	}
+	categoryOverrides := buildMarketplaceCategoryFilterOverrides(cards)
+	if len(categoryOverrides) > 0 {
+		filterOptions["category_overrides"] = categoryOverrides
+	}
+	return filterOptions
+}
+
 func mapCategoryCardsToAPI(cards []CategoryCard) []apiMarketplaceCategoryResponse {
 	result := make([]apiMarketplaceCategoryResponse, 0, len(cards))
 	for _, card := range cards {

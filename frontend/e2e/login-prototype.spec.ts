@@ -102,14 +102,12 @@ test.describe("Login prototype alignment", () => {
 
   test("login info panel copy supports query-based runtime override", async ({ page }) => {
     await mockAnonymousAuth(page);
-    await page.goto(
-      "/login?loginKicker=Configured+Kicker&loginTitle=Configured+Title&loginLead=Configured+Lead&loginHeroImageSrc=/brand/login-promo-illustration.svg%3Fv%3Dhero"
-    );
+    await page.goto("/login?loginKicker=Configured+Kicker&loginTitle=Configured+Title&loginLead=Configured+Lead");
 
     await expect(page.locator("[data-testid='login-info-hint']")).toHaveText("Configured Title");
-    await expect(page.locator("[data-testid='login-info-hero']")).toBeVisible();
-    await expect(page.locator(".login-info-hero-image")).toHaveAttribute("src", /\/brand\/login-promo-illustration\.svg\?v=hero$/);
-    await expect(page.locator("[data-testid='login-info-points']")).toContainText("Enterprise SSO verifies member identity before sign-in.");
+    await expect(page.locator("[data-testid='login-info-card']")).toBeVisible();
+    await expect(page.locator(".login-info-description")).toHaveText("Configured Lead");
+    await expect(page.locator("[data-testid='login-info-points']")).toHaveCount(0);
   });
 
   test("login stage is marked as no-drag region", async ({ page }) => {
@@ -143,8 +141,9 @@ test.describe("Login prototype alignment", () => {
     await expect(page.locator(".login-badge-row")).toHaveCount(0);
     await expect(page.locator(".auth-context-card")).toHaveCount(0);
     await expect(page.locator(".login-trust-row")).toHaveCount(0);
-    await expect(page.locator("[data-testid='login-info-hero']")).toBeVisible();
-    await expect(page.locator("[data-testid='login-info-points']")).toHaveCount(1);
+    await expect(page.locator("[data-testid='login-info-card']")).toBeVisible();
+    await expect(page.locator(".login-info-hero")).toHaveCount(0);
+    await expect(page.locator("[data-testid='login-info-points']")).toHaveCount(0);
   });
 });
 

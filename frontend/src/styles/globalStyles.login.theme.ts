@@ -17,11 +17,7 @@ export const globalLoginStylesTheme = `
     var(--si-color-surface, #171717),
     var(--si-color-panel, #111111)
   );
-  --login-panel-form-bg: linear-gradient(
-    155deg,
-    var(--si-color-panel, #111111),
-    var(--si-color-surface-alt, #1a1a1a)
-  );
+  --login-panel-form-bg: color-mix(in srgb, var(--si-color-panel, #111111) 84%, transparent);
   --login-panel-border: var(--si-color-border, #2b2b2b);
   --login-panel-shadow: var(--si-shadow-overlay, 0 24px 40px rgba(0, 0, 0, 0.34));
   --login-kicker: var(--si-color-text-secondary, #a3a3a3);
@@ -61,8 +57,16 @@ export const globalLoginStylesTheme = `
   --oauth-icon-wecom-text: var(--si-color-text-primary, #e5e5e5);
   --oauth-icon-more-bg: var(--si-color-panel, #111111);
   --oauth-icon-more-text: var(--si-color-text-primary, #e5e5e5);
+  --login-info-surface-bg: rgba(255, 255, 255, 0.06);
+  --login-info-surface-bg-strong: rgba(255, 255, 255, 0.02);
+  --login-info-surface-border: var(--si-color-border-soft, #3a3a3a);
+  --login-info-headline: var(--si-color-text-primary, #e5e5e5);
+  --login-info-description: var(--si-color-text-secondary, #a3a3a3);
+  --login-info-card-bg: rgba(255, 255, 255, 0.04);
+  --login-info-card-border: var(--si-color-border-soft, #3a3a3a);
+  --login-info-card-body: var(--si-color-text-secondary, #a3a3a3);
 
-  background: radial-gradient(92% 124% at 10% 0%, var(--login-root-bg-accent) 0%, var(--login-root-bg) 60%);
+  background: var(--login-root-bg);
   color: var(--login-copy);
   overflow: hidden;
 }
@@ -251,6 +255,12 @@ export const globalLoginStylesTheme = `
   overflow: hidden;
 }
 
+.auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-layout {
+  width: min(1120px, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 500px);
+  align-items: center;
+}
+
 .auth-layout::before {
   content: none;
 }
@@ -265,8 +275,8 @@ export const globalLoginStylesTheme = `
 }
 
 .auth-form-panel {
-  border: 1px solid var(--login-panel-border);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  border: 1px solid color-mix(in srgb, var(--login-panel-border) 72%, #5f5f5f 28%);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.26);
 }
 
 .auth-visual-panel {
@@ -279,13 +289,26 @@ export const globalLoginStylesTheme = `
 }
 
 .login-visual-panel {
-  background:
-    linear-gradient(168deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03) 42%, rgba(255, 255, 255, 0.08)),
-    var(--login-glass-bg);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.auth-visual-panel.login-visual-panel {
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.login-visual-panel {
   padding: clamp(20px, 2vw, 28px);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: stretch;
   gap: 14px;
 }
 

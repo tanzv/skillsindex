@@ -24,8 +24,8 @@ interface LoginPageCopyEntry {
 export const loginPageCopy: { en: LoginPageCopyEntry; zh: LoginPageCopyEntry } = {
   en: {
     kicker: "Enterprise Intranet - SkillOps",
-    title: "Internal Skill Access",
-    lead: "",
+    title: "Unified Identity Access",
+    lead: "Secure entry to enterprise workspace services.",
     signIn: "Sign In",
     note: "Choose enterprise identity sign-in, or use workspace credentials.",
     divider: "Or sign in with workspace credentials",
@@ -46,8 +46,8 @@ export const loginPageCopy: { en: LoginPageCopyEntry; zh: LoginPageCopyEntry } =
   },
   zh: {
     kicker: "\u4f01\u4e1a\u5185\u7f51 \u00b7 SkillOps",
-    title: "\u4f01\u4e1a\u5185\u90e8\u6280\u80fd\u767b\u5f55\u5165\u53e3",
-    lead: "",
+    title: "\u7edf\u4e00\u8eab\u4efd\u767b\u5f55",
+    lead: "\u901a\u8fc7\u4f01\u4e1a\u8d26\u53f7\u5b89\u5168\u8bbf\u95ee\u5de5\u4f5c\u533a\u670d\u52a1\u3002",
     signIn: "\u767b\u5f55",
     note: "\u9009\u62e9\u4f01\u4e1a\u8eab\u4efd\u63d0\u4f9b\u65b9\u767b\u5f55\uff0c\u6216\u4f7f\u7528\u5de5\u4f5c\u533a\u8d26\u53f7\u51ed\u8bc1\u3002",
     divider: "\u6216\u4f7f\u7528\u5de5\u4f5c\u533a\u8d26\u53f7",
