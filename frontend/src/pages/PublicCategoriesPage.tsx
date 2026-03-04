@@ -1,6 +1,6 @@
-import { Alert, Button, Card, Empty, Tag, Typography } from "antd";
-import { useMemo } from "react";
-import type { PublicMarketplaceResponse, SessionUser } from "../lib/api";
+import { Alert, Button, Card, Empty, Spin, Tag, Typography } from "antd";
+import { useEffect, useMemo, useState } from "react";
+import { PublicMarketplaceResponse, SessionUser } from "../lib/api";
 import type { AppLocale } from "../lib/i18n";
 import { buildMarketplaceFallback } from "./MarketplaceHomePage.fallback";
 import type { TopbarActionItem } from "./MarketplaceHomePage.lightTopbar";
@@ -8,10 +8,12 @@ import PublicStandardTopbar from "./PublicStandardTopbar";
 import {
   PrototypeSplitRow,
   PrototypeUtilityHeaderActions,
+  PrototypeUtilityLoading,
   PrototypeUtilityPanel,
   PrototypeUtilityShell,
   PrototypeTwoColumnGrid
 } from "./prototypeCssInJs";
+import { loadMarketplaceWithFallback, resolvePrototypeDataMode } from "./prototypeDataFallback";
 import { createPrototypePalette, isLightPrototypePath } from "./prototypePageTheme";
 import { createPublicPageNavigator } from "./publicPageNavigation";
 
@@ -43,11 +45,6 @@ interface CategoryCardViewModel {
   description: string;
   count: number;
   topSubcategories: Array<{ slug: string; name: string; count: number }>;
-}
-
-interface PayloadResolution {
-  payload: PublicMarketplaceResponse;
-  errorMessage: string;
 }
 
 const copy: Record<AppLocale, LocalizedCopy> = {
@@ -111,6 +108,10 @@ function createEmptyMarketplacePayload(): PublicMarketplaceResponse {
   };
 }
 
+export function resolveCategoriesViewPayload(payload: PublicMarketplaceResponse | null): PublicMarketplaceResponse {
+  return payload || createEmptyMarketplacePayload();
+}
+
 function resolveCategoryDescription(description: string, fallbackLabel: string): string {
   const normalized = String(description || "").trim();
   return normalized || fallbackLabel;
@@ -155,43 +156,69 @@ export function resolveRankingsPublicPath(currentPath: string): string {
   return createPublicPageNavigator(currentPath).toPublic("/rankings");
 }
 
-function resolvePayload(locale: AppLocale, sessionUser: SessionUser | null, payloadOverride?: PublicMarketplaceResponse | null): PayloadResolution {
-  if (payloadOverride) {
-    return {
-      payload: payloadOverride,
-      errorMessage: ""
-    };
-  }
-
-  try {
-    return {
-      payload: buildMarketplaceFallback({ page: 1, sort: "recent" }, locale, sessionUser),
-      errorMessage: ""
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return {
-      payload: createEmptyMarketplacePayload(),
-      errorMessage
-    };
-  }
-}
-
 export default function PublicCategoriesPage({ locale, onNavigate, sessionUser, payloadOverride }: PublicCategoriesPageProps) {
   const text = copy[locale];
   const currentPath = window.location.pathname;
   const isLightTheme = isLightPrototypePath(currentPath);
   const palette = useMemo(() => createPrototypePalette(isLightTheme), [isLightTheme]);
   const navigator = useMemo(() => createPublicPageNavigator(currentPath), [currentPath]);
-
-  const payloadResolution = useMemo(
-    () => resolvePayload(locale, sessionUser, payloadOverride),
-    [locale, sessionUser, payloadOverride]
+  const dataMode = useMemo(() => resolvePrototypeDataMode(import.meta.env.VITE_MARKETPLACE_HOME_MODE), []);
+  const fallbackPayload = useMemo(
+    () => buildMarketplaceFallback({ page: 1, sort: "recent" }, locale, sessionUser),
+    [locale, sessionUser]
   );
 
+  const [loading, setLoading] = useState(!payloadOverride);
+  const [payload, setPayload] = useState<PublicMarketplaceResponse | null>(payloadOverride || null);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    if (payloadOverride) {
+      setPayload(payloadOverride);
+      setErrorMessage("");
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setLoading(true);
+    setErrorMessage("");
+    loadMarketplaceWithFallback({
+      query: { page: 1, sort: "recent" },
+      locale,
+      sessionUser,
+      mode: dataMode
+    })
+      .then((result) => {
+        if (!active) {
+          return;
+        }
+        setPayload(result.payload);
+        setErrorMessage(result.degraded ? result.errorMessage || text.loadError : "");
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+        setPayload(fallbackPayload);
+        setErrorMessage(error instanceof Error ? error.message : text.loadError);
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [dataMode, fallbackPayload, locale, payloadOverride, sessionUser, text.loadError]);
+
   const categoryCards = useMemo(
-    () => resolveCategoryCardsFromPayload(payloadResolution.payload, text.noDescription),
-    [payloadResolution.payload, text.noDescription]
+    () => resolveCategoryCardsFromPayload(resolveCategoriesViewPayload(payload), text.noDescription),
+    [payload, text.noDescription]
   );
 
   const primaryActions = useMemo<TopbarActionItem[]>(
@@ -233,11 +260,20 @@ export default function PublicCategoriesPage({ locale, onNavigate, sessionUser, 
       />
 
       <PrototypeUtilityShell>
-        {payloadResolution.errorMessage ? (
-          <Alert type="warning" showIcon message={text.loadError} description={payloadResolution.errorMessage} />
+        {errorMessage ? (
+          <Alert type="warning" showIcon message={text.loadError} description={errorMessage} />
         ) : null}
 
-        <Card
+        {loading ? (
+          <PrototypeUtilityPanel>
+            <PrototypeUtilityLoading>
+              <Spin size="large" />
+            </PrototypeUtilityLoading>
+          </PrototypeUtilityPanel>
+        ) : null}
+
+        {!loading ? (
+          <Card
           variant="borderless"
           style={{ borderRadius: 16, border: `1px solid ${palette.headerBorder}`, background: palette.headerBackground }}
           styles={{ body: { padding: "14px 16px" } }}
@@ -272,12 +308,15 @@ export default function PublicCategoriesPage({ locale, onNavigate, sessionUser, 
             </PrototypeUtilityHeaderActions>
           </PrototypeSplitRow>
         </Card>
+        ) : null}
 
-        {categoryCards.length === 0 ? (
+        {!loading && categoryCards.length === 0 ? (
           <PrototypeUtilityPanel>
             <Empty description={text.emptyState} />
           </PrototypeUtilityPanel>
-        ) : (
+        ) : null}
+
+        {!loading && categoryCards.length > 0 ? (
           <PrototypeTwoColumnGrid>
             {categoryCards.map((category) => (
               <Card
@@ -333,7 +372,7 @@ export default function PublicCategoriesPage({ locale, onNavigate, sessionUser, 
               </Card>
             ))}
           </PrototypeTwoColumnGrid>
-        )}
+        ) : null}
       </PrototypeUtilityShell>
     </>
   );

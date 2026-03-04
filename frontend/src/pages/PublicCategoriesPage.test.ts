@@ -3,6 +3,7 @@ import type { PublicMarketplaceResponse } from "../lib/api";
 import {
   buildCategoryResultsPath,
   resolveCategoryCardsFromPayload,
+  resolveCategoriesViewPayload,
   resolveCategoryPublicPath,
   resolveRankingsPublicPath
 } from "./PublicCategoriesPage";
@@ -84,5 +85,12 @@ describe("PublicCategoriesPage helpers", () => {
 
   it("creates a results query with category and fixed page", () => {
     expect(buildCategoryResultsPath("odoo")).toBe("/results?category=odoo&page=1");
+  });
+
+  it("returns an empty view payload when runtime payload is missing", () => {
+    const payload = resolveCategoriesViewPayload(null);
+    expect(payload.stats.total_skills).toBe(0);
+    expect(payload.items).toEqual([]);
+    expect(payload.categories).toEqual([]);
   });
 });

@@ -1,6 +1,6 @@
-import { Button, Card, Empty, Segmented, Space, Table, Tag, Typography } from "antd";
-import { useMemo, useState } from "react";
-import { MarketplaceSkill, SessionUser } from "../lib/api";
+import { Alert, Button, Card, Empty, Segmented, Space, Spin, Table, Tag, Typography } from "antd";
+import { useEffect, useMemo, useState } from "react";
+import { MarketplaceSkill, PublicMarketplaceResponse, SessionUser } from "../lib/api";
 import { AppLocale } from "../lib/i18n";
 import { buildLightTopbarPrimaryActions, buildLightTopbarUtilityActions } from "./MarketplaceHomePage.lightTopbar";
 import { buildMarketplaceFallback } from "./MarketplaceHomePage.fallback";
@@ -8,9 +8,11 @@ import PublicStandardTopbar from "./PublicStandardTopbar";
 import {
   PrototypeSplitRow,
   PrototypeUtilityHeaderActions,
+  PrototypeUtilityLoading,
   PrototypeUtilityPanel,
   PrototypeUtilityShell
 } from "./prototypeCssInJs";
+import { loadMarketplaceWithFallback, resolvePrototypeDataMode } from "./prototypeDataFallback";
 import { createPrototypePalette, isLightPrototypePath } from "./prototypePageTheme";
 import { createPublicPageNavigator } from "./publicPageNavigation";
 
@@ -36,6 +38,7 @@ interface RankingPageCopy {
   updatedLabel: string;
   viewCategories: string;
   noData: string;
+  loadError: string;
   topbar: {
     categoryNav: string;
     downloadRankingNav: string;
@@ -61,6 +64,7 @@ const rankingPageCopy: Record<AppLocale, RankingPageCopy> = {
     updatedLabel: "Updated",
     viewCategories: "View Categories",
     noData: "No ranking data is available.",
+    loadError: "Failed to load ranking data.",
     topbar: {
       categoryNav: "Categories",
       downloadRankingNav: "Download Ranking",
@@ -84,6 +88,7 @@ const rankingPageCopy: Record<AppLocale, RankingPageCopy> = {
     updatedLabel: "Updated",
     viewCategories: "View Categories",
     noData: "No ranking data is available.",
+    loadError: "Failed to load ranking data.",
     topbar: {
       categoryNav: "Categories",
       downloadRankingNav: "Download Ranking",
@@ -120,6 +125,16 @@ export function buildRankingSkillPath(pathname: string, skillID: number): string
   return createPublicPageNavigator(pathname).toPublic(`/skills/${skillID}`);
 }
 
+export function resolveRankingSourceItems(
+  payload: PublicMarketplaceResponse | null,
+  fallbackPayload: PublicMarketplaceResponse
+): MarketplaceSkill[] {
+  if (payload?.items && payload.items.length > 0) {
+    return payload.items;
+  }
+  return fallbackPayload.items;
+}
+
 function formatRankingUpdatedAt(value: string, locale: AppLocale): string {
   const localeTag = locale === "zh" ? "zh-CN" : "en-US";
   return new Date(value).toLocaleDateString(localeTag, {
@@ -129,10 +144,6 @@ function formatRankingUpdatedAt(value: string, locale: AppLocale): string {
   });
 }
 
-function resolveRankingSourceItems(locale: AppLocale, sessionUser: SessionUser | null): MarketplaceSkill[] {
-  return buildMarketplaceFallback({ sort: "stars", page: 1 }, locale, sessionUser).items;
-}
-
 export default function PublicRankingPage({ locale, onNavigate, sessionUser }: PublicRankingPageProps) {
   const currentPath = window.location.pathname;
   const text = rankingPageCopy[locale];
@@ -140,7 +151,52 @@ export default function PublicRankingPage({ locale, onNavigate, sessionUser }: P
   const lightTheme = isLightPrototypePath(currentPath);
   const palette = useMemo(() => createPrototypePalette(lightTheme), [lightTheme]);
   const navigator = useMemo(() => createPublicPageNavigator(currentPath), [currentPath]);
-  const sourceItems = useMemo(() => resolveRankingSourceItems(locale, sessionUser), [locale, sessionUser]);
+  const dataMode = useMemo(() => resolvePrototypeDataMode(import.meta.env.VITE_MARKETPLACE_HOME_MODE), []);
+  const fallbackPayload = useMemo(
+    () => buildMarketplaceFallback({ sort: "stars", page: 1 }, locale, sessionUser),
+    [locale, sessionUser]
+  );
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [payload, setPayload] = useState<PublicMarketplaceResponse | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setErrorMessage("");
+
+    loadMarketplaceWithFallback({
+      query: { sort: "stars", page: 1 },
+      locale,
+      sessionUser,
+      mode: dataMode
+    })
+      .then((result) => {
+        if (!active) {
+          return;
+        }
+        setPayload(result.payload);
+        setErrorMessage(result.degraded ? result.errorMessage || text.loadError : "");
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+        setPayload(fallbackPayload);
+        setErrorMessage(error instanceof Error ? error.message : text.loadError);
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [dataMode, fallbackPayload, locale, sessionUser, text.loadError]);
+
+  const sourceItems = useMemo(() => resolveRankingSourceItems(payload, fallbackPayload), [fallbackPayload, payload]);
 
   const rankedItems = useMemo(() => {
     return sortRankingItems(sourceItems, sortKey).slice(0, 10);
@@ -187,6 +243,17 @@ export default function PublicRankingPage({ locale, onNavigate, sessionUser }: P
       />
 
       <PrototypeUtilityShell>
+        {errorMessage ? <Alert type="warning" showIcon message={errorMessage} /> : null}
+
+        {loading ? (
+          <PrototypeUtilityPanel>
+            <PrototypeUtilityLoading>
+              <Spin size="large" />
+            </PrototypeUtilityLoading>
+          </PrototypeUtilityPanel>
+        ) : null}
+
+        {!loading ? (
         <PrototypeUtilityPanel style={{ background: palette.cardBackground, borderColor: palette.cardBorder }}>
           <PrototypeSplitRow>
             <div>
@@ -266,6 +333,7 @@ export default function PublicRankingPage({ locale, onNavigate, sessionUser }: P
             />
           )}
         </PrototypeUtilityPanel>
+        ) : null}
       </PrototypeUtilityShell>
     </div>
   );
