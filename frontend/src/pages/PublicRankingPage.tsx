@@ -1,9 +1,12 @@
-import { Alert, Button, Card, Empty, Segmented, Space, Spin, Table, Tag, Typography } from "antd";
-import { useEffect, useMemo, useState } from "react";
-import { MarketplaceSkill, PublicMarketplaceResponse, SessionUser } from "../lib/api";
+import { Alert, Button, Card, Empty, Segmented, Space, Spin, Tag, Typography } from "antd";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { PublicMarketplaceResponse, SessionUser } from "../lib/api";
 import { AppLocale } from "../lib/i18n";
+import { ThemeMode } from "../lib/themeModePath";
+import MarketplaceHomeLocaleThemeSwitch from "./MarketplaceHomeLocaleThemeSwitch";
 import { buildLightTopbarPrimaryActions, buildLightTopbarUtilityActions } from "./MarketplaceHomePage.lightTopbar";
 import { buildMarketplaceFallback } from "./MarketplaceHomePage.fallback";
+import MarketplaceHomePageStyles from "./MarketplaceHomePage.styles";
 import PublicStandardTopbar from "./PublicStandardTopbar";
 import {
   PrototypeSplitRow,
@@ -13,152 +16,74 @@ import {
   PrototypeUtilityShell
 } from "./prototypeCssInJs";
 import { loadMarketplaceWithFallback, resolvePrototypeDataMode } from "./prototypeDataFallback";
-import { createPrototypePalette, isLightPrototypePath } from "./prototypePageTheme";
+import { isLightPrototypePath } from "./prototypePageTheme";
 import { createPublicPageNavigator } from "./publicPageNavigation";
+import {
+  RankingSortKey,
+  buildRankingCategoriesPath,
+  buildRankingSkillPath,
+  buildRankingSummaryMetrics,
+  formatRankingCompactNumber,
+  formatRankingUpdatedAt,
+  resolveRankingSourceItems,
+  sortRankingItems,
+  splitRankingSections
+} from "./PublicRankingPage.helpers";
+import { resolvePublicRankingCopy } from "./PublicRankingPage.copy";
 
 export interface PublicRankingPageProps {
   locale: AppLocale;
   onNavigate: (path: string) => void;
+  onThemeModeChange: (nextMode: ThemeMode) => void;
+  onLocaleChange: (nextLocale: AppLocale) => void;
   sessionUser: SessionUser | null;
 }
 
-export type RankingSortKey = "stars" | "quality";
-
-interface RankingPageCopy {
-  title: string;
-  subtitle: string;
-  sortByLabel: string;
-  sortByStars: string;
-  sortByQuality: string;
-  rankLabel: string;
-  skillLabel: string;
-  categoryLabel: string;
-  starsLabel: string;
-  qualityLabel: string;
-  updatedLabel: string;
-  viewCategories: string;
-  noData: string;
-  loadError: string;
-  topbar: {
-    categoryNav: string;
-    downloadRankingNav: string;
-    signedIn: string;
-    signedOut: string;
-    openWorkspace: string;
-    signIn: string;
-  };
-}
-
-const rankingPageCopy: Record<AppLocale, RankingPageCopy> = {
-  en: {
-    title: "Top Skills Ranking",
-    subtitle: "Monitor the highest-performing skills by popularity and quality.",
-    sortByLabel: "Sort by",
-    sortByStars: "Stars",
-    sortByQuality: "Quality",
-    rankLabel: "Rank",
-    skillLabel: "Skill Name",
-    categoryLabel: "Category",
-    starsLabel: "Stars",
-    qualityLabel: "Quality",
-    updatedLabel: "Updated",
-    viewCategories: "View Categories",
-    noData: "No ranking data is available.",
-    loadError: "Failed to load ranking data.",
-    topbar: {
-      categoryNav: "Categories",
-      downloadRankingNav: "Download Ranking",
-      signedIn: "Signed in",
-      signedOut: "Guest mode",
-      openWorkspace: "Open Workspace",
-      signIn: "Sign In"
-    }
-  },
-  zh: {
-    title: "Top Skills Ranking",
-    subtitle: "Monitor the highest-performing skills by popularity and quality.",
-    sortByLabel: "Sort by",
-    sortByStars: "Stars",
-    sortByQuality: "Quality",
-    rankLabel: "Rank",
-    skillLabel: "Skill Name",
-    categoryLabel: "Category",
-    starsLabel: "Stars",
-    qualityLabel: "Quality",
-    updatedLabel: "Updated",
-    viewCategories: "View Categories",
-    noData: "No ranking data is available.",
-    loadError: "Failed to load ranking data.",
-    topbar: {
-      categoryNav: "Categories",
-      downloadRankingNav: "Download Ranking",
-      signedIn: "Signed in",
-      signedOut: "Guest mode",
-      openWorkspace: "Open Workspace",
-      signIn: "Sign In"
-    }
-  }
-};
-
-export function sortRankingItems(items: MarketplaceSkill[], sortKey: RankingSortKey): MarketplaceSkill[] {
-  const sorted = [...items];
-  if (sortKey === "stars") {
-    sorted.sort(
-      (left, right) =>
-        right.star_count - left.star_count || right.quality_score - left.quality_score || right.id - left.id
-    );
-    return sorted;
-  }
-
-  sorted.sort(
-    (left, right) =>
-      right.quality_score - left.quality_score || right.star_count - left.star_count || right.id - left.id
-  );
-  return sorted;
-}
-
-export function buildRankingCategoriesPath(pathname: string): string {
-  return createPublicPageNavigator(pathname).toPublic("/categories");
-}
-
-export function buildRankingSkillPath(pathname: string, skillID: number): string {
-  return createPublicPageNavigator(pathname).toPublic(`/skills/${skillID}`);
-}
-
-export function resolveRankingSourceItems(
-  payload: PublicMarketplaceResponse | null,
-  fallbackPayload: PublicMarketplaceResponse
-): MarketplaceSkill[] {
-  if (payload?.items && payload.items.length > 0) {
-    return payload.items;
-  }
-  return fallbackPayload.items;
-}
-
-function formatRankingUpdatedAt(value: string, locale: AppLocale): string {
-  const localeTag = locale === "zh" ? "zh-CN" : "en-US";
-  return new Date(value).toLocaleDateString(localeTag, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  });
-}
-
-export default function PublicRankingPage({ locale, onNavigate, sessionUser }: PublicRankingPageProps) {
+export default function PublicRankingPage({
+  locale,
+  onNavigate,
+  onThemeModeChange,
+  onLocaleChange,
+  sessionUser
+}: PublicRankingPageProps) {
   const currentPath = window.location.pathname;
-  const text = rankingPageCopy[locale];
+  const text = resolvePublicRankingCopy(locale);
   const [sortKey, setSortKey] = useState<RankingSortKey>("stars");
+  const [viewport, setViewport] = useState(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight
+  }));
+
   const lightTheme = isLightPrototypePath(currentPath);
-  const palette = useMemo(() => createPrototypePalette(lightTheme), [lightTheme]);
+  const topbarThemeMode: ThemeMode = lightTheme ? "light" : "dark";
+  const isCompactLayout = viewport.width <= 900 && viewport.height >= 500;
+  const isMobileLayout = isCompactLayout || /^\/mobile(\/|$)/.test(currentPath);
+  const shellClassName = `prototype-shell marketplace-home-stage${isMobileLayout ? " is-mobile-stage" : ""}${lightTheme ? " is-light-stage" : ""}`;
+  const rootClassName = `marketplace-home${lightTheme ? " is-light-theme" : ""}${isMobileLayout ? " is-mobile" : ""}`;
   const navigator = useMemo(() => createPublicPageNavigator(currentPath), [currentPath]);
   const dataMode = useMemo(() => resolvePrototypeDataMode(import.meta.env.VITE_MARKETPLACE_HOME_MODE), []);
   const fallbackPayload = useMemo(
     () => buildMarketplaceFallback({ sort: "stars", page: 1 }, locale, sessionUser),
     [locale, sessionUser]
   );
+
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [payload, setPayload] = useState<PublicMarketplaceResponse | null>(null);
+
+  useEffect(() => {
+    function handleResize() {
+      setViewport({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -197,10 +122,51 @@ export default function PublicRankingPage({ locale, onNavigate, sessionUser }: P
   }, [dataMode, fallbackPayload, locale, sessionUser, text.loadError]);
 
   const sourceItems = useMemo(() => resolveRankingSourceItems(payload, fallbackPayload), [fallbackPayload, payload]);
-
-  const rankedItems = useMemo(() => {
-    return sortRankingItems(sourceItems, sortKey).slice(0, 10);
-  }, [sourceItems, sortKey]);
+  const rankedItems = useMemo(() => sortRankingItems(sourceItems, sortKey).slice(0, 10), [sourceItems, sortKey]);
+  const rankingSections = useMemo(() => splitRankingSections(rankedItems), [rankedItems]);
+  const rankingSummary = useMemo(() => buildRankingSummaryMetrics(rankedItems), [rankedItems]);
+  const panelStyle: CSSProperties = {
+    background: "var(--si-color-panel)",
+    border: "1px solid var(--si-color-border)",
+    boxShadow: "none",
+    backdropFilter: "none"
+  };
+  const sectionCardStyle: CSSProperties = {
+    border: "1px solid var(--si-color-border)",
+    background: "var(--si-color-surface)",
+    boxShadow: "none"
+  };
+  const rowCardStyle: CSSProperties = {
+    border: "1px solid var(--si-color-border-soft)",
+    background: "var(--si-color-surface)",
+    boxShadow: "none"
+  };
+  const metricTagStyle: CSSProperties = {
+    border: "1px solid var(--si-color-border-soft)",
+    background: "var(--si-color-muted-surface)",
+    color: "var(--si-color-text-secondary)",
+    marginInlineEnd: 0
+  };
+  const valueTagStyle: CSSProperties = {
+    border: "1px solid var(--si-color-border-soft)",
+    background: "var(--si-color-surface)",
+    color: "var(--si-color-text-primary)",
+    marginInlineEnd: 0
+  };
+  const defaultRankTagStyle: CSSProperties = {
+    border: "1px solid var(--si-color-border-soft)",
+    background: "var(--si-color-muted-surface)",
+    color: "var(--si-color-text-primary)",
+    marginInlineEnd: 0,
+    fontWeight: 700
+  };
+  const topRankTagStyle: CSSProperties = {
+    border: "1px solid var(--si-color-accent)",
+    background: "var(--si-color-accent)",
+    color: "var(--si-color-accent-contrast)",
+    marginInlineEnd: 0,
+    fontWeight: 700
+  };
 
   const topbarPrimaryActions = useMemo(
     () =>
@@ -227,114 +193,238 @@ export default function PublicRankingPage({ locale, onNavigate, sessionUser }: P
   );
 
   return (
-    <div className={`prototype-shell${lightTheme ? " marketplace-home-stage is-light-stage" : " marketplace-home-stage"}`}>
-      <PublicStandardTopbar
-        shellClassName="animated-fade-down"
-        dataAnimated
-        brandTitle="SkillsIndex"
-        brandSubtitle="User Portal"
-        onBrandClick={() => onNavigate(navigator.toPublic("/"))}
-        isLightTheme={lightTheme}
-        primaryActions={topbarPrimaryActions}
-        utilityActions={topbarUtilityActions}
-        statusLabel={sessionUser ? text.topbar.signedIn : text.topbar.signedOut}
-        ctaLabel={sessionUser ? text.topbar.openWorkspace : text.topbar.signIn}
-        onCtaClick={() => onNavigate(sessionUser ? navigator.toPublic("/workspace") : navigator.toPublic("/login"))}
-      />
-
-      <PrototypeUtilityShell>
-        {errorMessage ? <Alert type="warning" showIcon message={errorMessage} /> : null}
-
-        {loading ? (
-          <PrototypeUtilityPanel>
-            <PrototypeUtilityLoading>
-              <Spin size="large" />
-            </PrototypeUtilityLoading>
-          </PrototypeUtilityPanel>
-        ) : null}
-
-        {!loading ? (
-        <PrototypeUtilityPanel style={{ background: palette.cardBackground, borderColor: palette.cardBorder }}>
-          <PrototypeSplitRow>
-            <div>
-              <Typography.Title level={3} style={{ margin: 0, color: palette.cardTitle }}>
-                {text.title}
-              </Typography.Title>
-              <Typography.Paragraph style={{ marginTop: 8, marginBottom: 0, color: palette.cardText }}>
-                {text.subtitle}
-              </Typography.Paragraph>
-            </div>
-
-            <PrototypeUtilityHeaderActions>
-              <Button onClick={() => onNavigate(buildRankingCategoriesPath(currentPath))}>{text.viewCategories}</Button>
-            </PrototypeUtilityHeaderActions>
-          </PrototypeSplitRow>
-
-          <Space size={10} align="center" wrap>
-            <Typography.Text style={{ color: palette.metricLabel }}>{text.sortByLabel}</Typography.Text>
-            <Segmented
-              options={[
-                { label: text.sortByStars, value: "stars" },
-                { label: text.sortByQuality, value: "quality" }
-              ]}
-              value={sortKey}
-              onChange={(value) => setSortKey(value as RankingSortKey)}
+    <div className={shellClassName}>
+      <MarketplaceHomePageStyles />
+      <div className={rootClassName}>
+        <PublicStandardTopbar
+          shellClassName="animated-fade-down"
+          dataAnimated
+          brandTitle="SkillsIndex"
+          brandSubtitle={text.topbar.brandSubtitle}
+          onBrandClick={() => onNavigate(navigator.toPublic("/"))}
+          isLightTheme={lightTheme}
+          primaryActions={topbarPrimaryActions}
+          utilityActions={topbarUtilityActions}
+          statusLabel={sessionUser ? text.topbar.signedIn : text.topbar.signedOut}
+          ctaLabel={sessionUser ? text.topbar.openWorkspace : text.topbar.signIn}
+          onCtaClick={() => onNavigate(sessionUser ? navigator.toPublic("/workspace") : navigator.toPublic("/login"))}
+          localeThemeSwitch={
+            <MarketplaceHomeLocaleThemeSwitch
+              locale={locale}
+              currentThemeMode={topbarThemeMode}
+              onThemeModeChange={onThemeModeChange}
+              onLocaleChange={onLocaleChange}
             />
-          </Space>
+          }
+        />
 
-          {rankedItems.length === 0 ? (
-            <Card variant="borderless">
-              <Empty description={text.noData} />
-            </Card>
-          ) : (
-            <Table
-              size="small"
-              rowKey={(item) => item.id}
-              pagination={false}
-              dataSource={rankedItems}
-              columns={[
-                {
-                  title: text.rankLabel,
-                  width: 72,
-                  render: (_value: unknown, _record: MarketplaceSkill, index: number) => (
-                    <Tag color="cyan">#{index + 1}</Tag>
-                  )
-                },
-                {
-                  title: text.skillLabel,
-                  dataIndex: "name",
-                  render: (_value: string, record: MarketplaceSkill) => (
-                    <Button type="link" onClick={() => onNavigate(buildRankingSkillPath(currentPath, record.id))}>
-                      {record.name}
-                    </Button>
-                  )
-                },
-                {
-                  title: text.categoryLabel,
-                  dataIndex: "category",
-                  render: (value: string, record: MarketplaceSkill) => `${value} / ${record.subcategory}`
-                },
-                {
-                  title: text.starsLabel,
-                  dataIndex: "star_count",
-                  sorter: false
-                },
-                {
-                  title: text.qualityLabel,
-                  dataIndex: "quality_score",
-                  render: (value: number) => value.toFixed(1)
-                },
-                {
-                  title: text.updatedLabel,
-                  dataIndex: "updated_at",
-                  render: (value: string) => formatRankingUpdatedAt(value, locale)
-                }
-              ]}
-            />
-          )}
-        </PrototypeUtilityPanel>
-        ) : null}
-      </PrototypeUtilityShell>
+        <PrototypeUtilityShell>
+          {errorMessage ? <Alert type="warning" showIcon message={errorMessage} /> : null}
+
+          {loading ? (
+            <PrototypeUtilityPanel>
+              <PrototypeUtilityLoading>
+                <Spin size="large" />
+              </PrototypeUtilityLoading>
+            </PrototypeUtilityPanel>
+          ) : null}
+
+          {!loading ? (
+            <PrototypeUtilityPanel style={panelStyle}>
+              <PrototypeSplitRow>
+                <div style={{ display: "grid", gap: 8 }}>
+                  <Typography.Title level={2} style={{ margin: 0, color: "var(--si-color-text-primary)" }}>
+                    {text.title}
+                  </Typography.Title>
+                  <Typography.Paragraph style={{ margin: 0, color: "var(--si-color-text-secondary)", maxWidth: "72ch" }}>
+                    {text.subtitle}
+                  </Typography.Paragraph>
+                  <Space size={8} wrap>
+                    <Tag style={metricTagStyle}>{`${text.totalComparedLabel}: ${rankingSummary.totalCompared}`}</Tag>
+                    <Tag style={metricTagStyle}>{`${text.topStarsMetricLabel}: ${formatRankingCompactNumber(rankingSummary.topStars)}`}</Tag>
+                    <Tag style={metricTagStyle}>{`${text.topQualityMetricLabel}: ${rankingSummary.topQuality.toFixed(1)}`}</Tag>
+                    <Tag style={metricTagStyle}>{`${text.averageQualityMetricLabel}: ${rankingSummary.averageQuality.toFixed(1)}`}</Tag>
+                  </Space>
+                </div>
+
+                <PrototypeUtilityHeaderActions>
+                  <Button onClick={() => onNavigate(buildRankingCategoriesPath(currentPath))}>{text.viewCategories}</Button>
+                </PrototypeUtilityHeaderActions>
+              </PrototypeSplitRow>
+
+              <Space size={10} align="center" wrap>
+                <Typography.Text style={{ color: "var(--si-color-text-secondary)" }}>{text.sortByLabel}</Typography.Text>
+                <Segmented
+                  options={[
+                    { label: text.sortByStars, value: "stars" },
+                    { label: text.sortByQuality, value: "quality" }
+                  ]}
+                  value={sortKey}
+                  onChange={(value) => setSortKey(value as RankingSortKey)}
+                />
+              </Space>
+
+              {rankedItems.length === 0 ? (
+                <Card variant="borderless">
+                  <Empty description={text.noData} />
+                </Card>
+              ) : (
+                <div style={{ display: "grid", gap: 12 }}>
+                  <Card
+                    variant="borderless"
+                    style={sectionCardStyle}
+                    styles={{ body: { padding: 14, display: "grid", gap: 10 } }}
+                  >
+                    <Typography.Text strong style={{ color: "var(--si-color-text-primary)" }}>
+                      {text.topThreeLabel}
+                    </Typography.Text>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: isMobileLayout ? "1fr" : "repeat(3, minmax(0, 1fr))",
+                        gap: 10
+                      }}
+                    >
+                      {rankingSections.highlightedItems.map((item, index) => (
+                        <Card
+                          key={`ranking-highlight-${item.id}`}
+                          variant="borderless"
+                          style={rowCardStyle}
+                          styles={{ body: { padding: 12, display: "grid", gap: 8 } }}
+                        >
+                          <Space size={8} align="center" style={{ justifyContent: "space-between", width: "100%" }}>
+                            <Tag style={index === 0 ? topRankTagStyle : defaultRankTagStyle}>{`#${index + 1}`}</Tag>
+                            <Typography.Text style={{ color: "var(--si-color-text-secondary)" }}>
+                              {`${text.starsLabel} ${formatRankingCompactNumber(item.star_count)}`}
+                            </Typography.Text>
+                          </Space>
+
+                          <Button
+                            type="link"
+                            onClick={() => onNavigate(buildRankingSkillPath(currentPath, item.id))}
+                            data-testid="ranking-highlight-skill-button"
+                            style={{
+                              padding: 0,
+                              justifyContent: "flex-start",
+                              color: "var(--si-color-text-primary)",
+                              fontWeight: 700,
+                              textWrap: "pretty"
+                            }}
+                          >
+                            {item.name}
+                          </Button>
+
+                          <Typography.Text style={{ color: "var(--si-color-text-secondary)" }}>
+                            {`${item.category} / ${item.subcategory}`}
+                          </Typography.Text>
+                          <Space size={8} wrap>
+                            <Tag style={valueTagStyle}>{`${text.qualityLabel} ${item.quality_score.toFixed(1)}`}</Tag>
+                            <Tag style={metricTagStyle}>{`${text.updatedLabel} ${formatRankingUpdatedAt(item.updated_at, locale)}`}</Tag>
+                          </Space>
+                        </Card>
+                      ))}
+                    </div>
+                  </Card>
+
+                  {rankingSections.listItems.length > 0 ? (
+                    <Card
+                      variant="borderless"
+                      style={sectionCardStyle}
+                      styles={{ body: { padding: 14, display: "grid", gap: 8 } }}
+                    >
+                      <Typography.Text strong style={{ color: "var(--si-color-text-primary)" }}>
+                        {text.fullRankingLabel}
+                      </Typography.Text>
+
+                      {!isMobileLayout ? (
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "72px minmax(0, 1.8fr) minmax(0, 1.1fr) 100px 100px 120px 112px",
+                            gap: 8,
+                            alignItems: "center",
+                            color: "var(--si-color-text-secondary)",
+                            fontSize: "0.72rem",
+                            fontWeight: 700,
+                            letterSpacing: "0.02em",
+                            textTransform: "uppercase",
+                            padding: "0 6px"
+                          }}
+                        >
+                          <span>{text.rankLabel}</span>
+                          <span>{text.skillLabel}</span>
+                          <span>{text.categoryLabel}</span>
+                          <span>{text.starsLabel}</span>
+                          <span>{text.qualityLabel}</span>
+                          <span>{text.updatedLabel}</span>
+                          <span />
+                        </div>
+                      ) : null}
+
+                      <div style={{ display: "grid", gap: 8 }}>
+                        {rankingSections.listItems.map((item, index) => {
+                          const rankNumber = rankingSections.highlightedItems.length + index + 1;
+                          return (
+                            <Card
+                              key={`ranking-row-${item.id}`}
+                              variant="borderless"
+                              style={rowCardStyle}
+                              styles={{ body: { padding: 10 } }}
+                            >
+                              <div
+                                style={{
+                                  display: "grid",
+                                  gridTemplateColumns: isMobileLayout
+                                    ? "minmax(0, 1fr)"
+                                    : "72px minmax(0, 1.8fr) minmax(0, 1.1fr) 100px 100px 120px 112px",
+                                  gap: 8,
+                                  alignItems: "center"
+                                }}
+                              >
+                                <Tag style={defaultRankTagStyle}>{`#${rankNumber}`}</Tag>
+                                <Button
+                                  type="link"
+                                  onClick={() => onNavigate(buildRankingSkillPath(currentPath, item.id))}
+                                  style={{
+                                    padding: 0,
+                                    justifyContent: "flex-start",
+                                    color: "var(--si-color-text-primary)",
+                                    fontWeight: 700
+                                  }}
+                                >
+                                  {item.name}
+                                </Button>
+                                <Typography.Text style={{ color: "var(--si-color-text-secondary)" }}>
+                                  {`${item.category} / ${item.subcategory}`}
+                                </Typography.Text>
+                                <Typography.Text style={{ color: "var(--si-color-text-primary)" }}>
+                                  {formatRankingCompactNumber(item.star_count)}
+                                </Typography.Text>
+                                <Typography.Text style={{ color: "var(--si-color-text-primary)" }}>{item.quality_score.toFixed(1)}</Typography.Text>
+                                <Typography.Text style={{ color: "var(--si-color-text-secondary)" }}>
+                                  {formatRankingUpdatedAt(item.updated_at, locale)}
+                                </Typography.Text>
+                                <Button
+                                  type="default"
+                                  size="small"
+                                  data-testid="ranking-open-skill-button"
+                                  onClick={() => onNavigate(buildRankingSkillPath(currentPath, item.id))}
+                                >
+                                  {text.openSkillLabel}
+                                </Button>
+                              </div>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </Card>
+                  ) : null}
+                </div>
+              )}
+            </PrototypeUtilityPanel>
+          ) : null}
+        </PrototypeUtilityShell>
+      </div>
     </div>
   );
 }
