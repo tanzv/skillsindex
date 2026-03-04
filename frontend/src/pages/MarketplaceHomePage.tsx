@@ -510,9 +510,6 @@ export default function MarketplaceHomePage({
               <span>{text.sortLabel}</span>
               <span>{text.viewLabel}</span>
             </div>
-            <div className="marketplace-search-utility-right">
-              <span className="is-queue">{text.queueLabel}</span>
-            </div>
           </div>
         </section>
 

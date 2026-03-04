@@ -29,6 +29,7 @@ const selectors = {
   paginationPrev: ".marketplace-pagination .is-nav:first-of-type, [aria-label='pagination'] .is-nav:first-of-type",
   paginationNext: ".marketplace-pagination .is-nav:last-of-type, [aria-label='pagination'] .is-nav:last-of-type",
   paginationEmptyHint: "[data-testid='marketplace-pagination-empty-hint']",
+  paginationFinishedHint: "[data-testid='marketplace-pagination-finished-hint']",
   resultsEmptyState: "[data-testid='marketplace-results-empty-state']",
   skillRowNameButton: ".marketplace-skill-row .marketplace-skill-name button",
   resultsModalCardTitle: ".marketplace-results-modal-card h3",
@@ -326,6 +327,8 @@ test.describe("Marketplace home interactions", () => {
       window.scrollTo(0, document.body.scrollHeight);
     });
     await expect(page).toHaveURL(/\/\?q=odoo&page=109$/);
+    await expect(page.locator(selectors.paginationFinishedHint)).toBeVisible();
+    await expect(page.locator(selectors.loadMoreButton)).toHaveCount(0);
   });
 
   test("topbar sign-in action navigates to auth-protected route", async ({ page }) => {
@@ -334,6 +337,7 @@ test.describe("Marketplace home interactions", () => {
     await page.locator(selectors.topbarCta).click();
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.locator(".marketplace-search-utility-right .is-open-queue")).toHaveCount(0);
+    await expect(page.locator(".marketplace-search-utility-right .is-queue")).toHaveCount(0);
   });
 
   test("default home topbar shows category and download ranking navigation", async ({ page }) => {
