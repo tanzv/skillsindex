@@ -131,6 +131,10 @@ test.describe("Public categories layout", () => {
 
     await firstCategoryCard.click();
     await expect(page).toHaveURL(/\/categories\/[^/?#]+\?(?:category=[^&#]+&page=1|page=1&category=[^&#]+)/);
+    await expect(page.getByTestId("marketplace-category-detail-page")).toBeVisible();
+    await expect(page.locator(".marketplace-results-overlay")).toHaveCount(0);
+    await expect(page.locator(".marketplace-results-floating-container")).toHaveCount(0);
+    await expect(page.locator(".marketplace-search-filter-btn")).toHaveCount(0);
 
     const subcategoryFilterRow = page.locator(".marketplace-home .marketplace-subcategory-row");
     const categoryFilterRow = page.locator(".marketplace-home .marketplace-category-filter-row");
@@ -160,5 +164,11 @@ test.describe("Public categories layout", () => {
 
     await allSubcategoriesButton.click();
     await expect(page).not.toHaveURL(/[?&]subcategory=/);
+
+    const categoryKeywordInput = page.locator(".marketplace-home .marketplace-search-input.is-query input");
+    await categoryKeywordInput.fill("pipeline");
+    await categoryKeywordInput.press("Enter");
+    await expect(page).toHaveURL(/\/categories\/[^/?#]+\?(?=.*q=pipeline)(?=.*category=)/);
+    await expect(page.locator(".marketplace-results-overlay")).toHaveCount(0);
   });
 });

@@ -1,3 +1,4 @@
+import type { Ref } from "react";
 import { PublicSkillDetailComment, PublicSkillDetailViewerState, SkillInteractionStats } from "../lib/api";
 import { SkillDetailCopy } from "./PublicSkillDetailPage.copy";
 import { SkillDetailViewModel } from "./PublicSkillDetailPage.helpers";
@@ -13,11 +14,13 @@ interface PublicSkillDetailInteractionPanelProps {
   text: SkillDetailCopy;
   viewerState: PublicSkillDetailViewerState;
   selectedRating: number;
+  commentInputRef: Ref<HTMLTextAreaElement>;
   onCommentDraftChange: (value: string) => void;
   onCopyCommand: () => void;
   onDeleteComment: (commentID: number) => void;
   onInstall: () => void;
   onOpenSource: () => void;
+  onSignIn: () => void;
   onSelectRating: (score: number) => void;
   onSubmitComment: () => void;
   onSubmitFeedback: () => void;
@@ -48,11 +51,13 @@ export default function PublicSkillDetailInteractionPanel({
   text,
   viewerState,
   selectedRating,
+  commentInputRef,
   onCommentDraftChange,
   onCopyCommand,
   onDeleteComment,
   onInstall,
   onOpenSource,
+  onSignIn,
   onSelectRating,
   onSubmitComment,
   onSubmitFeedback,
@@ -105,7 +110,7 @@ export default function PublicSkillDetailInteractionPanel({
           <span>{text.actionCenter}</span>
         </div>
 
-        <button type="button" className="skill-detail-action-main" onClick={onToggleFavorite} disabled={interactionBusy}>
+        <button type="button" className="skill-detail-action-main" onClick={onToggleFavorite} disabled={!viewerState.can_interact || interactionBusy}>
           {favoriteLabel}
         </button>
 
@@ -114,7 +119,7 @@ export default function PublicSkillDetailInteractionPanel({
             {text.copyCommand}
           </button>
           <button type="button" className="skill-detail-action-button is-large" onClick={onOpenSource}>
-            {text.openReadme}
+            {text.openOriginal}
           </button>
         </div>
 
@@ -132,6 +137,15 @@ export default function PublicSkillDetailInteractionPanel({
           <span className="skill-detail-pill is-warning">{text.mediumRisk}</span>
           <span className="skill-detail-pill is-success">{text.maintained}</span>
         </div>
+
+        {!viewerState.can_interact ? (
+          <div className="skill-detail-auth-cta">
+            <p className="skill-detail-auth-hint">{text.signInToInteract}</p>
+            <button type="button" className="skill-detail-action-button is-large" onClick={onSignIn}>
+              {text.signIn}
+            </button>
+          </div>
+        ) : null}
 
         <p className="skill-detail-interaction-summary">{summaryLabel}</p>
 
@@ -159,6 +173,7 @@ export default function PublicSkillDetailInteractionPanel({
 
         <div className="skill-detail-comment-editor">
           <textarea
+            ref={commentInputRef}
             className="skill-detail-comment-input"
             value={commentDraft}
             onChange={(event) => onCommentDraftChange(event.target.value)}

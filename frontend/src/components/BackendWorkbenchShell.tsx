@@ -142,7 +142,7 @@ export default function BackendWorkbenchShell({
           <SideLocaleSwitch role="group" aria-label="Backend locale switch">
             <LocaleSwitchButton
               type="button"
-              data-testid="backend-locale-switch-en"
+              data-testid="sidebar-locale-switch-en"
               onClick={() => {
                 onLocaleChange("en");
               }}
@@ -155,7 +155,7 @@ export default function BackendWorkbenchShell({
             </LocaleSwitchButton>
             <LocaleSwitchButton
               type="button"
-              data-testid="backend-locale-switch-zh"
+              data-testid="sidebar-locale-switch-zh"
               onClick={() => {
                 onLocaleChange("zh");
               }}

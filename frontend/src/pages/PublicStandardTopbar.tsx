@@ -10,6 +10,8 @@ interface PublicStandardTopbarProps {
   utilityActions?: TopbarActionItem[];
   localeThemeSwitch?: ReactNode;
   statusLabel?: string;
+  secondaryCtaLabel?: string;
+  onSecondaryCtaClick?: () => void;
   ctaLabel?: string;
   onCtaClick?: () => void;
   shellClassName?: string;
@@ -25,6 +27,8 @@ export default function PublicStandardTopbar({
   utilityActions = [],
   localeThemeSwitch,
   statusLabel,
+  secondaryCtaLabel,
+  onSecondaryCtaClick,
   ctaLabel,
   onCtaClick,
   shellClassName = "",
@@ -86,6 +90,11 @@ export default function PublicStandardTopbar({
           <div className="marketplace-topbar-actions">
             {statusLabel ? <span className="marketplace-topbar-status">{statusLabel}</span> : null}
             {localeThemeSwitch}
+            {secondaryCtaLabel && onSecondaryCtaClick ? (
+              <button type="button" className="marketplace-topbar-secondary-cta" onClick={onSecondaryCtaClick}>
+                {secondaryCtaLabel}
+              </button>
+            ) : null}
             {ctaLabel && onCtaClick ? (
               <button type="button" className="marketplace-topbar-cta" onClick={onCtaClick}>
                 {ctaLabel}

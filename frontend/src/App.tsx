@@ -39,6 +39,7 @@ import LoginPage from "./pages/LoginPage";
 import { resolveLoginBrandConfig } from "./pages/loginBrandConfig";
 import { resolveLoginInfoPanelConfigOverride } from "./pages/loginInfoPanelConfig";
 import MarketplaceHomePage from "./pages/MarketplaceHomePage";
+import MarketplaceCategoryDetailPage from "./pages/MarketplaceCategoryDetailPage";
 import OrganizationCenterPage from "./pages/OrganizationCenterPage";
 import PrototypeRouteRenderer from "./pages/PrototypeRouteRenderer";
 import PublicComparePage from "./pages/PublicComparePage";
@@ -198,10 +199,10 @@ export default function App() {
       navigate("/login");
       return;
     }
-    if (sessionUser && route === "/login") {
+    if (sessionUser && route === "/login" && !submitLoading) {
       navigate("/");
     }
-  }, [authLoading, route, sessionUser]);
+  }, [authLoading, route, sessionUser, submitLoading]);
 
   useEffect(() => {
     const classes = [
@@ -307,7 +308,7 @@ export default function App() {
             onThemeModeChange={handleThemeModeChange}
           />
         ) : null}
-        {route === "/" || route === "/results" || route === "/categories/:slug" ? (
+        {route === "/" || route === "/results" ? (
           <MarketplaceHomePage
             locale={locale}
             sessionUser={sessionUser}
@@ -318,8 +319,21 @@ export default function App() {
               void handleLocaleChange(nextLocale);
             }}
             locationKey={locationKey}
-            isResultsPage={route === "/results" || route === "/categories/:slug"}
-            defaultCategorySlug={route === "/categories/:slug" ? categorySlug : null}
+            isResultsPage={route === "/results"}
+          />
+        ) : null}
+        {route === "/categories/:slug" ? (
+          <MarketplaceCategoryDetailPage
+            locale={locale}
+            sessionUser={sessionUser}
+            onNavigate={navigate}
+            onLogout={handleLogout}
+            onThemeModeChange={handleThemeModeChange}
+            onLocaleChange={(nextLocale) => {
+              void handleLocaleChange(nextLocale);
+            }}
+            locationKey={locationKey}
+            categorySlug={categorySlug}
           />
         ) : null}
         {route === "/compare" ? (
@@ -407,23 +421,6 @@ export default function App() {
     );
   }
 
-  if (route === "/admin/overview") {
-    return (
-      <ConfigProvider
-        theme={{
-          algorithm: theme.darkAlgorithm,
-          token: {
-            colorPrimary: "#1d4ed8",
-            borderRadius: 10,
-            fontFamily: '"Noto Sans", "Manrope", sans-serif'
-          }
-        }}
-      >
-        <AdminOverviewPage currentPath={window.location.pathname} onNavigate={navigate} />
-      </ConfigProvider>
-    );
-  }
-
   const quickRoutes: ProtectedRoute[] = isProtectedRoute(route)
     ? isAdminRoute(route)
       ? adminQuickRoutes
@@ -431,7 +428,9 @@ export default function App() {
     : [];
   const protectedRoute = route as ProtectedRoute;
   const protectedContent = isAdminRoute(protectedRoute) ? (
-    protectedRoute === "/admin/integrations" ? (
+    protectedRoute === "/admin/overview" ? (
+      <AdminOverviewPage currentPath={window.location.pathname} onNavigate={navigate} />
+    ) : protectedRoute === "/admin/integrations" ? (
       <AdminIntegrationsPage />
     ) : protectedRoute === "/admin/ops/metrics" ? (
       <AdminOpsMetricsPage />

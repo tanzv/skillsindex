@@ -138,6 +138,18 @@ export const globalLoginStylesComponents = `
   font-weight: 600;
 }
 
+.login-password-toggle {
+  width: fit-content;
+  border: 0;
+  background: transparent;
+  color: var(--login-copy);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
 .login-forgot-link {
   border: 0;
   background: transparent;

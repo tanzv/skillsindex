@@ -282,4 +282,75 @@ test.describe("Public skill detail interaction flow", () => {
     await page.getByTestId("skill-detail-breadcrumb-marketplace").click();
     await expect(page).toHaveURL("/");
   });
+
+  test("shows not-found state when live detail endpoint returns 404", async ({ page }) => {
+    await forceEnglishLocale(page);
+
+    await page.route("**/api/v1/auth/me", async (route) => {
+      await fulfillJSON(route, 200, {
+        user: null
+      });
+    });
+
+    await page.route("**/api/v1/public/skills/**", async (route) => {
+      await fulfillJSON(route, 404, {
+        error: "skill_not_found",
+        message: "Skill detail not found"
+      });
+    });
+
+    await page.goto("/skills/999999?skill_detail_mode=live");
+
+    await expect(page.locator(".skill-detail-empty")).toHaveText("Skill detail not found");
+    await expect(page.locator(".skill-detail-main")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "browser-automation-pro", exact: true })).toHaveCount(0);
+  });
+
+  test("routes unauthenticated feedback action to login page", async ({ page }) => {
+    await forceEnglishLocale(page);
+
+    await page.route("**/api/v1/auth/me", async (route) => {
+      await fulfillJSON(route, 200, {
+        user: null
+      });
+    });
+
+    await page.route("**/api/v1/public/skills/**", async (route) => {
+      await fulfillJSON(route, 200, {
+        skill: {
+          id: 974,
+          name: "sql-performance-lab",
+          description: "Optimize SQL plans for reporting workloads",
+          content: "SELECT customer_id, SUM(total_amount) AS total_spend FROM orders GROUP BY customer_id;",
+          category: "Data Platform",
+          subcategory: "SQL Optimization",
+          tags: ["sql", "postgresql", "query-plan"],
+          source_type: "official",
+          source_url: "https://github.com/skillsindex/sql-performance-lab",
+          star_count: 932,
+          quality_score: 96.4,
+          install_command: "npx skillsindex install sql-performance-lab",
+          updated_at: "2026-02-20T14:32:00Z"
+        },
+        stats: {
+          favorite_count: 2,
+          rating_count: 1,
+          rating_average: 4,
+          comment_count: 0
+        },
+        viewer_state: {
+          can_interact: false,
+          favorited: false,
+          rated: false,
+          rating: 0
+        },
+        comments: [],
+        comments_limit: 80
+      });
+    });
+
+    await page.goto("/skills/974?skill_detail_mode=live");
+    await page.getByRole("button", { name: "Submit Feedback", exact: true }).click();
+    await expect(page).toHaveURL("/login");
+  });
 });

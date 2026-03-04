@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { SessionUser } from "../lib/api";
 import { AppLocale } from "../lib/i18n";
 import MarketplaceHomePageStyles from "./MarketplaceHomePage.styles";
-import { buildLightTopbarPrimaryActions, buildLightTopbarUtilityActions, type TopbarActionItem } from "./MarketplaceHomePage.lightTopbar";
 import PublicStandardTopbar from "./PublicStandardTopbar";
 import { loadMarketplaceWithFallback, resolvePrototypeDataMode } from "./prototypeDataFallback";
 import { PrototypeUtilityShell } from "./prototypeCssInJs";
@@ -13,13 +12,21 @@ import { createPublicPageNavigator } from "./publicPageNavigation";
 import { getWorkspaceCenterCopy } from "./WorkspaceCenterPage.copy";
 import { buildWorkspaceCommandPreview, buildWorkspaceSnapshot, filterWorkspaceQueue } from "./WorkspaceCenterPage.helpers";
 import { buildWorkspaceSidebarNavigation, type WorkspaceSidebarItem } from "./WorkspaceCenterPage.navigation";
+import {
+  buildWorkspaceCenterTopbarPrimaryActions,
+  buildWorkspaceCenterTopbarUtilityActions
+} from "./WorkspaceCenterPage.topbar";
 import WorkspaceCenterPageContent from "./WorkspaceCenterPageContent";
 import {
   WorkspaceContentLayout,
   WorkspaceSidebarCard,
+  WorkspaceSidebarHeader,
   WorkspaceSidebarGroup,
   WorkspaceSidebarGroupTitle,
-  WorkspaceSidebarItemButton
+  WorkspaceSidebarHint,
+  WorkspaceSidebarItemButton,
+  WorkspaceSidebarMetaPill,
+  WorkspaceSidebarMetaRow
 } from "./WorkspaceCenterPage.styles";
 import { WorkspaceQueueFilter } from "./WorkspaceCenterPage.types";
 
@@ -117,55 +124,32 @@ export default function WorkspaceCenterPage({ locale, currentPath, onNavigate, s
     setSelectedQueueID(selectedQueueEntry.id);
   }, [selectedQueueEntry, selectedQueueID]);
 
-  const topbarPrimaryActions = useMemo<TopbarActionItem[]>(
+  const topbarPrimaryActions = useMemo(
     () =>
-      buildLightTopbarPrimaryActions({
+      buildWorkspaceCenterTopbarPrimaryActions({
         onNavigate,
         toPublicPath: pageNavigator.toPublic,
         labels: {
-          categoryNav: text.navCategories,
-          downloadRankingNav: text.navRankings,
-          workspaceNav: text.navWorkspace,
-          executionNav: text.navRollout,
-          syncNav: text.navGovernance,
-          securityNav: text.navCategories,
-          developerNav: text.navRankings
-        },
-        activeActionID: "workspace",
-        primaryActionSpecs: [
-          { id: "workspace", label: text.navWorkspace, routePath: "/workspace", tone: "highlight" },
-          { id: "category", label: text.navCategories, routePath: "/categories", tone: "subtle", className: "is-category-action" },
-          {
-            id: "download-ranking",
-            label: text.navRankings,
-            routePath: "/rankings",
-            tone: "default",
-            className: "is-download-ranking-action",
-            badge: "TOP"
-          },
-          { id: "rollout", label: text.navRollout, routePath: "/rollout", tone: "default" },
-          { id: "governance", label: text.navGovernance, routePath: "/governance", tone: "subtle" }
-        ]
+          navCategories: text.navCategories,
+          navRankings: text.navRankings
+        }
       }),
-    [
-      onNavigate,
-      pageNavigator.toPublic,
-      text.navCategories,
-      text.navGovernance,
-      text.navRankings,
-      text.navRollout,
-      text.navWorkspace
-    ]
+    [onNavigate, pageNavigator.toPublic, text.navCategories, text.navRankings]
   );
 
   const topbarUtilityActions = useMemo(
     () =>
-      buildLightTopbarUtilityActions({
+      buildWorkspaceCenterTopbarUtilityActions({
         onNavigate,
         toPublicPath: pageNavigator.toPublic,
-        hasSessionUser: Boolean(sessionUser)
+        toAdminPath: pageNavigator.toAdmin,
+        hasSessionUser: Boolean(sessionUser),
+        labels: {
+          signIn: text.signIn,
+          openDashboard: text.openDashboard
+        }
       }),
-    [onNavigate, pageNavigator.toPublic, sessionUser]
+    [onNavigate, pageNavigator.toAdmin, pageNavigator.toPublic, sessionUser, text.openDashboard, text.signIn]
   );
 
   const sidebarGroups = useMemo(
@@ -204,6 +188,9 @@ export default function WorkspaceCenterPage({ locale, currentPath, onNavigate, s
 
   const isCompactLayout = viewport.width <= 900 && viewport.height >= 500;
   const isMobileLayout = isCompactLayout || /^\/mobile(\/|$)/.test(currentPath);
+  const lightBrandSubtitle = "User Portal";
+  const topbarBrandTitle = "SkillsIndex";
+  const topbarBrandSubtitle = isLightTheme ? lightBrandSubtitle : text.brandSubtitle;
   const shellClassName = `prototype-shell marketplace-home-stage${isMobileLayout ? " is-mobile-stage" : ""}${isLightTheme ? " is-light-stage" : ""}`;
   const rootClassName = `marketplace-home${isLightTheme ? " is-light-theme" : ""}${isMobileLayout ? " is-mobile" : ""}`;
 
@@ -215,13 +202,15 @@ export default function WorkspaceCenterPage({ locale, currentPath, onNavigate, s
         <PublicStandardTopbar
           shellClassName="animated-fade-down"
           dataAnimated
-          brandTitle="SkillsIndex"
-          brandSubtitle={text.brandSubtitle}
+          brandTitle={topbarBrandTitle}
+          brandSubtitle={topbarBrandSubtitle}
           onBrandClick={() => onNavigate(pageNavigator.toPublic("/"))}
           isLightTheme={isLightTheme}
           primaryActions={topbarPrimaryActions}
           utilityActions={topbarUtilityActions}
           statusLabel={sessionUser ? "Signed In" : "Signed Out"}
+          secondaryCtaLabel={text.openMarketplace}
+          onSecondaryCtaClick={() => onNavigate(pageNavigator.toPublic("/"))}
           ctaLabel={sessionUser ? text.openDashboard : text.signIn}
           onCtaClick={() => onNavigate(sessionUser ? pageNavigator.toAdmin("/admin/overview") : pageNavigator.toPublic("/login"))}
         />
@@ -229,14 +218,16 @@ export default function WorkspaceCenterPage({ locale, currentPath, onNavigate, s
         <PrototypeUtilityShell>
           <WorkspaceContentLayout>
             <WorkspaceSidebarCard aria-label={text.sidebarMenuTitle}>
-              <div style={{ display: "grid", gap: 4 }}>
+              <WorkspaceSidebarHeader>
                 <Typography.Title level={5} style={{ margin: 0, color: "var(--si-color-text-primary)" }}>
                   {text.sidebarMenuTitle}
                 </Typography.Title>
-                <Typography.Paragraph style={{ margin: 0, color: "var(--si-color-text-secondary)", fontSize: "0.78rem" }}>
-                  {text.sidebarMenuHint}
-                </Typography.Paragraph>
-              </div>
+                <WorkspaceSidebarHint>{text.sidebarMenuHint}</WorkspaceSidebarHint>
+                <WorkspaceSidebarMetaRow>
+                  <WorkspaceSidebarMetaPill $tone="accent">{`${snapshot.metrics.alerts} ${text.alerts}`}</WorkspaceSidebarMetaPill>
+                  <WorkspaceSidebarMetaPill>{`${snapshot.metrics.healthScore.toFixed(1)} ${text.healthScore}`}</WorkspaceSidebarMetaPill>
+                </WorkspaceSidebarMetaRow>
+              </WorkspaceSidebarHeader>
 
               {sidebarGroups.map((group) => (
                 <WorkspaceSidebarGroup key={group.id}>

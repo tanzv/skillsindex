@@ -1,5 +1,6 @@
 import { KeyboardEvent, useLayoutEffect, useMemo, useRef } from "react";
 import { MarketplaceSkill } from "../lib/api";
+import MarketplaceGlobalSearchBar from "../components/MarketplaceGlobalSearchBar";
 import { MarketplaceFilterForm } from "./MarketplaceHomePage.helpers";
 import type { MarketplaceText } from "./marketplaceText";
 
@@ -219,34 +220,27 @@ export default function MarketplaceResultsPage({
               </button>
             </header>
 
-            <section className="marketplace-results-modal-search-row">
-              <label className="marketplace-results-modal-input is-query">
-                <input
-                  aria-label={text.queryKeyword}
-                  type="text"
-                  value={form.q}
-                  placeholder={modalQueryPlaceholder}
-                  onChange={(event) => onFilterFieldChange("q", event.target.value)}
-                  onKeyDown={onSearchInputKeyDown}
-                />
-              </label>
-              <label className="marketplace-results-modal-input is-semantic">
-                <input
-                  aria-label={text.querySemantic}
-                  type="text"
-                  value={form.tags}
-                  placeholder={semanticPlaceholder}
-                  onChange={(event) => onFilterFieldChange("tags", event.target.value)}
-                  onKeyDown={onSearchInputKeyDown}
-                />
-              </label>
-              <button type="button" className="marketplace-results-modal-filter" onClick={onSearchSubmit}>
-                {filterLabel}
-              </button>
-              <button type="button" className="marketplace-results-modal-search" onClick={onSearchSubmit}>
-                {searchLabel}
-              </button>
-            </section>
+            <MarketplaceGlobalSearchBar
+              rowClassName="marketplace-results-modal-search-row"
+              queryFieldClassName="marketplace-results-modal-input is-query"
+              semanticFieldClassName="marketplace-results-modal-input is-semantic"
+              submitButtonClassName="marketplace-results-modal-search"
+              filterButtonClassName="marketplace-results-modal-filter"
+              actionOrder="filter-first"
+              queryAriaLabel={text.queryKeyword}
+              queryValue={form.q}
+              queryPlaceholder={modalQueryPlaceholder}
+              onQueryChange={(value) => onFilterFieldChange("q", value)}
+              onQueryKeyDown={onSearchInputKeyDown}
+              semanticAriaLabel={text.querySemantic}
+              semanticValue={form.tags}
+              semanticPlaceholder={semanticPlaceholder}
+              onSemanticChange={(value) => onFilterFieldChange("tags", value)}
+              submitLabel={searchLabel}
+              onSubmit={onSearchSubmit}
+              filterLabel={filterLabel}
+              onFilterClick={onSearchSubmit}
+            />
 
             <section className="marketplace-results-modal-quick-filters marketplace-results-entry-chips">
               {quickFilterLabels.map((label, index) => (

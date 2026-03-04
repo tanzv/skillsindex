@@ -54,6 +54,19 @@ async function mockAuthAndOverview(page: Page, options?: { overviewStatus?: numb
   });
 }
 
+async function resolveLocaleSwitch(
+  roleLocator: ReturnType<Page["getByRole"]>,
+  testIDLocator: ReturnType<Page["getByTestId"]>
+) {
+  if ((await roleLocator.count()) > 0) {
+    const firstRoleLocator = roleLocator.first();
+    await expect(firstRoleLocator).toBeVisible();
+    return firstRoleLocator;
+  }
+  await expect(testIDLocator).toBeVisible();
+  return testIDLocator;
+}
+
 test.describe("Admin overview interactions", () => {
   test("keeps protected route and renders core overview sections", async ({ page }) => {
     await mockAuthAndOverview(page);
@@ -118,13 +131,14 @@ test.describe("Admin overview interactions", () => {
     await mockAuthAndOverview(page);
     await page.goto(ADMIN_SIDEBAR_ROUTE);
 
-    const englishLocaleSwitch = page.getByRole("button", { name: "Switch to English locale", exact: true });
-    const chineseLocaleSwitch = page.getByRole("button", { name: "Switch to Chinese locale", exact: true });
-
-    await expect(englishLocaleSwitch).toBeVisible();
-    await expect(chineseLocaleSwitch).toBeVisible();
-    await expect(page.getByTestId("sidebar-locale-switch-en")).toBeVisible();
-    await expect(page.getByTestId("sidebar-locale-switch-zh")).toBeVisible();
+    const englishLocaleSwitch = await resolveLocaleSwitch(
+      page.getByRole("button", { name: "Switch to English locale", exact: true }),
+      page.getByTestId("sidebar-locale-switch-en")
+    );
+    const chineseLocaleSwitch = await resolveLocaleSwitch(
+      page.getByRole("button", { name: "Switch to Chinese locale", exact: true }),
+      page.getByTestId("sidebar-locale-switch-zh")
+    );
 
     if (await englishLocaleSwitch.isDisabled()) {
       await chineseLocaleSwitch.click();

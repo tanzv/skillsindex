@@ -7,6 +7,8 @@ interface LoginPageCopyEntry {
   divider: string;
   username: string;
   password: string;
+  showPassword: string;
+  hidePassword: string;
   remember: string;
   forgotPassword: string;
   loginFailed: string;
@@ -31,6 +33,8 @@ export const loginPageCopy: { en: LoginPageCopyEntry; zh: LoginPageCopyEntry } =
     divider: "Or sign in with workspace credentials",
     username: "Work Email",
     password: "Password",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
     remember: "Remember me",
     forgotPassword: "Forgot?",
     loginFailed: "Login failed",
@@ -53,6 +57,8 @@ export const loginPageCopy: { en: LoginPageCopyEntry; zh: LoginPageCopyEntry } =
     divider: "\u6216\u4f7f\u7528\u5de5\u4f5c\u533a\u8d26\u53f7",
     username: "\u5de5\u4f5c\u90ae\u7bb1",
     password: "\u5bc6\u7801",
+    showPassword: "\u663e\u793a\u5bc6\u7801",
+    hidePassword: "\u9690\u85cf\u5bc6\u7801",
     remember: "\u8bb0\u4f4f\u6211",
     forgotPassword: "\u5fd8\u8bb0\uff1f",
     loginFailed: "\u767b\u5f55\u5931\u8d25",

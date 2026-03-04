@@ -203,6 +203,7 @@ interface ErrorPayload {
   message?: string;
 }
 
+const localeStorageKey = "skillsindex.locale";
 const apiBaseURL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8080").replace(/\/$/, "");
 const serverOriginURL = (() => {
   try {
@@ -220,12 +221,37 @@ export function buildServerURL(pathname: string): string {
 }
 let csrfTokenCache = "";
 
+export function resolveRequestAcceptLanguage(): string {
+  if (typeof window === "undefined") {
+    return "en";
+  }
+
+  try {
+    const storedLocale = window.localStorage.getItem(localeStorageKey);
+    if (storedLocale === "en" || storedLocale === "zh") {
+      return storedLocale;
+    }
+  } catch {
+    // Ignore localStorage access failures and fallback to navigator language.
+  }
+
+  const browserLanguage = String(window.navigator.language || "").trim().toLowerCase();
+  if (browserLanguage.startsWith("zh")) {
+    return "zh";
+  }
+  return "en";
+}
+
 async function ensureCSRFToken(): Promise<string> {
   if (csrfTokenCache) {
     return csrfTokenCache;
   }
   const response = await fetch(`${apiBaseURL}/api/v1/auth/csrf`, {
     method: "GET",
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": resolveRequestAcceptLanguage()
+    },
     credentials: "include"
   });
   if (!response.ok) {
@@ -248,6 +274,9 @@ async function requestJSON<T>(path: string, init?: RequestInit): Promise<T> {
     headers.set("Content-Type", "application/json");
   }
   headers.set("Accept", "application/json");
+  if (!headers.has("Accept-Language")) {
+    headers.set("Accept-Language", resolveRequestAcceptLanguage());
+  }
 
   if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
     const csrfToken = await ensureCSRFToken();

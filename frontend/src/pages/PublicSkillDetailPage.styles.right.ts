@@ -294,6 +294,32 @@ export const publicSkillDetailRightStyles = css`
     font-size: 12px;
   }
 
+  .skill-detail-auth-cta {
+    border-radius: 10px;
+    border: 1px solid #334155;
+    background: #1f2937;
+    padding: 10px;
+    display: grid;
+    gap: 8px;
+  }
+
+  .skill-detail-page.is-light .skill-detail-auth-cta {
+    border-color: #cbd5e1;
+    background: #e2e8f0;
+  }
+
+  .skill-detail-auth-hint {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 600;
+  }
+
+  .skill-detail-page.is-light .skill-detail-auth-hint {
+    color: #334155;
+  }
+
   .skill-detail-interaction-summary {
     margin: 0;
     color: #d4d4d4;

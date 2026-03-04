@@ -1,8 +1,6 @@
 import { css } from "@emotion/react";
 
 export const publicSkillDetailBaseStyles = css`
-  @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap");
-
   @keyframes skillDetailPageEnter {
     from {
       opacity: 0;

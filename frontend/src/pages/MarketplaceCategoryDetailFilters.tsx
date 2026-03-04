@@ -3,7 +3,7 @@ import type { MarketplaceFilterForm } from "./MarketplaceHomePage.helpers";
 import type { MarketplaceText } from "./marketplaceText";
 import type { MarketplaceSubcategoryOption } from "./MarketplaceHomePage.subcategory";
 import type { MarketplaceCategoryDetailFilterOption } from "./MarketplaceCategoryDetailFilters.config";
-import MarketplaceSearchMainRow from "./MarketplaceSearchMainRow";
+import MarketplaceGlobalSearchBar from "../components/MarketplaceGlobalSearchBar";
 
 interface MarketplaceCategoryDetailFiltersProps {
   text: MarketplaceText;
@@ -66,7 +66,7 @@ export default function MarketplaceCategoryDetailFilters({
         </div>
       </section>
 
-      <MarketplaceSearchMainRow
+      <MarketplaceGlobalSearchBar
         queryAriaLabel={text.queryKeyword}
         queryValue={form.q}
         queryPlaceholder={text.queryPlaceholder}

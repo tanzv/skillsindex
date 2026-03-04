@@ -1,4 +1,4 @@
-import { CSSProperties, KeyboardEvent, useEffect, useMemo, useState } from "react";
+import { KeyboardEvent, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   MarketplaceQueryParams,
@@ -31,12 +31,10 @@ import MarketplaceHomeSearchOverlay from "./MarketplaceHomeSearchOverlay";
 import MarketplaceHomeSkillCard from "./MarketplaceHomeSkillCard";
 import MarketplaceHomeTopStatsCard from "./MarketplaceHomeTopStatsCard";
 import MarketplaceHomeTopRecommendations from "./MarketplaceHomeTopRecommendations";
-import MarketplaceSearchMainRow from "./MarketplaceSearchMainRow";
-import MarketplaceCategoryDetailFilters from "./MarketplaceCategoryDetailFilters";
-import { resolveMarketplaceCategoryDetailFilterOptions } from "./MarketplaceCategoryDetailFilters.config";
-import MarketplaceHomePageStyles from "./MarketplaceHomePage.styles";
-import { resolveMarketplaceCategorySubcategoryState } from "./MarketplaceHomePage.subcategory";
+import MarketplaceGlobalSearchBar from "../components/MarketplaceGlobalSearchBar";
 import { buildMarketplaceTrendPathData } from "./MarketplaceHomePage.trend";
+import { normalizeFilterFormQuery } from "./MarketplacePublicQuery";
+import MarketplacePublicPageShell from "./marketplacePublic/MarketplacePublicPageShell";
 import PublicStandardTopbar from "./PublicStandardTopbar";
 import {
   HomeChipFilter,
@@ -61,11 +59,6 @@ interface MarketplaceHomePageProps {
   onLocaleChange?: (nextLocale: AppLocale) => void;
   locationKey: string;
   isResultsPage?: boolean;
-  defaultCategorySlug?: string | null;
-}
-
-function normalizeRouteCategorySlug(rawValue: string | null | undefined): string {
-  return String(rawValue || "").trim().replace(/\s+/g, " ");
 }
 
 export default function MarketplaceHomePage({
@@ -76,8 +69,7 @@ export default function MarketplaceHomePage({
   onThemeModeChange,
   onLocaleChange,
   locationKey,
-  isResultsPage = false,
-  defaultCategorySlug = null
+  isResultsPage = false
 }: MarketplaceHomePageProps) {
   const { t } = useTranslation();
   const text = useMemo(() => buildMarketplaceText(t), [t, locale]);
@@ -92,11 +84,8 @@ export default function MarketplaceHomePage({
 
   const currentPath = window.location.pathname;
   const navigator = useMemo(() => createPublicPageNavigator(currentPath), [locationKey, currentPath]);
-  const routeCategorySlug = useMemo(() => normalizeRouteCategorySlug(defaultCategorySlug), [defaultCategorySlug]);
   const marketplaceBasePath = navigator.toPublic("/");
-  const marketplaceResultsPath = routeCategorySlug
-    ? navigator.toPublic(`/categories/${encodeURIComponent(routeCategorySlug)}`)
-    : navigator.toPublic("/results");
+  const marketplaceResultsPath = navigator.toPublic("/results");
   const homeMode = useMemo<MarketplaceHomeMode>(
     () => resolveMarketplaceHomeMode(import.meta.env.VITE_MARKETPLACE_HOME_MODE),
     []
@@ -105,10 +94,9 @@ export default function MarketplaceHomePage({
   const queryState = useMemo(() => parseQueryState(window.location.search), [locationKey]);
   const effectiveQueryState = useMemo(
     () => ({
-      ...queryState,
-      category: queryState.category || routeCategorySlug
+      ...queryState
     }),
-    [queryState, routeCategorySlug]
+    [queryState]
   );
   const fallbackData = useMemo(
     () => buildMarketplaceFallback(effectiveQueryState, locale, sessionUser),
@@ -255,37 +243,9 @@ export default function MarketplaceHomePage({
     [cardGroups.latest, isLightTheme, items, locale, pageSize, shouldUseSkillPayloadForCards]
   );
   const hotFilters = useMemo(() => buildHomeChipFilters(text), [text]);
-  const isCategoryDetailResultsPage = isResultsPage && Boolean(routeCategorySlug);
-  const categorySubcategoryState = useMemo(
-    () =>
-      resolveMarketplaceCategorySubcategoryState(
-        Array.isArray(resolvedData.categories) ? resolvedData.categories : [],
-        effectiveQueryState.category || routeCategorySlug,
-        text.categoryNav
-      ),
-    [effectiveQueryState.category, resolvedData.categories, routeCategorySlug, text.categoryNav]
-  );
-  const categoryDetailFilterOptions = useMemo(
-    () => resolveMarketplaceCategoryDetailFilterOptions(resolvedData, text, effectiveQueryState.category || routeCategorySlug),
-    [effectiveQueryState.category, resolvedData, routeCategorySlug, text]
-  );
-
-  const stageStyle: CSSProperties = { width: "100%", minHeight: "100dvh", height: "auto" };
-  const rootStyle: CSSProperties = { width: "100%", height: "auto", minHeight: "100dvh", margin: 0 };
 
   function toHomePath(): string { return marketplaceBasePath; }
   function toPublicPath(path: string): string { return navigator.toPublic(path); }
-  function normalizeQueryText(rawValue: string): string { return String(rawValue || "").trim().replace(/\s+/g, " "); }
-
-  function normalizeFilterFormQuery(nextForm: MarketplaceFilterForm): MarketplaceQueryParams {
-    return {
-      ...nextForm,
-      q: normalizeQueryText(nextForm.q),
-      tags: normalizeQueryText(nextForm.tags),
-      category: normalizeQueryText(nextForm.category),
-      subcategory: normalizeQueryText(nextForm.subcategory)
-    };
-  }
 
   function commitQuery(next: MarketplaceQueryParams, target: "home" | "results" = "results") {
     const basePath = target === "home" ? marketplaceBasePath : marketplaceResultsPath;
@@ -344,38 +304,6 @@ export default function MarketplaceHomePage({
     commitQuery({ ...normalizeFilterFormQuery(nextForm), page: 1 }, "results");
   }
 
-  function handleSubcategoryFilterApply(subcategorySlug: string) {
-    const nextForm: MarketplaceFilterForm = {
-      ...form,
-      subcategory: String(subcategorySlug || "").trim()
-    };
-    setForm(nextForm);
-    setIsSearchOverlayOpen(false);
-    commitQuery({ ...normalizeFilterFormQuery(nextForm), page: 1 }, "results");
-  }
-
-  function handleSortFilterApply(sortValue: string) {
-    const nextSortValue = String(sortValue || "recent").trim().toLowerCase() || "recent";
-    const nextForm: MarketplaceFilterForm = {
-      ...form,
-      sort: nextSortValue
-    };
-    setForm(nextForm);
-    setIsSearchOverlayOpen(false);
-    commitQuery({ ...normalizeFilterFormQuery(nextForm), page: 1 }, "results");
-  }
-
-  function handleModeFilterApply(modeValue: string) {
-    const nextModeValue = String(modeValue || "keyword").trim().toLowerCase() || "keyword";
-    const nextForm: MarketplaceFilterForm = {
-      ...form,
-      mode: nextModeValue
-    };
-    setForm(nextForm);
-    setIsSearchOverlayOpen(false);
-    commitQuery({ ...normalizeFilterFormQuery(nextForm), page: 1 }, "results");
-  }
-
   function handleFilterFieldChange(field: keyof MarketplaceFilterForm, value: string) {
     const nextForm: MarketplaceFilterForm = {
       ...form,
@@ -398,6 +326,10 @@ export default function MarketplaceHomePage({
       return;
     }
     onNavigate(toPublicPath("/login"));
+  }
+
+  function handleTopbarConsoleAction(): void {
+    onNavigate("/workspace");
   }
 
   const lightTopbarPrimaryActions = useMemo<TopbarActionItem[]>(
@@ -441,156 +373,136 @@ export default function MarketplaceHomePage({
   }
 
   return (
-    <div
-      className={`prototype-shell marketplace-home-stage${isResultsPage ? " marketplace-results-page-stage" : ""}${isMobileLayout ? " is-mobile-stage" : ""}${isLightTheme ? " is-light-stage" : ""}`}
-      style={stageStyle}
-      data-testid="marketplace-home-stage"
+    <MarketplacePublicPageShell
+      isResultsStage={isResultsPage}
+      isMobileLayout={isMobileLayout}
+      isLightTheme={isLightTheme}
+      rootClassName={rootClasses}
+      rootTestId="marketplace-home-root"
     >
-      <MarketplaceHomePageStyles />
+      <PublicStandardTopbar
+        shellClassName="animated-fade-down"
+        dataAnimated
+        brandTitle={topbarBrandTitle}
+        brandSubtitle={topbarBrandSubtitle}
+        onBrandClick={() => onNavigate(toHomePath())}
+        isLightTheme={isLightTheme}
+        primaryActions={lightTopbarPrimaryActions}
+        utilityActions={lightTopbarUtilityActions}
+        secondaryCtaLabel={text.openWorkspace}
+        onSecondaryCtaClick={handleTopbarConsoleAction}
+        ctaLabel={sessionUser ? text.signOut : text.signIn}
+        onCtaClick={handleTopbarAuthAction}
+        localeThemeSwitch={
+          <MarketplaceHomeLocaleThemeSwitch
+            locale={locale}
+            currentThemeMode={currentThemeMode}
+            onThemeModeChange={onThemeModeChange}
+            onLocaleChange={onLocaleChange}
+          />
+        }
+      />
 
-      <div className={rootClasses} style={rootStyle} data-testid="marketplace-home-root">
-        <PublicStandardTopbar
-          shellClassName="animated-fade-down"
-          dataAnimated
-          brandTitle={topbarBrandTitle}
-          brandSubtitle={topbarBrandSubtitle}
-          onBrandClick={() => onNavigate(toHomePath())}
-          isLightTheme={isLightTheme}
-          primaryActions={lightTopbarPrimaryActions}
-          utilityActions={lightTopbarUtilityActions}
-          ctaLabel={sessionUser ? text.signOut : text.signIn}
-          onCtaClick={handleTopbarAuthAction}
-          localeThemeSwitch={
-            <MarketplaceHomeLocaleThemeSwitch
-              locale={locale}
-              currentThemeMode={currentThemeMode}
-              onThemeModeChange={onThemeModeChange}
-              onLocaleChange={onLocaleChange}
+      {isResultsPage ? (
+        <>
+          <section className="marketplace-search-strip animated-fade-up delay-1" role="search" aria-label="Marketplace search" data-animated="true">
+            <MarketplaceGlobalSearchBar
+              queryAriaLabel={text.queryKeyword}
+              queryValue={form.q}
+              queryPlaceholder={text.queryPlaceholder}
+              onQueryChange={(value) => handleFilterFieldChange("q", value)}
+              onQueryKeyDown={handleSearchInputKeyDown}
+              semanticAriaLabel={text.querySemantic}
+              semanticValue={form.tags}
+              semanticPlaceholder={text.semanticPlaceholder}
+              onSemanticChange={(value) => handleFilterFieldChange("tags", value)}
+              submitLabel={text.search}
+              onSubmit={handleSearchSubmit}
+              submitDisabled={homeMode === "live" && loading}
             />
-          }
-        />
 
-        {isResultsPage ? (
-          <>
-            <section className="marketplace-search-strip animated-fade-up delay-1" role="search" aria-label="Marketplace search" data-animated="true">
-              {isCategoryDetailResultsPage ? (
-                <MarketplaceCategoryDetailFilters
-                  text={text}
-                  categoryName={categorySubcategoryState.categoryName || text.categoryNav}
-                  form={form}
-                  categoryOptions={categorySubcategoryState.options}
-                  sortOptions={categoryDetailFilterOptions.sortOptions}
-                  modeOptions={categoryDetailFilterOptions.modeOptions}
-                  submitDisabled={homeMode === "live" && loading}
-                  onFilterFieldChange={handleFilterFieldChange}
-                  onSearchInputKeyDown={handleSearchInputKeyDown}
-                  onSearchSubmit={handleSearchSubmit}
-                  onSubcategoryFilterApply={handleSubcategoryFilterApply}
-                  onSortFilterApply={handleSortFilterApply}
-                  onModeFilterApply={handleModeFilterApply}
-                />
-              ) : (
-                <>
-                  <MarketplaceSearchMainRow
-                    queryAriaLabel={text.queryKeyword}
-                    queryValue={form.q}
-                    queryPlaceholder={text.queryPlaceholder}
-                    onQueryChange={(value) => handleFilterFieldChange("q", value)}
-                    onQueryKeyDown={handleSearchInputKeyDown}
-                    semanticAriaLabel={text.querySemantic}
-                    semanticValue={form.tags}
-                    semanticPlaceholder={text.semanticPlaceholder}
-                    onSemanticChange={(value) => handleFilterFieldChange("tags", value)}
-                    submitLabel={text.search}
-                    onSubmit={handleSearchSubmit}
-                    submitDisabled={homeMode === "live" && loading}
-                  />
+            <MarketplaceHomeTopRecommendations
+              label={text.recommendedLabel}
+              filters={hotFilters}
+              onApply={handleHotFilterApply}
+            />
+          </section>
 
-                  <MarketplaceHomeTopRecommendations
-                    label={text.recommendedLabel}
-                    filters={hotFilters}
-                    onApply={handleHotFilterApply}
-                  />
-                </>
-              )}
-            </section>
+          <main className="marketplace-layout animated-fade-up delay-2" data-animated="true">
+            <MarketplaceHomeResultsContent
+              isResultsPage={true}
+              text={text}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              resultCards={resultCards}
+              featuredCards={featuredCards}
+              autoLoadConfig={autoLoadConfig}
+              onPageChange={handlePageChange}
+              renderSkillCard={renderSkillCard}
+            />
+          </main>
+        </>
+      ) : (
+        <>
+          <section className="marketplace-search-strip animated-fade-up delay-1" role="search" aria-label="Marketplace search" data-animated="true">
+            <MarketplaceHomeTopStatsCard text={text} trendPathData={trendPathData} />
 
-            <main className="marketplace-layout animated-fade-up delay-2" data-animated="true">
-              <MarketplaceHomeResultsContent
-                isResultsPage={true}
-                text={text}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                resultCards={resultCards}
-                featuredCards={featuredCards}
-                autoLoadConfig={autoLoadConfig}
-                onPageChange={handlePageChange}
-                renderSkillCard={renderSkillCard}
-              />
-            </main>
-          </>
-        ) : (
-          <>
-            <section className="marketplace-search-strip animated-fade-up delay-1" role="search" aria-label="Marketplace search" data-animated="true">
-              <MarketplaceHomeTopStatsCard text={text} trendPathData={trendPathData} />
+            <MarketplaceHomeTopRecommendations label={text.recommendedLabel} filters={hotFilters} onApply={handleHotFilterApply} />
 
-              <MarketplaceHomeTopRecommendations label={text.recommendedLabel} filters={hotFilters} onApply={handleHotFilterApply} />
+            <MarketplaceGlobalSearchBar
+              queryAriaLabel="Keyword query"
+              queryValue={form.q}
+              queryPlaceholder={text.queryPlaceholder}
+              queryReadOnly
+              onQueryClick={handleSearchEntryOpen}
+              onQueryKeyDown={handleSearchInputKeyDown}
+              submitLabel={text.search}
+              onSubmit={handleSearchSubmit}
+              submitDisabled={homeMode === "live" && loading}
+              filterLabel={text.advanced}
+              onFilterClick={handleQuickFilterOpen}
+            />
 
-              <MarketplaceSearchMainRow
-                queryAriaLabel="Keyword query"
-                queryValue={form.q}
-                queryPlaceholder={text.queryPlaceholder}
-                queryReadOnly
-                onQueryClick={handleSearchEntryOpen}
-                onQueryKeyDown={handleSearchInputKeyDown}
-                submitLabel={text.search}
-                onSubmit={handleSearchSubmit}
-                submitDisabled={homeMode === "live" && loading}
-                filterLabel={text.advanced}
-                onFilterClick={handleQuickFilterOpen}
-              />
-
-              <div className="marketplace-search-utility-row" aria-label="Search utility">
-                <div className="marketplace-search-utility-left">
-                  <span className="is-active">{text.modeLabel}</span>
-                  <span>{text.sortLabel}</span>
-                  <span>{text.viewLabel}</span>
-                </div>
+            <div className="marketplace-search-utility-row" aria-label="Search utility">
+              <div className="marketplace-search-utility-left">
+                <span className="is-active">{text.modeLabel}</span>
+                <span>{text.sortLabel}</span>
+                <span>{text.viewLabel}</span>
               </div>
-            </section>
+            </div>
+          </section>
 
-            <main className="marketplace-layout animated-fade-up delay-2" data-animated="true">
-              <MarketplaceHomeResultsContent
-                isResultsPage={false}
-                text={text}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                resultCards={resultCards}
-                featuredCards={featuredCards}
-                autoLoadConfig={autoLoadConfig}
-                onPageChange={handlePageChange}
-                renderSkillCard={renderSkillCard}
-              />
-            </main>
-          </>
-        )}
+          <main className="marketplace-layout animated-fade-up delay-2" data-animated="true">
+            <MarketplaceHomeResultsContent
+              isResultsPage={false}
+              text={text}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              resultCards={resultCards}
+              featuredCards={featuredCards}
+              autoLoadConfig={autoLoadConfig}
+              onPageChange={handlePageChange}
+              renderSkillCard={renderSkillCard}
+            />
+          </main>
+        </>
+      )}
 
-        <MarketplaceHomeSearchOverlay
-          isVisible={!isResultsPage && isSearchOverlayOpen}
-          text={text}
-          form={form}
-          resultItems={items}
-          resultTotal={resolvedData.pagination.total_items || 0}
-          hotFilters={hotFilters}
-          isLightTheme={isLightTheme}
-          onFilterFieldChange={(field, value) => handleFilterFieldChange(field, value)}
-          onSearchSubmit={handleSearchSubmit}
-          onSearchInputKeyDown={handleSearchInputKeyDown}
-          onHotFilterApply={handleHotFilterApply}
-          onResultOpen={(skillID) => handleSkillOpen(skillID)}
-          onClose={handleResultsClose}
-        />
-      </div>
-    </div>
+      <MarketplaceHomeSearchOverlay
+        isVisible={!isResultsPage && isSearchOverlayOpen}
+        text={text}
+        form={form}
+        resultItems={items}
+        resultTotal={resolvedData.pagination.total_items || 0}
+        hotFilters={hotFilters}
+        isLightTheme={isLightTheme}
+        onFilterFieldChange={(field, value) => handleFilterFieldChange(field, value)}
+        onSearchSubmit={handleSearchSubmit}
+        onSearchInputKeyDown={handleSearchInputKeyDown}
+        onHotFilterApply={handleHotFilterApply}
+        onResultOpen={(skillID) => handleSkillOpen(skillID)}
+        onClose={handleResultsClose}
+      />
+    </MarketplacePublicPageShell>
   );
 }

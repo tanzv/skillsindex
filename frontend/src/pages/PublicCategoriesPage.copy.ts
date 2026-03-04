@@ -23,7 +23,7 @@ const categoriesPageCopy: Record<AppLocale, PublicCategoriesLocalizedCopy> = {
   en: {
     brandSubtitle: "User Portal",
     pageTitle: "Categories",
-    pageSubtitle: "Select a category to view related skills.",
+    pageSubtitle: "Select a category and start filtering.",
     rankings: "Open Rankings",
     categoriesTab: "Categories",
     topSubcategories: "Includes",
@@ -41,7 +41,7 @@ const categoriesPageCopy: Record<AppLocale, PublicCategoriesLocalizedCopy> = {
   zh: {
     brandSubtitle: "\u7528\u6237\u95e8\u6237",
     pageTitle: "\u5206\u7c7b",
-    pageSubtitle: "\u9009\u62e9\u5206\u7c7b\u4ee5\u67e5\u770b\u5bf9\u5e94\u6280\u80fd\u3002",
+    pageSubtitle: "\u9009\u62e9\u5206\u7c7b\u540e\u5373\u53ef\u8fdb\u884c\u7b5b\u9009\u3002",
     rankings: "\u67e5\u770b\u6392\u884c\u699c",
     categoriesTab: "\u5206\u7c7b",
     topSubcategories: "\u5305\u542b\u5b50\u5206\u7c7b",

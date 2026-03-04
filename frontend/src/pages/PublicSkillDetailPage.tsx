@@ -1,4 +1,4 @@
-import { CSSProperties, useEffect, useMemo, useState } from "react";
+import { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import {
   MarketplaceSkill,
   PublicSkillDetailComment,
@@ -12,7 +12,6 @@ import {
 } from "../lib/api";
 import { AppLocale } from "../lib/i18n";
 import type { ThemeMode } from "../lib/themeModePath";
-import { buildMarketplaceFallback } from "./MarketplaceHomePage.fallback";
 import {
   TopbarActionItem,
   buildLightTopbarPrimaryActions,
@@ -36,11 +35,12 @@ import {
   SkillDetailPresetKey,
   buildPrototypeSkillDetailSkill,
   buildSkillDetailViewModel,
-  findSkillInPublicCatalog,
   resolveFileIndexForPreset,
   resolvePresetForFileName,
   resolveSkillDetailDataMode
 } from "./PublicSkillDetailPage.helpers";
+import { resolveSkillDetailLoadFailure } from "./PublicSkillDetailPage.loadState";
+import type { SkillDetailLoadStatus } from "./PublicSkillDetailPage.loadState";
 import PublicSkillDetailPageStyles from "./PublicSkillDetailPage.styles";
 import PublicStandardTopbar from "./PublicStandardTopbar";
 import { createPublicPageNavigator } from "./publicPageNavigation";
@@ -87,7 +87,7 @@ export default function PublicSkillDetailPage({
   );
 
   const [skill, setSkill] = useState<MarketplaceSkill | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadStatus, setLoadStatus] = useState<SkillDetailLoadStatus>("loading");
   const [error, setError] = useState("");
   const [activePreset, setActivePreset] = useState<PresetKey>("skill");
   const [selectedFileIndex, setSelectedFileIndex] = useState(0);
@@ -98,15 +98,7 @@ export default function PublicSkillDetailPage({
   const [interactionStats, setInteractionStats] = useState(defaultSkillInteractionStats);
   const [viewerState, setViewerState] = useState(defaultSkillViewerState);
   const [comments, setComments] = useState<PublicSkillDetailComment[]>([]);
-  const [viewport, setViewport] = useState(() => ({
-    width: window.innerWidth,
-    height: window.innerHeight
-  }));
-
-  const fallbackSkill = useMemo(() => {
-    const fallback = buildMarketplaceFallback({ page: 1, sort: "recent" }, locale, sessionUser);
-    return fallback.items.find((item) => item.id === skillID) || null;
-  }, [locale, sessionUser, skillID]);
+  const commentComposerRef = useRef<HTMLTextAreaElement | null>(null);
 
   function applyInteractionSnapshot() {
     setInteractionStats(defaultSkillInteractionStats);
@@ -130,75 +122,55 @@ export default function PublicSkillDetailPage({
   }
 
   useEffect(() => {
-    function handleResize() {
-      setViewport({
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
-    }
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  useEffect(() => {
     let active = true;
-    setLoading(true);
+    setLoadStatus("loading");
     setError("");
+    setSkill(null);
+    applyInteractionSnapshot();
 
     if (dataMode === "prototype") {
       setSkill(buildPrototypeSkillDetailSkill(skillID));
-      applyInteractionSnapshot();
-      setLoading(false);
+      setLoadStatus("ready");
       return () => {
         active = false;
       };
     }
 
     loadLiveDetail(skillID)
-      .catch(async () => {
+      .then(() => {
         if (!active) {
           return;
         }
-
-        try {
-          const matched = await findSkillInPublicCatalog(skillID);
-          if (!active) {
-            return;
-          }
-          if (matched) {
-            setSkill(matched);
-            applyInteractionSnapshot();
-            return;
-          }
-        } catch {
-          // Ignore fallback catalog errors and use static fallback payload.
-        }
-
-        if (!active) {
-          return;
-        }
-        const fallback = fallbackSkill || buildPrototypeSkillDetailSkill(skillID);
-        setSkill(fallback);
-        applyInteractionSnapshot();
+        setLoadStatus("ready");
       })
-      .finally(() => {
-        if (active) {
-          setLoading(false);
+      .catch((loadError) => {
+        if (!active) {
+          return;
         }
+
+        const resolvedFailure = resolveSkillDetailLoadFailure(loadError, text.loadError);
+        if (resolvedFailure.status === "not_found") {
+          setLoadStatus("not_found");
+          return;
+        }
+
+        if (!active) {
+          return;
+        }
+        setError(resolvedFailure.message);
+        setLoadStatus("error");
       });
 
     return () => {
       active = false;
     };
-  }, [dataMode, fallbackSkill, skillID, text.loadError]);
+  }, [dataMode, skillID, text.loadError]);
 
-  const activeSkill = skill || buildPrototypeSkillDetailSkill(skillID);
+  const activeSkill = skill;
+  const detailViewSkill = activeSkill || buildPrototypeSkillDetailSkill(skillID);
   const detailModel = useMemo(
-    () => buildSkillDetailViewModel(activeSkill, locale, text, interactionStats),
-    [activeSkill, interactionStats, locale, text]
+    () => buildSkillDetailViewModel(detailViewSkill, locale, text, interactionStats),
+    [detailViewSkill, interactionStats, locale, text]
   );
 
   useEffect(() => {
@@ -220,7 +192,7 @@ export default function PublicSkillDetailPage({
   }
 
   async function handleCopyCommand() {
-    const installCommand = activeSkill.install_command;
+    const installCommand = String(activeSkill?.install_command || "").trim();
     if (!installCommand || !navigator?.clipboard) {
       setFeedback(text.copyFailed);
       return;
@@ -252,7 +224,7 @@ export default function PublicSkillDetailPage({
   }
 
   function handleOpenSource() {
-    const targetURL = activeSkill.source_url;
+    const targetURL = activeSkill?.source_url;
     if (targetURL) {
       window.open(targetURL, "_blank", "noopener,noreferrer");
       return;
@@ -260,8 +232,18 @@ export default function PublicSkillDetailPage({
     setFeedback(text.copyFailed);
   }
 
-  function handleInstall() {
-    setFeedback(text.installed);
+  async function handleInstall() {
+    const installCommand = String(activeSkill?.install_command || "").trim();
+    if (!installCommand || !navigator?.clipboard) {
+      setFeedback(text.installCommandMissing);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(installCommand);
+      setFeedback(text.installed);
+    } catch {
+      setFeedback(text.copyFailed);
+    }
   }
 
   async function refreshLiveDetail() {
@@ -363,6 +345,16 @@ export default function PublicSkillDetailPage({
     setFeedback(text.addedCompare);
   }
 
+  function handleSubmitFeedback() {
+    if (!viewerState.can_interact) {
+      onNavigate(routeNavigator.toPublic("/login"));
+      return;
+    }
+    commentComposerRef.current?.focus();
+    commentComposerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setFeedback(text.postComment);
+  }
+
   function handlePresetSwitch(nextPreset: PresetKey) {
     setActivePreset(nextPreset);
     setSelectedFileIndex((previousIndex) => resolveFileIndexForPreset(nextPreset, detailModel.fileEntries, previousIndex));
@@ -382,6 +374,7 @@ export default function PublicSkillDetailPage({
   const selectedFilePath = `/${detailModel.repositorySlug}/${selectedFileName}`;
   const selectedPresetLabel = selectedFile?.name || resolveFilePresetLabel(activePreset);
   const activePreviewLanguage = activePreset === "skill" ? detailModel.previewLanguage : "Markdown";
+  const activeSkillDisplayName = String(activeSkill?.name || "").trim() || text.title;
   const breadcrumbItems = useMemo(
     () => [
       {
@@ -391,7 +384,7 @@ export default function PublicSkillDetailPage({
       },
       {
         key: "skill",
-        label: activeSkill.name || detailModel.titleName,
+        label: activeSkillDisplayName,
         onClick: () => onNavigate(routeNavigator.toPublic(`/skills/${skillID}`))
       },
       {
@@ -399,15 +392,15 @@ export default function PublicSkillDetailPage({
         label: selectedPresetLabel
       }
     ],
-    [activeSkill.name, detailModel.titleName, onNavigate, routeNavigator, selectedPresetLabel, skillID, text.breadcrumbRoot]
+    [activeSkillDisplayName, onNavigate, routeNavigator, selectedPresetLabel, skillID, text.breadcrumbRoot]
   );
   const topMetaEntries = useMemo(
     () => [
       { key: "entry", value: `${text.metaEntryLabel} ${resolveFilePresetLabel(activePreset)}`, tone: "is-neutral" },
-      { key: "source", value: `${text.metaSourceLabel} ${(activeSkill.source_type || "repository").toLowerCase()}`, tone: "is-accent" },
+      { key: "source", value: `${text.metaSourceLabel} ${(activeSkill?.source_type || "repository").toLowerCase()}`, tone: "is-accent" },
       { key: "language", value: `${text.metaLanguageLabel} ${activePreviewLanguage.toLowerCase()}`, tone: "is-success" }
     ],
-    [activePreset, activeSkill.source_type, activePreviewLanguage, text.metaEntryLabel, text.metaLanguageLabel, text.metaSourceLabel]
+    [activePreset, activeSkill?.source_type, activePreviewLanguage, text.metaEntryLabel, text.metaLanguageLabel, text.metaSourceLabel]
   );
   const toPublicPath = routeNavigator.toPublic;
   const topbarCopy = marketplaceHomeCopy[locale] || marketplaceHomeCopy.en;
@@ -437,26 +430,16 @@ export default function PublicSkillDetailPage({
   const topbarBrandTitle = lightMode ? "SkillsIndex" : topbarCopy.brandTitle;
   const topbarBrandSubtitle = lightMode ? "User Portal" : topbarCopy.brandSubtitle;
   const topbarCtaPath = sessionUser ? toPublicPath("/workspace") : toPublicPath("/login");
-  const isVisualBaselineViewport = viewport.width === 512 && viewport.height === 342;
-  const visualScale = isVisualBaselineViewport ? viewport.width / 1440 : 1;
-
-  const stageStyle: CSSProperties = isVisualBaselineViewport
-    ? {
-        width: "100%",
-        height: "100dvh",
-        overflow: "hidden"
-      }
-    : {
-        width: "100%",
-        minHeight: "100dvh"
-      };
-
-  const pageStyle: CSSProperties | undefined = isVisualBaselineViewport ? { transform: `scale(${visualScale})` } : undefined;
+  const topActionsDisabled = loadStatus !== "ready" || !activeSkill;
+  const stageStyle: CSSProperties = {
+    width: "100%",
+    minHeight: "100dvh"
+  };
 
   return (
     <div className={`skill-detail-stage${lightMode ? " is-light-stage" : ""}`} style={stageStyle} data-testid="skill-detail-stage">
       <PublicSkillDetailPageStyles />
-      <section className={`skill-detail-page${lightMode ? " is-light" : ""}${isVisualBaselineViewport ? " is-visual-baseline" : ""}`} style={pageStyle} data-testid="skill-detail-page">
+      <section className={`skill-detail-page${lightMode ? " is-light" : ""}`} data-testid="skill-detail-page">
         <PublicStandardTopbar
           shellClassName="animated-fade-down"
           dataAnimated
@@ -481,7 +464,7 @@ export default function PublicSkillDetailPage({
 
         <header className="skill-detail-top">
           <div className="skill-detail-title-group">
-            <h1 className="skill-detail-title">{activeSkill.name || text.title}</h1>
+            <h1 className="skill-detail-title">{activeSkillDisplayName}</h1>
             <PublicSkillDetailBreadcrumb items={breadcrumbItems} />
             <div className="skill-detail-meta-strip" aria-label="skill detail metadata">
               {topMetaEntries.map((entry) => (
@@ -493,25 +476,25 @@ export default function PublicSkillDetailPage({
           </div>
 
           <div className="skill-detail-top-actions">
-            <button type="button" className="skill-detail-pill is-secondary-action" onClick={handleCopyCommand}>
+            <button type="button" className="skill-detail-pill is-secondary-action" onClick={handleCopyCommand} disabled={topActionsDisabled}>
               <span>{text.copyCommand}</span>
             </button>
-            <button type="button" className="skill-detail-pill is-primary-action" onClick={handleInstall}>
+            <button type="button" className="skill-detail-pill is-primary-action" onClick={handleInstall} disabled={topActionsDisabled}>
               <span>{text.installWorkspace}</span>
             </button>
-            <button type="button" className="skill-detail-pill is-neutral" onClick={handleOpenSource}>
-              <span>{text.openReadme}</span>
+            <button type="button" className="skill-detail-pill is-neutral" onClick={handleOpenSource} disabled={topActionsDisabled}>
+              <span>{text.openOriginal}</span>
             </button>
           </div>
         </header>
 
-        {loading ? <div className="skill-detail-loading">{text.loading}</div> : null}
+        {loadStatus === "loading" ? <div className="skill-detail-loading">{text.loading}</div> : null}
 
-        {!loading && error ? <div className="skill-detail-error">{error || text.loadError}</div> : null}
+        {loadStatus === "error" ? <div className="skill-detail-error">{error || text.loadError}</div> : null}
 
-        {!loading && !error && !activeSkill ? <div className="skill-detail-empty">{text.notFound}</div> : null}
+        {loadStatus === "not_found" ? <div className="skill-detail-empty">{text.notFound}</div> : null}
 
-        {!loading && activeSkill ? (
+        {loadStatus === "ready" && activeSkill ? (
           <main className="skill-detail-main">
             <PublicSkillDetailFileBrowser
               activePreset={activePreset}
@@ -530,6 +513,7 @@ export default function PublicSkillDetailPage({
             <PublicSkillDetailInteractionPanel
               comments={comments}
               commentDraft={commentDraft}
+              commentInputRef={commentComposerRef}
               detailModel={detailModel}
               feedbackMessage={feedbackMessage}
               interactionBusy={interactionBusy}
@@ -542,9 +526,10 @@ export default function PublicSkillDetailPage({
               onDeleteComment={handleDeleteComment}
               onInstall={handleInstall}
               onOpenSource={handleOpenSource}
+              onSignIn={() => onNavigate(routeNavigator.toPublic("/login"))}
               onSelectRating={setSelectedRating}
               onSubmitComment={handleSubmitComment}
-              onSubmitFeedback={() => onNavigate(routeNavigator.toPublic("/"))}
+              onSubmitFeedback={handleSubmitFeedback}
               onSubmitRating={handleSubmitRating}
               onToggleFavorite={handleToggleFavorite}
               onViewChangeHistory={handleViewChangeHistory}

@@ -110,6 +110,23 @@ test.describe("Login prototype alignment", () => {
     await expect(page.locator("[data-testid='login-info-points']")).toHaveCount(0);
   });
 
+  test("password field supports explicit show and hide toggle", async ({ page }) => {
+    await mockAnonymousAuth(page);
+    await page.goto("/login");
+
+    const passwordInput = page.locator("input[autocomplete='current-password']");
+    const visibilityToggle = page.getByTestId("login-password-visibility-toggle");
+
+    await expect(passwordInput).toHaveAttribute("type", "password");
+    await expect(visibilityToggle).toBeVisible();
+
+    await visibilityToggle.click();
+    await expect(passwordInput).toHaveAttribute("type", "text");
+
+    await visibilityToggle.click();
+    await expect(passwordInput).toHaveAttribute("type", "password");
+  });
+
   test("login stage is marked as no-drag region", async ({ page }) => {
     await mockAnonymousAuth(page);
     await page.goto("/login");

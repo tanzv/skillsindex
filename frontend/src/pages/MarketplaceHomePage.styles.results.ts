@@ -284,25 +284,89 @@ export const marketplaceHomeResultsStyles = css`
     font-weight: 700;
   }
 
-  .marketplace-home .marketplace-category-row .marketplace-skill-name button {
-    color: #f8fafc;
+  .marketplace-home.is-categories-index-page {
+    --marketplace-card-head-width: 84px;
+    --marketplace-card-head-height: 52px;
+    --marketplace-card-thumb-size: 46px;
+    --marketplace-card-title-size: 16px;
+    --marketplace-card-description-size: 13px;
+    --marketplace-card-tag-height: 22px;
+    --marketplace-card-tag-font-size: 10px;
+    --marketplace-card-foot-font-size: 10px;
   }
 
-  .marketplace-home .marketplace-category-row .marketplace-skill-description {
+  .marketplace-home.is-categories-index-page .marketplace-category-header-card {
+    border: 1px solid rgba(100, 116, 139, 0.42);
+    background: linear-gradient(180deg, rgba(20, 24, 33, 0.84) 0%, rgba(15, 19, 27, 0.8) 100%);
+    box-shadow: 0 14px 28px rgba(2, 6, 23, 0.3);
+    backdrop-filter: blur(10px);
+  }
+
+  .marketplace-home.is-categories-index-page .marketplace-category-row {
+    min-height: 214px;
+    padding: 16px 18px;
+    gap: 10px;
+  }
+
+  .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-card-cover,
+  .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-card-cover-thumb {
+    border-radius: 12px;
+  }
+
+  .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-card-cover-thumb {
+    border: 1px solid rgba(148, 163, 184, 0.44);
+  }
+
+  .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-card-cover-chip {
+    right: -4px;
+    bottom: -4px;
+    min-width: 22px;
+    padding: 0 6px;
+    font-size: 9px;
+  }
+
+  .marketplace-home.is-categories-index-page .marketplace-category-icon-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     color: #e2e8f0;
+    background: linear-gradient(180deg, rgba(51, 65, 85, 0.9) 0%, rgba(30, 41, 59, 0.86) 100%);
   }
 
-  .marketplace-home .marketplace-category-row .marketplace-skill-chip-row span {
+  .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-skill-secondary {
+    gap: 8px;
+  }
+
+  .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-skill-chip-row span {
     background: rgba(148, 163, 184, 0.22);
     color: #e2e8f0;
   }
 
-  .marketplace-home .marketplace-category-row .marketplace-skill-row-foot span {
+  .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-skill-row-foot span {
     color: #e2e8f0;
   }
 
-  .marketplace-home .marketplace-category-row .marketplace-skill-row-foot span.is-primary {
+  .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-skill-row-foot span.is-primary {
     color: #f8fafc;
+  }
+
+  .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-skill-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-skill-row-foot span:last-child {
+    min-width: 0;
+    max-width: min(100%, 52ch);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .marketplace-home.is-light-theme .marketplace-results-toolbar h2 {
@@ -391,24 +455,31 @@ export const marketplaceHomeResultsStyles = css`
     color: #2a2a2a;
   }
 
-  .marketplace-home.is-light-theme .marketplace-category-row .marketplace-skill-name button {
-    color: #0f172a;
+  .marketplace-home.is-light-theme.is-categories-index-page .marketplace-category-header-card {
+    border-color: rgba(148, 163, 184, 0.52);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.84) 100%);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
   }
 
-  .marketplace-home.is-light-theme .marketplace-category-row .marketplace-skill-description {
-    color: #334155;
+  .marketplace-home.is-light-theme.is-categories-index-page .marketplace-category-icon-fallback {
+    color: #1f2937;
+    background: linear-gradient(180deg, rgba(226, 232, 240, 0.92) 0%, rgba(203, 213, 225, 0.82) 100%);
   }
 
-  .marketplace-home.is-light-theme .marketplace-category-row .marketplace-skill-chip-row span {
+  .marketplace-home.is-light-theme.is-categories-index-page .marketplace-category-row .marketplace-skill-chip-row span {
     background: rgba(226, 232, 240, 0.9);
     color: #334155;
   }
 
-  .marketplace-home.is-light-theme .marketplace-category-row .marketplace-skill-row-foot span {
+  .marketplace-home.is-light-theme.is-categories-index-page .marketplace-category-row .marketplace-card-cover-thumb {
+    border-color: rgba(148, 163, 184, 0.56);
+  }
+
+  .marketplace-home.is-light-theme.is-categories-index-page .marketplace-category-row .marketplace-skill-row-foot span {
     color: #334155;
   }
 
-  .marketplace-home.is-light-theme .marketplace-category-row .marketplace-skill-row-foot span.is-primary {
+  .marketplace-home.is-light-theme.is-categories-index-page .marketplace-category-row .marketplace-skill-row-foot span.is-primary {
     color: #0f172a;
   }
 

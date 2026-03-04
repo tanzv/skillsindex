@@ -52,6 +52,8 @@ export default function LoginPage({
       divider: t("login.divider"),
       username: t("login.username"),
       password: t("login.password"),
+      showPassword: t("login.showPassword"),
+      hidePassword: t("login.hidePassword"),
       remember: t("login.remember"),
       forgotPassword: t("login.forgotPassword"),
       loginFailed: t("login.loginFailed"),
@@ -69,6 +71,7 @@ export default function LoginPage({
   );
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState("");
   const [viewport, setViewport] = useState(() => ({
     width: window.innerWidth,
@@ -274,13 +277,23 @@ export default function LoginPage({
 
               <label className="login-field-label">{text.password}</label>
               <Form.Item>
-                <Input.Password
+                <Input
+                  type={passwordVisible ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="••••••••"
                   autoComplete="current-password"
                 />
               </Form.Item>
+              <button
+                className="login-password-toggle"
+                type="button"
+                onClick={() => setPasswordVisible((currentVisible) => !currentVisible)}
+                aria-pressed={passwordVisible}
+                data-testid="login-password-visibility-toggle"
+              >
+                {passwordVisible ? text.hidePassword : text.showPassword}
+              </button>
 
               <div className="login-form-row">
                 <Checkbox>{text.remember}</Checkbox>

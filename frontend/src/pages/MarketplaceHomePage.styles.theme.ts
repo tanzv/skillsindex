@@ -1,4 +1,8 @@
 import { css } from "@emotion/react";
+import {
+  marketplaceHomeThemeCategoryTokenLightStyles,
+  marketplaceHomeThemeCategoryTokenStyles
+} from "./MarketplaceHomePage.styles.theme.categoryTokens";
 
 export const marketplaceHomeThemeStyles = css`
   @import url("https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap");
@@ -95,6 +99,7 @@ export const marketplaceHomeThemeStyles = css`
     --marketplace-utility-button-subtle-text: #a1a1aa;
     --marketplace-utility-button-hover-background: rgba(255, 255, 255, 0.1);
     --marketplace-focus-ring: #f4f4f5;
+    ${marketplaceHomeThemeCategoryTokenStyles}
 
     width: 100%;
     max-width: none;
@@ -358,6 +363,7 @@ export const marketplaceHomeThemeStyles = css`
   }
 
   .marketplace-home .marketplace-topbar-status,
+  .marketplace-home .marketplace-topbar-secondary-cta,
   .marketplace-home .marketplace-topbar-cta {
     min-height: 32px;
     border: 0;
@@ -375,6 +381,15 @@ export const marketplaceHomeThemeStyles = css`
     background: var(--marketplace-status-background);
     color: var(--marketplace-status-text);
     font-weight: 600;
+  }
+
+  .marketplace-home .marketplace-topbar-secondary-cta {
+    border: 1px solid var(--marketplace-utility-button-border);
+    background: var(--marketplace-utility-button-background);
+    color: var(--marketplace-utility-button-text);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
   }
 
   .marketplace-home .marketplace-topbar-cta {
@@ -463,9 +478,19 @@ export const marketplaceHomeThemeStyles = css`
   }
 
   .marketplace-home .marketplace-topbar-brand:focus-visible,
+  .marketplace-home .marketplace-topbar-secondary-cta:focus-visible,
   .marketplace-home .marketplace-topbar-cta:focus-visible {
     outline: 2px solid #3b82f6;
     outline-offset: 2px;
+  }
+
+  .marketplace-home .marketplace-topbar-secondary-cta:hover {
+    background: var(--marketplace-utility-button-hover-background);
+    color: var(--marketplace-utility-button-text);
+  }
+
+  .marketplace-home .marketplace-topbar-secondary-cta:active {
+    transform: translateY(1px);
   }
 
   .marketplace-home .marketplace-topbar-nav-button:focus-visible,
@@ -513,6 +538,7 @@ export const marketplaceHomeThemeStyles = css`
     --marketplace-utility-button-subtle-text: #71717a;
     --marketplace-utility-button-hover-background: #f5f5f5;
     --marketplace-focus-ring: #111111;
+    ${marketplaceHomeThemeCategoryTokenLightStyles}
     background: var(--marketplace-home-background);
     color: var(--marketplace-home-text);
   }
