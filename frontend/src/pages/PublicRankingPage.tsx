@@ -126,43 +126,43 @@ export default function PublicRankingPage({
   const rankingSections = useMemo(() => splitRankingSections(rankedItems), [rankedItems]);
   const rankingSummary = useMemo(() => buildRankingSummaryMetrics(rankedItems), [rankedItems]);
   const panelStyle: CSSProperties = {
-    background: "var(--si-color-panel)",
-    border: "1px solid var(--si-color-border)",
+    background: "color-mix(in srgb, var(--si-color-panel) 82%, transparent)",
+    border: "none",
     boxShadow: "none",
-    backdropFilter: "none"
+    backdropFilter: "blur(10px) saturate(120%)"
   };
   const sectionCardStyle: CSSProperties = {
-    border: "1px solid var(--si-color-border)",
-    background: "var(--si-color-surface)",
+    border: "none",
+    background: "color-mix(in srgb, var(--si-color-surface) 74%, transparent)",
     boxShadow: "none"
   };
   const rowCardStyle: CSSProperties = {
-    border: "1px solid var(--si-color-border-soft)",
-    background: "var(--si-color-surface)",
+    border: "none",
+    background: "color-mix(in srgb, var(--si-color-surface) 68%, transparent)",
     boxShadow: "none"
   };
   const metricTagStyle: CSSProperties = {
-    border: "1px solid var(--si-color-border-soft)",
-    background: "var(--si-color-muted-surface)",
+    border: "none",
+    background: "color-mix(in srgb, var(--si-color-muted-surface) 70%, transparent)",
     color: "var(--si-color-text-secondary)",
     marginInlineEnd: 0
   };
   const valueTagStyle: CSSProperties = {
-    border: "1px solid var(--si-color-border-soft)",
-    background: "var(--si-color-surface)",
+    border: "none",
+    background: "color-mix(in srgb, var(--si-color-surface) 66%, transparent)",
     color: "var(--si-color-text-primary)",
     marginInlineEnd: 0
   };
   const defaultRankTagStyle: CSSProperties = {
-    border: "1px solid var(--si-color-border-soft)",
-    background: "var(--si-color-muted-surface)",
+    border: "none",
+    background: "color-mix(in srgb, var(--si-color-muted-surface) 78%, transparent)",
     color: "var(--si-color-text-primary)",
     marginInlineEnd: 0,
     fontWeight: 700
   };
   const topRankTagStyle: CSSProperties = {
-    border: "1px solid var(--si-color-accent)",
-    background: "var(--si-color-accent)",
+    border: "none",
+    background: "color-mix(in srgb, var(--si-color-accent) 88%, transparent)",
     color: "var(--si-color-accent-contrast)",
     marginInlineEnd: 0,
     fontWeight: 700
@@ -248,7 +248,16 @@ export default function PublicRankingPage({
                 </div>
 
                 <PrototypeUtilityHeaderActions>
-                  <Button onClick={() => onNavigate(buildRankingCategoriesPath(currentPath))}>{text.viewCategories}</Button>
+                  <Button
+                    onClick={() => onNavigate(buildRankingCategoriesPath(currentPath))}
+                    style={{
+                      border: "none",
+                      background: "color-mix(in srgb, var(--si-color-muted-surface) 70%, transparent)",
+                      color: "var(--si-color-text-primary)"
+                    }}
+                  >
+                    {text.viewCategories}
+                  </Button>
                 </PrototypeUtilityHeaderActions>
               </PrototypeSplitRow>
 
@@ -265,7 +274,7 @@ export default function PublicRankingPage({
               </Space>
 
               {rankedItems.length === 0 ? (
-                <Card variant="borderless">
+                <Card variant="borderless" style={sectionCardStyle}>
                   <Empty description={text.noData} />
                 </Card>
               ) : (
@@ -409,6 +418,11 @@ export default function PublicRankingPage({
                                   size="small"
                                   data-testid="ranking-open-skill-button"
                                   onClick={() => onNavigate(buildRankingSkillPath(currentPath, item.id))}
+                                  style={{
+                                    border: "none",
+                                    background: "color-mix(in srgb, var(--si-color-muted-surface) 70%, transparent)",
+                                    color: "var(--si-color-text-primary)"
+                                  }}
                                 >
                                   {text.openSkillLabel}
                                 </Button>
