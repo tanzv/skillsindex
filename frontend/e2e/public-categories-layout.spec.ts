@@ -138,17 +138,38 @@ test.describe("Public categories layout", () => {
 
     const subcategoryFilterRow = page.locator(".marketplace-home .marketplace-subcategory-row");
     const categoryFilterRow = page.locator(".marketplace-home .marketplace-category-filter-row");
+    const categorySearchQueryInput = page.locator(".marketplace-home .marketplace-search-input.is-query input");
+    const categorySearchSemanticInput = page.locator(".marketplace-home .marketplace-search-input.is-semantic input");
     const allSubcategoriesButton = subcategoryFilterRow.getByRole("button", { name: "All subcategories" });
     const subcategoryButtons = subcategoryFilterRow.locator(".marketplace-subcategory-chips button");
     const sortByStarsButton = categoryFilterRow.getByRole("button", { name: "Sort: Stars" });
     const modeAiButton = categoryFilterRow.getByRole("button", { name: "Mode: AI" });
+    const resultsToolbarChips = page.locator(".marketplace-home.is-category-detail-page .marketplace-results-toolbar .marketplace-toolbar-chips span");
 
     await expect(subcategoryFilterRow).toBeVisible();
     await expect(categoryFilterRow).toBeVisible();
+    await expect(categorySearchQueryInput).toBeVisible();
+    await expect(categorySearchSemanticInput).toHaveCount(0);
     await expect(page.locator(".marketplace-home .marketplace-top-recommend-row")).toHaveCount(0);
     await expect(allSubcategoriesButton).toBeVisible();
     await expect(sortByStarsButton).toBeVisible();
     await expect(modeAiButton).toBeVisible();
+    await expect(resultsToolbarChips.nth(0)).toHaveText(/Sort:.*24\/page/);
+    await expect(resultsToolbarChips.nth(1)).toHaveText("Export CSV");
+    await expect(resultsToolbarChips.nth(2)).toHaveText("Copy Cmd");
+    await expect(resultsToolbarChips.nth(3)).toHaveText("HD");
+
+    const hasLargeGapBetweenSearchAndResults = await page.evaluate(() => {
+      const searchStripElement = document.querySelector(".marketplace-home.is-category-detail-page .marketplace-search-strip");
+      const resultsToolbarElement = document.querySelector(".marketplace-home.is-category-detail-page .marketplace-results-toolbar");
+      if (!searchStripElement || !resultsToolbarElement) {
+        return true;
+      }
+      const searchStripRect = searchStripElement.getBoundingClientRect();
+      const resultsToolbarRect = resultsToolbarElement.getBoundingClientRect();
+      return resultsToolbarRect.top - searchStripRect.bottom > 24;
+    });
+    expect(hasLargeGapBetweenSearchAndResults).toBe(false);
 
     const subcategoryButtonCount = await subcategoryButtons.count();
     expect(subcategoryButtonCount).toBeGreaterThan(1);
@@ -165,9 +186,8 @@ test.describe("Public categories layout", () => {
     await allSubcategoriesButton.click();
     await expect(page).not.toHaveURL(/[?&]subcategory=/);
 
-    const categoryKeywordInput = page.locator(".marketplace-home .marketplace-search-input.is-query input");
-    await categoryKeywordInput.fill("pipeline");
-    await categoryKeywordInput.press("Enter");
+    await categorySearchQueryInput.fill("pipeline");
+    await categorySearchQueryInput.press("Enter");
     await expect(page).toHaveURL(/\/categories\/[^/?#]+\?(?=.*q=pipeline)(?=.*category=)/);
     await expect(page.locator(".marketplace-results-overlay")).toHaveCount(0);
   });

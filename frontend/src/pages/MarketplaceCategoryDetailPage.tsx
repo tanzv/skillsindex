@@ -32,6 +32,7 @@ import MarketplaceCategoryDetailFilters from "./MarketplaceCategoryDetailFilters
 import {
   resolveMarketplaceCategoryDetailFilterOptions
 } from "./MarketplaceCategoryDetailFilters.config";
+import { buildMarketplaceTopbarRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
 import { buildMarketplaceText } from "./marketplaceText";
 import { normalizeFilterFormQuery, normalizeRouteCategorySlug } from "./MarketplacePublicQuery";
 import PublicStandardTopbar from "./PublicStandardTopbar";
@@ -86,7 +87,8 @@ export default function MarketplaceCategoryDetailPage({
   const effectiveQueryState = useMemo(
     () => ({
       ...queryState,
-      category: routeCategorySlug || queryState.category
+      category: routeCategorySlug || queryState.category,
+      tags: ""
     }),
     [queryState, routeCategorySlug]
   );
@@ -105,11 +107,11 @@ export default function MarketplaceCategoryDetailPage({
   useEffect(() => {
     setForm({
       q: effectiveQueryState.q || "",
-      tags: effectiveQueryState.tags || "",
+      tags: "",
       category: effectiveQueryState.category || "",
       subcategory: effectiveQueryState.subcategory || "",
-      sort: effectiveQueryState.sort || "recent",
-      mode: effectiveQueryState.mode || "keyword"
+      sort: effectiveQueryState.sort || "relevance",
+      mode: effectiveQueryState.mode || "hybrid"
     });
   }, [effectiveQueryState]);
 
@@ -230,10 +232,33 @@ export default function MarketplaceCategoryDetailPage({
     () => resolveMarketplaceCategoryDetailFilterOptions(resolvedData, text, routeCategorySlug || effectiveQueryState.category || ""),
     [effectiveQueryState.category, resolvedData, routeCategorySlug, text]
   );
+  const selectedSortLabel = useMemo(() => {
+    const activeSortValue = String(form.sort || "").trim().toLowerCase();
+    const matchedSortOption = categoryDetailFilterOptions.sortOptions.find((option) => option.value === activeSortValue);
+    return matchedSortOption?.label || text.sortLabel;
+  }, [categoryDetailFilterOptions.sortOptions, form.sort, text.sortLabel]);
+  const categoryResultsToolbarChips = useMemo(
+    () => [`${selectedSortLabel} \u00b7 ${pageSize}/page`, text.batchInstallLabel, text.compareLabel, "HD"],
+    [pageSize, selectedSortLabel, text.batchInstallLabel, text.compareLabel]
+  );
   const toPublicPath = (path: string) => navigator.toPublic(path);
 
+  function normalizeCategoryDetailQuery(next: MarketplaceQueryParams): MarketplaceQueryParams {
+    const normalized = normalizeFilterFormQuery({
+      ...defaultFilterForm,
+      ...(next as Partial<MarketplaceFilterForm>)
+    });
+    return {
+      ...normalized,
+      page: next.page,
+      tags: "",
+      sort: normalized.sort || "relevance",
+      mode: normalized.mode || "hybrid"
+    };
+  }
+
   function commitQuery(next: MarketplaceQueryParams) {
-    const nextPath = buildMarketplacePath(normalizeFilterFormQuery(next as MarketplaceFilterForm), categoryResultsPath);
+    const nextPath = buildMarketplacePath(normalizeCategoryDetailQuery(next), categoryResultsPath);
     const currentRoutePath = `${window.location.pathname}${window.location.search}`;
     if (nextPath === currentRoutePath) {
       return;
@@ -248,7 +273,7 @@ export default function MarketplaceCategoryDetailPage({
     handleSearchSubmit();
   }
   function handleSearchSubmit() {
-    commitQuery({ ...normalizeFilterFormQuery(form), page: 1 });
+    commitQuery({ ...normalizeCategoryDetailQuery(form), page: 1 });
   }
 
   function handlePageChange(page: number) {
@@ -276,12 +301,12 @@ export default function MarketplaceCategoryDetailPage({
   }
 
   function handleSortFilterApply(sortValue: string) {
-    const nextSortValue = String(sortValue || "recent").trim().toLowerCase() || "recent";
+    const nextSortValue = String(sortValue || "relevance").trim().toLowerCase() || "relevance";
     applyCategoryFilterPatch({ sort: nextSortValue });
   }
 
   function handleModeFilterApply(modeValue: string) {
-    const nextModeValue = String(modeValue || "keyword").trim().toLowerCase() || "keyword";
+    const nextModeValue = String(modeValue || "hybrid").trim().toLowerCase() || "hybrid";
     applyCategoryFilterPatch({ mode: nextModeValue });
   }
 
@@ -324,6 +349,14 @@ export default function MarketplaceCategoryDetailPage({
       }),
     [handleTopbarAuthAction, onNavigate, sessionUser, text.signIn, text.signOut, toPublicPath]
   );
+  const topbarRightRegistrations = useMemo(
+    () =>
+      buildMarketplaceTopbarRightRegistrations({
+        ctaLabel: sessionUser ? text.signOut : text.signIn,
+        onCtaClick: handleTopbarAuthAction
+      }),
+    [handleTopbarAuthAction, sessionUser, text.signIn, text.signOut]
+  );
   const topbarBrandTitle = isLightTheme ? "SkillsIndex" : text.brandTitle;
   const topbarBrandSubtitle = isLightTheme ? "User Portal" : text.brandSubtitle;
   const rootClasses = ["marketplace-home", "is-results-page", "is-category-detail-page", isLightTheme ? "is-light-theme" : "", isMobileLayout ? "is-mobile" : ""]
@@ -351,8 +384,7 @@ export default function MarketplaceCategoryDetailPage({
         isLightTheme={isLightTheme}
         primaryActions={lightTopbarPrimaryActions}
         utilityActions={lightTopbarUtilityActions}
-        ctaLabel={sessionUser ? text.signOut : text.signIn}
-        onCtaClick={handleTopbarAuthAction}
+        rightRegistrations={topbarRightRegistrations}
         localeThemeSwitch={
           <MarketplacePublicLocaleThemeSwitch
             locale={locale}
@@ -389,6 +421,7 @@ export default function MarketplaceCategoryDetailPage({
           totalPages={totalPages}
           resultCards={resultCards}
           featuredCards={[]}
+          resultsToolbarChips={categoryResultsToolbarChips}
           autoLoadConfig={autoLoadConfig}
           onPageChange={handlePageChange}
           renderSkillCard={renderSkillCard}

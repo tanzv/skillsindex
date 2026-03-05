@@ -16,6 +16,7 @@ interface MarketplaceHomeResultsContentProps {
   totalPages: number;
   resultCards: PrototypeCardEntry[];
   featuredCards: PrototypeCardEntry[];
+  resultsToolbarChips?: string[];
   autoLoadConfig: MarketplaceAutoLoadConfig;
   onPageChange: (page: number) => void;
   renderSkillCard: (card: PrototypeCardEntry, key: string) => JSX.Element;
@@ -32,6 +33,7 @@ export default function MarketplaceHomeResultsContent({
   totalPages,
   resultCards,
   featuredCards,
+  resultsToolbarChips,
   autoLoadConfig,
   onPageChange,
   renderSkillCard
@@ -451,6 +453,7 @@ export default function MarketplaceHomeResultsContent({
       categoryResultsTitle: text.categoryResultsTitle
     }
   });
+  const resolvedResultsToolbarChips = resultsToolbarChips || [text.latestSortLabel, text.batchInstallLabel, text.compareLabel];
 
   return (
     <>
@@ -459,9 +462,11 @@ export default function MarketplaceHomeResultsContent({
           <section className="marketplace-results-toolbar">
             <h2>{toolbarTitle}</h2>
             <div className="marketplace-toolbar-chips">
-              <span className="is-active">{text.latestSortLabel}</span>
-              <span>{text.batchInstallLabel}</span>
-              <span>{text.compareLabel}</span>
+              {resolvedResultsToolbarChips.map((chipLabel, chipIndex) => (
+                <span key={`results-toolbar-chip-${chipIndex}`} className={chipIndex === 0 ? "is-active" : ""}>
+                  {chipLabel}
+                </span>
+              ))}
             </div>
           </section>
 

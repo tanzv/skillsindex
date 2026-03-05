@@ -11,8 +11,8 @@ export interface MarketplaceCategoryDetailFilterOptions {
   modeOptions: MarketplaceCategoryDetailFilterOption[];
 }
 
-const fallbackSortValues = ["recent", "stars", "quality"];
-const fallbackModeValues = ["keyword", "ai"];
+const fallbackSortValues = ["relevance", "recent", "stars", "quality"];
+const fallbackModeValues = ["hybrid", "keyword", "ai"];
 
 function normalizeOptionValue(rawValue: unknown): string {
   return String(rawValue || "").trim().toLowerCase();
@@ -28,6 +28,9 @@ function normalizeOptionLabel(rawLabel: unknown): string {
 
 function resolveSortLabel(value: string, text: MarketplaceText, configuredLabel: string): string {
   switch (value) {
+    case "relevance":
+      return text.sortLabel;
+    case "latest":
     case "recent":
       return text.sortRecent;
     case "stars":
@@ -41,6 +44,8 @@ function resolveSortLabel(value: string, text: MarketplaceText, configuredLabel:
 
 function resolveModeLabel(value: string, text: MarketplaceText, configuredLabel: string): string {
   switch (value) {
+    case "hybrid":
+      return text.modeLabel;
     case "keyword":
       return text.modeKeyword;
     case "ai":

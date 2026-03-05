@@ -72,39 +72,41 @@ export default function MarketplaceCategoryDetailFilters({
         queryPlaceholder={text.queryPlaceholder}
         onQueryChange={(value) => onFilterFieldChange("q", value)}
         onQueryKeyDown={onSearchInputKeyDown}
-        semanticAriaLabel={text.querySemantic}
-        semanticValue={form.tags}
-        semanticPlaceholder={text.semanticPlaceholder}
-        onSemanticChange={(value) => onFilterFieldChange("tags", value)}
         submitLabel={text.search}
         onSubmit={onSearchSubmit}
         submitDisabled={submitDisabled}
       />
 
       <section className="marketplace-category-filter-row" role="group" aria-label="Category sort and mode filters">
-        <div className="marketplace-category-filter-group">
-          {sortOptions.map((option) => (
-            <button
-              key={`sort-filter-${option.value}`}
-              type="button"
-              className={form.sort === option.value ? "is-active" : ""}
-              onClick={() => onSortFilterApply(option.value)}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="marketplace-category-filter-group" aria-label={text.sortLabel}>
+          <span className="marketplace-category-filter-label">{text.sortLabel}</span>
+          <div className="marketplace-category-filter-chips">
+            {sortOptions.map((option) => (
+              <button
+                key={`sort-filter-${option.value}`}
+                type="button"
+                className={form.sort === option.value ? "is-active" : ""}
+                onClick={() => onSortFilterApply(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="marketplace-category-filter-group">
-          {modeOptions.map((option) => (
-            <button
-              key={`mode-filter-${option.value}`}
-              type="button"
-              className={form.mode === option.value ? "is-active" : ""}
-              onClick={() => onModeFilterApply(option.value)}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="marketplace-category-filter-group" aria-label={text.modeLabel}>
+          <span className="marketplace-category-filter-label">{text.modeLabel}</span>
+          <div className="marketplace-category-filter-chips">
+            {modeOptions.map((option) => (
+              <button
+                key={`mode-filter-${option.value}`}
+                type="button"
+                className={form.mode === option.value ? "is-active" : ""}
+                onClick={() => onModeFilterApply(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
     </>

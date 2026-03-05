@@ -42,9 +42,11 @@ function createText(): MarketplaceText {
     hotkeyLabel: "",
     allCategories: "",
     allSubcategories: "",
+    sortLabel: "Sort: Relevance",
     sortRecent: "Sort: Recent",
     sortStars: "Sort: Stars",
     sortQuality: "Sort: Quality",
+    modeLabel: "Mode: Hybrid",
     modeKeyword: "Mode: Keyword",
     modeAI: "Mode: AI",
     resetFilters: "",
@@ -52,8 +54,6 @@ function createText(): MarketplaceText {
     hotRepository: "",
     hotRelease: "",
     recommendedLabel: "",
-    modeLabel: "",
-    sortLabel: "",
     viewLabel: "",
     queueLabel: "",
     openQueue: "",
@@ -87,8 +87,8 @@ function createText(): MarketplaceText {
 describe("MarketplaceCategoryDetailFilters config", () => {
   it("returns default sort and mode options when payload has no filter options", () => {
     const options = resolveMarketplaceCategoryDetailFilterOptions(null, createText(), "tools");
-    expect(options.sortOptions.map((item) => item.value)).toEqual(["recent", "stars", "quality"]);
-    expect(options.modeOptions.map((item) => item.value)).toEqual(["keyword", "ai"]);
+    expect(options.sortOptions.map((item) => item.value)).toEqual(["relevance", "recent", "stars", "quality"]);
+    expect(options.modeOptions.map((item) => item.value)).toEqual(["hybrid", "keyword", "ai"]);
   });
 
   it("normalizes, deduplicates and localizes known configured options", () => {
