@@ -32,7 +32,6 @@ import MarketplaceCategoryDetailFilters from "./MarketplaceCategoryDetailFilters
 import {
   resolveMarketplaceCategoryDetailFilterOptions
 } from "./MarketplaceCategoryDetailFilters.config";
-import { buildMarketplaceTopbarRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
 import { buildMarketplaceText } from "./marketplaceText";
 import { normalizeFilterFormQuery, normalizeRouteCategorySlug } from "./MarketplacePublicQuery";
 import PublicStandardTopbar from "./PublicStandardTopbar";
@@ -349,14 +348,6 @@ export default function MarketplaceCategoryDetailPage({
       }),
     [handleTopbarAuthAction, onNavigate, sessionUser, text.signIn, text.signOut, toPublicPath]
   );
-  const topbarRightRegistrations = useMemo(
-    () =>
-      buildMarketplaceTopbarRightRegistrations({
-        ctaLabel: sessionUser ? text.signOut : text.signIn,
-        onCtaClick: handleTopbarAuthAction
-      }),
-    [handleTopbarAuthAction, sessionUser, text.signIn, text.signOut]
-  );
   const topbarBrandTitle = isLightTheme ? "SkillsIndex" : text.brandTitle;
   const topbarBrandSubtitle = isLightTheme ? "User Portal" : text.brandSubtitle;
   const rootClasses = ["marketplace-home", "is-results-page", "is-category-detail-page", isLightTheme ? "is-light-theme" : "", isMobileLayout ? "is-mobile" : ""]
@@ -384,7 +375,8 @@ export default function MarketplaceCategoryDetailPage({
         isLightTheme={isLightTheme}
         primaryActions={lightTopbarPrimaryActions}
         utilityActions={lightTopbarUtilityActions}
-        rightRegistrations={topbarRightRegistrations}
+        ctaLabel={sessionUser ? text.signOut : text.signIn}
+        onCtaClick={handleTopbarAuthAction}
         localeThemeSwitch={
           <MarketplacePublicLocaleThemeSwitch
             locale={locale}
