@@ -1,6 +1,6 @@
 # Style System Reference
 
-This reference captures the active visual system used by the current marketplace homepage stack.
+This reference documents the active public marketplace style system and how to extend it safely.
 
 ## 1. Token Layers
 
@@ -9,105 +9,115 @@ This reference captures the active visual system used by the current marketplace
 Source: `frontend/src/theme/themeSystem.ts`
 
 - Color tokens: `--si-color-*`
-- Overlay token: `--si-color-overlay-mask`
-- Overlay shadow token: `--si-shadow-overlay`
-- Marketplace sizing tokens: `--si-size-marketplace-*`
+- Overlay and shadow tokens: `--si-color-overlay-mask`, `--si-shadow-overlay`
+- Sizing tokens: `--si-size-*` (including marketplace dimensions)
 
-Dark and light modes are both fully defined in `standardThemeTokens`.
+Both dark and light mode values are defined in the shared theme token set.
 
-### Component Dimension Tokens
+### Marketplace Component Tokens
 
-Source: `frontend/src/pages/MarketplaceHomePage.styles.dimensionTokens.ts`
+Primary sources:
 
-Component-level variables mirror global size tokens, for example:
+- `frontend/src/pages/MarketplaceHomePage.styles.theme.ts`
+- `frontend/src/pages/MarketplaceHomePage.styles.dimensionTokens.ts`
+- `frontend/src/pages/MarketplaceHomePage.styles.theme.categoryTokens.ts`
 
-- `--marketplace-search-input-height`
-- `--marketplace-results-row-height`
-- `--marketplace-card-title-size`
-- `--marketplace-results-stat-height`
+Pattern:
 
-Rule: if a size changes, update global token first, then mapping token.
+- Global tokens (`--si-*`) feed page/component tokens (`--marketplace-*`).
+- Component styles consume `--marketplace-*` tokens.
+
+Rule:
+
+- New visual values should be introduced through token mapping, not direct hardcoded values in leaf selectors.
 
 ## 2. Typography System
 
 Source: `frontend/src/pages/MarketplaceHomePage.styles.theme.ts`
 
-- Sans body/UI: `"Noto Sans SC", "Noto Sans", sans-serif`
-- Monospace metric/label: `"JetBrains Mono", monospace`
-- Optional import includes Inter, but primary usage is Noto Sans SC + JetBrains Mono.
+- Body/UI: `"Noto Sans SC", "Noto Sans", sans-serif`
+- Metrics/labels/chips: `"JetBrains Mono", monospace`
 
 Usage conventions:
 
-- Data labels and chips use JetBrains Mono.
-- Content, descriptions, and body copy use Noto Sans SC.
+- Mono font for compact labels, chips, counts, and diagnostics.
+- Sans font for body text, titles, descriptions, and interaction-heavy copy.
 
-## 3. Color and Surface Direction
+## 3. Surface and Contrast Direction
 
-### Dark Baseline
+### Dark Mode
 
-- Canvas starts from near-black (`#101010` family).
-- Topbar uses layered dark gradient.
-- Cards use low-alpha, low-contrast gradients and borders.
+- Canvas is near-black with subtle depth and low-alpha surfaces.
+- Borders are soft and minimal.
+- High-contrast action states should remain clear.
 
-### Light Baseline
+### Light Mode
 
-- Canvas is cool neutral (`#eef1f5` family).
-- Panels/cards move to white and light gray neutrals.
-- Active nav and CTA keep strong black/white contrast for emphasis.
+- Canvas uses cool neutral backgrounds.
+- Surface layers move toward white/light gray values.
+- Active actions preserve strong contrast for readability.
 
-## 4. Radius, Spacing, and Density
+## 4. Category Detail Theming Rules
 
-Common radii:
+Category detail surfaces must stay token-driven.
 
-- Chips and pills: `999px`
-- Utility buttons: `8px`
-- Card blocks: `12px` to `16px`
+Use category-specific marketplace tokens for:
 
-Spacing pattern:
+- heading overline text
+- heading title text
+- filter labels and chip states
+- filter button states
+- category search input surface
 
-- Global content gutter via `--marketplace-content-gutter`
-- Vertical rhythm in 8/10/12/14 px increments
-- Dense data UI but clear section separation
+Do not hardcode category section colors directly in `MarketplaceHomePage.styles.search.utility.ts`.
 
-## 5. Motion and Accessibility Contracts
+## 5. Radius, Spacing, and Density
 
-Animation keys:
+Common patterns:
 
-- Page and section fade enter
-- Auto-load ring/dot/arrow motion
-- Results overlay enter
+- Pills/chips: `999px`
+- Utility/action controls: `8px` to `11px`
+- Card/surface blocks: `12px` to `16px`
+- Spacing rhythm: mostly 8/10/12/14 px increments
 
-Required accessibility:
+Rule:
 
-- `:focus-visible` ring on actionable controls
-- `@media (prefers-reduced-motion: reduce)` disables heavy animation
-- Strong keyboard behavior in results dialog
+- Preserve dense information layout while keeping distinct section separation.
 
-## 6. Responsive Rules
+## 6. Motion and Accessibility Contracts
+
+Keep existing behavior:
+
+- section/page fade transitions
+- loading indicators and subtle state transitions
+- reduced-motion fallback (`@media (prefers-reduced-motion: reduce)`)
+- visible keyboard focus (`:focus-visible`)
+
+Do not remove or weaken accessibility behavior when adjusting visuals.
+
+## 7. Responsive Contract
 
 Source: `frontend/src/pages/MarketplaceHomePage.styles.responsive.ts`
 
-Mobile mode uses `.is-mobile` and `.is-mobile-stage`:
+Mobile behavior relies on class gates (`.is-mobile`, `.is-mobile-stage`) and existing media rules.
 
-- Topbar stacks vertically
-- Search row collapses into one-column controls
-- Results grid becomes one column
-- Overlay modal search row becomes one column
+Expected outcomes:
 
-Rule: preserve class-based responsive contract before adding new breakpoints.
+- topbar wraps/reshapes without overlap
+- search rows collapse into stacked layout
+- result grids reduce column count
+- compact controls remain operable
 
-## 7. Overlay and Modal Style Rules
+Prefer extending existing responsive rules over introducing unrelated breakpoints.
+
+## 8. Overlay and Modal Rules
 
 Source: `frontend/src/pages/MarketplaceHomePage.styles.resultsPage.ts`
 
-- Overlay uses tokenized mask (`--si-color-overlay-mask`)
-- Modal canvas and panel use border + radius hierarchy
-- Search row uses multi-column desktop and single-column mobile
-- Footer and stat pills keep compact informational density
+- Overlay mask and panel should remain tokenized.
+- Result overlay should keep keyboard and pointer-close affordances.
+- Modal row layout adapts desktop/mobile while preserving function order.
 
-## 8. What Not to Change Lightly
+Important:
 
-- Token names and existing `marketplace-*` class contract
-- Theme mode class gates (`.is-light-theme`, `.is-mobile`)
-- Reduced-motion and focus-visible behavior
-- Prefix-aware route styling behavior
+- Category detail page should not rely on floating overlay UI.

@@ -1,150 +1,146 @@
 # Component Design Reference
 
-This reference documents the current component composition model for the public marketplace experience.
+This reference captures the current component composition model for public marketplace pages.
 
-## 1. Page Shell and Navigation
+## 1. Shared Public Shell Layer
 
-### Standard Topbar
+Primary files:
 
-Source: `frontend/src/pages/PublicStandardTopbar.tsx`
+- `frontend/src/pages/marketplacePublic/MarketplacePublicPageShell.tsx`
+- `frontend/src/pages/marketplacePublic/MarketplacePublicPageStyles.tsx`
+- `frontend/src/pages/marketplacePublic/MarketplacePublicShared.ts`
 
-Primary responsibilities:
+Responsibilities:
 
-- Brand anchor and identity lockup
-- Primary navigation group
+- unify stage/root class structure
+- inject shared marketplace styles
+- centralize reusable imports for public marketplace pages
+
+Guideline:
+
+- If a new public marketplace page follows existing shell semantics, use this layer first.
+
+## 2. Topbar Composition
+
+Primary files:
+
+- `frontend/src/pages/PublicStandardTopbar.tsx`
+- `frontend/src/pages/MarketplaceHomePage.lightTopbar.ts`
+
+Behavior model:
+
+- Brand area
+- Primary action group
 - Utility action group
 - Locale/theme switch slot
-- Optional status + CTA
+- CTA and optional secondary CTA where applicable
 
-Action style model comes from `TopbarActionItem`:
+Action model:
 
-- `tone`: `default` | `subtle` | `highlight`
-- `active`, `disabled`, `badge`, custom `className`
+- `TopbarActionItem` with tone/state/badge/className options
 
-### Topbar Action Builders
+## 3. Search Component Contract
 
-Source: `frontend/src/pages/MarketplaceHomePage.lightTopbar.ts`
+Primary file:
 
-Reusable builders:
+- `frontend/src/components/MarketplaceGlobalSearchBar.tsx`
 
-- `buildLightTopbarPrimaryActions`
-- `buildLightTopbarUtilityActions`
+Use this component for:
 
-Current public IA alignment:
+- keyword query input
+- optional semantic input
+- submit action
+- optional filter action
 
-- Categories route: `/categories`
-- Ranking route: `/rankings`
-- Global search utility: `/results`
+Keep action ordering explicit through helper-driven `actionOrder`.
 
-## 2. Homepage Composition
+## 4. Route-Scoped Page Ownership
 
-Source: `frontend/src/pages/MarketplaceHomePage.tsx`
+### Home and Results
 
-Primary composition sequence:
+Primary file:
 
-1. `PublicStandardTopbar`
-2. Top stats and search strip
-3. `MarketplaceHomeTopRecommendations`
-4. Search main row + utility row
-5. `MarketplaceHomeResultsContent`
-6. Optional `MarketplaceResultsPage` floating overlay
+- `frontend/src/pages/MarketplaceHomePage.tsx`
 
-Shared stylesheet injector:
+Notes:
 
-- `MarketplaceHomePageStyles`
+- owns `/` and `/results`
+- can use floating overlay search path
+- keeps top stats/recommendation/results composition
 
-## 3. Search and Recommendation Components
+### Category Detail
 
-### Recommendation Chips
+Primary files:
 
-Source: `frontend/src/pages/MarketplaceHomeTopRecommendations.tsx`
+- `frontend/src/pages/MarketplaceCategoryDetailPage.tsx`
+- `frontend/src/pages/MarketplaceCategoryDetailFilters.tsx`
 
-- Shows up to 3 recommendations
-- Emits selected filter (`queryTags`) to parent
+Notes:
 
-### Query Entry and Quick Filter
+- owns `/categories/:slug`
+- is standalone and should not be delegated to `MarketplaceHomePage`
+- uses in-page filters and result list flow
+- must not depend on floating search overlay behavior
 
-Source: `MarketplaceHomePage.tsx` and `MarketplaceHomePage.styles.search.utility.ts`
+### Other Public Subpages
 
-- Query input opens or submits into `/results`
-- Quick filter button opens results context while preserving query state
-- Utility pills provide mode/sort/view and queue shortcut affordances
+- categories list: `PublicCategoriesPage.tsx`
+- rankings: `PublicRankingPage.tsx`
+- skill detail: `PublicSkillDetailPage.tsx`
 
-## 4. Card and List Patterns
+All should preserve public prefix-aware navigation and topbar consistency.
 
-### Skill Card
+## 5. Query and Navigation Contracts
 
-Source: `frontend/src/pages/MarketplaceHomeSkillCard.tsx`
+Primary files:
 
-Structure:
+- `frontend/src/pages/publicPageNavigation.ts`
+- `frontend/src/pages/MarketplacePublicQuery.ts`
+- `frontend/src/lib/appPathnameResolver.ts`
 
-- Head: circular cover + compact badge
-- Title button
-- Description paragraph
-- Chip row (up to 2 chips)
-- Metadata row (up to 3 segments)
+Rules:
 
-### Results Content Block
+- preserve `/light`, `/mobile`, `/mobile/light` route families
+- normalize and serialize query state deterministically
+- keep legacy redirect behavior (`/docs` -> `/categories`, `/compare` -> `/rankings`)
 
-Source: `frontend/src/pages/MarketplaceHomeResultsContent.tsx`
+## 6. Results and Card Composition
+
+Primary files:
+
+- `frontend/src/pages/MarketplaceHomeResultsContent.tsx`
+- `frontend/src/pages/MarketplaceHomeSkillCard.tsx`
 
 Contracts:
 
-- Three-column desktop row grouping
-- Virtualized row window for larger datasets
-- Auto-load trigger near page bottom
-- Explicit visual states for loading indicator
+- grouped row rendering and virtualized window on large sets
+- deterministic auto-load indicator states
+- stable card structure (title button, chips, metadata)
 
-## 5. Floating Results Overlay
+## 7. Overlay Search Composition
 
-Source: `frontend/src/pages/MarketplaceResultsPage.tsx`
+Primary files:
 
-Behavior contracts:
+- `frontend/src/pages/MarketplaceHomeSearchOverlay.tsx`
+- `frontend/src/pages/MarketplaceResultsPage.tsx`
 
-- Modal focus trap
-- Escape closes dialog
-- Backdrop click closes dialog
-- Search row updates query fields
-- Quick filter chips sync with current tags
-- Result cards provide direct open action
+Contract:
 
-## 6. Categories and Ranking Subpages
+- valid for home/results overlay flow only
+- keeps escape close and backdrop close
+- retains keyboard-focused interactions
 
-Sources:
+Do not attach this flow to category detail page.
 
-- `frontend/src/pages/PublicCategoriesPage.tsx`
-- `frontend/src/pages/PublicRankingPage.tsx`
+## 8. Regression Checkpoints
 
-Shared pattern:
+Primary checkpoints:
 
-- Reuse standard topbar and navigation builders
-- Keep homepage class language (`marketplace-home-stage`, `marketplace-home`, light/mobile modifiers)
-- Use utility shell components from `prototypeCssInJs.tsx`
-- Keep routing prefix awareness through `createPublicPageNavigator`
+- unit: `MarketplaceHomePage.lightTopbar.test.ts`, `MarketplacePublicQuery.test.ts`
+- e2e: `marketplace-home.spec.ts`, `public-categories-layout.spec.ts`, `public-route-prefix.spec.ts`
+- visual: `frontend/scripts/visual-regression`
+- alignment: `MarketplaceHomePage.pen-alignment.test.js`
 
-## 7. Route and Prefix Rules
+Rule:
 
-Sources:
-
-- `frontend/src/lib/appPathnameResolver.ts`
-- `frontend/src/App.shared.tsx`
-
-Requirements:
-
-- Preserve mode prefixes (`/light`, `/mobile`, `/mobile/light`)
-- Normalize public route matching for prefixed and unprefixed paths
-- Apply legacy redirects:
-  - `/docs` -> `/categories`
-  - `/compare` -> `/rankings`
-
-## 8. Test and Alignment Contracts
-
-Primary regression checkpoints:
-
-- `MarketplaceHomePage.pen-alignment.test.js`
-- `MarketplaceHomePage.lightTopbar.test.ts`
-- `public-route-prefix.spec.ts`
-- `marketplace-home.spec.ts`
-- visual regression under `frontend/scripts/visual-regression`
-
-If component geometry or interaction contracts change, update matching tests in the same change set.
+- when changing a behavior or contract, update matching tests in the same change set.
