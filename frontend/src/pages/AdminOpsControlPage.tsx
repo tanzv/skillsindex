@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchConsoleJSON, postConsoleJSON } from "../lib/api";
 import { adminOpsRouteDefinitions } from "./AdminOpsControlPage.config";
 import { labelFromKey, stringifyValue } from "./AdminOpsControlPage.helpers";
+import AdminSubpageSummaryPanel from "./AdminSubpageSummaryPanel";
 import { AdminOpsControlPageProps, AdminOpsControlRoute } from "./AdminOpsControlPage.types";
 
 export type { AdminOpsControlRoute };
@@ -84,7 +85,7 @@ export default function AdminOpsControlPage({ route }: AdminOpsControlPageProps)
       <section className="panel error">
         <h2 style={{ marginTop: 0 }}>Unable to load operations control data</h2>
         <p>{error}</p>
-        <button type="button" onClick={reload} style={{ padding: "8px 14px", borderRadius: 8, cursor: "pointer" }}>
+        <button type="button" onClick={reload} className="panel-action-button">
           Retry
         </button>
       </section>
@@ -93,37 +94,24 @@ export default function AdminOpsControlPage({ route }: AdminOpsControlPageProps)
 
   return (
     <div className="page-grid" style={{ gap: 16 }}>
-      <section className="panel panel-hero">
-        <h2 style={{ marginBottom: 8 }}>{routeDefinition.title}</h2>
-        <p style={{ margin: 0 }}>{routeDefinition.subtitle}</p>
-      </section>
-
-      <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-        {view.metrics.map((metric) => (
-          <article key={metric.label} className="panel" style={{ borderLeft: "4px solid #235078" }}>
-            <span style={{ display: "block", color: "var(--text-subtle)" }}>{metric.label}</span>
-            <strong style={{ fontSize: 26 }}>{metric.value}</strong>
-            <p style={{ marginBottom: 0, marginTop: 8 }}>{metric.help}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="panel" style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-        <button type="button" onClick={reload} style={{ padding: "8px 14px", borderRadius: 8, cursor: "pointer" }}>
-          Refresh
-        </button>
-        {routeDefinition.runEndpoint ? (
-          <button
-            type="button"
-            onClick={runReleaseGates}
-            disabled={running}
-            style={{ padding: "8px 14px", borderRadius: 8, cursor: running ? "wait" : "pointer" }}
-          >
-            {running ? "Running..." : "Run Release Gates"}
-          </button>
-        ) : null}
-        {runFeedback ? <span style={{ color: "var(--text-subtle)" }}>{runFeedback}</span> : null}
-      </section>
+      <AdminSubpageSummaryPanel
+        title={routeDefinition.title}
+        status={<span className="pill muted">{routeDefinition.subtitle}</span>}
+        actions={
+          <>
+            <button type="button" onClick={reload} className="panel-action-button">
+              Refresh
+            </button>
+            {routeDefinition.runEndpoint ? (
+              <button type="button" onClick={runReleaseGates} disabled={running} className="panel-action-button" data-variant="emphasis">
+                {running ? "Running..." : "Run Release Gates"}
+              </button>
+            ) : null}
+          </>
+        }
+        notice={runFeedback ? <span>{runFeedback}</span> : undefined}
+        metrics={view.metrics.map((metric) => ({ id: metric.label, label: metric.label, value: metric.value, help: metric.help }))}
+      />
 
       <section className="panel">
         <h3 style={{ marginTop: 0 }}>Records</h3>

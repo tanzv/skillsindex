@@ -1,4 +1,5 @@
 import { PublicMarketplaceResponse } from "../lib/api";
+import type { AppLocale } from "../lib/i18n";
 
 export type WorkspaceQueueStatus = "pending" | "running" | "risk";
 export type WorkspaceQueueFilter = "all" | WorkspaceQueueStatus;
@@ -48,4 +49,5 @@ export interface WorkspaceSnapshot {
 export interface BuildWorkspaceSnapshotOptions {
   payload: PublicMarketplaceResponse | null;
   qualityRiskThreshold?: number;
+  locale?: AppLocale;
 }

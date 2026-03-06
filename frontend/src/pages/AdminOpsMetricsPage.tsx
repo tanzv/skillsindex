@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { CSSProperties, useEffect, useMemo, useState } from "react";
 import { AdminOpsMetricsResponse, OpsMetrics, fetchAdminOpsMetrics } from "../lib/api";
 
 type OpsMetricKey = keyof OpsMetrics;
@@ -40,9 +40,35 @@ function getSeverity(value: number, warningAt: number, criticalAt: number): Seve
 }
 
 const severityPalette: Record<Severity, { tone: string; border: string; background: string }> = {
-  normal: { tone: "#0f8a62", border: "rgba(15, 138, 98, 0.35)", background: "rgba(15, 138, 98, 0.08)" },
-  warning: { tone: "#b26b00", border: "rgba(178, 107, 0, 0.35)", background: "rgba(178, 107, 0, 0.1)" },
-  critical: { tone: "#b42318", border: "rgba(180, 35, 24, 0.38)", background: "rgba(180, 35, 24, 0.1)" }
+  normal: {
+    tone: "var(--si-color-success-text)",
+    border: "color-mix(in srgb, var(--si-color-success-bg) 68%, transparent)",
+    background: "color-mix(in srgb, var(--si-color-success-bg) 44%, transparent)"
+  },
+  warning: {
+    tone: "var(--si-color-warning-text)",
+    border: "color-mix(in srgb, var(--si-color-warning-bg) 72%, transparent)",
+    background: "color-mix(in srgb, var(--si-color-warning-bg) 48%, transparent)"
+  },
+  critical: {
+    tone: "var(--si-color-danger-text)",
+    border: "color-mix(in srgb, var(--si-color-danger-bg) 72%, transparent)",
+    background: "color-mix(in srgb, var(--si-color-danger-bg) 48%, transparent)"
+  }
+};
+
+const subtleTextColor = "var(--si-color-text-secondary)";
+const heroPanelStyle: CSSProperties = {
+  background:
+    "linear-gradient(120deg, color-mix(in srgb, var(--si-color-surface) 94%, var(--si-color-accent) 6%), color-mix(in srgb, var(--si-color-panel) 90%, var(--si-color-accent) 10%))",
+  color: "var(--si-color-text-primary)"
+};
+
+const heroMetricCardStyle: CSSProperties = {
+  border: "1px solid color-mix(in srgb, var(--si-color-border) 72%, transparent)",
+  borderRadius: 12,
+  padding: "10px 12px",
+  background: "color-mix(in srgb, var(--si-color-surface) 74%, transparent)"
 };
 
 export default function AdminOpsMetricsPage() {
@@ -149,22 +175,22 @@ export default function AdminOpsMetricsPage() {
     <div className="page-grid" style={{ gap: 18 }}>
       <section
         className="panel panel-hero"
-        style={{ background: "linear-gradient(120deg, rgba(13, 55, 95, 0.95), rgba(22, 106, 114, 0.92))", color: "#f8fafc" }}
+        style={heroPanelStyle}
       >
         <h2 style={{ marginBottom: 8 }}>Operations Command Dashboard</h2>
         <p style={{ marginTop: 0, opacity: 0.92 }}>
           Live baseline for reliability, moderation capacity, and integration stability. Use the risk queue to prioritize response.
         </p>
         <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", marginTop: 14 }}>
-          <article style={{ border: "1px solid rgba(255,255,255,0.32)", borderRadius: 12, padding: "10px 12px", background: "rgba(255,255,255,0.08)" }}>
+          <article style={heroMetricCardStyle}>
             <span style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Critical Signals</span>
             <strong style={{ fontSize: 22 }}>{summary.critical}</strong>
           </article>
-          <article style={{ border: "1px solid rgba(255,255,255,0.32)", borderRadius: 12, padding: "10px 12px", background: "rgba(255,255,255,0.08)" }}>
+          <article style={heroMetricCardStyle}>
             <span style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Warning Signals</span>
             <strong style={{ fontSize: 22 }}>{summary.warning}</strong>
           </article>
-          <article style={{ border: "1px solid rgba(255,255,255,0.32)", borderRadius: 12, padding: "10px 12px", background: "rgba(255,255,255,0.08)" }}>
+          <article style={heroMetricCardStyle}>
             <span style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Tracked Events</span>
             <strong style={{ fontSize: 22 }}>{summary.total}</strong>
           </article>
@@ -173,8 +199,12 @@ export default function AdminOpsMetricsPage() {
 
       <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
         {quickContextCards.map((card) => (
-          <article key={card.label} className="panel" style={{ borderLeft: "4px solid #0c6475" }}>
-            <span style={{ display: "block", color: "var(--text-subtle)" }}>{card.label}</span>
+          <article
+            key={card.label}
+            className="panel"
+            style={{ borderLeft: "4px solid color-mix(in srgb, var(--si-color-accent) 64%, transparent)" }}
+          >
+            <span style={{ display: "block", color: subtleTextColor }}>{card.label}</span>
             <strong style={{ fontSize: 26, lineHeight: 1.25 }}>{card.value}</strong>
             <p style={{ marginBottom: 0, fontSize: 13 }}>{card.target}</p>
           </article>
@@ -183,7 +213,7 @@ export default function AdminOpsMetricsPage() {
 
       <section className="panel">
         <h3 style={{ marginTop: 0 }}>Risk Queue</h3>
-        <p style={{ marginTop: 0, color: "var(--text-subtle)" }}>
+        <p style={{ marginTop: 0, color: subtleTextColor }}>
           {summary.critical > 0 ? "Immediate intervention needed on critical metrics." : "No critical blockers detected."}
         </p>
         <div style={{ display: "grid", gap: 10 }}>
@@ -204,7 +234,13 @@ export default function AdminOpsMetricsPage() {
               </article>
             ))}
           {summary.critical === 0 && summary.warning === 0 ? (
-            <article style={{ border: "1px dashed rgba(35, 80, 120, 0.45)", borderRadius: 10, padding: "10px 12px" }}>
+            <article
+              style={{
+                border: "1px dashed color-mix(in srgb, var(--si-color-border) 84%, transparent)",
+                borderRadius: 10,
+                padding: "10px 12px"
+              }}
+            >
               All monitored metrics are currently within normal operating thresholds.
             </article>
           ) : null}
@@ -218,7 +254,7 @@ export default function AdminOpsMetricsPage() {
             className="panel"
             style={{ borderTop: `4px solid ${severityPalette[metric.severity].tone}`, background: severityPalette[metric.severity].background }}
           >
-            <span style={{ display: "block", color: "var(--text-subtle)", marginBottom: 8 }}>{metric.label}</span>
+            <span style={{ display: "block", color: subtleTextColor, marginBottom: 8 }}>{metric.label}</span>
             <strong style={{ fontSize: 30, lineHeight: 1.1 }}>{metric.value}</strong>
             <p style={{ marginBottom: 0, marginTop: 8 }}>{metric.description}</p>
           </article>
@@ -228,7 +264,7 @@ export default function AdminOpsMetricsPage() {
       <section className="panel" style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
           <h3 style={{ marginTop: 0, marginBottom: 8 }}>Operational Notes</h3>
-          <p style={{ margin: 0, color: "var(--text-subtle)" }}>
+          <p style={{ margin: 0, color: subtleTextColor }}>
             Last refresh: {lastLoadedAt || "Unavailable"}.
           </p>
         </div>

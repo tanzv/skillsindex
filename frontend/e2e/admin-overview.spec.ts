@@ -54,6 +54,46 @@ async function mockAuthAndOverview(page: Page, options?: { overviewStatus?: numb
   });
 }
 
+async function mockAccountManagementData(page: Page): Promise<void> {
+  await page.route("**/api/v1/admin/accounts", async (route) => {
+    await fulfillJSON(route, 200, {
+      total: 3,
+      items: [
+        {
+          id: 1001,
+          username: "ops.lead",
+          role: "admin",
+          status: "active",
+          created_at: "2026-03-01T00:00:00Z",
+          updated_at: "2026-03-02T09:00:00Z"
+        },
+        {
+          id: 1002,
+          username: "security.audit",
+          role: "auditor",
+          status: "active",
+          created_at: "2026-03-01T00:00:00Z",
+          updated_at: "2026-03-03T09:00:00Z"
+        },
+        {
+          id: 1003,
+          username: "readonly.demo",
+          role: "viewer",
+          status: "disabled",
+          created_at: "2026-03-01T00:00:00Z",
+          updated_at: "2026-03-01T09:00:00Z"
+        }
+      ]
+    });
+  });
+
+  await page.route("**/api/v1/admin/settings/registration", async (route) => {
+    await fulfillJSON(route, 200, {
+      allow_registration: true
+    });
+  });
+}
+
 async function resolveLocaleSwitch(
   roleLocator: ReturnType<Page["getByRole"]>,
   testIDLocator: ReturnType<Page["getByTestId"]>
@@ -150,5 +190,24 @@ test.describe("Admin overview interactions", () => {
     await englishLocaleSwitch.click();
     await expect(englishLocaleSwitch).toBeDisabled();
     await expect(chineseLocaleSwitch).toBeEnabled();
+  });
+
+  test("account management list supports search and status filtering", async ({ page }) => {
+    await mockAuthAndOverview(page);
+    await mockAccountManagementData(page);
+
+    await page.goto("/admin/accounts");
+
+    await expect(page.getByRole("heading", { name: "Account Management List", exact: true }).first()).toBeVisible();
+
+    const searchInput = page.getByPlaceholder("Search by username, role, or status");
+    await searchInput.fill("security");
+    await expect(page.getByRole("cell", { name: "security.audit", exact: true })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "ops.lead", exact: true })).toHaveCount(0);
+
+    await searchInput.fill("");
+    await page.getByRole("button", { name: "Disabled", exact: true }).click();
+    await expect(page.getByRole("cell", { name: "readonly.demo", exact: true })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "security.audit", exact: true })).toHaveCount(0);
   });
 });

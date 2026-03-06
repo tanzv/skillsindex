@@ -5,9 +5,9 @@ import {
 import { createGlobalNavigationRegistry } from "../lib/globalNavigationRegistry";
 
 interface WorkspaceTopbarPrimaryLabels {
-  navCategories: string;
-  navRankings: string;
-  navTop: string;
+  categories: string;
+  rankings: string;
+  top: string;
   openMarketplace: string;
   openDashboard: string;
   signIn: string;
@@ -35,6 +35,78 @@ interface WorkspaceTopbarUtilityInput {
   extraUtilityActions?: TopbarActionItem[];
 }
 
+const WORKSPACE_TOPBAR_PRIMARY_SLOT = "workspace-topbar-primary";
+
+type WorkspaceTopbarPrimaryRegistry = ReturnType<
+  typeof createGlobalNavigationRegistry<typeof WORKSPACE_TOPBAR_PRIMARY_SLOT, TopbarActionItem>
+>;
+
+function registerWorkspaceTopbarPrimaryAction(
+  registry: WorkspaceTopbarPrimaryRegistry,
+  key: string,
+  order: number,
+  item: TopbarActionItem
+): void {
+  registry.register({
+    key,
+    slot: WORKSPACE_TOPBAR_PRIMARY_SLOT,
+    order,
+    item
+  });
+}
+
+function buildWorkspaceMarketplaceEntryActions({
+  onNavigate,
+  toPublicPath,
+  labels
+}: Pick<WorkspaceTopbarPrimaryInput, "onNavigate" | "toPublicPath" | "labels">): TopbarActionItem[] {
+  return [
+    {
+      id: "category",
+      label: labels.categories,
+      tone: "subtle",
+      className: "is-category-action is-marketplace-entry-action",
+      onClick: () => onNavigate(toPublicPath("/categories"))
+    },
+    {
+      id: "ranking",
+      label: labels.rankings,
+      tone: "default",
+      className: "is-download-ranking-action is-marketplace-entry-action",
+      onClick: () => onNavigate(toPublicPath("/rankings"))
+    },
+    {
+      id: "top",
+      label: labels.top,
+      tone: "subtle",
+      className: "is-top-action is-marketplace-entry-action",
+      onClick: () => onNavigate(toPublicPath("/rankings?scope=top"))
+    },
+    {
+      id: "open-marketplace",
+      label: labels.openMarketplace,
+      tone: "default",
+      className: "is-marketplace-entry-action",
+      onClick: () => onNavigate(toPublicPath("/"))
+    }
+  ];
+}
+
+function deduplicateWorkspaceTopbarActions(actions: TopbarActionItem[]): TopbarActionItem[] {
+  const deduplicatedActions: TopbarActionItem[] = [];
+  const seenActionIDs = new Set<string>();
+
+  for (const action of actions) {
+    if (seenActionIDs.has(action.id)) {
+      continue;
+    }
+    seenActionIDs.add(action.id);
+    deduplicatedActions.push(action);
+  }
+
+  return deduplicatedActions;
+}
+
 export function buildWorkspaceCenterTopbarPrimaryActions({
   onNavigate,
   toPublicPath,
@@ -43,94 +115,33 @@ export function buildWorkspaceCenterTopbarPrimaryActions({
   labels,
   extraPrimaryActions
 }: WorkspaceTopbarPrimaryInput): TopbarActionItem[] {
-  const registry = createGlobalNavigationRegistry<"workspace-topbar-primary", TopbarActionItem>();
-  registry.register({
-    key: "workspace-topbar-category",
-    slot: "workspace-topbar-primary",
-    order: 10,
-    item: {
-      id: "category",
-      label: labels.navCategories,
-      tone: "subtle",
-      className: "is-category-action is-marketplace-entry-action",
-      onClick: () => onNavigate(toPublicPath("/categories"))
-    }
+  const registry = createGlobalNavigationRegistry<typeof WORKSPACE_TOPBAR_PRIMARY_SLOT, TopbarActionItem>();
+
+  buildWorkspaceMarketplaceEntryActions({
+    onNavigate,
+    toPublicPath,
+    labels
+  }).forEach((action, index) => {
+    registerWorkspaceTopbarPrimaryAction(registry, `workspace-topbar-marketplace-${action.id}`, (index + 1) * 10, action);
   });
-  registry.register({
-    key: "workspace-topbar-ranking",
-    slot: "workspace-topbar-primary",
-    order: 20,
-    item: {
-      id: "ranking",
-      label: labels.navRankings,
-      tone: "default",
-      className: "is-download-ranking-action is-marketplace-entry-action",
-      onClick: () => onNavigate(toPublicPath("/rankings"))
-    }
-  });
-  registry.register({
-    key: "workspace-topbar-top",
-    slot: "workspace-topbar-primary",
-    order: 30,
-    item: {
-      id: "top",
-      label: labels.navTop,
-      tone: "default",
-      className: "is-top-action is-marketplace-entry-action",
-      onClick: () => onNavigate(toPublicPath("/rankings?scope=top"))
-    }
-  });
-  registry.register({
-    key: "workspace-topbar-open-marketplace",
-    slot: "workspace-topbar-primary",
-    order: 40,
-    item: {
-      id: "open-marketplace",
-      label: labels.openMarketplace,
-      tone: "default",
-      className: "is-open-marketplace-action is-marketplace-entry-action",
-      onClick: () => onNavigate(toPublicPath("/"))
-    }
-  });
-  registry.register({
-    key: "workspace-topbar-open-dashboard",
-    slot: "workspace-topbar-primary",
-    order: 60,
-    item: {
-      id: "open-dashboard",
-      label: hasSessionUser ? labels.openDashboard : labels.signIn,
-      tone: "highlight",
-      className: "is-open-dashboard-action is-backend-entry-action",
-      onClick: () => onNavigate(hasSessionUser ? toAdminPath("/admin/overview") : toPublicPath("/login"))
-    }
+
+  registerWorkspaceTopbarPrimaryAction(registry, "workspace-topbar-open-dashboard", 50, {
+    id: "open-dashboard",
+    label: hasSessionUser ? labels.openDashboard : labels.signIn,
+    tone: "highlight",
+    className: "is-open-dashboard-action is-backend-entry-action",
+    onClick: () => onNavigate(hasSessionUser ? toAdminPath("/admin/overview") : toPublicPath("/login"))
   });
 
   if (extraPrimaryActions && extraPrimaryActions.length > 0) {
     let extraOrder = 100;
     for (const action of extraPrimaryActions) {
-      registry.register({
-        key: `workspace-topbar-extra-${action.id}`,
-        slot: "workspace-topbar-primary",
-        order: extraOrder,
-        item: action
-      });
+      registerWorkspaceTopbarPrimaryAction(registry, `workspace-topbar-extra-${action.id}`, extraOrder, action);
       extraOrder += 10;
     }
   }
 
-  const registrations = registry.resolveRegistrations("workspace-topbar-primary");
-  const deduplicatedActions: TopbarActionItem[] = [];
-  const seenActionIDs = new Set<string>();
-
-  for (const registration of registrations) {
-    if (seenActionIDs.has(registration.item.id)) {
-      continue;
-    }
-    seenActionIDs.add(registration.item.id);
-    deduplicatedActions.push(registration.item);
-  }
-
-  return deduplicatedActions;
+  return deduplicateWorkspaceTopbarActions(registry.resolve(WORKSPACE_TOPBAR_PRIMARY_SLOT));
 }
 
 export function buildWorkspaceCenterTopbarUtilityActions({

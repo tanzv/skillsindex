@@ -75,12 +75,12 @@ export function parseSyncRun(raw: unknown): SyncRunRecord {
   };
 }
 
-export function parseSyncPolicy(payload: SyncPolicyRecord): SyncPolicyRecord {
+export function parseSyncPolicy(payload: unknown): SyncPolicyRecord {
   return {
-    enabled: Boolean(payload.enabled),
-    interval: String(payload.interval || "30m"),
-    timeout: String(payload.timeout || "10m"),
-    batch_size: Number(payload.batch_size || 20)
+    enabled: Boolean(asRecord(payload).enabled),
+    interval: String(asRecord(payload).interval || "30m"),
+    timeout: String(asRecord(payload).timeout || "10m"),
+    batch_size: Number(asRecord(payload).batch_size || 20)
   };
 }
 

@@ -1,5 +1,6 @@
 import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { fetchConsoleJSON, postConsoleJSON } from "../lib/api";
+import AdminSubpageSummaryPanel from "./AdminSubpageSummaryPanel";
 
 export type AdminCatalogRoute =
   | "/admin/skills"
@@ -103,15 +104,6 @@ const pageMeta: Record<AdminCatalogRoute, { title: string; subtitle: string; end
   }
 };
 
-const baseButtonStyle = {
-  border: "1px solid rgba(17, 25, 31, 0.2)",
-  background: "rgba(255, 255, 255, 0.9)",
-  borderRadius: 10,
-  padding: "8px 14px",
-  fontWeight: 700,
-  cursor: "pointer"
-} as const;
-
 const initialViewState: ViewState = {
   skills: [],
   skillsTotal: 0,
@@ -132,18 +124,6 @@ function statusPillClass(active: boolean): string {
   return active ? "pill active" : "pill muted";
 }
 
-function renderMetrics(metrics: PageViewModel["metrics"]): ReactNode {
-  return (
-    <div className="metric-row">
-      {metrics.map((metric) => (
-        <article className="metric-card" key={metric.label}>
-          <span>{metric.label}</span>
-          <strong>{metric.value}</strong>
-        </article>
-      ))}
-    </div>
-  );
-}
 
 function renderTable(model: TableViewModel): ReactNode {
   return (
@@ -352,7 +332,7 @@ export default function AdminCatalogPage({ route }: AdminCatalogPageProps) {
             <label style={{ display: "grid", gap: 6 }}><span>Timeout</span><input type="text" value={policyForm.timeout} onChange={(event) => setPolicyForm((previous) => ({ ...previous, timeout: event.target.value }))} /></label>
             <label style={{ display: "grid", gap: 6 }}><span>Batch Size</span><input type="number" min={1} value={String(policyForm.batch_size)} onChange={(event) => setPolicyForm((previous) => ({ ...previous, batch_size: Number(event.target.value) || 0 }))} /></label>
             <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-              <button type="submit" style={baseButtonStyle} disabled={saving}>{saving ? "Saving..." : "Save Policy"}</button>
+              <button type="submit" className="panel-action-button" data-variant="emphasis" disabled={saving}>{saving ? "Saving..." : "Save Policy"}</button>
               {message ? <span className="pill active">{message}</span> : null}
             </div>
           </form>
@@ -366,8 +346,8 @@ export default function AdminCatalogPage({ route }: AdminCatalogPageProps) {
     return (
       <div className="page-grid">
         <section className="panel panel-hero error">
-          <h2>{meta.title}</h2><p>{meta.subtitle}</p><p>{error}</p>
-          <button type="button" style={baseButtonStyle} onClick={() => void loadData()}>Retry request</button>
+          <h2>{meta.title}</h2><p>{error}</p>
+          <button type="button" className="panel-action-button" onClick={() => void loadData()}>Retry request</button>
         </section>
       </div>
     );
@@ -375,16 +355,21 @@ export default function AdminCatalogPage({ route }: AdminCatalogPageProps) {
 
   return (
     <div className="page-grid">
-      <section className="panel panel-hero">
-        <h2>{meta.title}</h2>
-        <p>{meta.subtitle}</p>
-        <div style={{ marginBottom: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <span className="pill active">Catalog route</span>
-          <span className="pill muted">{meta.endpoint}</span>
-        </div>
-        <div style={{ marginBottom: 12 }}><button type="button" style={baseButtonStyle} onClick={() => void loadData()}>Refresh</button></div>
-        {renderMetrics(viewModel.metrics)}
-      </section>
+      <AdminSubpageSummaryPanel
+        title={meta.title}
+        status={
+          <>
+            <span className="pill active">Catalog route</span>
+            <span className="pill muted">{meta.endpoint}</span>
+          </>
+        }
+        actions={
+          <button type="button" className="panel-action-button" onClick={() => void loadData()}>
+            Refresh
+          </button>
+        }
+        metrics={viewModel.metrics.map((metric) => ({ id: metric.label, label: metric.label, value: metric.value }))}
+      />
       {viewModel.empty ? <section className="panel"><h3>Empty State</h3><p>No records were returned for this route.</p></section> : null}
       {viewModel.table ? renderTable(viewModel.table) : null}
       {viewModel.editor || null}

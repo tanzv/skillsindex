@@ -1,4 +1,5 @@
 import { MarketplaceSkill } from "../lib/api";
+import type { AppLocale } from "../lib/i18n";
 import {
   BuildWorkspaceSnapshotOptions,
   WorkspacePolicySignal,
@@ -103,30 +104,39 @@ function averageQuality(entries: WorkspaceQueueEntry[]): number {
   return Number((total / entries.length).toFixed(1));
 }
 
-function buildPolicySignals(entries: WorkspaceQueueEntry[], queueCounts: WorkspaceQueueCounts): WorkspacePolicySignal[] {
+function buildPolicySignals(
+  entries: WorkspaceQueueEntry[],
+  queueCounts: WorkspaceQueueCounts,
+  locale: AppLocale
+): WorkspacePolicySignal[] {
   const uniqueCategories = new Set(entries.map((entry) => entry.category)).size;
   const uniqueOwners = new Set(entries.map((entry) => entry.owner)).size;
   const topQuality = entries.length > 0 ? Math.max(...entries.map((entry) => entry.qualityScore)) : 0;
+  const isChinese = locale === "zh";
 
   return [
     {
       key: "coverage",
-      label: "Coverage Scope",
-      value: `${uniqueCategories} categories / ${uniqueOwners} squads`
+      label: isChinese ? "\u8986\u76d6\u8303\u56f4" : "Coverage Scope",
+      value: isChinese
+        ? `${uniqueCategories} \u7c7b / ${uniqueOwners} \u56e2\u961f`
+        : `${uniqueCategories} categories / ${uniqueOwners} squads`
     },
     {
       key: "risk",
-      label: "Risk Signals",
-      value: `${queueCounts.risk} entries require review`
+      label: isChinese ? "\u98ce\u9669\u4fe1\u53f7" : "Risk Signals",
+      value: isChinese ? `${queueCounts.risk} \u6761\u9700\u8981\u590d\u6838` : `${queueCounts.risk} entries require review`
     },
     {
       key: "running",
-      label: "Active Throughput",
-      value: `${queueCounts.running} running / ${queueCounts.pending} pending`
+      label: isChinese ? "\u6d3b\u8dc3\u541e\u5410" : "Active Throughput",
+      value: isChinese
+        ? `${queueCounts.running} \u8fd0\u884c\u4e2d / ${queueCounts.pending} \u5f85\u6267\u884c`
+        : `${queueCounts.running} running / ${queueCounts.pending} pending`
     },
     {
       key: "quality",
-      label: "Top Quality",
+      label: isChinese ? "\u6700\u9ad8\u8d28\u91cf" : "Top Quality",
       value: topQuality.toFixed(1)
     }
   ];
@@ -134,6 +144,7 @@ function buildPolicySignals(entries: WorkspaceQueueEntry[], queueCounts: Workspa
 
 export function buildWorkspaceSnapshot(options: BuildWorkspaceSnapshotOptions): WorkspaceSnapshot {
   const qualityRiskThreshold = toFiniteNumber(options.qualityRiskThreshold, DEFAULT_QUALITY_RISK_THRESHOLD);
+  const locale: AppLocale = options.locale || "en";
   const skills = options.payload?.items || [];
   const queueEntries = sortByRecent(skills.map((skill, index) => mapWorkspaceQueueEntry(skill, index, qualityRiskThreshold)));
   const queueCounts = buildWorkspaceQueueCounts(queueEntries);
@@ -149,7 +160,7 @@ export function buildWorkspaceSnapshot(options: BuildWorkspaceSnapshotOptions): 
       healthScore: averageQuality(queueEntries),
       alerts: queueCounts.risk + topTags.length
     },
-    policySignals: buildPolicySignals(queueEntries, queueCounts),
+    policySignals: buildPolicySignals(queueEntries, queueCounts, locale),
     topTags
   };
 }

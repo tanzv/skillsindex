@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchConsoleJSON } from "../lib/api";
+import AdminSubpageSummaryPanel from "./AdminSubpageSummaryPanel";
 import {
   buildRouteCopy,
   computeMetrics,
@@ -22,14 +23,6 @@ import type {
 } from "./AdminSecurityPage.types";
 
 export type { AdminSecurityRoute } from "./AdminSecurityPage.types";
-
-const actionButtonStyle = {
-  border: "1px solid rgba(17, 25, 31, 0.2)",
-  background: "rgba(255, 255, 255, 0.9)",
-  borderRadius: 10,
-  padding: "8px 14px",
-  cursor: "pointer"
-} as const;
 
 function renderRouteSection(route: AdminSecurityRoute, data: SecurityViewData): JSX.Element {
   if (route === "/admin/apikeys") {
@@ -112,9 +105,8 @@ export default function AdminSecurityPage({ route }: AdminSecurityPageProps) {
       <div className="page-grid">
         <section className="panel panel-hero error">
           <h2>{routeCopy.title}</h2>
-          <p>Failed to load latest data.</p>
           <p>{error}</p>
-          <button type="button" style={actionButtonStyle} onClick={retryFetch}>
+          <button type="button" className="panel-action-button" onClick={retryFetch}>
             Retry
           </button>
         </section>
@@ -125,47 +117,38 @@ export default function AdminSecurityPage({ route }: AdminSecurityPageProps) {
   if (isEmptyData(route, data)) {
     return (
       <div className="page-grid">
-        <section className="panel panel-hero">
-          <h2>{routeCopy.title}</h2>
-          <p>No records were returned for this route.</p>
-          <div className="metric-row">
-            <article className="metric-card">
-              <span>Total Records</span>
-              <strong>0</strong>
-            </article>
-          </div>
-          <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button type="button" style={actionButtonStyle} onClick={retryFetch}>
+        <AdminSubpageSummaryPanel
+          title={routeCopy.title}
+          status={<span className="pill muted">Empty</span>}
+          actions={
+            <button type="button" className="panel-action-button" onClick={retryFetch}>
               Refresh
             </button>
-            <span className="pill muted">Empty</span>
-          </div>
-        </section>
+          }
+          notice="No records were returned for this route."
+          metrics={[{ id: "total-records", label: "Total Records", value: 0 }]}
+        />
       </div>
     );
   }
 
   return (
     <div className="page-grid">
-      <section className="panel panel-hero">
-        <h2>{routeCopy.title}</h2>
-        <p>{routeCopy.subtitle}</p>
-        <div style={{ marginBottom: 12, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <span className="pill active">Live endpoint</span>
-          <span className="pill muted">Last refresh: {lastLoadedAt || "Unavailable"}</span>
-          <button type="button" style={actionButtonStyle} onClick={retryFetch}>
+      <AdminSubpageSummaryPanel
+        title={routeCopy.title}
+        status={
+          <>
+            <span className="pill active">Live endpoint</span>
+            <span className="pill muted">Last refresh: {lastLoadedAt || "Unavailable"}</span>
+          </>
+        }
+        actions={
+          <button type="button" className="panel-action-button" onClick={retryFetch}>
             Refresh
           </button>
-        </div>
-        <div className="metric-row">
-          {metrics.map((metric) => (
-            <article className="metric-card" key={metric.label}>
-              <span>{metric.label}</span>
-              <strong>{metric.value}</strong>
-            </article>
-          ))}
-        </div>
-      </section>
+        }
+        metrics={metrics.map((metric) => ({ id: metric.label, label: metric.label, value: metric.value }))}
+      />
 
       {data ? renderRouteSection(route, data) : null}
     </div>

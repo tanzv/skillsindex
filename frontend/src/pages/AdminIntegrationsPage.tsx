@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import { AdminIntegrationsResponse, fetchAdminIntegrations } from "../lib/api";
 
 function formatDateTime(value: string): string {
@@ -8,6 +8,24 @@ function formatDateTime(value: string): string {
   }
   return parsed.toLocaleString();
 }
+
+const integrationActionButtonStyle: CSSProperties = {
+  border: "1px solid color-mix(in srgb, var(--si-color-border) 78%, transparent)",
+  background: "color-mix(in srgb, var(--si-color-panel) 90%, transparent)",
+  color: "var(--si-color-text-primary)",
+  borderRadius: 10,
+  padding: "8px 14px",
+  fontWeight: 700,
+  cursor: "pointer"
+};
+
+const integrationQuietButtonStyle: CSSProperties = {
+  ...integrationActionButtonStyle,
+  background: "color-mix(in srgb, var(--si-color-surface) 58%, transparent)",
+  color: "var(--si-color-text-secondary)",
+  cursor: "not-allowed",
+  opacity: 0.74
+};
 
 export default function AdminIntegrationsPage() {
   const [data, setData] = useState<AdminIntegrationsResponse | null>(null);
@@ -75,14 +93,7 @@ export default function AdminIntegrationsPage() {
           <p>{error}</p>
           <button
             type="button"
-            style={{
-              border: "1px solid rgba(17, 25, 31, 0.2)",
-              background: "rgba(255, 255, 255, 0.9)",
-              borderRadius: 10,
-              padding: "8px 14px",
-              fontWeight: 700,
-              cursor: "pointer"
-            }}
+            style={integrationActionButtonStyle}
             onClick={() => setReloadVersion((value) => value + 1)}
           >
             Retry request
@@ -111,14 +122,7 @@ export default function AdminIntegrationsPage() {
           <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
               type="button"
-              style={{
-                border: "1px solid rgba(17, 25, 31, 0.2)",
-                background: "rgba(255, 255, 255, 0.85)",
-                borderRadius: 10,
-                padding: "8px 14px",
-                fontWeight: 700,
-                cursor: "pointer"
-              }}
+              style={integrationActionButtonStyle}
               onClick={() => setReloadVersion((value) => value + 1)}
             >
               Refresh data
@@ -144,40 +148,21 @@ export default function AdminIntegrationsPage() {
         <div style={{ marginBottom: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button
             type="button"
-            style={{
-              border: "1px solid rgba(17, 25, 31, 0.2)",
-              background: "rgba(255, 255, 255, 0.9)",
-              borderRadius: 10,
-              padding: "8px 14px",
-              fontWeight: 700,
-              cursor: "pointer"
-            }}
+            style={integrationActionButtonStyle}
             onClick={() => setReloadVersion((value) => value + 1)}
           >
             Refresh now
           </button>
           <button
             type="button"
-            style={{
-              border: "1px solid rgba(17, 25, 31, 0.2)",
-              background: "transparent",
-              borderRadius: 10,
-              padding: "8px 14px",
-              fontWeight: 700
-            }}
+            style={integrationQuietButtonStyle}
             disabled
           >
             Rotate secrets
           </button>
           <button
             type="button"
-            style={{
-              border: "1px solid rgba(17, 25, 31, 0.2)",
-              background: "transparent",
-              borderRadius: 10,
-              padding: "8px 14px",
-              fontWeight: 700
-            }}
+            style={integrationQuietButtonStyle}
             disabled
           >
             Export audit snapshot

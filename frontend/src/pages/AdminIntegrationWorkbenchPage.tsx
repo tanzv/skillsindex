@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminIntegrationsResponse, fetchConsoleJSON } from "../lib/api";
 import { resolvePrototypeDataMode } from "./prototypeDataFallback";
 import { buildIntegrationWorkbenchFallback } from "./adminWorkbenchFallback";
+import AdminSubpageSummaryPanel from "./AdminSubpageSummaryPanel";
 
 export type AdminIntegrationWorkbenchMode =
   | "integration_settings"
@@ -167,37 +168,26 @@ export default function AdminIntegrationWorkbenchPage({ mode }: AdminIntegration
 
   return (
     <div className="page-grid">
-      <section className="panel panel-hero">
-        <h2>{modeCopy[mode].title}</h2>
-        <p>{modeCopy[mode].subtitle}</p>
-        <div style={{ marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+      <AdminSubpageSummaryPanel
+        title={modeCopy[mode].title}
+        status={
           <span className={degraded || dataMode === "prototype" ? "pill muted" : "pill active"}>
             {dataMode === "prototype" ? "Prototype dataset" : degraded ? "Fallback prototype data" : "Live backend data"}
           </span>
-          <button type="button" onClick={refresh} style={{ borderRadius: 10, padding: "8px 14px", cursor: "pointer" }}>
+        }
+        actions={
+          <button type="button" onClick={refresh} className="panel-action-button">
             Refresh
           </button>
-        </div>
-        {degraded && error ? <p style={{ marginTop: 0, color: "#f4c9ce", fontSize: "0.78rem" }}>Degraded mode: {error}</p> : null}
-        <div className="metric-row">
-          <article className="metric-card">
-            <span>Total Connectors</span>
-            <strong>{data?.integrations.total ?? connectors.length}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Enabled Connectors</span>
-            <strong>{enabledConnectors}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Webhook Logs</span>
-            <strong>{data?.integrations.webhook_total ?? webhookLogs.length}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Failed Deliveries</span>
-            <strong>{failedLogs}</strong>
-          </article>
-        </div>
-      </section>
+        }
+        notice={degraded && error ? `Degraded mode: ${error}` : undefined}
+        metrics={[
+          { id: "total-connectors", label: "Total Connectors", value: data?.integrations.total ?? connectors.length },
+          { id: "enabled-connectors", label: "Enabled Connectors", value: enabledConnectors },
+          { id: "webhook-logs", label: "Webhook Logs", value: data?.integrations.webhook_total ?? webhookLogs.length },
+          { id: "failed-deliveries", label: "Failed Deliveries", value: failedLogs }
+        ]}
+      />
 
       <section className="panel">
         <h3 style={{ marginTop: 0 }}>

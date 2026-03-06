@@ -183,14 +183,23 @@ export function statusColorStyle(status: string): { color: string; background: s
   const normalized = status.trim().toLowerCase();
 
   if (["active", "enabled", "open", "resolved"].includes(normalized)) {
-    return { color: "#1b5c54", background: "rgba(47, 155, 143, 0.16)" };
+    return {
+      color: "var(--si-color-success-text)",
+      background: "color-mix(in srgb, var(--si-color-success-bg) 82%, transparent)"
+    };
   }
 
   if (["warning", "pending", "expired"].includes(normalized)) {
-    return { color: "#8a5a00", background: "rgba(245, 158, 11, 0.18)" };
+    return {
+      color: "var(--si-color-warning-text)",
+      background: "color-mix(in srgb, var(--si-color-warning-bg) 78%, transparent)"
+    };
   }
 
-  return { color: "#9f2f1f", background: "rgba(183, 64, 45, 0.16)" };
+  return {
+    color: "var(--si-color-danger-text)",
+    background: "color-mix(in srgb, var(--si-color-danger-bg) 78%, transparent)"
+  };
 }
 
 export function isEmptyData(route: AdminSecurityRoute, data: SecurityViewData | null): boolean {

@@ -124,6 +124,27 @@ describe("WorkspaceCenterPage.helpers", () => {
     expect(snapshot.topTags[0]?.name).toBe("ops");
   });
 
+  it("localizes policy signal labels and values for zh locale", () => {
+    const snapshot = buildWorkspaceSnapshot({ payload: payloadFixture, qualityRiskThreshold: 7.5, locale: "zh" });
+
+    expect(snapshot.policySignals[0]).toEqual({
+      key: "coverage",
+      label: "\u8986\u76d6\u8303\u56f4",
+      value: "3 \u7c7b / 3 \u56e2\u961f"
+    });
+    expect(snapshot.policySignals[1]).toEqual({
+      key: "risk",
+      label: "\u98ce\u9669\u4fe1\u53f7",
+      value: "1 \u6761\u9700\u8981\u590d\u6838"
+    });
+    expect(snapshot.policySignals[2]).toEqual({
+      key: "running",
+      label: "\u6d3b\u8dc3\u541e\u5410",
+      value: "1 \u8fd0\u884c\u4e2d / 1 \u5f85\u6267\u884c"
+    });
+    expect(snapshot.policySignals[3]?.label).toBe("\u6700\u9ad8\u8d28\u91cf");
+  });
+
   it("builds command preview and status colors", () => {
     const snapshot = buildWorkspaceSnapshot({ payload: payloadFixture });
     const preview = buildWorkspaceCommandPreview(snapshot.queueEntries[0]);

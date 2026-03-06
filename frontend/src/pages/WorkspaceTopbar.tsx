@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { SessionUser } from "../lib/api";
 import GlobalUserControlDropdown from "../components/GlobalUserControlDropdown";
 import type { GlobalUserControlService } from "../lib/globalUserControlService";
+import type { AppLocale } from "../lib/i18n";
 import type { TopbarActionItem } from "./MarketplaceHomePage.lightTopbar";
 import MarketplaceTopbarBase from "./MarketplaceTopbarBase";
 import {
@@ -11,8 +12,15 @@ import {
   resolveMarketplaceTopbarRightRegistrations
 } from "./MarketplaceTopbar.shared";
 import type { MarketplaceTopbarRightRegistration } from "./MarketplaceTopbar.rightRegistry";
+import {
+  resolveWorkspaceOverflowPresentation,
+  resolveWorkspacePrimaryActionPresentation,
+  resolveWorkspaceTopbarPrimaryGroups,
+  resolveWorkspaceTopbarUserProfile
+} from "./WorkspaceTopbar.helpers";
 
 interface WorkspaceTopbarProps {
+  locale: AppLocale;
   isLightTheme: boolean;
   brandTitle: string;
   brandSubtitle: string;
@@ -25,238 +33,9 @@ interface WorkspaceTopbarProps {
   defaultPrimaryExpanded?: boolean;
 }
 
-interface WorkspaceTopbarUserProfile {
-  displayName: string;
-  subtitle: string;
-}
-
-interface WorkspaceTopbarPrimaryGroup {
-  id: string;
-  label: string;
-  tagLabel: string;
-  className: string;
-  actions: TopbarActionItem[];
-}
-
-interface WorkspaceTopbarOverflowGroup {
-  id: string;
-  title: string;
-  actions: TopbarActionItem[];
-}
-
-interface WorkspaceTopbarOverflowPresentation {
-  titleText: string;
-  hintText: string;
-  metrics: TopbarActionItem[];
-  groups: WorkspaceTopbarOverflowGroup[];
-}
-
-const PRIMARY_ACTION_COLLAPSED_VISIBLE_COUNT = 5;
-const WORKSPACE_OVERFLOW_DEFAULT_GROUP_TITLE = "Workspace Menu";
-const WORKSPACE_OVERFLOW_MARKETPLACE_GROUP_TITLE = "Marketplace Navigation";
 const WORKSPACE_OVERFLOW_PANEL_ID = "workspace-topbar-overflow-panel";
-const WORKSPACE_MARKETPLACE_ACTION_IDS = new Set(["category", "ranking", "top", "open-marketplace"]);
-
-function hasActionClass(action: TopbarActionItem, className: string): boolean {
-  const classTokens = String(action.className || "")
-    .split(/\s+/)
-    .map((token) => token.trim())
-    .filter(Boolean);
-  return classTokens.includes(className);
-}
-
-function isWorkspaceOverflowMetaAction(action: TopbarActionItem): boolean {
-  return (
-    hasActionClass(action, "is-menu-label") ||
-    hasActionClass(action, "is-menu-title") ||
-    hasActionClass(action, "is-menu-hint") ||
-    hasActionClass(action, "is-menu-metric") ||
-    hasActionClass(action, "is-menu-group-label")
-  );
-}
-
-function isWorkspaceMarketplaceEntryAction(action: TopbarActionItem): boolean {
-  return hasActionClass(action, "is-marketplace-entry-action") || WORKSPACE_MARKETPLACE_ACTION_IDS.has(action.id);
-}
-
-function isWorkspaceBackendPrimaryAction(action: TopbarActionItem): boolean {
-  return !isWorkspaceOverflowMetaAction(action) && !isWorkspaceMarketplaceEntryAction(action);
-}
-
-interface WorkspacePrimaryActionPresentation {
-  visibleActions: TopbarActionItem[];
-  hiddenActions: TopbarActionItem[];
-}
-
-function resolveWorkspacePrimaryActionPresentation(actions: TopbarActionItem[]): WorkspacePrimaryActionPresentation {
-  const selectedActionIndexes = new Set<number>();
-
-  for (let index = 0; index < actions.length; index += 1) {
-    if (selectedActionIndexes.size >= PRIMARY_ACTION_COLLAPSED_VISIBLE_COUNT) {
-      break;
-    }
-    if (!isWorkspaceBackendPrimaryAction(actions[index])) {
-      continue;
-    }
-    selectedActionIndexes.add(index);
-  }
-
-  if (selectedActionIndexes.size === 0) {
-    for (let index = 0; index < actions.length; index += 1) {
-      if (selectedActionIndexes.size >= PRIMARY_ACTION_COLLAPSED_VISIBLE_COUNT) {
-        break;
-      }
-      if (isWorkspaceOverflowMetaAction(actions[index])) {
-        continue;
-      }
-      selectedActionIndexes.add(index);
-    }
-  }
-
-  const visibleActions: TopbarActionItem[] = [];
-  const hiddenActions: TopbarActionItem[] = [];
-
-  for (let index = 0; index < actions.length; index += 1) {
-    if (selectedActionIndexes.has(index)) {
-      visibleActions.push(actions[index]);
-      continue;
-    }
-    hiddenActions.push(actions[index]);
-  }
-
-  return {
-    visibleActions,
-    hiddenActions
-  };
-}
-
-function resolveWorkspaceTopbarPrimaryGroups(actions: TopbarActionItem[]): WorkspaceTopbarPrimaryGroup[] {
-  const workspaceActions: TopbarActionItem[] = [];
-  const accessActions: TopbarActionItem[] = [];
-  const quickActions: TopbarActionItem[] = [];
-
-  for (const action of actions) {
-    if (action.id === "open-dashboard" || hasActionClass(action, "is-backend-entry-action")) {
-      accessActions.push(action);
-      continue;
-    }
-    if (hasActionClass(action, "is-menu-entry")) {
-      workspaceActions.push(action);
-      continue;
-    }
-    quickActions.push(action);
-  }
-
-  return [
-    {
-      id: "workspace-primary-workspace-group",
-      label: "Workspace Navigation",
-      tagLabel: "Workspace",
-      className: "is-workspace-group",
-      actions: workspaceActions
-    },
-    {
-      id: "workspace-primary-entry-group",
-      label: "Access Navigation",
-      tagLabel: "Access",
-      className: "is-entry-group",
-      actions: accessActions
-    },
-    {
-      id: "workspace-primary-quick-group",
-      label: "Quick Navigation",
-      tagLabel: "Quick",
-      className: "is-quick-group",
-      actions: quickActions
-    }
-  ].filter((group) => group.actions.length > 0);
-}
-
-function resolveWorkspaceOverflowPresentation(actions: TopbarActionItem[]): WorkspaceTopbarOverflowPresentation {
-  let titleText = WORKSPACE_OVERFLOW_DEFAULT_GROUP_TITLE;
-  let hintText = "";
-  const metrics: TopbarActionItem[] = [];
-  const groups: WorkspaceTopbarOverflowGroup[] = [];
-  const marketplaceActions = actions.filter((action) => isWorkspaceMarketplaceEntryAction(action));
-  const nonMarketplaceActions = actions.filter((action) => !isWorkspaceMarketplaceEntryAction(action));
-
-  let currentGroup: WorkspaceTopbarOverflowGroup | null = null;
-
-  function flushCurrentGroup(): void {
-    if (currentGroup && currentGroup.actions.length > 0) {
-      groups.push(currentGroup);
-    }
-    currentGroup = null;
-  }
-
-  for (const action of nonMarketplaceActions) {
-    if (hasActionClass(action, "is-menu-title")) {
-      titleText = action.label;
-      continue;
-    }
-
-    if (hasActionClass(action, "is-menu-hint")) {
-      hintText = action.label;
-      continue;
-    }
-
-    if (hasActionClass(action, "is-menu-metric")) {
-      metrics.push(action);
-      continue;
-    }
-
-    if (hasActionClass(action, "is-menu-group-label")) {
-      flushCurrentGroup();
-      currentGroup = {
-        id: `workspace-overflow-group-${action.id}`,
-        title: action.label,
-        actions: []
-      };
-      continue;
-    }
-
-    if (!currentGroup) {
-      currentGroup = {
-        id: "workspace-overflow-group-default",
-        title: WORKSPACE_OVERFLOW_DEFAULT_GROUP_TITLE,
-        actions: []
-      };
-    }
-    currentGroup.actions.push(action);
-  }
-
-  flushCurrentGroup();
-
-  return {
-    titleText,
-    hintText,
-    metrics,
-    groups: [
-      ...(marketplaceActions.length > 0
-        ? [
-            {
-              id: "workspace-overflow-group-marketplace",
-              title: WORKSPACE_OVERFLOW_MARKETPLACE_GROUP_TITLE,
-              actions: marketplaceActions
-            }
-          ]
-        : []),
-      ...groups
-    ]
-  };
-}
-
-function resolveWorkspaceTopbarUserProfile(sessionUser: SessionUser | null): WorkspaceTopbarUserProfile {
-  const baseDisplayName = String(sessionUser?.display_name || sessionUser?.username || "").trim();
-  const displayName = baseDisplayName || "Guest User";
-  const subtitle = String(sessionUser?.role || "").trim() || "Workspace Visitor";
-  return {
-    displayName,
-    subtitle
-  };
-}
-
 export default function WorkspaceTopbar({
+  locale,
   isLightTheme,
   brandTitle,
   brandSubtitle,
@@ -268,7 +47,7 @@ export default function WorkspaceTopbar({
   rightRegistrations,
   defaultPrimaryExpanded = false
 }: WorkspaceTopbarProps) {
-  const profile = useMemo(() => resolveWorkspaceTopbarUserProfile(sessionUser), [sessionUser]);
+  const profile = useMemo(() => resolveWorkspaceTopbarUserProfile(sessionUser, locale), [locale, sessionUser]);
   const [isPrimaryExpanded, setIsPrimaryExpanded] = useState(defaultPrimaryExpanded);
   const interactionScopeRef = useRef<HTMLDivElement | null>(null);
   const primaryActionPresentation = useMemo(
@@ -276,6 +55,28 @@ export default function WorkspaceTopbar({
     [primaryActions]
   );
   const hasPrimaryOverflow = primaryActionPresentation.hiddenActions.length > 0;
+  const topbarCopy = useMemo(() => {
+    if (locale === "zh") {
+      return {
+        more: "\u66f4\u591a",
+        hide: "\u6536\u8d77",
+        expandAria: "\u5c55\u5f00\u4e3b\u5bfc\u822a\u9762\u677f",
+        collapseAria: "\u6536\u8d77\u4e3b\u5bfc\u822a\u9762\u677f",
+        primaryNavigationAria: "\u4e3b\u5bfc\u822a",
+        primaryControlsAria: "\u4e3b\u5bfc\u822a\u63a7\u5236",
+        expandedPanelAria: "\u5df2\u5c55\u5f00\u7684\u5de5\u4f5c\u53f0\u5bfc\u822a\u9762\u677f",
+      };
+    }
+    return {
+      more: "More",
+      hide: "Hide",
+      expandAria: "Expand primary navigation panel",
+      collapseAria: "Collapse primary navigation panel",
+      primaryNavigationAria: "Primary navigation",
+      primaryControlsAria: "Primary navigation controls",
+      expandedPanelAria: "Expanded workspace navigation panel",
+    };
+  }, [locale]);
 
   useEffect(() => {
     if (!isPrimaryExpanded) {
@@ -358,15 +159,15 @@ export default function WorkspaceTopbar({
 
     return {
       id: "workspace-primary-nav-toggle",
-      label: isPrimaryExpanded ? "Hide" : "More",
+      label: isPrimaryExpanded ? topbarCopy.hide : topbarCopy.more,
       tone: "subtle" as const,
       className: "is-primary-nav-toggle",
-      ariaLabel: isPrimaryExpanded ? "Collapse primary navigation panel" : "Expand primary navigation panel",
+      ariaLabel: isPrimaryExpanded ? topbarCopy.collapseAria : topbarCopy.expandAria,
       onClick: () => {
         setIsPrimaryExpanded((previousExpanded) => !previousExpanded);
       }
     };
-  }, [hasPrimaryOverflow, isPrimaryExpanded]);
+  }, [hasPrimaryOverflow, isPrimaryExpanded, topbarCopy.collapseAria, topbarCopy.expandAria, topbarCopy.hide, topbarCopy.more]);
 
   const primaryTrailingContent = useMemo(() => {
     if (!primaryToggleAction) {
@@ -396,8 +197,8 @@ export default function WorkspaceTopbar({
   }, [hiddenPrimaryActions.length, isPrimaryExpanded, primaryToggleAction]);
 
   const primaryGroups = useMemo(
-    () => resolveWorkspaceTopbarPrimaryGroups(primaryActionsForRender),
-    [primaryActionsForRender]
+    () => resolveWorkspaceTopbarPrimaryGroups(primaryActionsForRender, locale),
+    [locale, primaryActionsForRender]
   );
 
   const primaryNavigationContent = useMemo(() => {
@@ -407,7 +208,7 @@ export default function WorkspaceTopbar({
 
     return (
       <div className="workspace-topbar-primary-groups-shell">
-        <div className="workspace-topbar-primary-groups" role="group" aria-label="Primary navigation">
+        <div className="workspace-topbar-primary-groups" role="group" aria-label={topbarCopy.primaryNavigationAria}>
           {primaryGroups.map((group) => (
             <div
               key={group.id}
@@ -423,20 +224,20 @@ export default function WorkspaceTopbar({
           ))}
         </div>
         {primaryTrailingContent ? (
-          <div className="workspace-topbar-primary-inline-toggle" role="group" aria-label="Primary navigation controls">
+          <div className="workspace-topbar-primary-inline-toggle" role="group" aria-label={topbarCopy.primaryControlsAria}>
             {primaryTrailingContent}
           </div>
         ) : null}
       </div>
     );
-  }, [primaryGroups, primaryTrailingContent]);
+  }, [primaryGroups, primaryTrailingContent, topbarCopy.primaryControlsAria, topbarCopy.primaryNavigationAria]);
 
   const expandedPrimaryPanel = useMemo(() => {
     if (!hasPrimaryOverflow || hiddenPrimaryActions.length === 0) {
       return null;
     }
 
-    const overflowPresentation = resolveWorkspaceOverflowPresentation(hiddenPrimaryActions);
+    const overflowPresentation = resolveWorkspaceOverflowPresentation(hiddenPrimaryActions, locale);
 
     return (
       <div
@@ -444,7 +245,7 @@ export default function WorkspaceTopbar({
         className={`workspace-topbar-overflow-wrapper ${isPrimaryExpanded ? "is-expanded" : "is-collapsed"}`}
         aria-hidden={!isPrimaryExpanded}
       >
-        <div className="marketplace-topbar-overflow-panel" role="region" aria-label="Expanded workspace navigation panel">
+        <div className="marketplace-topbar-overflow-panel" role="region" aria-label={topbarCopy.expandedPanelAria}>
           <div className="workspace-topbar-overflow-header">
             <h3 className="workspace-topbar-overflow-title">{overflowPresentation.titleText}</h3>
             {overflowPresentation.hintText ? (
@@ -461,8 +262,13 @@ export default function WorkspaceTopbar({
 
           <div className="workspace-topbar-overflow-groups">
             {overflowPresentation.groups.map((group) => (
-              <section key={group.id} className="workspace-topbar-overflow-group">
-                <h4 className="workspace-topbar-overflow-group-title">{group.title}</h4>
+              <section key={group.id} className={`workspace-topbar-overflow-group${group.active ? " is-active" : ""}`}>
+                <div className="workspace-topbar-overflow-group-header">
+                  <h4 className="workspace-topbar-overflow-group-title">{group.title}</h4>
+                  <span className="workspace-topbar-overflow-group-count" aria-label={`${group.actions.length} actions`}>
+                    {group.countLabel}
+                  </span>
+                </div>
                 <div className="workspace-topbar-overflow-group-actions">
                   {group.actions.map((action) => renderMarketplaceTopbarActionButton(action, "primary"))}
                 </div>
@@ -472,7 +278,7 @@ export default function WorkspaceTopbar({
         </div>
       </div>
     );
-  }, [hasPrimaryOverflow, hiddenPrimaryActions, isPrimaryExpanded]);
+  }, [hasPrimaryOverflow, hiddenPrimaryActions, isPrimaryExpanded, locale, topbarCopy.expandedPanelAria]);
 
   return (
     <div ref={interactionScopeRef} className="workspace-topbar-interaction-scope">

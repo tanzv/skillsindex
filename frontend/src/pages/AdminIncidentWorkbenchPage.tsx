@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchConsoleJSON } from "../lib/api";
 import { resolvePrototypeDataMode } from "./prototypeDataFallback";
 import { buildIncidentWorkbenchFallback } from "./adminWorkbenchFallback";
+import AdminSubpageSummaryPanel from "./AdminSubpageSummaryPanel";
 
 export type AdminIncidentWorkbenchMode =
   | "incident_recovery"
@@ -183,38 +184,29 @@ export default function AdminIncidentWorkbenchPage({ mode, incidentID }: AdminIn
 
   return (
     <div className="page-grid">
-      <section className="panel panel-hero">
-        <h2>{modeCopy[mode].title}</h2>
-        <p>{modeCopy[mode].subtitle}</p>
-        <div style={{ marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <span className={degraded || dataMode === "prototype" ? "pill muted" : "pill active"}>
-            {dataMode === "prototype" ? "Prototype dataset" : degraded ? "Fallback prototype data" : "Live backend data"}
-          </span>
-          {incidentID ? <span className="pill muted">Incident #{incidentID}</span> : null}
-          <button type="button" onClick={refresh} style={{ borderRadius: 10, padding: "8px 14px", cursor: "pointer" }}>
+      <AdminSubpageSummaryPanel
+        title={modeCopy[mode].title}
+        status={
+          <>
+            <span className={degraded || dataMode === "prototype" ? "pill muted" : "pill active"}>
+              {dataMode === "prototype" ? "Prototype dataset" : degraded ? "Fallback prototype data" : "Live backend data"}
+            </span>
+            {incidentID ? <span className="pill muted">Incident #{incidentID}</span> : null}
+          </>
+        }
+        actions={
+          <button type="button" onClick={refresh} className="panel-action-button">
             Refresh
           </button>
-        </div>
-        {degraded && error ? <p style={{ marginTop: 0, color: "#f4c9ce", fontSize: "0.78rem" }}>Degraded mode: {error}</p> : null}
-        <div className="metric-row">
-          <article className="metric-card">
-            <span>Open Incidents</span>
-            <strong>{openIncidents}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Total Alerts</span>
-            <strong>{toPositiveInteger(totalAlerts)}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Triggered Alerts</span>
-            <strong>{triggeredAlerts}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Recovery Drills</span>
-            <strong>{toPositiveInteger(data?.recoveryDrills.total ?? recoveryDrills.length)}</strong>
-          </article>
-        </div>
-      </section>
+        }
+        notice={degraded && error ? `Degraded mode: ${error}` : undefined}
+        metrics={[
+          { id: "open-incidents", label: "Open Incidents", value: openIncidents },
+          { id: "total-alerts", label: "Total Alerts", value: toPositiveInteger(totalAlerts) },
+          { id: "triggered-alerts", label: "Triggered Alerts", value: triggeredAlerts },
+          { id: "recovery-drills", label: "Recovery Drills", value: toPositiveInteger(data?.recoveryDrills.total ?? recoveryDrills.length) }
+        ]}
+      />
 
       <section className="panel">
         <h3 style={{ marginTop: 0 }}>
