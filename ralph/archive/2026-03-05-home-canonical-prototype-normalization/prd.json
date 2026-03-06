@@ -1,0 +1,148 @@
+{
+  "project": "SkillsIndex Prototype",
+  "branchName": "ralph/home-canonical-prototype-normalization",
+  "description": "Use homepage as canonical design contract, enforce prototype constraints, and normalize all marketplace-related prototype pages to one-to-one feature parity.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Publish homepage-derived prototype standards to agent documentation",
+      "description": "As a design maintainer, I want a single homepage-derived standard document so that all prototype updates follow the same constraints and interaction contract.",
+      "acceptanceCriteria": [
+        "Update agents/prototype-design-standards.md with homepage canonical contract and hard constraints",
+        "Document MCP-only editing policy for .pen updates",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Create route and node baseline for command deck variants",
+      "description": "As a prototype engineer, I want node-level baseline mapping for all command deck variants so that parity checks are deterministic.",
+      "acceptanceCriteria": [
+        "List all marketplace command deck page IDs including full-scroll variants",
+        "Map required blocks: TopNav, homeTopStatsCard, homeSearch, homeBodyWrap, homePagination",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Normalize full-scroll Chinese marketplace pages to homepage contract",
+      "description": "As a user, I want full-scroll Chinese marketplace pages to behave like the homepage contract so that interactions and information hierarchy remain consistent.",
+      "acceptanceCriteria": [
+        "Apply homepage block order and required modules to Chinese full-scroll pages",
+        "Ensure stats card, search utility order, and scroll-loading footer follow canonical contract",
+        "No clipped or overlapped blocks in touched pages",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Normalize full-scroll English marketplace pages to homepage contract",
+      "description": "As a user, I want full-scroll English marketplace pages to keep one-to-one parity with Chinese and dark/light contracts.",
+      "acceptanceCriteria": [
+        "Apply homepage block order and required modules to English full-scroll pages",
+        "Ensure English stats and loading copy are semantically aligned with Chinese variants",
+        "No clipped or overlapped blocks in touched pages",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Enforce stats card semantics and readable copy across all command deck pages",
+      "description": "As a user, I want every stats card to expose clear numeric totals and meaningful promotional copy so that the information is readable and consistent.",
+      "acceptanceCriteria": [
+        "statsMain uses numeric total format and remains dominant",
+        "statsSub and statsPromo copy are standardized by locale and device-friendly sizes",
+        "Trend label semantics are standardized and readable",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Replace click-only load-more controls with scroll-driven loading guidance",
+      "description": "As a user, I want bottom loading behavior to match scroll-driven interaction so that list continuation feels natural and consistent.",
+      "acceptanceCriteria": [
+        "Remove loadMoreBtn from command deck footers",
+        "Footer text communicates auto-load on scroll and next-batch behavior by locale",
+        "Dark and light variants keep equivalent semantics and contrast",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Apply homepage constraints to search workspace pages",
+      "description": "As a user, I want search workspace pages to follow the same hierarchy and density rules as homepage so that transition between pages is predictable.",
+      "acceptanceCriteria": [
+        "Search workspace pages adopt canonical spacing, utility, and footer behavior rules",
+        "No noisy helper copy that conflicts with canonical interaction language",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Apply homepage constraints to skill detail pages",
+      "description": "As a user, I want skill detail pages to keep the same readability and hierarchy constraints so that dense information remains scannable.",
+      "acceptanceCriteria": [
+        "Skill detail pages align with card density and typography constraints",
+        "Dark and light variants keep one-to-one module parity",
+        "No clipping or overlap in detail critical regions",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Run clipping and overlap audit for all touched prototype pages",
+      "description": "As a maintainer, I want deterministic layout checks so that no prototype page ships with hidden or covered content.",
+      "acceptanceCriteria": [
+        "Run layout snapshot audit on all touched pages",
+        "Fix all clipping and overlap findings in the same pass",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Publish final parity report for homepage-driven normalization",
+      "description": "As a stakeholder, I want a final parity report so that I can validate completeness against the homepage contract.",
+      "acceptanceCriteria": [
+        "Document before/after parity status per normalized page",
+        "Include node IDs for key modules and unresolved risks if any",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

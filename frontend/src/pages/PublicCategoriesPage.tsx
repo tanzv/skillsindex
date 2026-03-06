@@ -3,17 +3,22 @@ import { useEffect, useMemo, useState } from "react";
 import { PublicMarketplaceResponse, SessionUser } from "../lib/api";
 import type { AppLocale } from "../lib/i18n";
 import type { ThemeMode } from "../lib/themeModePath";
+import MarketplacePageBreadcrumb, { type MarketplacePageBreadcrumbItem } from "../components/MarketplacePageBreadcrumb";
 import { buildMarketplaceFallback } from "./MarketplaceHomePage.fallback";
 import MarketplaceHomePageStyles from "./MarketplaceHomePage.styles";
+import { marketplaceHomeCopy } from "./MarketplaceHomePage.copy";
 import MarketplaceHomeLocaleThemeSwitch from "./MarketplaceHomeLocaleThemeSwitch";
-import { buildLightTopbarPrimaryActions, buildLightTopbarUtilityActions } from "./MarketplaceHomePage.lightTopbar";
+import {
+  buildMarketplaceTopbarActionBundle
+} from "./MarketplaceHomePage.lightTopbar";
+import { buildMarketplaceWorkspaceAuthRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
 import { resolvePublicCategoriesCopy } from "./PublicCategoriesPage.copy";
 import {
   buildCategoryDetailPath,
   resolveCategoryCardsFromPayload,
   resolveCategoriesViewPayload
 } from "./PublicCategoriesPage.helpers";
-import PublicStandardTopbar from "./PublicStandardTopbar";
+import MarketplaceTopbar from "./MarketplaceTopbar";
 import {
   PrototypeUtilityLoading,
   PrototypeUtilityPanel,
@@ -27,6 +32,7 @@ import { createPublicPageNavigator } from "./publicPageNavigation";
 interface PublicCategoriesPageProps {
   locale: AppLocale;
   onNavigate: (path: string) => void;
+  onLogout?: () => Promise<void> | void;
   onThemeModeChange: (nextMode: ThemeMode) => void;
   onLocaleChange: (nextLocale: AppLocale) => void;
   sessionUser: SessionUser | null;
@@ -36,12 +42,14 @@ interface PublicCategoriesPageProps {
 export default function PublicCategoriesPage({
   locale,
   onNavigate,
+  onLogout,
   onThemeModeChange,
   onLocaleChange,
   sessionUser,
   payloadOverride
 }: PublicCategoriesPageProps) {
   const text = resolvePublicCategoriesCopy(locale);
+  const topbarText = marketplaceHomeCopy[locale] || marketplaceHomeCopy.en;
   const currentPath = window.location.pathname;
   const [viewport, setViewport] = useState(() => ({
     width: window.innerWidth,
@@ -133,28 +141,72 @@ export default function PublicCategoriesPage({
     [payload, text.generalSubcategoryName, text.iconPlaceholderFallback, text.noDescription, text.uncategorizedName]
   );
 
-  const topbarPrimaryActions = useMemo(
+  const topbarActionBundle = useMemo(
     () =>
-      buildLightTopbarPrimaryActions({
+      buildMarketplaceTopbarActionBundle({
         onNavigate,
         toPublicPath: navigator.toPublic,
-        labels: {
-          categoryNav: text.categoriesTab,
-          downloadRankingNav: text.rankings
-        },
-        activeActionID: "category"
+        locale,
+        hasSessionUser: Boolean(sessionUser),
+        activeActionID: "category",
+        authActionLabel: sessionUser ? topbarText.signOut : topbarText.signIn,
+        onAuthAction: handleTopbarAuthAction
       }),
-    [navigator.toPublic, onNavigate, text.categoriesTab, text.rankings]
+    [handleTopbarAuthAction, locale, navigator.toPublic, onNavigate, sessionUser, topbarText.signIn, topbarText.signOut]
   );
-  const topbarUtilityActions = useMemo(
+  const topbarRightRegistrations = useMemo(
     () =>
-      buildLightTopbarUtilityActions({
-        onNavigate,
-        toPublicPath: navigator.toPublic,
-        hasSessionUser: Boolean(sessionUser)
+      buildMarketplaceWorkspaceAuthRightRegistrations({
+        sessionUser,
+        workspaceLabel: topbarText.openWorkspace,
+        signInLabel: topbarText.signIn,
+        signOutLabel: topbarText.signOut,
+        onWorkspaceClick: handleTopbarConsoleAction,
+        onAuthClick: handleTopbarAuthAction
       }),
-    [navigator.toPublic, onNavigate, sessionUser]
+    [
+      handleTopbarAuthAction,
+      handleTopbarConsoleAction,
+      sessionUser,
+      topbarText.openWorkspace,
+      topbarText.signIn,
+      topbarText.signOut
+    ]
   );
+  const breadcrumbItems = useMemo<MarketplacePageBreadcrumbItem[]>(
+    () => [
+      {
+        key: "home",
+        label: "SkillsIndex",
+        onClick: () => onNavigate(navigator.toPublic("/"))
+      },
+      {
+        key: "current",
+        label: text.pageTitle
+      }
+    ],
+    [navigator, onNavigate, text.pageTitle]
+  );
+  const lightBrandTitle = "SkillsIndex";
+  const lightBrandSubtitle = "User Portal";
+  const topbarBrandTitle = isLightTheme ? lightBrandTitle : topbarText.brandTitle;
+  const topbarBrandSubtitle = isLightTheme ? lightBrandSubtitle : topbarText.brandSubtitle;
+
+  function toPublicPath(path: string): string {
+    return navigator.toPublic(path);
+  }
+
+  function handleTopbarAuthAction(): void {
+    if (sessionUser) {
+      void onLogout?.();
+      return;
+    }
+    onNavigate(toPublicPath("/login"));
+  }
+
+  function handleTopbarConsoleAction(): void {
+    onNavigate("/workspace");
+  }
 
   function handleCategoryCardOpen(categorySlug: string): void {
     const normalizedSlug = String(categorySlug || "").trim();
@@ -169,15 +221,16 @@ export default function PublicCategoriesPage({
       <MarketplaceHomePageStyles />
 
       <div className={rootClassName}>
-        <PublicStandardTopbar
+        <MarketplaceTopbar
           shellClassName="animated-fade-down"
           dataAnimated
-          brandTitle="SkillsIndex"
-          brandSubtitle={text.brandSubtitle}
+          brandTitle={topbarBrandTitle}
+          brandSubtitle={topbarBrandSubtitle}
           onBrandClick={() => onNavigate(navigator.toPublic("/"))}
           isLightTheme={isLightTheme}
-          primaryActions={topbarPrimaryActions}
-          utilityActions={topbarUtilityActions}
+          primaryActions={topbarActionBundle.primaryActions}
+          utilityActions={topbarActionBundle.utilityActions}
+          rightRegistrations={topbarRightRegistrations}
           localeThemeSwitch={
             <MarketplaceHomeLocaleThemeSwitch
               locale={locale}
@@ -189,6 +242,12 @@ export default function PublicCategoriesPage({
         />
 
         <PrototypeUtilityShell>
+          <MarketplacePageBreadcrumb
+            items={breadcrumbItems}
+            ariaLabel="Categories page breadcrumb"
+            testIdPrefix="categories-page-breadcrumb"
+          />
+
           {errorMessage ? (
             <Alert type="warning" showIcon message={text.loadError} description={errorMessage} />
           ) : null}
@@ -296,6 +355,7 @@ export default function PublicCategoriesPage({
                       <div className="marketplace-skill-chip-row">
                         <span className="is-primary">{`${text.cardCountLabel} ${category.count}`}</span>
                         <span>{`${text.subcategoryCountLabel} ${category.subcategoryCount}`}</span>
+                        <span>{`${text.topSubcategoryCountLabel} ${category.topSubcategoryTotalCount}`}</span>
                       </div>
                       <div className="marketplace-skill-row-foot">
                         <span className="is-primary">{text.topSubcategories}</span>

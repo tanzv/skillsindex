@@ -8,6 +8,8 @@ export {
 } from "../MarketplaceHomePage.helpers";
 export type { MarketplaceFilterForm, PrototypeCardEntry } from "../MarketplaceHomePage.helpers";
 export {
+  buildMarketplaceTopbarActionBundle,
+  buildMarketplaceTopbarPrimaryActions,
   buildLightTopbarPrimaryActions,
   buildLightTopbarUtilityActions
 } from "../MarketplaceHomePage.lightTopbar";

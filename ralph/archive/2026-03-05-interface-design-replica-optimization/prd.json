@@ -1,0 +1,123 @@
+{
+  "project": "SkillsIndex Marketplace",
+  "branchName": "ralph/interface-design-replica-optimization",
+  "description": "Install the interface-design reference skill and optimize skill detail pages with a restrained, replica-style visual system.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Install interface-design reference skill package",
+      "description": "As a developer, I want the interface-design skill installed from the provided URL so that implementation decisions can follow a concrete local reference.",
+      "acceptanceCriteria": [
+        "Install skill from https://skills.sh/dammyjay93/interface-design/interface-design using the project-supported skill workflow",
+        "Installed skill is available locally with SKILL.md and referenced assets",
+        "Record the resolved local install path in implementation notes",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Create replica design contract for skill detail optimization",
+      "description": "As a maintainer, I want a written mapping between reference patterns and current page selectors so that refactoring stays consistent and reviewable.",
+      "acceptanceCriteria": [
+        "Create docs/plans/2026-03-05-interface-design-replica-contract.md",
+        "Document typography, spacing, palette, and interaction rules extracted from the reference skill/page",
+        "Include selector-level mapping for PublicSkillDetailPage style modules",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Unify skill detail root palette into neutral token system",
+      "description": "As a user, I want the skill detail page to use fewer tones so that the page feels cleaner and easier to scan.",
+      "acceptanceCriteria": [
+        "Define or refine root CSS tokens in PublicSkillDetailPage.styles.base.ts with one accent hue per theme",
+        "Replace scattered multi-hue hardcoded colors in root, hero, and shared card surfaces",
+        "Keep pen-alignment contracts compatible with baseline checks",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Refactor topbar and hero styles to replica-minimal hierarchy",
+      "description": "As a user, I want topbar and hero sections to have restrained contrast and clear hierarchy so that navigation and context feel coherent.",
+      "acceptanceCriteria": [
+        "Refactor PublicSkillDetailPage.styles.topbar.ts and related hero rules in base styles to match neutralized hierarchy",
+        "Ensure brand, nav, locale/theme controls, and CTA states use tokenized color rules",
+        "Keep focus-visible and reduced-motion/accessibility behavior unchanged",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Refactor left column panels with low-noise visual language",
+      "description": "As a user, I want summary, quality, file browser, and code blocks to use consistent neutral tones so that dense content remains readable.",
+      "acceptanceCriteria": [
+        "Refactor PublicSkillDetailPage.styles.left.ts to remove non-essential hue variation",
+        "Keep active, hover, and selected states distinguishable through contrast and border treatment",
+        "Preserve existing layout geometry and responsive behavior",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Refactor right column interaction panels with neutral accents",
+      "description": "As a user, I want install, metadata, actions, comments, and compatibility panels to share one coherent tone system so that actions stand out without color clutter.",
+      "acceptanceCriteria": [
+        "Refactor PublicSkillDetailPage.styles.right.ts to remove multi-hue state colors",
+        "Map primary actions to the single accent token and secondary actions to neutral surfaces",
+        "Keep disabled, validation, and feedback states legible with accessible contrast",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Add regression coverage for replica color and interaction constraints",
+      "description": "As a maintainer, I want automated checks for the new restrained style system so that future edits do not reintroduce tone sprawl.",
+      "acceptanceCriteria": [
+        "Update existing unit or alignment tests to assert key neutral token and baseline fallback contracts",
+        "Ensure e2e coverage still validates critical skill detail and login interactions after style refactor",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Run full verification and publish replica optimization evidence",
+      "description": "As a stakeholder, I want explicit verification evidence so that the replica optimization can be accepted with low risk.",
+      "acceptanceCriteria": [
+        "Run frontend verification commands: test:unit, test:e2e, test:visual, build",
+        "Include visual mismatch ratio and artifact paths when visual regression runs",
+        "Run ./scripts/check_max_lines.sh and report hard violations if any remain",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

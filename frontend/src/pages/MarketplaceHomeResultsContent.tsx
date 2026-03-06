@@ -16,6 +16,7 @@ interface MarketplaceHomeResultsContentProps {
   totalPages: number;
   resultCards: PrototypeCardEntry[];
   featuredCards: PrototypeCardEntry[];
+  resultsToolbarTitleOverride?: string;
   resultsToolbarChips?: string[];
   autoLoadConfig: MarketplaceAutoLoadConfig;
   onPageChange: (page: number) => void;
@@ -33,6 +34,7 @@ export default function MarketplaceHomeResultsContent({
   totalPages,
   resultCards,
   featuredCards,
+  resultsToolbarTitleOverride,
   resultsToolbarChips,
   autoLoadConfig,
   onPageChange,
@@ -444,7 +446,7 @@ export default function MarketplaceHomeResultsContent({
   const visibleResultRows = resultRows.slice(latestRowsWindow.startIndex, latestRowsWindow.endIndex);
   const virtualPaddingTop = latestRowsWindow.paddingTop;
   const virtualPaddingBottom = latestRowsWindow.paddingBottom;
-  const toolbarTitle = resolveResultsToolbarTitle({
+  const defaultToolbarTitle = resolveResultsToolbarTitle({
     isResultsPage,
     pathname: window.location.pathname,
     labels: {
@@ -453,7 +455,10 @@ export default function MarketplaceHomeResultsContent({
       categoryResultsTitle: text.categoryResultsTitle
     }
   });
-  const resolvedResultsToolbarChips = resultsToolbarChips || [text.latestSortLabel, text.batchInstallLabel, text.compareLabel];
+  const toolbarTitle = resultsToolbarTitleOverride || defaultToolbarTitle;
+  const resolvedResultsToolbarChips = (resultsToolbarChips || [text.latestSortLabel, text.batchInstallLabel, text.compareLabel]).filter(
+    (chipLabel) => String(chipLabel || "").trim().length > 0
+  );
 
   return (
     <>
@@ -461,13 +466,15 @@ export default function MarketplaceHomeResultsContent({
         <>
           <section className="marketplace-results-toolbar">
             <h2>{toolbarTitle}</h2>
-            <div className="marketplace-toolbar-chips">
-              {resolvedResultsToolbarChips.map((chipLabel, chipIndex) => (
-                <span key={`results-toolbar-chip-${chipIndex}`} className={chipIndex === 0 ? "is-active" : ""}>
-                  {chipLabel}
-                </span>
-              ))}
-            </div>
+            {resolvedResultsToolbarChips.length > 0 ? (
+              <div className="marketplace-toolbar-chips">
+                {resolvedResultsToolbarChips.map((chipLabel, chipIndex) => (
+                  <span key={`results-toolbar-chip-${chipIndex}`} className={chipIndex === 0 ? "is-active" : ""}>
+                    {chipLabel}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </section>
 
           <section className="marketplace-results-list" aria-label="results list">

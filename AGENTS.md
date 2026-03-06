@@ -4,6 +4,49 @@
 
 All implementation work in this repository must follow a high standard for code quality, readability, and maintainability.
 
+## Development Principles
+
+1. Apply SOLID principles with explicit module boundaries and single-responsibility implementations.
+2. Prefer dependency injection over hidden global state to keep behavior testable and predictable.
+3. Keep business logic framework-agnostic where practical to reduce migration and integration risks.
+4. Use DRY, KISS, and YAGNI as default decision criteria during design and implementation.
+5. Treat backward compatibility as the default unless a breaking change is explicitly approved and documented.
+6. Define clear contracts between layers (input/output, error model, side effects) before implementation.
+7. Design for extension via composition and interfaces, not by duplicating concrete implementations.
+
+## Component Generality Rules
+
+1. Build reusable components around stable, explicit interfaces rather than page-specific assumptions.
+2. Separate presentation concerns from domain behavior; UI components should not embed business workflows.
+3. Support composition through slots/props/children patterns and avoid hardcoded content or layout coupling.
+4. Keep state ownership explicit; prefer controlled patterns for externally managed state and clear defaults for uncontrolled state.
+5. Ensure accessibility and internationalization compatibility at component level (semantic structure, labels, adaptable text length).
+6. Expose only necessary extension points (variants, tokens, callbacks) and avoid speculative abstractions.
+7. Every shared component change must include contract-level tests and impact validation for existing consumers.
+8. When introducing a new shared component API, document intended usage, constraints, and migration guidance.
+
+## TDD Design Rules
+
+1. Follow strict Red-Green-Refactor: write a failing test first, implement minimal code to pass, then refactor safely.
+2. For every bug fix, add a regression test that fails before the fix and passes after the fix.
+3. Encode behavior contracts and edge cases in tests before changing implementation details.
+4. Keep tests deterministic and isolated: no hidden time/network/external-state dependencies without explicit control.
+5. Maintain balanced coverage across unit, integration, and end-to-end levels based on change risk.
+6. Treat test readability as production quality: clear naming, explicit setup, and actionable assertion messages.
+7. Do not finalize implementation claims without running and reporting relevant test evidence.
+8. If TDD sequencing is not feasible for a change, document the reason and residual risk explicitly in completion notes.
+
+## High Code Quality Gates
+
+1. All changed code must pass lint, type-check, and relevant automated tests before completion.
+2. Reject monolithic changesets; keep commits and patches scoped, reviewable, and behavior-focused.
+3. Require explicit error handling for expected failure paths; avoid silent failures and ambiguous exceptions.
+4. Prefer measurable quality checks (tests, static checks, build validation) over subjective “looks good” judgments.
+5. Remove or resolve temporary debugging code, dead branches, and commented-out legacy logic before completion.
+6. Any TODO/FIXME introduced must include scope and tracking reference; avoid untracked technical debt.
+7. Evaluate security, performance, and data-integrity impact for behavior changes, especially in shared paths.
+8. Keep public contracts stable; if contract changes are required, include compatibility notes and migration steps.
+
 ## Quality Rules
 
 1. Keep modules focused and cohesive. Avoid large multi-purpose functions.

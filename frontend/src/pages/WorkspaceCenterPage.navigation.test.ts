@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { createPublicPageNavigator } from "./publicPageNavigation";
-import { buildWorkspaceSidebarNavigation } from "./WorkspaceCenterPage.navigation";
+import { buildWorkspaceSidebarNavigation, flattenWorkspaceSidebarPrimaryMenu } from "./WorkspaceCenterPage.navigation";
 
 const textFixture = {
   sidebarSectionsTitle: "Workspace Sections",
   sidebarHubsTitle: "Related Hubs",
+  sidebarOrganizationTitle: "Organization Management",
   sidebarOverview: "Overview",
   sidebarActivity: "Activity Feed",
   sidebarQueue: "Queue Execution",
@@ -14,7 +15,10 @@ const textFixture = {
   sidebarQuickActions: "Quick Actions",
   sidebarRollout: "Rollout Workflow",
   sidebarGovernance: "Governance Center",
-  sidebarRecords: "Records Sync"
+  sidebarRecords: "Records Sync",
+  sidebarPersonnelManagement: "Personnel Management",
+  sidebarPermissionManagement: "Permission Management",
+  sidebarRoleManagement: "Role Management"
 };
 
 describe("WorkspaceCenterPage.navigation", () => {
@@ -26,9 +30,10 @@ describe("WorkspaceCenterPage.navigation", () => {
       toAdminPath: navigator.toAdmin
     });
 
-    expect(groups).toHaveLength(2);
+    expect(groups).toHaveLength(3);
     expect(groups[0]?.id).toBe("sections");
     expect(groups[1]?.id).toBe("hubs");
+    expect(groups[2]?.id).toBe("organization-management");
     expect(groups[0]?.items.map((item) => item.target)).toEqual([
       "workspace-overview",
       "workspace-activity",
@@ -51,6 +56,44 @@ describe("WorkspaceCenterPage.navigation", () => {
       "/light/rollout",
       "/light/governance",
       "/light/admin/records/sync-jobs"
+    ]);
+    expect(groups[2]?.items.map((item) => item.target)).toEqual([
+      "/light/admin/accounts",
+      "/light/admin/access",
+      "/light/admin/roles"
+    ]);
+  });
+
+  it("flattens grouped navigation into first-level menu order", () => {
+    const navigator = createPublicPageNavigator("/workspace");
+    const groups = buildWorkspaceSidebarNavigation({
+      text: textFixture,
+      toPublicPath: navigator.toPublic,
+      toAdminPath: navigator.toAdmin
+    });
+    const flatItems = flattenWorkspaceSidebarPrimaryMenu(groups);
+
+    expect(flatItems.map((item) => item.id)).toEqual([
+      "group-sections",
+      "section-overview",
+      "section-activity",
+      "section-queue",
+      "section-policy",
+      "section-runbook",
+      "section-actions",
+      "group-hubs",
+      "hub-rollout",
+      "hub-governance",
+      "hub-records",
+      "group-organization-management",
+      "org-personnel",
+      "org-permission",
+      "org-role"
+    ]);
+    expect(flatItems.filter((item) => item.kind === "label").map((item) => item.label)).toEqual([
+      "Workspace Sections",
+      "Related Hubs",
+      "Organization Management"
     ]);
   });
 });

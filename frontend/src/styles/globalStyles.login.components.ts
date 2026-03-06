@@ -5,47 +5,6 @@ export const globalLoginStylesComponents = `
   -webkit-user-drag: none;
 }
 
-.login-form-panel {
-  background: var(--login-panel-form-bg);
-  padding: clamp(20px, 1.9vw, 30px);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  justify-content: center;
-}
-
-.login-form-brand {
-  width: min(100%, 404px);
-  min-height: 30px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.login-form-brand-logo-wrap {
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.login-form-brand-logo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.login-form-brand-text {
-  color: var(--login-title);
-  font-family: var(--login-font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  line-height: 1;
-}
 
 .login-form-panel h2 {
   margin: 0;
@@ -139,15 +98,42 @@ export const globalLoginStylesComponents = `
 }
 
 .login-password-toggle {
-  width: fit-content;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
   border: 0;
   background: transparent;
   color: var(--login-copy);
-  font-size: 12px;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
   line-height: 1;
   padding: 0;
+  border-radius: 8px;
   cursor: pointer;
+  transition: color 160ms ease, transform 140ms ease, opacity 140ms ease;
+}
+
+.login-password-toggle-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.login-password-toggle:hover {
+  color: var(--login-title);
+  opacity: 0.96;
+}
+
+.login-password-toggle:focus-visible {
+  outline: 2px solid var(--si-color-accent, #d6d6d6);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.login-password-toggle:active {
+  transform: translateY(1px);
 }
 
 .login-forgot-link {
@@ -158,6 +144,21 @@ export const globalLoginStylesComponents = `
   font-weight: 700;
   cursor: pointer;
   padding: 0;
+  transition: color 160ms ease, transform 140ms ease;
+}
+
+.login-forgot-link:hover {
+  color: var(--login-title);
+}
+
+.login-forgot-link:focus-visible {
+  outline: 2px solid var(--si-color-accent, #d6d6d6);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.login-forgot-link:active {
+  transform: translateY(1px);
 }
 
 .auth-error {
@@ -178,6 +179,7 @@ export const globalLoginStylesComponents = `
   font-size: 15px;
   font-weight: 700;
   box-shadow: var(--login-panel-shadow);
+  transition: transform 150ms ease, box-shadow 200ms ease;
 }
 
 .auth-submit.ant-btn:hover,
@@ -186,6 +188,11 @@ export const globalLoginStylesComponents = `
   background: var(--login-btn-bg);
   color: var(--login-btn-text);
   box-shadow: var(--login-panel-shadow);
+  transform: translateY(-1px);
+}
+
+.auth-submit.ant-btn:active {
+  transform: translateY(0);
 }
 
 .auth-helper-text,
@@ -222,6 +229,43 @@ export const globalLoginStylesComponents = `
   min-height: 40px;
   padding: 8px 10px 8px 12px;
   cursor: pointer;
+  transition: transform 170ms ease, box-shadow 220ms ease, border-color 180ms ease, filter 180ms ease;
+  animation: loginPanelEnter 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.oauth-provider-item:nth-child(1) {
+  animation-delay: 40ms;
+}
+
+.oauth-provider-item:nth-child(2) {
+  animation-delay: 100ms;
+}
+
+.oauth-provider-item:nth-child(3) {
+  animation-delay: 160ms;
+}
+
+.oauth-provider-item:nth-child(4) {
+  animation-delay: 220ms;
+}
+
+.oauth-provider-item:nth-child(5) {
+  animation-delay: 260ms;
+}
+
+.oauth-provider-item:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--login-chip-border) 68%, var(--si-color-accent, #d6d6d6) 32%);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
+}
+
+.oauth-provider-item:focus-visible {
+  outline: 2px solid var(--si-color-accent, #d6d6d6);
+  outline-offset: 2px;
+}
+
+.oauth-provider-item:active {
+  transform: translateY(0) scale(0.992);
 }
 
 .oauth-provider-item.is-full-width {
@@ -243,6 +287,30 @@ export const globalLoginStylesComponents = `
   font-size: 9px;
   font-weight: 800;
   flex: 0 0 auto;
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.oauth-provider-item:hover .oauth-provider-icon {
+  transform: scale(1.08);
+  filter: saturate(1.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-form-panel,
+  .oauth-provider-item {
+    animation: none !important;
+  }
+
+  .auth-submit.ant-btn,
+  .login-password-toggle,
+  .login-forgot-link,
+  .auth-topbar-brand,
+  .auth-topbar-theme-switch button,
+  .auth-topbar-locale-switch button,
+  .oauth-provider-item,
+  .oauth-provider-icon {
+    transition: none !important;
+  }
 }
 
 .oauth-provider-item.is-dingtalk .oauth-provider-icon {

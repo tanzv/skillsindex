@@ -10,14 +10,15 @@ const selectors = {
   resultsList: ".marketplace-results-list",
   topbarBrand: ".marketplace-topbar-brand",
   topbarCta: ".marketplace-topbar-cta",
-  resultsSearchButton: ".marketplace-home.is-results-page .marketplace-search-submit"
+  resultsKeywordInput: ".marketplace-home.is-results-page .marketplace-search-input.is-query input"
 } as const;
 
 test.describe("Marketplace results standalone page interactions", () => {
   test("results route renders dedicated results page without floating layers", async ({ page }) => {
     await page.goto(RESULTS_PATH);
 
-    await expect(page.locator(selectors.resultsPageRoot).first()).toBeVisible();
+    await expect(page.locator("[data-testid='marketplace-home-root']")).toBeVisible({ timeout: 10000 });
+    await expect(page.locator(selectors.resultsPageRoot).first()).toBeVisible({ timeout: 10000 });
     await expect(page.locator(selectors.resultsList).first()).toBeVisible();
     await expect(page.locator(selectors.resultsFloatingMask)).toHaveCount(0);
     await expect(page.locator(selectors.resultsFloatingClose)).toHaveCount(0);
@@ -61,7 +62,7 @@ test.describe("Marketplace results standalone page interactions", () => {
     await page.evaluate(() => {
       (window as Window & { __beforeHistoryLength?: number }).__beforeHistoryLength = window.history.length;
     });
-    await page.locator(selectors.resultsSearchButton).click();
+    await page.locator(selectors.resultsKeywordInput).press("Enter");
     await page.waitForTimeout(150);
     const historySnapshot = await page.evaluate(() => {
       const value = (window as Window & { __beforeHistoryLength?: number }).__beforeHistoryLength;

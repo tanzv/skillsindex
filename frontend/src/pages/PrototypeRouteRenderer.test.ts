@@ -12,6 +12,7 @@ import PublicSkillDetailPage from "./PublicSkillDetailPage";
 import RecordsSyncCenterPage from "./RecordsSyncCenterPage";
 import RolloutWorkflowPage from "./RolloutWorkflowPage";
 import SystemStatePage from "./SystemStatePage";
+import WorkspaceCenterPage from "./WorkspaceCenterPage";
 import { renderPrototypeRouteContent } from "./PrototypeRouteRenderer";
 
 const baseProps = {
@@ -76,6 +77,29 @@ describe("renderPrototypeRouteContent", () => {
 
     expect(element.type).toBe(SystemStatePage);
     expect(element.props.stateKind).toBe("error");
+  });
+
+  it("forwards global control handlers to workspace route", () => {
+    const onThemeModeChange = () => undefined;
+    const onLocaleChange = () => undefined;
+    const onLogout = async () => undefined;
+    const element = renderPrototypeRouteContent({
+      ...baseProps,
+      currentPath: "/light/workspace",
+      onThemeModeChange,
+      onLocaleChange,
+      onLogout,
+      entry: {
+        ...baseProps.entry,
+        key: "team_workspace_light",
+        primaryRoute: "/light/workspace"
+      }
+    });
+
+    expect(element.type).toBe(WorkspaceCenterPage);
+    expect(element.props.onThemeModeChange).toBe(onThemeModeChange);
+    expect(element.props.onLocaleChange).toBe(onLocaleChange);
+    expect(element.props.onLogout).toBe(onLogout);
   });
 
   it("maps records export alias to records sync center page", () => {

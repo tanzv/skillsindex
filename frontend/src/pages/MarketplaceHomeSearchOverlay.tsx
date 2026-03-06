@@ -1,7 +1,6 @@
 import type { KeyboardEvent } from "react";
-import type { MarketplaceSkill } from "../lib/api";
+import type { MarketplaceSearchHistoryEntry } from "../lib/marketplaceSearchHistory";
 import type { MarketplaceFilterForm } from "./MarketplaceHomePage.helpers";
-import type { HomeChipFilter } from "./MarketplaceHomePage.config";
 import type { MarketplaceText } from "./marketplaceText";
 import MarketplaceResultsPage from "./MarketplaceResultsPage";
 
@@ -9,15 +8,13 @@ interface MarketplaceHomeSearchOverlayProps {
   isVisible: boolean;
   text: MarketplaceText;
   form: MarketplaceFilterForm;
-  resultItems: MarketplaceSkill[];
-  resultTotal: number;
-  hotFilters: HomeChipFilter[];
+  recentSearches: MarketplaceSearchHistoryEntry[];
   isLightTheme: boolean;
   onFilterFieldChange: (field: keyof MarketplaceFilterForm, value: string) => void;
   onSearchSubmit: () => void;
   onSearchInputKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
-  onHotFilterApply: (filter: HomeChipFilter) => void;
-  onResultOpen: (skillID: number) => void;
+  onRecentSearchApply: (entry: MarketplaceSearchHistoryEntry) => void;
+  onRecentSearchClear: () => void;
   onClose: () => void;
 }
 
@@ -25,15 +22,13 @@ export default function MarketplaceHomeSearchOverlay({
   isVisible,
   text,
   form,
-  resultItems,
-  resultTotal,
-  hotFilters,
+  recentSearches,
   isLightTheme,
   onFilterFieldChange,
   onSearchSubmit,
   onSearchInputKeyDown,
-  onHotFilterApply,
-  onResultOpen,
+  onRecentSearchApply,
+  onRecentSearchClear,
   onClose
 }: MarketplaceHomeSearchOverlayProps) {
   if (!isVisible) {
@@ -44,15 +39,13 @@ export default function MarketplaceHomeSearchOverlay({
     <MarketplaceResultsPage
       text={text}
       form={form}
-      resultItems={resultItems}
-      resultTotal={resultTotal}
-      hotFilters={hotFilters}
+      recentSearches={recentSearches}
       isLightTheme={isLightTheme}
       onFilterFieldChange={onFilterFieldChange}
       onSearchSubmit={onSearchSubmit}
       onSearchInputKeyDown={onSearchInputKeyDown}
-      onHotFilterApply={onHotFilterApply}
-      onResultOpen={onResultOpen}
+      onRecentSearchApply={onRecentSearchApply}
+      onRecentSearchClear={onRecentSearchClear}
       onClose={onClose}
     />
   );

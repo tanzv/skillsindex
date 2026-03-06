@@ -198,6 +198,17 @@ export interface MarketplaceQueryParams extends Partial<MarketplaceFilters> {
   page?: number | string;
 }
 
+export interface AuthProviderEntry {
+  key: string;
+  start_path: string;
+}
+
+export interface AuthProvidersResponse {
+  ok: boolean;
+  auth_providers: string[];
+  items: AuthProviderEntry[];
+}
+
 interface ErrorPayload {
   error?: string;
   message?: string;
@@ -334,6 +345,12 @@ export async function logout(): Promise<void> {
     method: "POST"
   });
   csrfTokenCache = "";
+}
+
+export async function fetchAuthProviders(): Promise<AuthProvidersResponse> {
+  return requestJSON<AuthProvidersResponse>("/api/v1/auth/providers", {
+    method: "GET"
+  });
 }
 
 export async function fetchAdminIntegrations(): Promise<AdminIntegrationsResponse> {

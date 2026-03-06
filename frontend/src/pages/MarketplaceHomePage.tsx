@@ -5,6 +5,12 @@ import {
   PublicMarketplaceResponse,
   SessionUser
 } from "../lib/api";
+import {
+  appendMarketplaceSearchHistory,
+  clearMarketplaceSearchHistory,
+  readMarketplaceSearchHistory,
+  type MarketplaceSearchHistoryEntry
+} from "../lib/marketplaceSearchHistory";
 import { AppLocale } from "../lib/i18n";
 import {
   MarketplaceFilterForm,
@@ -22,20 +28,19 @@ import {
 import { buildMarketplaceFallback } from "./MarketplaceHomePage.fallback";
 import MarketplaceHomeResultsContent from "./MarketplaceHomeResultsContent";
 import {
-  TopbarActionItem,
-  buildLightTopbarPrimaryActions,
-  buildLightTopbarUtilityActions
+  buildMarketplaceTopbarActionBundle
 } from "./MarketplaceHomePage.lightTopbar";
 import MarketplaceHomeLocaleThemeSwitch from "./MarketplaceHomeLocaleThemeSwitch";
 import MarketplaceHomeSearchOverlay from "./MarketplaceHomeSearchOverlay";
 import MarketplaceHomeSkillCard from "./MarketplaceHomeSkillCard";
 import MarketplaceHomeTopStatsCard from "./MarketplaceHomeTopStatsCard";
-import MarketplaceHomeTopRecommendations from "./MarketplaceHomeTopRecommendations";
-import MarketplaceGlobalSearchBar from "../components/MarketplaceGlobalSearchBar";
+import MarketplaceSearchStrip from "../components/MarketplaceSearchStrip";
+import MarketplacePageBreadcrumb, { type MarketplacePageBreadcrumbItem } from "../components/MarketplacePageBreadcrumb";
+import { buildMarketplaceWorkspaceAuthRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
 import { buildMarketplaceTrendPathData } from "./MarketplaceHomePage.trend";
 import { normalizeFilterFormQuery } from "./MarketplacePublicQuery";
 import MarketplacePublicPageShell from "./marketplacePublic/MarketplacePublicPageShell";
-import PublicStandardTopbar from "./PublicStandardTopbar";
+import MarketplaceTopbar from "./MarketplaceTopbar";
 import {
   HomeChipFilter,
   MarketplaceHomeMode,
@@ -77,6 +82,7 @@ export default function MarketplaceHomePage({
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<MarketplaceFilterForm>(defaultFilterForm);
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<MarketplaceSearchHistoryEntry[]>(() => readMarketplaceSearchHistory());
   const [viewport, setViewport] = useState(() => ({
     width: window.innerWidth,
     height: window.innerHeight
@@ -90,6 +96,8 @@ export default function MarketplaceHomePage({
     () => resolveMarketplaceHomeMode(import.meta.env.VITE_MARKETPLACE_HOME_MODE),
     []
   );
+  const shouldForceLiveSearch = isResultsPage;
+  const effectiveDataMode: MarketplaceHomeMode = shouldForceLiveSearch ? "live" : homeMode;
   const autoLoadConfig = useMemo(() => resolveMarketplaceAutoLoadConfig(import.meta.env), []);
   const queryState = useMemo(() => parseQueryState(window.location.search), [locationKey]);
   const effectiveQueryState = useMemo(
@@ -128,15 +136,15 @@ export default function MarketplaceHomePage({
       query: effectiveQueryState,
       locale,
       sessionUser,
-      mode: homeMode,
-      prototypeDelayMs: homeMode === "prototype" ? autoLoadConfig.prototypeDataDelayMs : 0
+      mode: effectiveDataMode,
+      prototypeDelayMs: effectiveDataMode === "prototype" ? autoLoadConfig.prototypeDataDelayMs : 0
     })
       .then((result) => {
         if (!active) {
           return;
         }
         const payload =
-          homeMode === "live" && result.degraded && hasLiveQueryConstraints
+          effectiveDataMode === "live" && result.degraded && hasLiveQueryConstraints
             ? normalizeUnavailableLiveMarketplacePayload(result.payload, effectiveQueryState.page)
             : result.payload;
         setData((previousPayload) =>
@@ -152,7 +160,7 @@ export default function MarketplaceHomePage({
           return;
         }
         const fallbackPayload =
-          homeMode === "live" && hasLiveQueryConstraints
+          effectiveDataMode === "live" && hasLiveQueryConstraints
             ? normalizeUnavailableLiveMarketplacePayload(fallbackData, effectiveQueryState.page)
             : fallbackData;
         setData((previousPayload) =>
@@ -175,7 +183,7 @@ export default function MarketplaceHomePage({
   }, [
     effectiveQueryState,
     fallbackData,
-    homeMode,
+    effectiveDataMode,
     locale,
     sessionUser,
     autoLoadConfig.prototypeDataDelayMs,
@@ -243,6 +251,20 @@ export default function MarketplaceHomePage({
     [cardGroups.latest, isLightTheme, items, locale, pageSize, shouldUseSkillPayloadForCards]
   );
   const hotFilters = useMemo(() => buildHomeChipFilters(text), [text]);
+  const resultsPageBreadcrumbItems = useMemo<MarketplacePageBreadcrumbItem[]>(
+    () => [
+      {
+        key: "home",
+        label: "SkillsIndex",
+        onClick: () => onNavigate(marketplaceBasePath)
+      },
+      {
+        key: "current",
+        label: text.resultsTitle
+      }
+    ],
+    [marketplaceBasePath, onNavigate, text.resultsTitle]
+  );
 
   function toHomePath(): string { return marketplaceBasePath; }
   function toPublicPath(path: string): string { return navigator.toPublic(path); }
@@ -262,8 +284,15 @@ export default function MarketplaceHomePage({
       setIsSearchOverlayOpen(true);
       return;
     }
+    const normalizedForm = normalizeFilterFormQuery(form);
+    setRecentSearches(
+      appendMarketplaceSearchHistory({
+        q: normalizedForm.q,
+        tags: normalizedForm.tags
+      })
+    );
     setIsSearchOverlayOpen(false);
-    commitQuery({ ...normalizeFilterFormQuery(form), page: 1 }, "results");
+    commitQuery({ ...normalizedForm, page: 1 }, "results");
   }
 
   function handleSearchEntryOpen() {
@@ -299,9 +328,16 @@ export default function MarketplaceHomePage({
       ...form,
       tags: filter.queryTags
     };
+    const normalizedNextForm = normalizeFilterFormQuery(nextForm);
     setForm(nextForm);
+    setRecentSearches(
+      appendMarketplaceSearchHistory({
+        q: normalizedNextForm.q,
+        tags: normalizedNextForm.tags
+      })
+    );
     setIsSearchOverlayOpen(false);
-    commitQuery({ ...normalizeFilterFormQuery(nextForm), page: 1 }, "results");
+    commitQuery({ ...normalizedNextForm, page: 1 }, "results");
   }
 
   function handleFilterFieldChange(field: keyof MarketplaceFilterForm, value: string) {
@@ -312,12 +348,31 @@ export default function MarketplaceHomePage({
     setForm(nextForm);
   }
 
-  function handleQuickFilterOpen() {
-    setIsSearchOverlayOpen(true);
-  }
-
   function handleResultsClose() {
     setIsSearchOverlayOpen(false);
+  }
+
+  function handleRecentSearchApply(entry: MarketplaceSearchHistoryEntry) {
+    const nextForm: MarketplaceFilterForm = {
+      ...form,
+      q: entry.q,
+      tags: entry.tags
+    };
+    const normalizedNextForm = normalizeFilterFormQuery(nextForm);
+    setForm(nextForm);
+    setRecentSearches(
+      appendMarketplaceSearchHistory({
+        q: normalizedNextForm.q,
+        tags: normalizedNextForm.tags
+      })
+    );
+    setIsSearchOverlayOpen(false);
+    commitQuery({ ...normalizedNextForm, page: 1 }, "results");
+  }
+
+  function handleRecentSearchClear() {
+    clearMarketplaceSearchHistory();
+    setRecentSearches([]);
   }
 
   function handleTopbarAuthAction(): void {
@@ -332,28 +387,29 @@ export default function MarketplaceHomePage({
     onNavigate("/workspace");
   }
 
-  const lightTopbarPrimaryActions = useMemo<TopbarActionItem[]>(
+  const topbarActionBundle = useMemo(
     () =>
-      buildLightTopbarPrimaryActions({
+      buildMarketplaceTopbarActionBundle({
         onNavigate,
         toPublicPath,
-        labels: {
-          categoryNav: text.categoryNav,
-          downloadRankingNav: text.downloadRankingNav
-        }
-      }),
-    [onNavigate, text.categoryNav, text.downloadRankingNav, toPublicPath]
-  );
-  const lightTopbarUtilityActions = useMemo<TopbarActionItem[]>(
-    () =>
-      buildLightTopbarUtilityActions({
-        onNavigate,
-        toPublicPath,
+        locale,
         hasSessionUser: Boolean(sessionUser),
         authActionLabel: sessionUser ? text.signOut : text.signIn,
         onAuthAction: handleTopbarAuthAction
       }),
-    [handleTopbarAuthAction, onNavigate, sessionUser, text.signIn, text.signOut, toPublicPath]
+    [handleTopbarAuthAction, locale, onNavigate, sessionUser, text.signIn, text.signOut, toPublicPath]
+  );
+  const topbarRightRegistrations = useMemo(
+    () =>
+      buildMarketplaceWorkspaceAuthRightRegistrations({
+        sessionUser,
+        workspaceLabel: text.openWorkspace,
+        signInLabel: text.signIn,
+        signOutLabel: text.signOut,
+        onWorkspaceClick: handleTopbarConsoleAction,
+        onAuthClick: handleTopbarAuthAction
+      }),
+    [handleTopbarAuthAction, handleTopbarConsoleAction, sessionUser, text.openWorkspace, text.signIn, text.signOut]
   );
   const lightBrandTitle = "SkillsIndex";
   const lightBrandSubtitle = "User Portal";
@@ -380,19 +436,16 @@ export default function MarketplaceHomePage({
       rootClassName={rootClasses}
       rootTestId="marketplace-home-root"
     >
-      <PublicStandardTopbar
+      <MarketplaceTopbar
         shellClassName="animated-fade-down"
         dataAnimated
         brandTitle={topbarBrandTitle}
         brandSubtitle={topbarBrandSubtitle}
         onBrandClick={() => onNavigate(toHomePath())}
         isLightTheme={isLightTheme}
-        primaryActions={lightTopbarPrimaryActions}
-        utilityActions={lightTopbarUtilityActions}
-        secondaryCtaLabel={text.openWorkspace}
-        onSecondaryCtaClick={handleTopbarConsoleAction}
-        ctaLabel={sessionUser ? text.signOut : text.signIn}
-        onCtaClick={handleTopbarAuthAction}
+        primaryActions={topbarActionBundle.primaryActions}
+        utilityActions={topbarActionBundle.utilityActions}
+        rightRegistrations={topbarRightRegistrations}
         localeThemeSwitch={
           <MarketplaceHomeLocaleThemeSwitch
             locale={locale}
@@ -405,26 +458,25 @@ export default function MarketplaceHomePage({
 
       {isResultsPage ? (
         <>
-          <section className="marketplace-search-strip animated-fade-up delay-1" role="search" aria-label="Marketplace search" data-animated="true">
-            <MarketplaceGlobalSearchBar
-              queryAriaLabel={text.queryKeyword}
-              queryValue={form.q}
-              queryPlaceholder={text.queryPlaceholder}
-              onQueryChange={(value) => handleFilterFieldChange("q", value)}
-              onQueryKeyDown={handleSearchInputKeyDown}
-              semanticAriaLabel={text.querySemantic}
-              semanticValue={form.tags}
-              semanticPlaceholder={text.semanticPlaceholder}
-              onSemanticChange={(value) => handleFilterFieldChange("tags", value)}
-              submitLabel={text.search}
-              onSubmit={handleSearchSubmit}
-              submitDisabled={homeMode === "live" && loading}
+          <section className="marketplace-page-breadcrumb-shell">
+            <MarketplacePageBreadcrumb
+              items={resultsPageBreadcrumbItems}
+              ariaLabel="Results page breadcrumb"
+              testIdPrefix="results-page-breadcrumb"
             />
+          </section>
 
-            <MarketplaceHomeTopRecommendations
-              label={text.recommendedLabel}
-              filters={hotFilters}
-              onApply={handleHotFilterApply}
+          <section className="marketplace-search-strip animated-fade-up delay-1" role="search" aria-label="Marketplace search" data-animated="true">
+            <MarketplaceSearchStrip
+              variant="results"
+              text={text}
+              form={form}
+              submitDisabled={effectiveDataMode === "live" && loading}
+              hotFilters={hotFilters}
+              onFilterFieldChange={handleFilterFieldChange}
+              onSearchInputKeyDown={handleSearchInputKeyDown}
+              onSearchSubmit={handleSearchSubmit}
+              onHotFilterApply={handleHotFilterApply}
             />
           </section>
 
@@ -446,30 +498,18 @@ export default function MarketplaceHomePage({
         <>
           <section className="marketplace-search-strip animated-fade-up delay-1" role="search" aria-label="Marketplace search" data-animated="true">
             <MarketplaceHomeTopStatsCard text={text} trendPathData={trendPathData} />
-
-            <MarketplaceHomeTopRecommendations label={text.recommendedLabel} filters={hotFilters} onApply={handleHotFilterApply} />
-
-            <MarketplaceGlobalSearchBar
-              queryAriaLabel="Keyword query"
-              queryValue={form.q}
-              queryPlaceholder={text.queryPlaceholder}
-              queryReadOnly
-              onQueryClick={handleSearchEntryOpen}
-              onQueryKeyDown={handleSearchInputKeyDown}
-              submitLabel={text.search}
-              onSubmit={handleSearchSubmit}
-              submitDisabled={homeMode === "live" && loading}
-              filterLabel={text.advanced}
-              onFilterClick={handleQuickFilterOpen}
+            <MarketplaceSearchStrip
+              variant="home-entry"
+              text={text}
+              form={form}
+              submitDisabled={effectiveDataMode === "live" && loading}
+              hotFilters={hotFilters}
+              onFilterFieldChange={handleFilterFieldChange}
+              onSearchInputKeyDown={handleSearchInputKeyDown}
+              onSearchSubmit={handleSearchSubmit}
+              onSearchEntryOpen={handleSearchEntryOpen}
+              onHotFilterApply={handleHotFilterApply}
             />
-
-            <div className="marketplace-search-utility-row" aria-label="Search utility">
-              <div className="marketplace-search-utility-left">
-                <span className="is-active">{text.modeLabel}</span>
-                <span>{text.sortLabel}</span>
-                <span>{text.viewLabel}</span>
-              </div>
-            </div>
           </section>
 
           <main className="marketplace-layout animated-fade-up delay-2" data-animated="true">
@@ -492,17 +532,16 @@ export default function MarketplaceHomePage({
         isVisible={!isResultsPage && isSearchOverlayOpen}
         text={text}
         form={form}
-        resultItems={items}
-        resultTotal={resolvedData.pagination.total_items || 0}
-        hotFilters={hotFilters}
+        recentSearches={recentSearches}
         isLightTheme={isLightTheme}
         onFilterFieldChange={(field, value) => handleFilterFieldChange(field, value)}
         onSearchSubmit={handleSearchSubmit}
         onSearchInputKeyDown={handleSearchInputKeyDown}
-        onHotFilterApply={handleHotFilterApply}
-        onResultOpen={(skillID) => handleSkillOpen(skillID)}
+        onRecentSearchApply={handleRecentSearchApply}
+        onRecentSearchClear={handleRecentSearchClear}
         onClose={handleResultsClose}
       />
+
     </MarketplacePublicPageShell>
   );
 }

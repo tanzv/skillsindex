@@ -4,6 +4,7 @@ import { ReactNode, useMemo } from "react";
 
 import { LocaleSwitchButton, QuickJumpActions, QuickJumpLabel, QuickJumpSection, SideLocaleSwitch } from "../App.shared";
 import type { NavigationItem, ProtectedRoute } from "../appNavigationConfig";
+import { createGlobalUserControlService } from "../lib/globalUserControlService";
 import type { AppLocale } from "../lib/i18n";
 
 interface BackendWorkbenchText {
@@ -105,6 +106,17 @@ export default function BackendWorkbenchShell({
   children
 }: BackendWorkbenchShellProps) {
   const primarySections = useMemo(() => buildPrimarySections(), []);
+  const globalUserControlService = useMemo(
+    () =>
+      createGlobalUserControlService({
+        locale,
+        themeMode: "dark",
+        onLocaleChange,
+        onLogout,
+        logoutDisabled: submitLoading
+      }),
+    [locale, onLocaleChange, onLogout, submitLoading]
+  );
   const activeSection = useMemo(() => resolveActivePrimarySection(route, primarySections), [route, primarySections]);
   const secondaryItems = useMemo(
     () => navItems.filter((item) => activeSection.routes.includes(item.path)),
@@ -144,10 +156,10 @@ export default function BackendWorkbenchShell({
               type="button"
               data-testid="sidebar-locale-switch-en"
               onClick={() => {
-                onLocaleChange("en");
+                globalUserControlService.locale.switchLocale("en");
               }}
               $active={locale === "en"}
-              disabled={locale === "en"}
+              disabled={locale === "en" || !globalUserControlService.locale.canSwitch}
               aria-label="Switch to English locale"
               title="English locale"
             >
@@ -157,10 +169,10 @@ export default function BackendWorkbenchShell({
               type="button"
               data-testid="sidebar-locale-switch-zh"
               onClick={() => {
-                onLocaleChange("zh");
+                globalUserControlService.locale.switchLocale("zh");
               }}
               $active={locale === "zh"}
-              disabled={locale === "zh"}
+              disabled={locale === "zh" || !globalUserControlService.locale.canSwitch}
               aria-label="Switch to Chinese locale"
               title="Chinese locale"
             >
@@ -173,7 +185,14 @@ export default function BackendWorkbenchShell({
             <span>{sessionUser.role}</span>
           </div>
 
-          <button className="ghost" onClick={onLogout} disabled={submitLoading} type="button">
+          <button
+            className="ghost"
+            onClick={() => {
+              void globalUserControlService.auth.logout();
+            }}
+            disabled={!globalUserControlService.auth.canLogout}
+            type="button"
+          >
             {text.signOut}
           </button>
         </div>

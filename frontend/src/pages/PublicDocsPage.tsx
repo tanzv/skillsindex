@@ -1,45 +1,39 @@
 import { Button, Card, Tag, Typography } from "antd";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SessionUser, buildServerURL } from "../lib/api";
 import { AppLocale } from "../lib/i18n";
+import type { ThemeMode } from "../lib/themeModePath";
+import MarketplacePageBreadcrumb, { type MarketplacePageBreadcrumbItem } from "../components/MarketplacePageBreadcrumb";
+import MarketplaceHomeLocaleThemeSwitch from "./MarketplaceHomeLocaleThemeSwitch";
+import {
+  buildMarketplaceTopbarActionBundle,
+} from "./MarketplaceHomePage.lightTopbar";
+import { marketplaceHomeCopy } from "./MarketplaceHomePage.copy";
+import { buildMarketplaceWorkspaceAuthRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
+import MarketplaceHomePageStyles from "./MarketplaceHomePage.styles";
 import {
   PrototypeSplitRow,
   PrototypeTwoColumnGrid,
   PrototypeUtilityHeaderActions,
   PrototypeUtilityPanel,
-  PrototypeUtilityShell
+  PrototypeUtilityShell,
 } from "./prototypeCssInJs";
-import { createPrototypePalette, isLightPrototypePath } from "./prototypePageTheme";
+import MarketplaceTopbar from "./MarketplaceTopbar";
+import {
+  createPrototypePalette,
+  isLightPrototypePath,
+} from "./prototypePageTheme";
+import { publicDocsPageCopy, type DocsEntry } from "./PublicDocsPage.copy";
+import { resolvePublicRankingCopy } from "./PublicRankingPage.copy";
 import { createPublicPageNavigator } from "./publicPageNavigation";
 
 interface PublicDocsPageProps {
   locale: AppLocale;
   onNavigate: (path: string) => void;
+  onLogout?: () => Promise<void> | void;
+  onThemeModeChange: (nextMode: ThemeMode) => void;
+  onLocaleChange: (nextLocale: AppLocale) => void;
   sessionUser: SessionUser | null;
-}
-
-interface DocsEntry {
-  key: string;
-  title: string;
-  summary: string;
-  path: string;
-  badge: string;
-  appPath?: string;
-}
-
-interface DocsCategory {
-  key: string;
-  title: string;
-  summary: string;
-  docsKeys: string[];
-}
-
-interface QuickAction {
-  key: string;
-  title: string;
-  summary: string;
-  path: string;
-  inApp?: boolean;
 }
 
 interface EndpointMetadata {
@@ -49,243 +43,153 @@ interface EndpointMetadata {
   summary: string;
 }
 
-const copy = {
-  en: {
-    title: "Documentation Hub",
-    subtitle: "Open backend documentation endpoints and governance references from one dashboard.",
-    openMarketplace: "Back to Marketplace",
-    openDashboard: "Open Dashboard",
-    signIn: "Sign In",
-    openLink: "Open",
-    openInApp: "Open in App",
-    summaryTitle: "Command Center",
-    summarySubtitle: "Track documentation health, launch key resources, and inspect endpoint metadata in one panel.",
-    metricTotalDocs: "Total Docs",
-    metricSpecs: "API Specs",
-    metricTools: "Interactive Tools",
-    metricInApp: "In-App Routes",
-    docsSectionTitle: "Document Categories",
-    quickActionsTitle: "Quick Actions",
-    endpointMetadataTitle: "Endpoint Metadata",
-    categories: [
-      {
-        key: "core",
-        title: "Core References",
-        summary: "Primary guides for product behavior and backend usage.",
-        docsKeys: ["overview", "api"]
-      },
-      {
-        key: "exploration",
-        title: "Exploration Tools",
-        summary: "Interactive surfaces for request modeling and validation.",
-        docsKeys: ["swagger"]
-      },
-      {
-        key: "contracts",
-        title: "Contract Specs",
-        summary: "Machine-readable artifacts for integration workflows and governance checks.",
-        docsKeys: ["openapi-json", "openapi-yaml"]
-      }
-    ] as DocsCategory[],
-    quickActions: [
-      {
-        key: "open-swagger",
-        title: "Launch Swagger UI",
-        summary: "Open the interactive API browser in a new tab.",
-        path: "/docs/swagger"
-      },
-      {
-        key: "download-openapi-json",
-        title: "Fetch OpenAPI JSON",
-        summary: "Access the JSON spec for SDK generation and contract validation.",
-        path: "/docs/openapi.json"
-      },
-      {
-        key: "open-overview-in-app",
-        title: "Open Developer Docs In App",
-        summary: "Jump to the in-app documentation route when available.",
-        path: "/docs",
-        inApp: true
-      }
-    ] as QuickAction[],
-    docs: [
-      {
-        key: "overview",
-        title: "Developer Docs",
-        summary: "Main product documentation page with workflows and references.",
-        path: "/docs",
-        badge: "General",
-        appPath: "/docs"
-      },
-      {
-        key: "api",
-        title: "API Docs",
-        summary: "Rendered API documentation page for session-based endpoints.",
-        path: "/docs/api",
-        badge: "API"
-      },
-      {
-        key: "swagger",
-        title: "Swagger UI",
-        summary: "Interactive API browser generated from OpenAPI definitions.",
-        path: "/docs/swagger",
-        badge: "Explore"
-      },
-      {
-        key: "openapi-json",
-        title: "OpenAPI JSON",
-        summary: "Machine-readable JSON specification for integrations and SDK generation.",
-        path: "/docs/openapi.json",
-        badge: "JSON"
-      },
-      {
-        key: "openapi-yaml",
-        title: "OpenAPI YAML",
-        summary: "YAML specification variant for CI pipelines and API governance checks.",
-        path: "/docs/openapi.yaml",
-        badge: "YAML"
-      }
-    ] as DocsEntry[]
-  },
-  zh: {
-    title: "\u6587\u6863\u4e2d\u5fc3",
-    subtitle: "\u5728\u540c\u4e00\u4e2a\u63a7\u5236\u9762\u677f\u6253\u5f00\u540e\u7aef\u6587\u6863\u3001API\u89c4\u7ea6\u4e0e\u8fd0\u7ef4\u53c2\u8003\u9875\u3002",
-    openMarketplace: "\u8fd4\u56de\u5e02\u573a",
-    openDashboard: "\u6253\u5f00\u63a7\u5236\u53f0",
-    signIn: "\u767b\u5f55",
-    openLink: "\u65b0\u7a97\u53e3\u6253\u5f00",
-    openInApp: "\u5e94\u7528\u5185\u8df3\u8f6c",
-    summaryTitle: "Command Center",
-    summarySubtitle: "Track documentation health, launch key resources, and inspect endpoint metadata in one panel.",
-    metricTotalDocs: "Total Docs",
-    metricSpecs: "API Specs",
-    metricTools: "Interactive Tools",
-    metricInApp: "In-App Routes",
-    docsSectionTitle: "Document Categories",
-    quickActionsTitle: "Quick Actions",
-    endpointMetadataTitle: "Endpoint Metadata",
-    categories: [
-      {
-        key: "core",
-        title: "Core References",
-        summary: "Primary guides for product behavior and backend usage.",
-        docsKeys: ["overview", "api"]
-      },
-      {
-        key: "exploration",
-        title: "Exploration Tools",
-        summary: "Interactive surfaces for request modeling and validation.",
-        docsKeys: ["swagger"]
-      },
-      {
-        key: "contracts",
-        title: "Contract Specs",
-        summary: "Machine-readable artifacts for integration workflows and governance checks.",
-        docsKeys: ["openapi-json", "openapi-yaml"]
-      }
-    ] as DocsCategory[],
-    quickActions: [
-      {
-        key: "open-swagger",
-        title: "Launch Swagger UI",
-        summary: "Open the interactive API browser in a new tab.",
-        path: "/docs/swagger"
-      },
-      {
-        key: "download-openapi-json",
-        title: "Fetch OpenAPI JSON",
-        summary: "Access the JSON spec for SDK generation and contract validation.",
-        path: "/docs/openapi.json"
-      },
-      {
-        key: "open-overview-in-app",
-        title: "Open Developer Docs In App",
-        summary: "Jump to the in-app documentation route when available.",
-        path: "/docs",
-        inApp: true
-      }
-    ] as QuickAction[],
-    docs: [
-      {
-        key: "overview",
-        title: "\u5f00\u53d1\u8005\u6587\u6863",
-        summary: "\u4ea7\u54c1\u4e3b\u6587\u6863\u5165\u53e3\uff0c\u5305\u542b\u4e3b\u8981\u6d41\u7a0b\u548c\u53c2\u8003\u8bf4\u660e\u3002",
-        path: "/docs",
-        badge: "\u901a\u7528",
-        appPath: "/docs"
-      },
-      {
-        key: "api",
-        title: "API \u6587\u6863",
-        summary: "\u9762\u5411\u4f1a\u8bdd\u63a5\u53e3\u7684\u6587\u6863\u89c6\u56fe\u9875\u9762\u3002",
-        path: "/docs/api",
-        badge: "API"
-      },
-      {
-        key: "swagger",
-        title: "Swagger UI",
-        summary: "\u57fa\u4e8e OpenAPI \u7684\u4ea4\u4e92\u5f0f\u63a5\u53e3\u6d4f\u89c8\u754c\u9762\u3002",
-        path: "/docs/swagger",
-        badge: "\u6d4f\u89c8"
-      },
-      {
-        key: "openapi-json",
-        title: "OpenAPI JSON",
-        summary: "\u7528\u4e8e\u96c6\u6210\u5de5\u5177\u4e0e SDK \u751f\u6210\u7684 JSON \u89c4\u7ea6\u3002",
-        path: "/docs/openapi.json",
-        badge: "JSON"
-      },
-      {
-        key: "openapi-yaml",
-        title: "OpenAPI YAML",
-        summary: "\u9002\u7528\u4e8e CI \u6d41\u6c34\u7ebf\u4e0e\u89c4\u7ea6\u5ba1\u67e5\u7684 YAML \u5f62\u5f0f\u3002",
-        path: "/docs/openapi.yaml",
-        badge: "YAML"
-      }
-    ] as DocsEntry[]
-  }
-};
-
-export default function PublicDocsPage({ locale, onNavigate, sessionUser }: PublicDocsPageProps) {
-  const text = copy[locale];
+export default function PublicDocsPage({
+  locale,
+  onNavigate,
+  onLogout,
+  onThemeModeChange,
+  onLocaleChange,
+  sessionUser,
+}: PublicDocsPageProps) {
+  const text = publicDocsPageCopy[locale];
   const currentPath = window.location.pathname;
+  const [viewport, setViewport] = useState(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }));
   const lightMode = isLightPrototypePath(currentPath);
+  const topbarThemeMode: ThemeMode = lightMode ? "light" : "dark";
+  const isCompactLayout = viewport.width <= 900 && viewport.height >= 500;
+  const isMobileLayout = isCompactLayout || /^\/mobile(\/|$)/.test(currentPath);
+  const shellClassName = `prototype-shell marketplace-home-stage${isMobileLayout ? " is-mobile-stage" : ""}${lightMode ? " is-light-stage" : ""}`;
+  const rootClassName = `marketplace-home is-docs-page${lightMode ? " is-light-theme" : ""}${isMobileLayout ? " is-mobile" : ""}`;
   const palette = useMemo(() => createPrototypePalette(lightMode), [lightMode]);
-  const navigator = useMemo(() => createPublicPageNavigator(currentPath), [currentPath]);
-  const docsByKey = useMemo(() => new Map(text.docs.map((entry) => [entry.key, entry])), [text.docs]);
+  const topbarCopy = useMemo(
+    () => resolvePublicRankingCopy(locale).topbar,
+    [locale],
+  );
+  const topbarLocaleCopy = useMemo(() => marketplaceHomeCopy[locale] || marketplaceHomeCopy.en, [locale]);
+  const navigator = useMemo(
+    () => createPublicPageNavigator(currentPath),
+    [currentPath],
+  );
+  const toPublicPath = navigator.toPublic;
+  const docsByKey = useMemo(
+    () => new Map(text.docs.map((entry) => [entry.key, entry])),
+    [text.docs],
+  );
   const totalDocs = text.docs.length;
-  const specDocs = text.docs.filter((entry) => entry.path.endsWith(".json") || entry.path.endsWith(".yaml")).length;
-  const interactiveTools = text.docs.filter((entry) => entry.badge === "Explore" || entry.key === "swagger").length;
-  const inAppRoutes = text.docs.filter((entry) => Boolean(entry.appPath)).length;
+  const specDocs = text.docs.filter(
+    (entry) => entry.path.endsWith(".json") || entry.path.endsWith(".yaml"),
+  ).length;
+  const interactiveTools = text.docs.filter(
+    (entry) => entry.badge === "Explore" || entry.key === "swagger",
+  ).length;
+  const inAppRoutes = text.docs.filter((entry) =>
+    Boolean(entry.appPath),
+  ).length;
+  function handleTopbarAuthAction(): void {
+    if (sessionUser) {
+      void onLogout?.();
+      return;
+    }
+    onNavigate(toPublicPath("/login"));
+  }
+
+  function handleTopbarConsoleAction(): void {
+    onNavigate("/workspace");
+  }
+
+  const topbarActionBundle = useMemo(
+    () =>
+      buildMarketplaceTopbarActionBundle({
+        onNavigate,
+        toPublicPath,
+        locale,
+        hasSessionUser: Boolean(sessionUser),
+        authActionLabel: sessionUser ? topbarLocaleCopy.signOut : topbarLocaleCopy.signIn,
+        onAuthAction: handleTopbarAuthAction
+      }),
+    [handleTopbarAuthAction, locale, onNavigate, sessionUser, toPublicPath, topbarLocaleCopy.signIn, topbarLocaleCopy.signOut],
+  );
+  const topbarRightRegistrations = useMemo(
+    () =>
+      buildMarketplaceWorkspaceAuthRightRegistrations({
+        sessionUser,
+        workspaceLabel: topbarLocaleCopy.openWorkspace,
+        signInLabel: topbarLocaleCopy.signIn,
+        signOutLabel: topbarLocaleCopy.signOut,
+        onWorkspaceClick: handleTopbarConsoleAction,
+        onAuthClick: handleTopbarAuthAction
+      }),
+    [
+      handleTopbarAuthAction,
+      handleTopbarConsoleAction,
+      sessionUser,
+      topbarLocaleCopy.openWorkspace,
+      topbarLocaleCopy.signIn,
+      topbarLocaleCopy.signOut,
+    ],
+  );
   const endpointMetadata = useMemo<EndpointMetadata[]>(
     () => [
       {
         key: "base-url",
         label: "Server Base URL",
         value: new URL(buildServerURL("/")).origin,
-        summary: "Shared backend origin used by all public documentation endpoints."
+        summary:
+          "Shared backend origin used by all public documentation endpoints.",
       },
       {
         key: "api-doc-path",
         label: "API Docs Endpoint",
         value: buildServerURL("/docs/api"),
-        summary: "Session-aware endpoint for rendered API documentation."
+        summary: "Session-aware endpoint for rendered API documentation.",
       },
       {
         key: "openapi-json-path",
         label: "OpenAPI JSON Endpoint",
         value: buildServerURL("/docs/openapi.json"),
-        summary: "Structured schema source for integrations and code generation."
+        summary:
+          "Structured schema source for integrations and code generation.",
       },
       {
         key: "openapi-yaml-path",
         label: "OpenAPI YAML Endpoint",
         value: buildServerURL("/docs/openapi.yaml"),
-        summary: "Human-readable schema variant for governance pipelines."
+        summary: "Human-readable schema variant for governance pipelines.",
+      },
+    ],
+    [],
+  );
+  const breadcrumbItems = useMemo<MarketplacePageBreadcrumbItem[]>(
+    () => [
+      {
+        key: "home",
+        label: "SkillsIndex",
+        onClick: () => onNavigate(navigator.toPublic("/"))
+      },
+      {
+        key: "current",
+        label: text.title
       }
     ],
-    []
+    [navigator, onNavigate, text.title]
   );
+
+  useEffect(() => {
+    function handleResize() {
+      setViewport({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   function openExternal(path: string): void {
     window.open(buildServerURL(path), "_blank", "noopener,noreferrer");
@@ -296,194 +200,374 @@ export default function PublicDocsPage({ locale, onNavigate, sessionUser }: Publ
   }
 
   return (
-    <PrototypeUtilityShell>
-      <Card
-        variant="borderless"
-        style={{ borderRadius: 16, border: `1px solid ${palette.headerBorder}`, background: palette.headerBackground }}
-        styles={{ body: { padding: "14px 16px" } }}
-      >
-        <PrototypeSplitRow>
-          <div style={{ display: "grid", gap: 6 }}>
-            <Typography.Title
-              level={2}
-              style={{
-                margin: 0,
-                color: palette.headerTitle,
-                fontFamily: "\"Syne\", sans-serif",
-                fontSize: "clamp(1.12rem, 2.5vw, 1.72rem)",
-                lineHeight: 1.18
-              }}
-            >
-              {text.title}
-            </Typography.Title>
-            <Typography.Paragraph style={{ margin: 0, color: palette.headerSubtitle, fontSize: "0.82rem", maxWidth: "72ch" }}>
-              {text.subtitle}
-            </Typography.Paragraph>
-            <Typography.Text style={{ color: palette.headerSubtitle, fontSize: "0.78rem", letterSpacing: "0.02em" }}>
-              {text.summaryTitle}: {text.summarySubtitle}
-            </Typography.Text>
-          </div>
-          <PrototypeUtilityHeaderActions>
-            <Button onClick={() => onNavigate(navigator.toPublic("/"))}>{text.openMarketplace}</Button>
-            <Button
-              type="primary"
-              onClick={() => onNavigate(sessionUser ? navigator.toAdmin("/admin/overview") : navigator.toPublic("/login"))}
-            >
-              {sessionUser ? text.openDashboard : text.signIn}
-            </Button>
-          </PrototypeUtilityHeaderActions>
-        </PrototypeSplitRow>
-        <div
-          style={{
-            marginTop: 12,
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-            gap: 10
-          }}
-        >
-          {[
-            { label: text.metricTotalDocs, value: totalDocs },
-            { label: text.metricSpecs, value: specDocs },
-            { label: text.metricTools, value: interactiveTools },
-            { label: text.metricInApp, value: inAppRoutes }
-          ].map((metric) => (
-            <div
-              key={metric.label}
-              style={{
-                borderRadius: 12,
-                border: `1px solid ${palette.cardBorder}`,
-                background: palette.cardBackground,
-                padding: "10px 12px",
-                display: "grid",
-                gap: 3
-              }}
-            >
-              <Typography.Text style={{ color: palette.metricLabel, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                {metric.label}
-              </Typography.Text>
-              <Typography.Text style={{ color: palette.metricValue, fontSize: "1.2rem", fontWeight: 700 }}>{metric.value}</Typography.Text>
-            </div>
-          ))}
-        </div>
-      </Card>
+    <div className={shellClassName}>
+      <MarketplaceHomePageStyles />
+      <div className={rootClassName}>
+        <MarketplaceTopbar
+          shellClassName="animated-fade-down"
+          dataAnimated
+          brandTitle="SkillsIndex"
+          brandSubtitle={topbarCopy.brandSubtitle}
+          onBrandClick={() => onNavigate(navigator.toPublic("/"))}
+          isLightTheme={lightMode}
+          primaryActions={topbarActionBundle.primaryActions}
+          utilityActions={topbarActionBundle.utilityActions}
+          rightRegistrations={topbarRightRegistrations}
+          localeThemeSwitch={
+            <MarketplaceHomeLocaleThemeSwitch
+              locale={locale}
+              currentThemeMode={topbarThemeMode}
+              onThemeModeChange={onThemeModeChange}
+              onLocaleChange={onLocaleChange}
+            />
+          }
+        />
 
-      <PrototypeUtilityPanel style={{ background: "transparent", border: "none", padding: 0 }}>
-        <PrototypeTwoColumnGrid>
+        <PrototypeUtilityShell>
+          <MarketplacePageBreadcrumb
+            items={breadcrumbItems}
+            ariaLabel="Docs page breadcrumb"
+            testIdPrefix="docs-page-breadcrumb"
+          />
+
           <Card
             variant="borderless"
-            style={{ borderRadius: 14, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-            title={text.docsSectionTitle}
-            styles={{ body: { display: "grid", gap: 12 } }}
+            style={{
+              borderRadius: 16,
+              border: "none",
+              background:
+                "color-mix(in srgb, var(--si-color-panel) 82%, transparent)",
+              boxShadow: "none",
+              backdropFilter: "blur(10px) saturate(120%)",
+            }}
+            styles={{ body: { padding: "14px 16px" } }}
           >
-            {text.categories.map((category) => (
-              <div
-                key={category.key}
-                style={{
-                  borderRadius: 12,
-                  border: `1px solid ${palette.headerBorder}`,
-                  background: palette.headerBackground,
-                  padding: 10,
-                  display: "grid",
-                  gap: 10
-                }}
-              >
-                <div style={{ display: "grid", gap: 4 }}>
-                  <Typography.Text style={{ color: palette.headerTitle, fontSize: "0.85rem", fontWeight: 700 }}>{category.title}</Typography.Text>
-                  <Typography.Text style={{ color: palette.headerSubtitle, fontSize: "0.76rem", lineHeight: 1.45 }}>{category.summary}</Typography.Text>
-                </div>
-                {category.docsKeys
-                  .map((docsKey) => docsByKey.get(docsKey))
-                  .filter((entry): entry is DocsEntry => Boolean(entry))
-                  .map((entry) => (
-                    <div
-                      key={entry.key}
-                      style={{
-                        borderRadius: 10,
-                        border: `1px solid ${palette.cardBorder}`,
-                        background: palette.cardBackground,
-                        padding: 10,
-                        display: "grid",
-                        gap: 8
-                      }}
-                    >
-                      <PrototypeSplitRow>
-                        <Typography.Text style={{ color: palette.cardTitle, fontWeight: 700 }}>{entry.title}</Typography.Text>
-                        <Tag color="blue">{entry.badge}</Tag>
-                      </PrototypeSplitRow>
-                      <Typography.Paragraph style={{ margin: 0, color: palette.cardText, fontSize: "0.8rem", lineHeight: 1.45 }}>
-                        {entry.summary}
-                      </Typography.Paragraph>
-                      <PrototypeUtilityHeaderActions>
-                        <Button type="primary" onClick={() => openExternal(entry.path)}>
-                          {text.openLink}
-                        </Button>
-                        <Button onClick={() => (entry.appPath ? openInApp(entry.appPath) : openExternal(entry.path))}>
-                          {text.openInApp}
-                        </Button>
-                      </PrototypeUtilityHeaderActions>
-                    </div>
-                  ))}
+            <PrototypeSplitRow>
+              <div style={{ display: "grid", gap: 6 }}>
+                <Typography.Title
+                  level={2}
+                  style={{
+                    margin: 0,
+                    color: palette.headerTitle,
+                    fontFamily: '"Syne", sans-serif',
+                    fontSize: "clamp(1.12rem, 2.5vw, 1.72rem)",
+                    lineHeight: 1.18,
+                  }}
+                >
+                  {text.title}
+                </Typography.Title>
+                <Typography.Paragraph
+                  style={{
+                    margin: 0,
+                    color: palette.headerSubtitle,
+                    fontSize: "0.82rem",
+                    maxWidth: "72ch",
+                  }}
+                >
+                  {text.subtitle}
+                </Typography.Paragraph>
+                <Typography.Text
+                  style={{
+                    color: palette.headerSubtitle,
+                    fontSize: "0.78rem",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  {text.summaryTitle}: {text.summarySubtitle}
+                </Typography.Text>
               </div>
-            ))}
+              <PrototypeUtilityHeaderActions>
+                <Button onClick={() => onNavigate(navigator.toPublic("/"))}>
+                  {text.openMarketplace}
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={() =>
+                    onNavigate(
+                      sessionUser
+                        ? navigator.toAdmin("/admin/overview")
+                        : navigator.toPublic("/login"),
+                    )
+                  }
+                >
+                  {sessionUser ? text.openDashboard : text.signIn}
+                </Button>
+              </PrototypeUtilityHeaderActions>
+            </PrototypeSplitRow>
+            <div
+              style={{
+                marginTop: 12,
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+                gap: 10,
+              }}
+            >
+              {[
+                { label: text.metricTotalDocs, value: totalDocs },
+                { label: text.metricSpecs, value: specDocs },
+                { label: text.metricTools, value: interactiveTools },
+                { label: text.metricInApp, value: inAppRoutes },
+              ].map((metric) => (
+                <div
+                  key={metric.label}
+                  style={{
+                    borderRadius: 12,
+                    border: "none",
+                    background:
+                      "color-mix(in srgb, var(--si-color-muted-surface) 52%, transparent)",
+                    padding: "10px 12px",
+                    display: "grid",
+                    gap: 3,
+                  }}
+                >
+                  <Typography.Text
+                    style={{
+                      color: palette.metricLabel,
+                      fontSize: "0.72rem",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    {metric.label}
+                  </Typography.Text>
+                  <Typography.Text
+                    style={{
+                      color: palette.metricValue,
+                      fontSize: "1.2rem",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {metric.value}
+                  </Typography.Text>
+                </div>
+              ))}
+            </div>
           </Card>
 
-          <div style={{ display: "grid", gap: 10 }}>
-            <Card
-              variant="borderless"
-              style={{ borderRadius: 14, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-              title={text.quickActionsTitle}
-              styles={{ body: { display: "grid", gap: 10 } }}
-            >
-              {text.quickActions.map((action) => (
-                <div
-                  key={action.key}
-                  style={{
-                    borderRadius: 10,
-                    border: `1px solid ${palette.headerBorder}`,
-                    background: palette.headerBackground,
-                    padding: 10,
-                    display: "grid",
-                    gap: 8
-                  }}
-                >
-                  <Typography.Text style={{ color: palette.headerTitle, fontWeight: 700 }}>{action.title}</Typography.Text>
-                  <Typography.Text style={{ color: palette.headerSubtitle, fontSize: "0.77rem", lineHeight: 1.45 }}>{action.summary}</Typography.Text>
-                  <Button type="primary" onClick={() => (action.inApp ? openInApp(action.path) : openExternal(action.path))}>
-                    {action.inApp ? text.openInApp : text.openLink}
-                  </Button>
-                </div>
-              ))}
-            </Card>
+          <PrototypeUtilityPanel
+            style={{ background: "transparent", border: "none", padding: 0 }}
+          >
+            <PrototypeTwoColumnGrid>
+              <Card
+                variant="borderless"
+                style={{
+                  borderRadius: 14,
+                  border: "none",
+                  background:
+                    "color-mix(in srgb, var(--si-color-surface) 72%, transparent)",
+                  boxShadow: "none",
+                }}
+                title={text.docsSectionTitle}
+                styles={{ body: { display: "grid", gap: 12 } }}
+              >
+                {text.categories.map((category) => (
+                  <div
+                    key={category.key}
+                    style={{
+                      borderRadius: 12,
+                      border: "none",
+                      background:
+                        "color-mix(in srgb, var(--si-color-muted-surface) 52%, transparent)",
+                      padding: 10,
+                      display: "grid",
+                      gap: 10,
+                    }}
+                  >
+                    <div style={{ display: "grid", gap: 4 }}>
+                      <Typography.Text
+                        style={{
+                          color: palette.headerTitle,
+                          fontSize: "0.85rem",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {category.title}
+                      </Typography.Text>
+                      <Typography.Text
+                        style={{
+                          color: palette.headerSubtitle,
+                          fontSize: "0.76rem",
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        {category.summary}
+                      </Typography.Text>
+                    </div>
+                    {category.docsKeys
+                      .map((docsKey) => docsByKey.get(docsKey))
+                      .filter((entry): entry is DocsEntry => Boolean(entry))
+                      .map((entry) => (
+                        <div
+                          key={entry.key}
+                          style={{
+                            borderRadius: 10,
+                            border: "none",
+                            background:
+                              "color-mix(in srgb, var(--si-color-surface) 66%, transparent)",
+                            padding: 10,
+                            display: "grid",
+                            gap: 8,
+                          }}
+                        >
+                          <PrototypeSplitRow>
+                            <Typography.Text
+                              style={{
+                                color: palette.cardTitle,
+                                fontWeight: 700,
+                              }}
+                            >
+                              {entry.title}
+                            </Typography.Text>
+                            <Tag color="blue">{entry.badge}</Tag>
+                          </PrototypeSplitRow>
+                          <Typography.Paragraph
+                            style={{
+                              margin: 0,
+                              color: palette.cardText,
+                              fontSize: "0.8rem",
+                              lineHeight: 1.45,
+                            }}
+                          >
+                            {entry.summary}
+                          </Typography.Paragraph>
+                          <PrototypeUtilityHeaderActions>
+                            <Button
+                              type="primary"
+                              onClick={() => openExternal(entry.path)}
+                            >
+                              {text.openLink}
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                entry.appPath
+                                  ? openInApp(entry.appPath)
+                                  : openExternal(entry.path)
+                              }
+                            >
+                              {text.openInApp}
+                            </Button>
+                          </PrototypeUtilityHeaderActions>
+                        </div>
+                      ))}
+                  </div>
+                ))}
+              </Card>
 
-            <Card
-              variant="borderless"
-              style={{ borderRadius: 14, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-              title={text.endpointMetadataTitle}
-              styles={{ body: { display: "grid", gap: 10 } }}
-            >
-              {endpointMetadata.map((meta) => (
-                <div
-                  key={meta.key}
+              <div style={{ display: "grid", gap: 10 }}>
+                <Card
+                  variant="borderless"
                   style={{
-                    borderRadius: 10,
-                    border: `1px solid ${palette.headerBorder}`,
-                    background: palette.headerBackground,
-                    padding: 10,
-                    display: "grid",
-                    gap: 4
+                    borderRadius: 14,
+                    border: "none",
+                    background:
+                      "color-mix(in srgb, var(--si-color-surface) 72%, transparent)",
+                    boxShadow: "none",
                   }}
+                  title={text.quickActionsTitle}
+                  styles={{ body: { display: "grid", gap: 10 } }}
                 >
-                  <Typography.Text style={{ color: palette.metricLabel, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    {meta.label}
-                  </Typography.Text>
-                  <Typography.Text style={{ color: palette.metricValue, fontSize: "0.78rem", wordBreak: "break-all" }}>{meta.value}</Typography.Text>
-                  <Typography.Text style={{ color: palette.headerSubtitle, fontSize: "0.75rem", lineHeight: 1.4 }}>{meta.summary}</Typography.Text>
-                </div>
-              ))}
-            </Card>
-          </div>
-        </PrototypeTwoColumnGrid>
-      </PrototypeUtilityPanel>
-    </PrototypeUtilityShell>
+                  {text.quickActions.map((action) => (
+                    <div
+                      key={action.key}
+                      style={{
+                        borderRadius: 10,
+                        border: "none",
+                        background:
+                          "color-mix(in srgb, var(--si-color-muted-surface) 52%, transparent)",
+                        padding: 10,
+                        display: "grid",
+                        gap: 8,
+                      }}
+                    >
+                      <Typography.Text
+                        style={{ color: palette.headerTitle, fontWeight: 700 }}
+                      >
+                        {action.title}
+                      </Typography.Text>
+                      <Typography.Text
+                        style={{
+                          color: palette.headerSubtitle,
+                          fontSize: "0.77rem",
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        {action.summary}
+                      </Typography.Text>
+                      <Button
+                        type="primary"
+                        onClick={() =>
+                          action.inApp
+                            ? openInApp(action.path)
+                            : openExternal(action.path)
+                        }
+                      >
+                        {action.inApp ? text.openInApp : text.openLink}
+                      </Button>
+                    </div>
+                  ))}
+                </Card>
+
+                <Card
+                  variant="borderless"
+                  style={{
+                    borderRadius: 14,
+                    border: "none",
+                    background:
+                      "color-mix(in srgb, var(--si-color-surface) 72%, transparent)",
+                    boxShadow: "none",
+                  }}
+                  title={text.endpointMetadataTitle}
+                  styles={{ body: { display: "grid", gap: 10 } }}
+                >
+                  {endpointMetadata.map((meta) => (
+                    <div
+                      key={meta.key}
+                      style={{
+                        borderRadius: 10,
+                        border: "none",
+                        background:
+                          "color-mix(in srgb, var(--si-color-muted-surface) 52%, transparent)",
+                        padding: 10,
+                        display: "grid",
+                        gap: 4,
+                      }}
+                    >
+                      <Typography.Text
+                        style={{
+                          color: palette.metricLabel,
+                          fontSize: "0.72rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                        }}
+                      >
+                        {meta.label}
+                      </Typography.Text>
+                      <Typography.Text
+                        style={{
+                          color: palette.metricValue,
+                          fontSize: "0.78rem",
+                          wordBreak: "break-all",
+                        }}
+                      >
+                        {meta.value}
+                      </Typography.Text>
+                      <Typography.Text
+                        style={{
+                          color: palette.headerSubtitle,
+                          fontSize: "0.75rem",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {meta.summary}
+                      </Typography.Text>
+                    </div>
+                  ))}
+                </Card>
+              </div>
+            </PrototypeTwoColumnGrid>
+          </PrototypeUtilityPanel>
+        </PrototypeUtilityShell>
+      </div>
+    </div>
   );
 }

@@ -65,12 +65,14 @@ func TestHandleAPIAccountPasswordResetConfirmSuccess(t *testing.T) {
 
 func TestHandleAPIAccountPasswordResetConfirmInvalidToken(t *testing.T) {
 	app, _, _, _ := setupAccountHandlersTestApp(t)
+	applyAPITestTranslations(app)
 	req := httptest.NewRequest(
 		http.MethodPost,
 		"/api/v1/account/password-reset/confirm",
 		strings.NewReader(`{"token":"invalid-token","new_password":"Account234!"}`),
 	)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9")
 	recorder := httptest.NewRecorder()
 
 	app.handleAPIAccountPasswordResetConfirm(recorder, req)
@@ -80,5 +82,13 @@ func TestHandleAPIAccountPasswordResetConfirmInvalidToken(t *testing.T) {
 	}
 	if !strings.Contains(recorder.Body.String(), `"error":"invalid_reset_token"`) {
 		t.Fatalf("unexpected response body: %s", recorder.Body.String())
+	}
+	payload := decodeBodyMap(t, recorder)
+	message, ok := payload["message"].(string)
+	if !ok {
+		t.Fatalf("missing message field in response payload: %#v", payload)
+	}
+	if message != "localized-reset-invalid-token" {
+		t.Fatalf("unexpected localized message: got=%q", message)
 	}
 }

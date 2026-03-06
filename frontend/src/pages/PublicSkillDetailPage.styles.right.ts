@@ -1,21 +1,47 @@
 import { css } from "@emotion/react";
 
 export const publicSkillDetailRightStyles = css`
+  .skill-detail-card.is-file-control {
+    min-height: 332px;
+    background: var(--skill-detail-surface-2);
+    gap: 10px;
+  }
+
+  .skill-detail-page.is-light .skill-detail-card.is-file-control {
+    background: var(--skill-detail-surface-2);
+  }
+
+  .skill-detail-right-col .skill-detail-card.is-file-control .skill-detail-file-browser-row {
+    min-height: 228px;
+    gap: 10px;
+  }
+
+  .skill-detail-right-col .skill-detail-card.is-file-control .skill-detail-file-list-panel,
+  .skill-detail-right-col .skill-detail-card.is-file-control .skill-detail-file-info-panel {
+    min-height: 228px;
+    max-height: 228px;
+  }
+
+  .skill-detail-right-col .skill-detail-card.is-file-control .skill-detail-file-state-badge {
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-secondary);
+  }
+
   .skill-detail-card.is-install {
     height: 294px;
-    background: #111111;
+    background: var(--skill-detail-surface-1);
     gap: 10px;
   }
 
   .skill-detail-page.is-light .skill-detail-card.is-install {
-    background: #111111;
+    background: var(--skill-detail-surface-1);
     gap: 8px;
-    color: #e5e5e5;
+    color: var(--skill-detail-text-primary);
   }
 
   .skill-detail-install-hint {
     margin: 0;
-    color: #c7d2fe;
+    color: var(--skill-detail-text-secondary);
     font-size: 11px;
     line-height: 1.45;
     font-weight: 600;
@@ -30,11 +56,11 @@ export const publicSkillDetailRightStyles = css`
   .skill-detail-install-step {
     min-height: 30px;
     border-radius: 8px;
-    background: #2b2b2b;
+    background: var(--skill-detail-surface-3);
     padding: 6px 9px;
     display: inline-flex;
     align-items: center;
-    color: #e5e5e5;
+    color: var(--skill-detail-text-primary);
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
     line-height: 1.2;
@@ -57,12 +83,12 @@ export const publicSkillDetailRightStyles = css`
 
   .skill-detail-card.is-metadata {
     min-height: 232px;
-    background: #242424;
+    background: var(--skill-detail-surface-2);
     gap: 10px;
   }
 
   .skill-detail-page.is-light .skill-detail-card.is-metadata {
-    background: #f0f0f0;
+    background: var(--skill-detail-surface-2);
     gap: 8px;
   }
 
@@ -70,15 +96,15 @@ export const publicSkillDetailRightStyles = css`
   .skill-detail-metadata-lines,
   .skill-detail-metadata-governance {
     border-radius: 10px;
-    background: #1f2937;
+    background: var(--skill-detail-surface-1);
     padding: 10px 12px;
-    border: 1px solid rgba(148, 163, 184, 0.18);
+    border: 1px solid var(--skill-detail-border);
   }
 
   .skill-detail-page.is-light .skill-detail-metadata-owner,
   .skill-detail-page.is-light .skill-detail-metadata-lines,
   .skill-detail-page.is-light .skill-detail-metadata-governance {
-    background: #f5f5f5;
+    background: var(--skill-detail-surface-1);
   }
 
   .skill-detail-metadata-owner {
@@ -93,8 +119,8 @@ export const publicSkillDetailRightStyles = css`
     width: 38px;
     height: 38px;
     border-radius: 10px;
-    background: #0f172a;
-    color: #e5e5e5;
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-primary);
     font-family: "JetBrains Mono", monospace;
     font-size: 12px;
     line-height: 1;
@@ -106,8 +132,8 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-page.is-light .skill-detail-owner-avatar {
-    background: #f0f0f0;
-    color: #111111;
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-primary);
   }
 
   .skill-detail-owner-main {
@@ -119,19 +145,19 @@ export const publicSkillDetailRightStyles = css`
 
   .skill-detail-owner-name {
     margin: 0;
-    color: #e5e5e5;
+    color: var(--skill-detail-text-primary);
     font-size: 14px;
     line-height: 1.25;
     font-weight: 700;
   }
 
   .skill-detail-page.is-light .skill-detail-owner-name {
-    color: #2b2b2b;
+    color: var(--skill-detail-text-primary);
   }
 
   .skill-detail-owner-repo {
     margin: 0;
-    color: #4a4a4a;
+    color: var(--skill-detail-text-muted);
     font-family: "JetBrains Mono", monospace;
     font-size: 12px;
     line-height: 1.35;
@@ -142,7 +168,7 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-page.is-light .skill-detail-owner-repo {
-    color: #111111;
+    color: var(--skill-detail-text-muted);
   }
 
   .skill-detail-metadata-lines {
@@ -156,7 +182,7 @@ export const publicSkillDetailRightStyles = css`
   .skill-detail-metadata-lines p,
   .skill-detail-metadata-governance p {
     margin: 0;
-    color: #d4d4d4;
+    color: var(--skill-detail-text-secondary);
     font-family: "JetBrains Mono", monospace;
     font-size: 12px;
     line-height: 1.4;
@@ -164,11 +190,11 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-page.is-light .skill-detail-metadata-lines p {
-    color: #2b2b2b;
+    color: var(--skill-detail-text-secondary);
   }
 
   .skill-detail-page.is-light .skill-detail-metadata-governance p {
-    color: #111111;
+    color: var(--skill-detail-text-secondary);
   }
 
   .skill-detail-metadata-governance {
@@ -188,12 +214,12 @@ export const publicSkillDetailRightStyles = css`
 
   .skill-detail-card.is-action {
     min-height: 236px;
-    background: #242424;
+    background: var(--skill-detail-surface-2);
     gap: 12px;
   }
 
   .skill-detail-page.is-light .skill-detail-card.is-action {
-    background: #f5f5f5;
+    background: var(--skill-detail-surface-2);
     gap: 8px;
   }
 
@@ -201,8 +227,8 @@ export const publicSkillDetailRightStyles = css`
     width: 100%;
     min-height: 42px;
     border-radius: 9px;
-    background: #111111;
-    color: #e5e5e5;
+    background: var(--skill-detail-accent-bg);
+    color: var(--skill-detail-accent-text);
     font-size: 14px;
     line-height: 1.2;
     font-weight: 700;
@@ -237,8 +263,8 @@ export const publicSkillDetailRightStyles = css`
 
   .skill-detail-action-button {
     border-radius: 8px;
-    background: #111827;
-    color: #e5e5e5;
+    background: var(--skill-detail-surface-1);
+    color: var(--skill-detail-text-primary);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -263,8 +289,8 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-page.is-light .skill-detail-action-button {
-    background: #f5f5f5;
-    color: #111111;
+    background: var(--skill-detail-surface-1);
+    color: var(--skill-detail-text-primary);
   }
 
   .skill-detail-action-button:hover {
@@ -272,8 +298,8 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-action-button.is-active {
-    background: #1d4ed8;
-    color: #dbeafe;
+    background: var(--skill-detail-accent-bg);
+    color: var(--skill-detail-accent-text);
   }
 
   .skill-detail-action-tags {
@@ -296,33 +322,33 @@ export const publicSkillDetailRightStyles = css`
 
   .skill-detail-auth-cta {
     border-radius: 10px;
-    border: 1px solid #334155;
-    background: #1f2937;
+    border: 1px solid var(--skill-detail-border);
+    background: var(--skill-detail-surface-1);
     padding: 10px;
     display: grid;
     gap: 8px;
   }
 
   .skill-detail-page.is-light .skill-detail-auth-cta {
-    border-color: #cbd5e1;
-    background: #e2e8f0;
+    border-color: var(--skill-detail-border);
+    background: var(--skill-detail-surface-1);
   }
 
   .skill-detail-auth-hint {
     margin: 0;
-    color: #cbd5e1;
+    color: var(--skill-detail-text-secondary);
     font-size: 12px;
     line-height: 1.4;
     font-weight: 600;
   }
 
   .skill-detail-page.is-light .skill-detail-auth-hint {
-    color: #334155;
+    color: var(--skill-detail-text-secondary);
   }
 
   .skill-detail-interaction-summary {
     margin: 0;
-    color: #d4d4d4;
+    color: var(--skill-detail-text-secondary);
     font-family: "JetBrains Mono", monospace;
     font-size: 12px;
     line-height: 1.5;
@@ -330,7 +356,7 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-page.is-light .skill-detail-interaction-summary {
-    color: #334155;
+    color: var(--skill-detail-text-secondary);
   }
 
   .skill-detail-rating-row {
@@ -344,8 +370,8 @@ export const publicSkillDetailRightStyles = css`
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    background: #111111;
-    color: #e5e5e5;
+    background: var(--skill-detail-surface-1);
+    color: var(--skill-detail-text-primary);
     font-family: "JetBrains Mono", monospace;
     font-size: 12px;
     font-weight: 700;
@@ -359,18 +385,18 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-rating-button.is-active {
-    background: #2563eb;
-    color: #ffffff;
+    background: var(--skill-detail-accent-bg);
+    color: var(--skill-detail-accent-text);
   }
 
   .skill-detail-page.is-light .skill-detail-rating-button {
-    background: #cbd5e1;
-    color: #0f172a;
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-secondary);
   }
 
   .skill-detail-page.is-light .skill-detail-rating-button.is-active {
-    background: #2563eb;
-    color: #ffffff;
+    background: var(--skill-detail-accent-bg);
+    color: var(--skill-detail-accent-text);
   }
 
   .skill-detail-comment-editor {
@@ -381,10 +407,10 @@ export const publicSkillDetailRightStyles = css`
   .skill-detail-comment-input {
     width: 100%;
     min-height: 96px;
-    border: 1px solid #334155;
+    border: 1px solid var(--skill-detail-border);
     border-radius: 8px;
-    background: #111111;
-    color: #e5e5e5;
+    background: var(--skill-detail-surface-1);
+    color: var(--skill-detail-text-primary);
     font-family: "Noto Sans SC", "Noto Sans", sans-serif;
     font-size: 13px;
     line-height: 1.5;
@@ -393,47 +419,47 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-page.is-light .skill-detail-comment-input {
-    background: #ffffff;
-    border-color: #cbd5e1;
-    color: #0f172a;
+    background: var(--skill-detail-surface-1);
+    border-color: var(--skill-detail-border);
+    color: var(--skill-detail-text-primary);
   }
 
   .skill-detail-card.is-comments {
     min-height: 176px;
-    background: #242424;
+    background: var(--skill-detail-surface-2);
     gap: 12px;
   }
 
   .skill-detail-page.is-light .skill-detail-card.is-comments {
-    background: #f5f5f5;
+    background: var(--skill-detail-surface-2);
   }
 
   .skill-detail-comments-empty {
     margin: 0;
-    color: #a3a3a3;
+    color: var(--skill-detail-text-muted);
     font-size: 13px;
     line-height: 1.4;
   }
 
   .skill-detail-page.is-light .skill-detail-comments-empty {
-    color: #475569;
+    color: var(--skill-detail-text-muted);
   }
 
   .skill-detail-comment-item {
     border-radius: 10px;
-    background: #1f2937;
+    background: var(--skill-detail-surface-1);
     padding: 10px;
     display: grid;
     gap: 8px;
   }
 
   .skill-detail-page.is-light .skill-detail-comment-item {
-    background: #e2e8f0;
+    background: var(--skill-detail-surface-1);
   }
 
   .skill-detail-comment-meta {
     margin: 0;
-    color: #cbd5e1;
+    color: var(--skill-detail-text-muted);
     font-family: "JetBrains Mono", monospace;
     font-size: 12px;
     line-height: 1.35;
@@ -444,12 +470,12 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-page.is-light .skill-detail-comment-meta {
-    color: #334155;
+    color: var(--skill-detail-text-muted);
   }
 
   .skill-detail-comment-content {
     margin: 0;
-    color: #e5e5e5;
+    color: var(--skill-detail-text-primary);
     font-size: 13px;
     line-height: 1.5;
     white-space: pre-wrap;
@@ -457,15 +483,15 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-page.is-light .skill-detail-comment-content {
-    color: #0f172a;
+    color: var(--skill-detail-text-primary);
   }
 
   .skill-detail-comment-delete {
     width: 90px;
     min-height: 32px;
     border-radius: 7px;
-    background: #7f1d1d;
-    color: #fee2e2;
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-secondary);
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
@@ -477,25 +503,25 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-page.is-light .skill-detail-comment-delete {
-    background: #fecaca;
-    color: #7f1d1d;
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-secondary);
   }
 
   .skill-detail-card.is-compatibility {
     min-height: 172px;
-    background: #242424;
+    background: var(--skill-detail-surface-2);
     padding: 12px 14px;
     gap: 10px;
   }
 
   .skill-detail-page.is-light .skill-detail-card.is-compatibility {
-    background: #f0f0f0;
+    background: var(--skill-detail-surface-2);
   }
 
   .skill-detail-compat-row {
     min-height: 34px;
     border-radius: 8px;
-    background: #242424;
+    background: var(--skill-detail-surface-1);
     padding: 8px 10px;
     display: flex;
     align-items: center;
@@ -509,7 +535,7 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-page.is-light .skill-detail-compat-row {
-    background: #ffffff;
+    background: var(--skill-detail-surface-1);
   }
 
   .skill-detail-compat-label,
@@ -521,22 +547,22 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-compat-label {
-    color: #4a4a4a;
+    color: var(--skill-detail-text-muted);
   }
 
   .skill-detail-compat-value {
-    color: #e5e5e5;
+    color: var(--skill-detail-text-primary);
     font-family: "JetBrains Mono", monospace;
   }
 
   .skill-detail-page.is-light .skill-detail-compat-label,
   .skill-detail-page.is-light .skill-detail-compat-value {
-    color: #111111;
+    color: var(--skill-detail-text-secondary);
   }
 
   .skill-detail-compat-conflict {
     margin: 0;
-    color: #ffd6a5;
+    color: var(--skill-detail-text-secondary);
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
     line-height: 1.4;
@@ -544,6 +570,6 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-page.is-light .skill-detail-compat-conflict {
-    color: #b45309;
+    color: var(--skill-detail-text-secondary);
   }
 `;

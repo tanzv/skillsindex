@@ -1,4 +1,4 @@
 # Ralph Progress
 
-- Feature: home-canonical-prototype-normalization
+- Feature: pages-directory-maintainability-refactor
 - Status: not-started

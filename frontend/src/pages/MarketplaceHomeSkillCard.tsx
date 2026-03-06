@@ -15,8 +15,25 @@ export default function MarketplaceHomeSkillCard({ card, cardKey, onOpen }: Mark
     .filter(Boolean)
     .slice(0, 3);
 
+  function handleOpen(): void {
+    onOpen(card.skillID);
+  }
+
   return (
-    <article key={cardKey} className="marketplace-skill-row">
+    <article
+      key={cardKey}
+      className="marketplace-skill-row is-clickable"
+      role="button"
+      tabIndex={0}
+      onClick={handleOpen}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") {
+          return;
+        }
+        event.preventDefault();
+        handleOpen();
+      }}
+    >
       <div className="marketplace-card-head">
         <span className="marketplace-card-cover" aria-hidden="true">
           <span className="marketplace-card-cover-thumb" style={coverStyle} />
@@ -24,7 +41,13 @@ export default function MarketplaceHomeSkillCard({ card, cardKey, onOpen }: Mark
         </span>
       </div>
       <div className="marketplace-skill-name">
-        <button type="button" onClick={() => onOpen(card.skillID)}>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            handleOpen();
+          }}
+        >
           {card.title}
         </button>
       </div>

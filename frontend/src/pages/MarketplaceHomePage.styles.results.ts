@@ -24,6 +24,58 @@ export const marketplaceHomeResultsStyles = css`
     padding: 0 var(--marketplace-content-gutter);
   }
 
+  .marketplace-home .marketplace-page-breadcrumb-shell {
+    width: 100%;
+    padding: 8px var(--marketplace-content-gutter) 0;
+  }
+
+  .marketplace-home .marketplace-page-breadcrumb {
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .marketplace-home .marketplace-page-breadcrumb .ant-breadcrumb {
+    width: 100%;
+    color: var(--si-color-text-secondary, #9ca3af);
+    font-size: 12px;
+    line-height: 1.35;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .marketplace-home .marketplace-page-breadcrumb .ant-breadcrumb-link,
+  .marketplace-home .marketplace-page-breadcrumb .ant-breadcrumb-separator {
+    color: inherit;
+  }
+
+  .marketplace-home .marketplace-page-breadcrumb-link {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
+    transition: color 180ms ease;
+  }
+
+  .marketplace-home .marketplace-page-breadcrumb-link:hover {
+    color: var(--si-color-text-primary, #e2e8f0);
+  }
+
+  .marketplace-home .marketplace-page-breadcrumb-link:focus-visible {
+    outline: 2px solid var(--marketplace-focus-ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .marketplace-home .marketplace-page-breadcrumb-current {
+    color: inherit;
+  }
+
   .marketplace-home .marketplace-results-toolbar {
     height: 36px;
     display: flex;
@@ -214,6 +266,15 @@ export const marketplaceHomeResultsStyles = css`
     transform: translateY(-1px);
   }
 
+  .marketplace-home .marketplace-skill-row.is-clickable {
+    cursor: pointer;
+  }
+
+  .marketplace-home .marketplace-skill-row.is-clickable:focus-visible {
+    outline: 2px solid #e5e7eb;
+    outline-offset: 2px;
+  }
+
   .marketplace-home .marketplace-skill-name button:hover {
     color: #f1f5f9;
   }
@@ -287,7 +348,7 @@ export const marketplaceHomeResultsStyles = css`
   .marketplace-home.is-categories-index-page {
     --marketplace-card-head-width: 84px;
     --marketplace-card-head-height: 52px;
-    --marketplace-card-thumb-size: 46px;
+    --marketplace-card-thumb-size: 50px;
     --marketplace-card-title-size: 16px;
     --marketplace-card-description-size: 13px;
     --marketplace-card-tag-height: 22px;
@@ -296,16 +357,30 @@ export const marketplaceHomeResultsStyles = css`
   }
 
   .marketplace-home.is-categories-index-page .marketplace-category-header-card {
-    border: 1px solid rgba(100, 116, 139, 0.42);
-    background: linear-gradient(180deg, rgba(20, 24, 33, 0.84) 0%, rgba(15, 19, 27, 0.8) 100%);
-    box-shadow: 0 14px 28px rgba(2, 6, 23, 0.3);
+    border: 0;
+    background: var(--marketplace-category-header-background);
+    box-shadow: var(--marketplace-category-header-shadow);
     backdrop-filter: blur(10px);
   }
 
   .marketplace-home.is-categories-index-page .marketplace-category-row {
-    min-height: 214px;
+    min-height: 220px;
     padding: 16px 18px;
     gap: 10px;
+    border: 0;
+    background: var(--marketplace-category-card-background);
+    box-shadow: var(--marketplace-category-card-shadow);
+  }
+
+  .marketplace-home.is-categories-index-page .marketplace-category-row:hover {
+    background: var(--marketplace-category-card-hover-background);
+    box-shadow: var(--marketplace-category-card-hover-shadow);
+    transform: translateY(-2px);
+  }
+
+  .marketplace-home.is-categories-index-page .marketplace-category-row:focus-within {
+    outline: 2px solid var(--marketplace-focus-ring);
+    outline-offset: 2px;
   }
 
   .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-card-cover,
@@ -314,15 +389,15 @@ export const marketplaceHomeResultsStyles = css`
   }
 
   .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-card-cover-thumb {
-    border: 1px solid rgba(148, 163, 184, 0.44);
+    border: 1px solid var(--marketplace-category-icon-border);
   }
 
   .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-card-cover-chip {
-    right: -4px;
+    right: -3px;
     bottom: -4px;
-    min-width: 22px;
-    padding: 0 6px;
-    font-size: 9px;
+    min-width: 24px;
+    padding: 0 7px;
+    font-size: 10px;
   }
 
   .marketplace-home.is-categories-index-page .marketplace-category-icon-fallback {
@@ -333,8 +408,8 @@ export const marketplaceHomeResultsStyles = css`
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.04em;
-    color: #e2e8f0;
-    background: linear-gradient(180deg, rgba(51, 65, 85, 0.9) 0%, rgba(30, 41, 59, 0.86) 100%);
+    color: var(--marketplace-category-summary-chip-text);
+    background: var(--marketplace-category-icon-background);
   }
 
   .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-skill-secondary {
@@ -342,16 +417,16 @@ export const marketplaceHomeResultsStyles = css`
   }
 
   .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-skill-chip-row span {
-    background: rgba(148, 163, 184, 0.22);
-    color: #e2e8f0;
+    background: var(--marketplace-category-summary-chip-background);
+    color: var(--marketplace-category-summary-chip-text);
   }
 
   .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-skill-row-foot span {
-    color: #e2e8f0;
+    color: var(--marketplace-category-footnote-text);
   }
 
   .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-skill-row-foot span.is-primary {
-    color: #f8fafc;
+    color: var(--marketplace-category-footnote-primary-text);
   }
 
   .marketplace-home.is-categories-index-page .marketplace-category-row .marketplace-skill-description {
@@ -412,6 +487,10 @@ export const marketplaceHomeResultsStyles = css`
     transform: translateY(-1px);
   }
 
+  .marketplace-home.is-light-theme .marketplace-skill-row.is-clickable:focus-visible {
+    outline-color: #374151;
+  }
+
   .marketplace-home.is-light-theme .marketplace-card-cover-thumb {
     background: #eef2f7;
   }
@@ -453,34 +532,6 @@ export const marketplaceHomeResultsStyles = css`
 
   .marketplace-home.is-light-theme .marketplace-featured-row .marketplace-skill-row-foot span {
     color: #2a2a2a;
-  }
-
-  .marketplace-home.is-light-theme.is-categories-index-page .marketplace-category-header-card {
-    border-color: rgba(148, 163, 184, 0.52);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.84) 100%);
-    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
-  }
-
-  .marketplace-home.is-light-theme.is-categories-index-page .marketplace-category-icon-fallback {
-    color: #1f2937;
-    background: linear-gradient(180deg, rgba(226, 232, 240, 0.92) 0%, rgba(203, 213, 225, 0.82) 100%);
-  }
-
-  .marketplace-home.is-light-theme.is-categories-index-page .marketplace-category-row .marketplace-skill-chip-row span {
-    background: rgba(226, 232, 240, 0.9);
-    color: #334155;
-  }
-
-  .marketplace-home.is-light-theme.is-categories-index-page .marketplace-category-row .marketplace-card-cover-thumb {
-    border-color: rgba(148, 163, 184, 0.56);
-  }
-
-  .marketplace-home.is-light-theme.is-categories-index-page .marketplace-category-row .marketplace-skill-row-foot span {
-    color: #334155;
-  }
-
-  .marketplace-home.is-light-theme.is-categories-index-page .marketplace-category-row .marketplace-skill-row-foot span.is-primary {
-    color: #0f172a;
   }
 
 `;

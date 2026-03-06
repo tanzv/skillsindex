@@ -1,32 +1,30 @@
-import { Typography, message } from "antd";
+import { message } from "antd";
 import { useEffect, useMemo, useState } from "react";
 
 import { SessionUser } from "../lib/api";
+import { createGlobalUserControlService } from "../lib/globalUserControlService";
 import { AppLocale } from "../lib/i18n";
+import type { ThemeMode } from "../lib/themeModePath";
 import MarketplaceHomePageStyles from "./MarketplaceHomePage.styles";
-import PublicStandardTopbar from "./PublicStandardTopbar";
 import { loadMarketplaceWithFallback, resolvePrototypeDataMode } from "./prototypeDataFallback";
 import { PrototypeUtilityShell } from "./prototypeCssInJs";
 import { isLightPrototypePath } from "./prototypePageTheme";
 import { createPublicPageNavigator } from "./publicPageNavigation";
 import { getWorkspaceCenterCopy } from "./WorkspaceCenterPage.copy";
 import { buildWorkspaceCommandPreview, buildWorkspaceSnapshot, filterWorkspaceQueue } from "./WorkspaceCenterPage.helpers";
-import { buildWorkspaceSidebarNavigation, type WorkspaceSidebarItem } from "./WorkspaceCenterPage.navigation";
+import {
+  buildWorkspaceSidebarNavigation,
+  flattenWorkspaceSidebarPrimaryMenu,
+  type WorkspaceSidebarPrimaryMenuItem
+} from "./WorkspaceCenterPage.navigation";
 import {
   buildWorkspaceCenterTopbarPrimaryActions,
   buildWorkspaceCenterTopbarUtilityActions
 } from "./WorkspaceCenterPage.topbar";
+import WorkspaceTopbar from "./WorkspaceTopbar";
 import WorkspaceCenterPageContent from "./WorkspaceCenterPageContent";
 import {
-  WorkspaceContentLayout,
-  WorkspaceSidebarCard,
-  WorkspaceSidebarHeader,
-  WorkspaceSidebarGroup,
-  WorkspaceSidebarGroupTitle,
-  WorkspaceSidebarHint,
-  WorkspaceSidebarItemButton,
-  WorkspaceSidebarMetaPill,
-  WorkspaceSidebarMetaRow
+  WorkspaceContentLayout
 } from "./WorkspaceCenterPage.styles";
 import { WorkspaceQueueFilter } from "./WorkspaceCenterPage.types";
 
@@ -35,9 +33,20 @@ interface WorkspaceCenterPageProps {
   currentPath: string;
   onNavigate: (path: string) => void;
   sessionUser: SessionUser | null;
+  onThemeModeChange?: (nextMode: ThemeMode) => void;
+  onLocaleChange?: (nextLocale: AppLocale) => void;
+  onLogout?: () => Promise<void> | void;
 }
 
-export default function WorkspaceCenterPage({ locale, currentPath, onNavigate, sessionUser }: WorkspaceCenterPageProps) {
+export default function WorkspaceCenterPage({
+  locale,
+  currentPath,
+  onNavigate,
+  sessionUser,
+  onThemeModeChange,
+  onLocaleChange,
+  onLogout
+}: WorkspaceCenterPageProps) {
   const text = useMemo(() => getWorkspaceCenterCopy(locale), [locale]);
   const isLightTheme = useMemo(() => isLightPrototypePath(currentPath), [currentPath]);
   const dataMode = useMemo(() => resolvePrototypeDataMode(import.meta.env.VITE_MARKETPLACE_HOME_MODE), []);
@@ -53,7 +62,7 @@ export default function WorkspaceCenterPage({ locale, currentPath, onNavigate, s
   const [payload, setPayload] = useState<Awaited<ReturnType<typeof loadMarketplaceWithFallback>>["payload"] | null>(null);
   const [queueFilter, setQueueFilter] = useState<WorkspaceQueueFilter>("all");
   const [selectedQueueID, setSelectedQueueID] = useState<number>(0);
-  const [activeSidebarItemID, setActiveSidebarItemID] = useState("section-overview");
+  const [activeWorkspaceMenuID, setActiveWorkspaceMenuID] = useState("section-overview");
 
   useEffect(() => {
     function handleResize() {
@@ -124,32 +133,14 @@ export default function WorkspaceCenterPage({ locale, currentPath, onNavigate, s
     setSelectedQueueID(selectedQueueEntry.id);
   }, [selectedQueueEntry, selectedQueueID]);
 
-  const topbarPrimaryActions = useMemo(
-    () =>
-      buildWorkspaceCenterTopbarPrimaryActions({
-        onNavigate,
-        toPublicPath: pageNavigator.toPublic,
-        labels: {
-          navCategories: text.navCategories,
-          navRankings: text.navRankings
-        }
-      }),
-    [onNavigate, pageNavigator.toPublic, text.navCategories, text.navRankings]
-  );
-
   const topbarUtilityActions = useMemo(
     () =>
       buildWorkspaceCenterTopbarUtilityActions({
         onNavigate,
         toPublicPath: pageNavigator.toPublic,
-        toAdminPath: pageNavigator.toAdmin,
-        hasSessionUser: Boolean(sessionUser),
-        labels: {
-          signIn: text.signIn,
-          openDashboard: text.openDashboard
-        }
+        hasSessionUser: Boolean(sessionUser)
       }),
-    [onNavigate, pageNavigator.toAdmin, pageNavigator.toPublic, sessionUser, text.openDashboard, text.signIn]
+    [onNavigate, pageNavigator.toPublic, sessionUser]
   );
 
   const sidebarGroups = useMemo(
@@ -161,18 +152,17 @@ export default function WorkspaceCenterPage({ locale, currentPath, onNavigate, s
       }),
     [text, pageNavigator.toPublic, pageNavigator.toAdmin]
   );
+  const sidebarPrimaryMenuItems = useMemo(
+    () => flattenWorkspaceSidebarPrimaryMenu(sidebarGroups),
+    [sidebarGroups]
+  );
 
-  async function handleCopyCommandPreview(): Promise<void> {
-    try {
-      await window.navigator.clipboard.writeText(commandPreview);
-      void message.success(text.copySuccess);
-    } catch {
-      void message.error(text.copyFailed);
+  function handleWorkspaceMenuSelect(item: WorkspaceSidebarPrimaryMenuItem): void {
+    if (!item.target || item.kind === "label") {
+      return;
     }
-  }
 
-  function handleSidebarItemSelect(item: WorkspaceSidebarItem): void {
-    setActiveSidebarItemID(item.id);
+    setActiveWorkspaceMenuID(item.id);
 
     if (item.kind === "route") {
       onNavigate(item.target);
@@ -186,76 +176,147 @@ export default function WorkspaceCenterPage({ locale, currentPath, onNavigate, s
     sectionElement.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  const workspaceMenuPrimaryActions = useMemo(() => {
+    const menuLabelAction = {
+      id: "workspace-menu-label",
+      label: text.sidebarMenuTitle,
+      disabled: true,
+      tone: "subtle" as const,
+      className: "is-menu-label is-menu-title",
+      onClick: () => undefined
+    };
+    const menuHintAction = {
+      id: "workspace-menu-hint",
+      label: text.sidebarMenuHint,
+      disabled: true,
+      tone: "subtle" as const,
+      className: "is-menu-label is-menu-hint",
+      onClick: () => undefined
+    };
+    const alertsAction = {
+      id: "workspace-menu-alerts",
+      label: `${snapshot.metrics.alerts} ${text.alerts}`,
+      disabled: true,
+      tone: "default" as const,
+      className: "is-menu-metric is-alert-metric",
+      onClick: () => undefined
+    };
+    const healthScoreAction = {
+      id: "workspace-menu-health-score",
+      label: `${snapshot.metrics.healthScore.toFixed(1)} ${text.healthScore}`,
+      disabled: true,
+      tone: "default" as const,
+      className: "is-menu-metric is-health-score-metric",
+      onClick: () => undefined
+    };
+
+    const registeredMenuActions = sidebarPrimaryMenuItems.map((item) => ({
+      id: item.id,
+      label: item.label,
+      active: item.kind !== "label" && item.id === activeWorkspaceMenuID,
+      disabled: item.kind === "label",
+      tone: item.kind === "label" ? ("subtle" as const) : ("default" as const),
+      className: item.kind === "label" ? "is-menu-label is-menu-group-label" : "is-menu-entry",
+      onClick: () => handleWorkspaceMenuSelect(item)
+    }));
+
+    return [menuLabelAction, menuHintAction, alertsAction, healthScoreAction, ...registeredMenuActions];
+  }, [
+    activeWorkspaceMenuID,
+    sidebarPrimaryMenuItems,
+    snapshot.metrics.alerts,
+    snapshot.metrics.healthScore,
+    text.alerts,
+    text.healthScore,
+    text.sidebarMenuHint,
+    text.sidebarMenuTitle
+  ]);
+
+  const topbarPrimaryActions = useMemo(
+    () =>
+      buildWorkspaceCenterTopbarPrimaryActions({
+        onNavigate,
+        toPublicPath: pageNavigator.toPublic,
+        toAdminPath: pageNavigator.toAdmin,
+        hasSessionUser: Boolean(sessionUser),
+        labels: {
+          navCategories: text.navCategories,
+          navRankings: text.navRankings,
+          navTop: text.navTop,
+          openMarketplace: text.openMarketplace,
+          openDashboard: text.openDashboard,
+          signIn: text.signIn
+        },
+        extraPrimaryActions: workspaceMenuPrimaryActions
+      }),
+    [
+      onNavigate,
+      pageNavigator.toAdmin,
+      pageNavigator.toPublic,
+      sessionUser,
+      text.navCategories,
+      text.navRankings,
+      text.navTop,
+      text.openDashboard,
+      text.openMarketplace,
+      text.signIn,
+      workspaceMenuPrimaryActions
+    ]
+  );
+
+  async function handleCopyCommandPreview(): Promise<void> {
+    try {
+      await window.navigator.clipboard.writeText(commandPreview);
+      void message.success(text.copySuccess);
+    } catch {
+      void message.error(text.copyFailed);
+    }
+  }
+
   const isCompactLayout = viewport.width <= 900 && viewport.height >= 500;
   const isMobileLayout = isCompactLayout || /^\/mobile(\/|$)/.test(currentPath);
+  const currentThemeMode: ThemeMode = isLightTheme ? "light" : "dark";
+  const userControlService = useMemo(
+    () =>
+      createGlobalUserControlService({
+        locale,
+        themeMode: currentThemeMode,
+        onThemeModeChange,
+        onLocaleChange,
+        onLogout
+      }),
+    [currentThemeMode, locale, onLocaleChange, onLogout, onThemeModeChange]
+  );
   const lightBrandSubtitle = "User Portal";
   const topbarBrandTitle = "SkillsIndex";
   const topbarBrandSubtitle = isLightTheme ? lightBrandSubtitle : text.brandSubtitle;
   const shellClassName = `prototype-shell marketplace-home-stage${isMobileLayout ? " is-mobile-stage" : ""}${isLightTheme ? " is-light-stage" : ""}`;
   const rootClassName = `marketplace-home${isLightTheme ? " is-light-theme" : ""}${isMobileLayout ? " is-mobile" : ""}`;
-
   return (
     <div className={shellClassName}>
       <MarketplaceHomePageStyles />
 
       <div className={rootClassName}>
-        <PublicStandardTopbar
-          shellClassName="animated-fade-down"
-          dataAnimated
+        <WorkspaceTopbar
+          isLightTheme={isLightTheme}
           brandTitle={topbarBrandTitle}
           brandSubtitle={topbarBrandSubtitle}
+          sessionUser={sessionUser}
+          userControlService={userControlService}
           onBrandClick={() => onNavigate(pageNavigator.toPublic("/"))}
-          isLightTheme={isLightTheme}
           primaryActions={topbarPrimaryActions}
           utilityActions={topbarUtilityActions}
-          statusLabel={sessionUser ? "Signed In" : "Signed Out"}
-          secondaryCtaLabel={text.openMarketplace}
-          onSecondaryCtaClick={() => onNavigate(pageNavigator.toPublic("/"))}
-          ctaLabel={sessionUser ? text.openDashboard : text.signIn}
-          onCtaClick={() => onNavigate(sessionUser ? pageNavigator.toAdmin("/admin/overview") : pageNavigator.toPublic("/login"))}
+          rightRegistrations={[]}
         />
 
         <PrototypeUtilityShell>
           <WorkspaceContentLayout>
-            <WorkspaceSidebarCard aria-label={text.sidebarMenuTitle}>
-              <WorkspaceSidebarHeader>
-                <Typography.Title level={5} style={{ margin: 0, color: "var(--si-color-text-primary)" }}>
-                  {text.sidebarMenuTitle}
-                </Typography.Title>
-                <WorkspaceSidebarHint>{text.sidebarMenuHint}</WorkspaceSidebarHint>
-                <WorkspaceSidebarMetaRow>
-                  <WorkspaceSidebarMetaPill $tone="accent">{`${snapshot.metrics.alerts} ${text.alerts}`}</WorkspaceSidebarMetaPill>
-                  <WorkspaceSidebarMetaPill>{`${snapshot.metrics.healthScore.toFixed(1)} ${text.healthScore}`}</WorkspaceSidebarMetaPill>
-                </WorkspaceSidebarMetaRow>
-              </WorkspaceSidebarHeader>
-
-              {sidebarGroups.map((group) => (
-                <WorkspaceSidebarGroup key={group.id}>
-                  <WorkspaceSidebarGroupTitle>{group.title}</WorkspaceSidebarGroupTitle>
-                  <div style={{ display: "grid", gap: 6 }}>
-                    {group.items.map((item) => (
-                      <WorkspaceSidebarItemButton
-                        key={item.id}
-                        type="button"
-                        $active={activeSidebarItemID === item.id}
-                        onClick={() => handleSidebarItemSelect(item)}
-                        aria-current={activeSidebarItemID === item.id ? "page" : undefined}
-                      >
-                        {item.label}
-                      </WorkspaceSidebarItemButton>
-                    ))}
-                  </div>
-                </WorkspaceSidebarGroup>
-              ))}
-            </WorkspaceSidebarCard>
-
             <WorkspaceCenterPageContent
               text={text}
               locale={locale}
               loading={loading}
               error={error}
               degradedMessage={degradedMessage}
-              sessionUser={sessionUser}
               snapshot={snapshot}
               queueFilter={queueFilter}
               filteredQueue={filteredQueue}

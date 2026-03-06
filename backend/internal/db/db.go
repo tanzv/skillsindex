@@ -54,6 +54,25 @@ func Migrate(database *gorm.DB) error {
 			return fmt.Errorf("failed to migrate schema: %w", err)
 		}
 	}
+	if err := reconcileOAuthGrantIndexes(database); err != nil {
+		return err
+	}
+	return nil
+}
+
+func reconcileOAuthGrantIndexes(database *gorm.DB) error {
+	if database == nil {
+		return nil
+	}
+	migrator := database.Migrator()
+	_ = migrator.DropIndex(&models.OAuthGrant{}, "idx_oauth_provider_user")
+	_ = migrator.DropIndex(&models.OAuthGrant{}, "idx_oauth_provider_external")
+	if err := migrator.CreateIndex(&models.OAuthGrant{}, "idx_oauth_provider_user"); err != nil {
+		return fmt.Errorf("failed to create oauth grant index idx_oauth_provider_user: %w", err)
+	}
+	if err := migrator.CreateIndex(&models.OAuthGrant{}, "idx_oauth_provider_external"); err != nil {
+		return fmt.Errorf("failed to create oauth grant index idx_oauth_provider_external: %w", err)
+	}
 	return nil
 }
 

@@ -66,7 +66,12 @@ export const globalLoginStylesTheme = `
   --login-info-card-border: var(--si-color-border-soft, #3a3a3a);
   --login-info-card-body: var(--si-color-text-secondary, #a3a3a3);
 
-  background: var(--login-root-bg);
+  background:
+    linear-gradient(
+      135deg,
+      var(--login-root-bg) 0%,
+      color-mix(in srgb, var(--login-root-bg-accent) 68%, var(--login-root-bg) 32%) 100%
+    );
   color: var(--login-copy);
   overflow: hidden;
 }
@@ -75,12 +80,14 @@ export const globalLoginStylesTheme = `
   width: 100%;
   height: 100dvh;
   overflow: hidden;
+  background: inherit;
 }
 
 .login-page-stage.is-visual-baseline {
   width: 100%;
   height: 100dvh;
   overflow: hidden;
+  background: inherit;
 }
 
 .auth-shell.auth-shell-prototype {
@@ -94,6 +101,7 @@ export const globalLoginStylesTheme = `
   justify-content: flex-start;
   gap: 0;
   overflow: hidden;
+  background: inherit;
   font-family: var(--login-font-base);
 }
 
@@ -138,6 +146,15 @@ export const globalLoginStylesTheme = `
   align-items: center;
   gap: 10px;
   cursor: pointer;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.auth-topbar-brand:hover {
+  opacity: 0.94;
+}
+
+.auth-topbar-brand:active {
+  transform: translateY(1px);
 }
 
 .auth-topbar-brand-logo-wrap {
@@ -205,6 +222,17 @@ export const globalLoginStylesTheme = `
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
+  transition: color 150ms ease, background-color 150ms ease, transform 130ms ease;
+}
+
+.auth-topbar-theme-switch button:hover,
+.auth-topbar-locale-switch button:hover {
+  transform: translateY(-1px);
+}
+
+.auth-topbar-theme-switch button:active,
+.auth-topbar-locale-switch button:active {
+  transform: translateY(0);
 }
 
 .auth-topbar-theme-switch button.is-active,
@@ -244,21 +272,25 @@ export const globalLoginStylesTheme = `
 
 .auth-layout {
   position: relative;
-  width: min(1360px, 100%);
-  min-height: 0;
-  height: calc(100dvh - var(--login-topbar-height));
-  margin: 0 auto;
-  padding: clamp(12px, 1.8vw, 24px);
+  width: 100%;
+  min-height: 100dvh;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
   display: grid;
   grid-template-columns: 820px 460px;
-  gap: 16px;
+  gap: 0;
   overflow: hidden;
+  background: inherit;
 }
 
 .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-layout {
-  width: min(1120px, 100%);
-  grid-template-columns: minmax(0, 1fr) minmax(0, 500px);
-  align-items: center;
+  width: 100%;
+  min-height: 100dvh;
+  height: 100dvh;
+  grid-template-columns: minmax(0, 1fr) minmax(460px, 520px);
+  align-items: stretch;
+  justify-content: stretch;
 }
 
 .auth-layout::before {
@@ -274,9 +306,27 @@ export const globalLoginStylesTheme = `
   min-height: 0;
 }
 
+.auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-visual-panel,
+.auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-form-panel {
+  min-height: 100%;
+  border-radius: 0;
+}
+
 .auth-form-panel {
   border: 1px solid color-mix(in srgb, var(--login-panel-border) 72%, #5f5f5f 28%);
   box-shadow: 0 16px 34px rgba(0, 0, 0, 0.26);
+}
+
+.auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-form-panel {
+  border: 0;
+  border-left: 1px solid color-mix(in srgb, var(--login-panel-border) 72%, transparent);
+  box-shadow: none;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--login-panel-form-bg) 90%, var(--login-root-bg) 10%) 0%,
+      color-mix(in srgb, var(--login-root-bg-accent) 74%, var(--login-root-bg) 26%) 100%
+    );
 }
 
 .auth-visual-panel {
@@ -294,6 +344,16 @@ export const globalLoginStylesTheme = `
   box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+
+.auth-shell.auth-shell-prototype:not(.is-visual-baseline) .login-visual-panel {
+  background:
+    radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.08), transparent 28%),
+    linear-gradient(
+      150deg,
+      color-mix(in srgb, var(--login-root-bg-accent) 82%, var(--login-root-bg) 18%) 0%,
+      var(--login-root-bg) 100%
+    );
 }
 
 .auth-visual-panel.login-visual-panel {

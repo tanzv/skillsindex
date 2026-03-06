@@ -227,6 +227,14 @@ func openAPISchemasAccessOrgModeration() map[string]any {
 				"ok": map[string]any{"type": "boolean"},
 			},
 		},
+		"ObjectRequest": map[string]any{
+			"type":                 "object",
+			"additionalProperties": true,
+		},
+		"ObjectResponse": map[string]any{
+			"type":                 "object",
+			"additionalProperties": true,
+		},
 		"ErrorResponse": map[string]any{
 			"type": "object",
 			"properties": map[string]any{

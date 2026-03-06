@@ -104,15 +104,17 @@ test.describe("Public route prefix navigation", () => {
     await page.goto("/light/skills/901");
     await page.getByRole("button", { name: "History", exact: true }).first().click();
     await expect(page).toHaveURL(/\/light\/skills\/901$/);
-    await expect(page.locator(".skill-detail-file-preset.is-active")).toHaveText("CHANGELOG.md");
+    await expect(page.locator(".skill-detail-top-file-switch .skill-detail-top-file-button.is-active")).toHaveText("CHANGELOG.md");
   });
 
-  test("legacy docs and compare roots redirect to semantic routes with preserved prefix", async ({ page }) => {
+  test("docs route stays stable while legacy compare root redirects with preserved prefix", async ({ page }) => {
     await forceEnglishLocale(page);
     await mockAnonymousAuth(page);
 
     await page.goto("/mobile/light/docs#api");
-    await expect(page).toHaveURL("/mobile/light/categories#api");
+    await expect(page).toHaveURL("/mobile/light/docs#api");
+    await expect(page.getByRole("heading", { name: "Documentation Hub" })).toBeVisible();
+    await expect(page.getByTestId("docs-page-breadcrumb-current")).toHaveText("Documentation Hub");
 
     await page.goto("/light/compare?left=901&right=902");
     await expect(page).toHaveURL("/light/rankings?left=901&right=902");
@@ -138,7 +140,7 @@ test.describe("Public route prefix navigation", () => {
     await page.getByRole("button", { name: "View Categories", exact: true }).click();
     await expect(page).toHaveURL("/light/categories");
 
-    await page.getByRole("button", { name: "Open Rankings", exact: true }).first().click();
+    await page.getByRole("button", { name: /Open Rankings|Download Ranking/ }).first().click();
     await expect(page).toHaveURL("/light/rankings");
   });
 });

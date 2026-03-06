@@ -1,6 +1,7 @@
 # Component Design Reference
 
-This reference captures the current component composition model for public marketplace pages.
+This reference captures the current system-level component composition model.
+The marketplace page family is documented as a concrete baseline implementation.
 
 ## 1. Shared Public Shell Layer
 

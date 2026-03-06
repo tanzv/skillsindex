@@ -3,13 +3,14 @@ import { useTranslation } from "react-i18next";
 import { MarketplaceQueryParams, PublicMarketplaceResponse, SessionUser } from "../lib/api";
 import { AppLocale } from "../lib/i18n";
 import type { ThemeMode } from "../lib/themeModePath";
+import MarketplaceCategorySearchControls from "../components/MarketplaceCategorySearchControls";
+import MarketplacePageBreadcrumb, { type MarketplacePageBreadcrumbItem } from "../components/MarketplacePageBreadcrumb";
 import {
   buildMergedLatestCards,
+  buildMarketplaceTopbarActionBundle,
   buildMarketplaceFallback,
   buildMarketplacePath,
   buildPrototypeCardGroups,
-  buildLightTopbarPrimaryActions,
-  buildLightTopbarUtilityActions,
   defaultFilterForm,
   MarketplacePublicLocaleThemeSwitch,
   MarketplacePublicResultsContent,
@@ -21,20 +22,15 @@ import {
   resolveMarketplaceHomeMode,
   normalizeUnavailableLiveMarketplacePayload
 } from "./marketplacePublic/MarketplacePublicShared";
-import type {
-  MarketplaceFilterForm,
-  MarketplaceHomeMode,
-  PrototypeCardEntry,
-  TopbarActionItem
-} from "./marketplacePublic/MarketplacePublicShared";
+import type { MarketplaceFilterForm, MarketplaceHomeMode, PrototypeCardEntry } from "./marketplacePublic/MarketplacePublicShared";
 import MarketplacePublicPageShell from "./marketplacePublic/MarketplacePublicPageShell";
-import MarketplaceCategoryDetailFilters from "./MarketplaceCategoryDetailFilters";
 import {
   resolveMarketplaceCategoryDetailFilterOptions
 } from "./MarketplaceCategoryDetailFilters.config";
+import { buildMarketplaceWorkspaceAuthRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
 import { buildMarketplaceText } from "./marketplaceText";
 import { normalizeFilterFormQuery, normalizeRouteCategorySlug } from "./MarketplacePublicQuery";
-import PublicStandardTopbar from "./PublicStandardTopbar";
+import MarketplaceTopbar from "./MarketplaceTopbar";
 import { createPublicPageNavigator } from "./publicPageNavigation";
 import { isLightPrototypePath } from "./prototypePageTheme";
 import { loadMarketplaceWithFallback } from "./prototypeDataFallback";
@@ -48,6 +44,10 @@ interface MarketplaceCategoryDetailPageProps {
   onLocaleChange?: (nextLocale: AppLocale) => void;
   locationKey: string;
   categorySlug?: string | null;
+}
+
+function interpolateLabelTemplate(template: string, values: Record<string, string | number>): string {
+  return String(template || "").replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ""));
 }
 
 export default function MarketplaceCategoryDetailPage({
@@ -191,6 +191,7 @@ export default function MarketplaceCategoryDetailPage({
 
   const resolvedData = data || fallbackData;
   const items = resolvedData.items || [];
+  const totalItems = resolvedData.pagination.total_items || 0;
   const currentPage = resolvedData.pagination.page || 1;
   const pageSize = resolvedData.pagination.page_size || 24;
   const totalPages = resolvedData.pagination.total_pages || 1;
@@ -231,14 +232,31 @@ export default function MarketplaceCategoryDetailPage({
     () => resolveMarketplaceCategoryDetailFilterOptions(resolvedData, text, routeCategorySlug || effectiveQueryState.category || ""),
     [effectiveQueryState.category, resolvedData, routeCategorySlug, text]
   );
-  const selectedSortLabel = useMemo(() => {
-    const activeSortValue = String(form.sort || "").trim().toLowerCase();
-    const matchedSortOption = categoryDetailFilterOptions.sortOptions.find((option) => option.value === activeSortValue);
-    return matchedSortOption?.label || text.sortLabel;
-  }, [categoryDetailFilterOptions.sortOptions, form.sort, text.sortLabel]);
-  const categoryResultsToolbarChips = useMemo(
-    () => [`${selectedSortLabel} \u00b7 ${pageSize}/page`, text.batchInstallLabel, text.compareLabel, "HD"],
-    [pageSize, selectedSortLabel, text.batchInstallLabel, text.compareLabel]
+  const categoryResultsToolbarTitle = useMemo(() => {
+    const matchedLabel = interpolateLabelTemplate(text.resultsStatMatchedTemplate, {
+      total: totalItems
+    });
+    const categoryName = categorySubcategoryState.categoryName || text.categoryNav;
+    return `${categoryName} \u00b7 ${matchedLabel || totalItems}`;
+  }, [categorySubcategoryState.categoryName, text.categoryNav, text.resultsStatMatchedTemplate, totalItems]);
+  const categoryDetailBreadcrumbItems = useMemo<MarketplacePageBreadcrumbItem[]>(
+    () => [
+      {
+        key: "home",
+        label: "SkillsIndex",
+        onClick: () => onNavigate(homePath)
+      },
+      {
+        key: "categories",
+        label: text.categoryNav,
+        onClick: () => onNavigate(navigator.toPublic("/categories"))
+      },
+      {
+        key: "current",
+        label: categorySubcategoryState.categoryName || text.categoryNav
+      }
+    ],
+    [categorySubcategoryState.categoryName, homePath, navigator, onNavigate, text.categoryNav]
   );
   const toPublicPath = (path: string) => navigator.toPublic(path);
 
@@ -324,29 +342,34 @@ export default function MarketplaceCategoryDetailPage({
     }
     onNavigate(toPublicPath("/login"));
   }
+  function handleTopbarConsoleAction(): void {
+    onNavigate("/workspace");
+  }
 
-  const lightTopbarPrimaryActions = useMemo<TopbarActionItem[]>(
+  const topbarActionBundle = useMemo(
     () =>
-      buildLightTopbarPrimaryActions({
+      buildMarketplaceTopbarActionBundle({
         onNavigate,
         toPublicPath,
-        labels: {
-          categoryNav: text.categoryNav,
-          downloadRankingNav: text.downloadRankingNav
-        }
-      }),
-    [onNavigate, text.categoryNav, text.downloadRankingNav, toPublicPath]
-  );
-  const lightTopbarUtilityActions = useMemo<TopbarActionItem[]>(
-    () =>
-      buildLightTopbarUtilityActions({
-        onNavigate,
-        toPublicPath,
+        locale,
         hasSessionUser: Boolean(sessionUser),
+        activeActionID: "category",
         authActionLabel: sessionUser ? text.signOut : text.signIn,
         onAuthAction: handleTopbarAuthAction
       }),
-    [handleTopbarAuthAction, onNavigate, sessionUser, text.signIn, text.signOut, toPublicPath]
+    [handleTopbarAuthAction, locale, onNavigate, sessionUser, text.signIn, text.signOut, toPublicPath]
+  );
+  const topbarRightRegistrations = useMemo(
+    () =>
+      buildMarketplaceWorkspaceAuthRightRegistrations({
+        sessionUser,
+        workspaceLabel: text.openWorkspace,
+        signInLabel: text.signIn,
+        signOutLabel: text.signOut,
+        onWorkspaceClick: handleTopbarConsoleAction,
+        onAuthClick: handleTopbarAuthAction
+      }),
+    [handleTopbarAuthAction, handleTopbarConsoleAction, sessionUser, text.openWorkspace, text.signIn, text.signOut]
   );
   const topbarBrandTitle = isLightTheme ? "SkillsIndex" : text.brandTitle;
   const topbarBrandSubtitle = isLightTheme ? "User Portal" : text.brandSubtitle;
@@ -366,17 +389,16 @@ export default function MarketplaceCategoryDetailPage({
       rootClassName={rootClasses}
       rootTestId="marketplace-category-detail-page"
     >
-      <PublicStandardTopbar
+      <MarketplaceTopbar
         shellClassName="animated-fade-down"
         dataAnimated
         brandTitle={topbarBrandTitle}
         brandSubtitle={topbarBrandSubtitle}
         onBrandClick={() => onNavigate(homePath)}
         isLightTheme={isLightTheme}
-        primaryActions={lightTopbarPrimaryActions}
-        utilityActions={lightTopbarUtilityActions}
-        ctaLabel={sessionUser ? text.signOut : text.signIn}
-        onCtaClick={handleTopbarAuthAction}
+        primaryActions={topbarActionBundle.primaryActions}
+        utilityActions={topbarActionBundle.utilityActions}
+        rightRegistrations={topbarRightRegistrations}
         localeThemeSwitch={
           <MarketplacePublicLocaleThemeSwitch
             locale={locale}
@@ -387,8 +409,16 @@ export default function MarketplaceCategoryDetailPage({
         }
       />
 
+      <section className="marketplace-page-breadcrumb-shell">
+        <MarketplacePageBreadcrumb
+          items={categoryDetailBreadcrumbItems}
+          ariaLabel="Category detail breadcrumb"
+          testIdPrefix="category-detail-breadcrumb"
+        />
+      </section>
+
       <section className="marketplace-search-strip animated-fade-up delay-1" role="search" aria-label="Marketplace search" data-animated="true">
-        <MarketplaceCategoryDetailFilters
+        <MarketplaceCategorySearchControls
           text={text}
           categoryName={categorySubcategoryState.categoryName || text.categoryNav}
           form={form}
@@ -413,7 +443,8 @@ export default function MarketplaceCategoryDetailPage({
           totalPages={totalPages}
           resultCards={resultCards}
           featuredCards={[]}
-          resultsToolbarChips={categoryResultsToolbarChips}
+          resultsToolbarTitleOverride={categoryResultsToolbarTitle}
+          resultsToolbarChips={[]}
           autoLoadConfig={autoLoadConfig}
           onPageChange={handlePageChange}
           renderSkillCard={renderSkillCard}

@@ -152,7 +152,7 @@ test.describe("Public skill detail interaction flow", () => {
     });
 
     await page.goto("/skills/902?skill_detail_mode=live");
-    await expect(page.getByRole("heading", { name: "browser-automation-pro", exact: true })).toBeVisible();
+    await expect(page.locator(".skill-detail-top .skill-detail-title")).toHaveText("browser-automation-pro");
 
     await page.getByRole("button", { name: "Add Favorite", exact: true }).click();
     await expect(page.getByRole("button", { name: "Remove Favorite", exact: true })).toBeVisible();
@@ -227,9 +227,9 @@ test.describe("Public skill detail interaction flow", () => {
     await expect(page.locator(".skill-detail-code-panel")).toHaveClass(/is-sql/);
     await expect(page.locator(".skill-detail-meta-strip")).toContainText("language sql");
 
-    await page.locator(".skill-detail-file-list-panel .skill-detail-file-row", { hasText: "README.md" }).first().click();
-    await expect(page.locator(".skill-detail-file-preset.is-active")).toContainText("README.md");
-    await expect(page.locator(".skill-detail-code-content")).toContainText("## Overview");
+    await page.locator(".skill-detail-top-file-switch .skill-detail-top-file-button", { hasText: "README.md" }).first().click();
+    await expect(page.locator(".skill-detail-top-file-switch .skill-detail-top-file-button.is-active")).toContainText("README.md");
+    await expect(page.locator(".skill-detail-code-content")).toContainText("Overview");
     await expect(page.locator(".skill-detail-code-head .skill-detail-file-state-hint")).toContainText("/sql-performance-lab/README.md");
     await expect(page.locator(".skill-detail-code-head .skill-detail-file-state-meta")).toContainText("Markdown");
   });

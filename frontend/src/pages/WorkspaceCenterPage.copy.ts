@@ -10,6 +10,7 @@ export interface WorkspaceCenterCopy {
   navWorkspace: string;
   navCategories: string;
   navRankings: string;
+  navTop: string;
   navRollout: string;
   navGovernance: string;
   openMarketplace: string;
@@ -20,6 +21,7 @@ export interface WorkspaceCenterCopy {
   sidebarMenuHint: string;
   sidebarSectionsTitle: string;
   sidebarHubsTitle: string;
+  sidebarOrganizationTitle: string;
   sidebarOverview: string;
   sidebarActivity: string;
   sidebarQueue: string;
@@ -29,6 +31,9 @@ export interface WorkspaceCenterCopy {
   sidebarRollout: string;
   sidebarGovernance: string;
   sidebarRecords: string;
+  sidebarPersonnelManagement: string;
+  sidebarPermissionManagement: string;
+  sidebarRoleManagement: string;
   installed: string;
   runsToday: string;
   healthScore: string;
@@ -72,6 +77,7 @@ const baseCopy: WorkspaceCenterCopy = {
   navWorkspace: "Workspace",
   navCategories: "Categories",
   navRankings: "Rankings",
+  navTop: "TOP",
   navRollout: "Rollout",
   navGovernance: "Governance",
   openMarketplace: "Open Marketplace",
@@ -82,6 +88,7 @@ const baseCopy: WorkspaceCenterCopy = {
   sidebarMenuHint: "Jump between core workspace panels and linked hubs.",
   sidebarSectionsTitle: "Workspace Sections",
   sidebarHubsTitle: "Related Hubs",
+  sidebarOrganizationTitle: "Organization Management",
   sidebarOverview: "Overview",
   sidebarActivity: "Activity Feed",
   sidebarQueue: "Queue Execution",
@@ -91,6 +98,9 @@ const baseCopy: WorkspaceCenterCopy = {
   sidebarRollout: "Rollout Workflow",
   sidebarGovernance: "Governance Center",
   sidebarRecords: "Records Sync",
+  sidebarPersonnelManagement: "Personnel Management",
+  sidebarPermissionManagement: "Permission Management",
+  sidebarRoleManagement: "Role Management",
   installed: "Installed Skills",
   runsToday: "Automation Runs",
   healthScore: "Health Score",

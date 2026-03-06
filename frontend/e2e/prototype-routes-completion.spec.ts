@@ -277,7 +277,7 @@ test.describe("Prototype route completion coverage", () => {
     await expect(page.getByText("Prototype Replica", { exact: true })).toHaveCount(0);
 
     await page.goto("/light/workspace");
-    await expect(page.getByRole("heading", { name: /Team Workspace/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Team Workspace/ })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Queue State and Execution", exact: true })).toBeVisible();
     await page.locator(".ant-segmented-item-label", { hasText: "Pending" }).first().click();
     await expect(page.locator("pre").filter({ hasText: "--status pending" })).toBeVisible();

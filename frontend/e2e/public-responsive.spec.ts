@@ -74,7 +74,9 @@ test.describe("Public pages responsive and functional", () => {
 
     await page.locator(".marketplace-search-input.is-query input").click();
     await expect(page.locator(".marketplace-results-floating-container")).toBeVisible();
-    await page.locator(".marketplace-results-modal-search").click();
+    await expect(page.locator("[data-testid='marketplace-results-modal-context']")).toBeVisible();
+    await expect(page.locator("[data-testid='marketplace-results-modal-recent-searches']")).toBeVisible();
+    await page.locator(".marketplace-results-modal-input.is-query input").press("Enter");
     await expect(page).toHaveURL(/\/results$/);
 
     await page.locator(".marketplace-results-list .marketplace-skill-name button").first().click();
@@ -87,12 +89,12 @@ test.describe("Public pages responsive and functional", () => {
     await mockSkillDetail(page);
 
     await page.goto("/skills/901");
-    await expect(page.getByRole("heading", { name: "browser-automation-pro", exact: true })).toBeVisible();
+    await expect(page.locator(".skill-detail-title").first()).toHaveText("browser-automation-pro");
     await expect(page.getByRole("button", { name: "Categories", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Execution", exact: true })).toHaveCount(0);
     await page.getByRole("button", { name: "History", exact: true }).first().click();
     await expect(page).toHaveURL(/\/skills\/901$/);
-    await expect(page.locator(".skill-detail-file-preset.is-active")).toHaveText("CHANGELOG.md");
+    await expect(page.locator(".skill-detail-top-file-switch .skill-detail-top-file-button.is-active")).toHaveText("CHANGELOG.md");
   });
 
   test("categories and rankings pages remain functional on mobile viewport", async ({ page }) => {
@@ -101,12 +103,14 @@ test.describe("Public pages responsive and functional", () => {
 
     await page.goto("/rankings");
     await expect(page.getByRole("heading", { name: "Top Skills Ranking", exact: true })).toBeVisible();
+    await expect(page.getByTestId("ranking-page-breadcrumb-current")).toHaveText("Top Skills Ranking");
     await page.getByTestId("ranking-highlight-skill-button").first().click();
     await expect(page).toHaveURL(/\/skills\/\d+$/);
 
     await page.goto("/categories");
     await expect(page.getByRole("heading", { name: "Categories", exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Open Rankings", exact: true }).first().click();
+    await expect(page.getByTestId("categories-page-breadcrumb-current")).toHaveText("Categories");
+    await page.getByRole("button", { name: /Open Rankings|Download Ranking/ }).first().click();
     await expect(page).toHaveURL(/\/rankings$/);
   });
 });

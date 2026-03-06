@@ -35,9 +35,87 @@ export const marketplaceHomeResponsiveStyles = css`
 
   .marketplace-home.is-mobile .marketplace-topbar-left-group,
   .marketplace-home.is-mobile .marketplace-topbar-light-nav,
-  .marketplace-home.is-mobile .marketplace-topbar-light-utility {
+  .marketplace-home.is-mobile .marketplace-topbar-light-utility,
+  .marketplace-home.is-mobile .marketplace-topbar-primary-trailing,
+  .marketplace-home.is-mobile .workspace-topbar-primary-inline-toggle,
+  .marketplace-home.is-mobile .workspace-topbar-primary-groups-shell {
     width: 100%;
     flex-wrap: wrap;
+  }
+
+  .marketplace-home.is-mobile .workspace-topbar-primary-groups-shell {
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .marketplace-home.is-mobile .workspace-topbar-primary-groups {
+    width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .marketplace-home.is-mobile .workspace-topbar-primary-group {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .marketplace-home.is-mobile .workspace-topbar-primary-group-label {
+    margin-right: auto;
+  }
+
+  .marketplace-home.is-mobile .workspace-topbar-primary-group + .workspace-topbar-primary-group {
+    margin-left: 0;
+    padding-left: 0;
+    padding-top: 8px;
+    margin-top: 8px;
+    border-top: 1px solid color-mix(in srgb, var(--marketplace-nav-shell-border) 75%, transparent);
+  }
+
+  .marketplace-home.is-mobile .workspace-topbar-primary-group + .workspace-topbar-primary-group::before {
+    display: none;
+  }
+
+  .marketplace-home.is-mobile .workspace-topbar-overflow-groups {
+    grid-template-columns: 1fr;
+  }
+
+  .marketplace-home.is-mobile .workspace-topbar-overflow-wrapper {
+    position: static;
+    width: 100%;
+    max-width: none;
+    transform: none;
+  }
+
+  .marketplace-home.is-mobile .workspace-topbar-overflow-wrapper.is-expanded {
+    max-height: 760px;
+    transform: none;
+  }
+
+  .marketplace-home.is-mobile .marketplace-topbar-primary-trailing,
+  .marketplace-home.is-mobile .workspace-topbar-primary-inline-toggle {
+    justify-content: flex-end;
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  .marketplace-home.is-mobile .workspace-topbar-primary-inline-toggle::before {
+    display: none;
+  }
+
+  .marketplace-home.is-mobile .marketplace-topbar-below-content {
+    width: 100%;
+    padding: 0 var(--marketplace-content-gutter);
+  }
+
+  .marketplace-home.is-mobile .marketplace-topbar-left-accessory {
+    width: 100%;
+  }
+
+  .marketplace-home.is-mobile .workspace-topbar-user-trigger {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .marketplace-home.is-mobile .marketplace-topbar-locale-switch {
@@ -90,8 +168,7 @@ export const marketplaceHomeResponsiveStyles = css`
     overflow: visible;
   }
 
-  .marketplace-home.is-mobile .marketplace-search-submit,
-  .marketplace-home.is-mobile .marketplace-search-filter-btn {
+  .marketplace-home.is-mobile .marketplace-search-submit {
     justify-content: center;
   }
 
@@ -99,6 +176,10 @@ export const marketplaceHomeResponsiveStyles = css`
     height: auto;
     position: relative;
     z-index: 2;
+  }
+
+  .marketplace-home.is-mobile .marketplace-page-breadcrumb-shell {
+    padding-top: 6px;
   }
 
   .marketplace-home.is-mobile .marketplace-search-utility-row {
@@ -110,6 +191,36 @@ export const marketplaceHomeResponsiveStyles = css`
   .marketplace-home.is-mobile .marketplace-search-utility-left,
   .marketplace-home.is-mobile .marketplace-search-utility-right {
     flex-wrap: wrap;
+  }
+
+  .marketplace-home.is-mobile.is-category-detail-page .marketplace-subcategory-row {
+    height: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .marketplace-home.is-mobile.is-category-detail-page .marketplace-subcategory-chips {
+    width: 100%;
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  .marketplace-home.is-mobile.is-category-detail-page .marketplace-category-filter-row {
+    height: auto;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .marketplace-home.is-mobile.is-category-detail-page .marketplace-category-filter-group {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .marketplace-home.is-mobile.is-category-detail-page .marketplace-category-filter-chips {
+    width: 100%;
   }
 
   .marketplace-home.is-mobile .marketplace-advanced-panel {

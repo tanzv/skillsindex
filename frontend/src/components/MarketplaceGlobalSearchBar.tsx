@@ -16,6 +16,7 @@ export interface MarketplaceGlobalSearchBarProps {
   onSemanticKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
   submitLabel: string;
   onSubmit: () => void;
+  showSubmitAction?: boolean;
   submitDisabled?: boolean;
   filterLabel?: string;
   onFilterClick?: () => void;
@@ -42,6 +43,7 @@ export default function MarketplaceGlobalSearchBar({
   onSemanticKeyDown,
   submitLabel,
   onSubmit,
+  showSubmitAction = true,
   submitDisabled = false,
   filterLabel,
   onFilterClick,
@@ -54,7 +56,12 @@ export default function MarketplaceGlobalSearchBar({
 }: MarketplaceGlobalSearchBarProps) {
   const hasSemanticField = typeof semanticValue === "string";
   const hasFilterAction = Boolean(filterLabel && onFilterClick);
-  const actionSequence = resolveSearchActionOrder(actionOrder, hasFilterAction);
+  const actionSequence = resolveSearchActionOrder(actionOrder, hasFilterAction).filter((action) => {
+    if (action === "submit" && !showSubmitAction) {
+      return false;
+    }
+    return true;
+  });
 
   function renderAction(action: "submit" | "filter") {
     if (action === "submit") {

@@ -1,32 +1,26 @@
 import styled from "@emotion/styled";
 
 export const WorkspaceContentLayout = styled.div`
-  display: grid;
-  grid-template-columns: minmax(228px, 268px) minmax(0, 1fr);
+  display: block;
   align-items: start;
-  gap: 14px;
-
-  @media (max-width: 1120px) {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
+  width: 100%;
 `;
 
 export const WorkspaceSidebarCard = styled.aside`
   position: sticky;
   top: 74px;
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--si-color-accent) 20%, var(--si-color-border));
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--si-color-accent) 26%, var(--si-color-border-soft));
   background:
-    linear-gradient(168deg, rgba(24, 71, 145, 0.22) 0%, rgba(17, 44, 90, 0.08) 42%, rgba(5, 12, 22, 0) 100%),
-    color-mix(in srgb, var(--si-color-panel) 80%, transparent);
+    linear-gradient(165deg, color-mix(in srgb, var(--si-color-accent) 16%, transparent) 0%, transparent 58%),
+    color-mix(in srgb, var(--si-color-panel) 86%, transparent);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--si-color-border-soft) 46%, transparent),
-    0 18px 34px rgba(8, 15, 30, 0.26);
-  backdrop-filter: blur(10px);
-  padding: 12px 12px 14px;
+    inset 0 0 0 1px color-mix(in srgb, var(--si-color-border-soft) 52%, transparent),
+    0 18px 34px color-mix(in srgb, #070b13 44%, transparent);
+  backdrop-filter: blur(9px);
+  padding: 14px 13px 15px;
   display: grid;
-  gap: 10px;
+  gap: 12px;
   overflow: hidden;
 
   &::before {
@@ -45,14 +39,22 @@ export const WorkspaceSidebarCard = styled.aside`
 
 export const WorkspaceSidebarHeader = styled.div`
   display: grid;
-  gap: 4px;
+  gap: 5px;
+`;
+
+export const WorkspaceSidebarTitle = styled.h2`
+  margin: 0;
+  color: var(--si-color-text-primary);
+  font-size: 1rem;
+  line-height: 1.25;
+  font-weight: 700;
 `;
 
 export const WorkspaceSidebarHint = styled.p`
   margin: 0;
   color: var(--si-color-text-secondary);
-  font-size: 0.74rem;
-  line-height: 1.38;
+  font-size: 0.73rem;
+  line-height: 1.42;
   text-wrap: pretty;
 `;
 
@@ -85,7 +87,7 @@ export const WorkspaceSidebarMetaPill = styled.span<{ $tone?: "neutral" | "accen
 
 export const WorkspaceSidebarGroup = styled.section`
   display: grid;
-  gap: 7px;
+  gap: 8px;
 `;
 
 export const WorkspaceSidebarGroupTitle = styled.h3`
@@ -98,60 +100,219 @@ export const WorkspaceSidebarGroupTitle = styled.h3`
   font-family: "JetBrains Mono", monospace;
 `;
 
-export const WorkspaceSidebarItemButton = styled.button<{ $active?: boolean }>`
+export const WorkspaceSidebarItemButton = styled.button<{ $active?: boolean; $variant?: "item" | "label" }>`
   border: 1px solid
-    ${({ $active }) =>
-      $active
-        ? "color-mix(in srgb, #60a5fa 68%, transparent)"
-        : "color-mix(in srgb, var(--si-color-border) 62%, transparent)"};
-  border-radius: 11px;
+    ${({ $active, $variant }) =>
+      $variant === "label"
+        ? "color-mix(in srgb, var(--si-color-border-soft) 64%, transparent)"
+        : $active
+          ? "color-mix(in srgb, #60a5fa 68%, transparent)"
+          : "color-mix(in srgb, var(--si-color-border) 62%, transparent)"};
+  border-style: ${({ $variant }) => ($variant === "label" ? "dashed" : "solid")};
+  border-radius: 12px;
   background:
-    ${({ $active }) =>
-      $active
-        ? "linear-gradient(150deg, rgba(59, 130, 246, 0.68), rgba(37, 99, 235, 0.48))"
-        : "linear-gradient(165deg, rgba(30, 64, 125, 0.2), rgba(15, 23, 42, 0.08))"},
-    ${({ $active }) =>
-    $active
-      ? "color-mix(in srgb, var(--si-color-accent) 52%, transparent)"
-      : "color-mix(in srgb, var(--si-color-surface) 78%, transparent)"};
-  color: ${({ $active }) => ($active ? "var(--si-color-accent-contrast)" : "var(--si-color-text-primary)")};
-  font-size: 0.77rem;
-  font-weight: ${({ $active }) => ($active ? 700 : 600)};
+    ${({ $active, $variant }) =>
+      $variant === "label"
+        ? "linear-gradient(165deg, rgba(15, 23, 42, 0.04), rgba(15, 23, 42, 0.02))"
+        : $active
+          ? "linear-gradient(150deg, rgba(59, 130, 246, 0.68), rgba(37, 99, 235, 0.48))"
+          : "linear-gradient(165deg, rgba(30, 64, 125, 0.2), rgba(15, 23, 42, 0.08))"},
+    ${({ $active, $variant }) =>
+      $variant === "label"
+        ? "color-mix(in srgb, var(--si-color-surface-alt) 56%, transparent)"
+        : $active
+          ? "color-mix(in srgb, var(--si-color-accent) 52%, transparent)"
+          : "color-mix(in srgb, var(--si-color-surface) 78%, transparent)"};
+  color: ${({ $active, $variant }) =>
+    $variant === "label"
+      ? "color-mix(in srgb, var(--si-color-text-secondary) 78%, #9ec8ff)"
+      : $active
+        ? "var(--si-color-accent-contrast)"
+        : "var(--si-color-text-primary)"};
+  font-size: ${({ $variant }) => ($variant === "label" ? "0.68rem" : "0.78rem")};
+  font-weight: ${({ $active, $variant }) => ($variant === "label" ? 700 : $active ? 700 : 600)};
+  letter-spacing: ${({ $variant }) => ($variant === "label" ? "0.06em" : "normal")};
+  text-transform: ${({ $variant }) => ($variant === "label" ? "uppercase" : "none")};
   text-align: left;
-  line-height: 1.3;
-  padding: 8px 10px;
-  cursor: pointer;
-  box-shadow: ${({ $active }) => ($active ? "0 8px 16px rgba(19, 51, 115, 0.26)" : "none")};
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.12s ease,
-    box-shadow 0.2s ease;
+  line-height: 1.34;
+  min-height: 38px;
+  padding: 9px 11px;
+  cursor: ${({ $variant }) => ($variant === "label" ? "default" : "pointer")};
+  box-shadow: ${({ $active, $variant }) =>
+    $variant === "label" ? "none" : $active ? "0 8px 16px rgba(19, 51, 115, 0.26)" : "none"};
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.12s ease, box-shadow 0.2s ease;
 
   &:hover {
-    border-color: color-mix(in srgb, #60a5fa 58%, transparent);
+    border-color: ${({ $variant }) =>
+      $variant === "label"
+        ? "color-mix(in srgb, var(--si-color-border-soft) 64%, transparent)"
+        : "color-mix(in srgb, #60a5fa 58%, transparent)"};
     background:
-      linear-gradient(165deg, rgba(37, 99, 235, 0.28), rgba(30, 64, 175, 0.12)),
-      color-mix(in srgb, var(--si-color-surface-alt) 72%, transparent);
+      ${({ $variant }) =>
+        $variant === "label"
+          ? "linear-gradient(165deg, rgba(15, 23, 42, 0.04), rgba(15, 23, 42, 0.02))"
+          : "linear-gradient(165deg, rgba(37, 99, 235, 0.28), rgba(30, 64, 175, 0.12))"},
+      ${({ $variant }) =>
+        $variant === "label"
+          ? "color-mix(in srgb, var(--si-color-surface-alt) 56%, transparent)"
+          : "color-mix(in srgb, var(--si-color-surface-alt) 72%, transparent)"};
   }
 
   &:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--si-color-accent) 74%, transparent);
+    outline: ${({ $variant }) =>
+      $variant === "label" ? "none" : "2px solid color-mix(in srgb, var(--si-color-accent) 74%, transparent)"};
     outline-offset: 2px;
   }
 
   &:active {
-    transform: translateY(1px);
+    transform: ${({ $variant }) => ($variant === "label" ? "none" : "translateY(1px)")};
+  }
+
+  &[aria-disabled="true"] {
+    pointer-events: none;
   }
 `;
 
 export const WorkspaceMainColumn = styled.div`
   display: grid;
-  gap: 12px;
+  gap: 14px;
 `;
 
 export const WorkspaceSectionAnchor = styled.section`
   display: grid;
-  gap: 10px;
+  gap: 12px;
   scroll-margin-top: 86px;
+`;
+
+export const WorkspaceHeroTextStack = styled.div`
+  max-width: 64ch;
+  display: grid;
+  gap: 8px;
+`;
+
+export const WorkspaceHeroTitle = styled.h2`
+  margin: 0;
+  color: var(--si-color-text-primary);
+  font-family: "Syne", sans-serif;
+  font-size: clamp(1.16rem, 2.1vw, 1.62rem);
+  line-height: 1.18;
+  letter-spacing: 0.01em;
+`;
+
+export const WorkspaceHeroSubtitle = styled.p`
+  margin: 0;
+  color: var(--si-color-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  text-wrap: pretty;
+`;
+
+export const WorkspaceActionRow = styled.div`
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .ant-btn {
+    border-radius: 10px;
+    min-height: 34px;
+    padding-inline: 14px;
+    font-size: 0.76rem;
+    font-weight: 600;
+  }
+`;
+
+export const WorkspaceMetricLabel = styled.span`
+  color: var(--si-color-text-secondary);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.2;
+`;
+
+export const WorkspaceMetricValue = styled.strong`
+  color: var(--si-color-text-primary);
+  font-size: 1.18rem;
+  font-weight: 750;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+`;
+
+export const WorkspacePanelHeading = styled.h3`
+  margin: 0;
+  color: var(--si-color-text-primary);
+  font-size: 0.96rem;
+  font-weight: 700;
+  line-height: 1.3;
+`;
+
+export const WorkspaceMutedText = styled.p`
+  margin: 0;
+  color: var(--si-color-text-secondary);
+  font-size: 0.74rem;
+  line-height: 1.45;
+`;
+
+export const WorkspaceTagCloud = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  .ant-tag {
+    margin-inline-end: 0;
+    border-radius: 999px;
+    font-size: 0.66rem;
+    line-height: 1.1;
+    padding: 4px 9px;
+    border: 1px solid color-mix(in srgb, var(--si-color-border-soft) 68%, transparent);
+    background: color-mix(in srgb, var(--si-color-surface) 84%, transparent);
+    color: var(--si-color-text-secondary);
+  }
+`;
+
+export const WorkspaceQueueLegend = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  .ant-tag {
+    margin-inline-end: 0;
+    border-radius: 999px;
+    font-size: 0.67rem;
+    padding: 3px 9px;
+    border: 1px solid color-mix(in srgb, var(--si-color-border-soft) 70%, transparent);
+    background: color-mix(in srgb, var(--si-color-surface) 82%, transparent);
+  }
+`;
+
+export const WorkspaceSegmentHint = styled.p`
+  margin: 0;
+  color: var(--si-color-text-secondary);
+  font-size: 0.73rem;
+  line-height: 1.4;
+`;
+
+export const WorkspaceQuickActionGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+
+  .ant-btn {
+    width: 100%;
+    border-radius: 10px;
+    min-height: 34px;
+    font-size: 0.75rem;
+    font-weight: 620;
+    justify-content: flex-start;
+    padding-inline: 12px;
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
 `;

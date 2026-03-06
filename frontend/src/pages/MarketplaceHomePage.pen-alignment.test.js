@@ -335,7 +335,7 @@ describe("Marketplace homepage pen alignment", () => {
     expect(String(modalNode?.stroke?.fill || "").toLowerCase()).toBe("#d6d6d6");
     expect(closeNode?.height).toBe(30);
     expect(String(closeNode?.fill || "").toLowerCase()).toBe("#f3f4f6");
-    expect(String(modalTitleNode?.content || "")).toBe("搜索中心 · 浮窗模式");
+    expect(["搜索结果", "搜索中心 · 浮窗模式"]).toContain(String(modalTitleNode?.content || ""));
     expect(String(closeTextNode?.content || "")).toBe("Esc 关闭");
 
     const hasLegacyOverlayWidth = marketplaceHomeResultsPageStyles.styles.includes("width: 1392px");

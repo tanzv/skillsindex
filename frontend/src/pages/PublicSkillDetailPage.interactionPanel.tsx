@@ -78,6 +78,43 @@ export default function PublicSkillDetailInteractionPanel({
 
   return (
     <aside className="skill-detail-right-col">
+      <article className="skill-detail-card is-summary">
+        <div className="skill-detail-summary-head">
+          <div className="skill-detail-summary-title-group">
+            <p className="skill-detail-summary-title">{detailModel.titleName}</p>
+            <p className="skill-detail-summary-subtitle">{detailModel.breadcrumb}</p>
+          </div>
+          <div className="skill-detail-summary-badges">
+            <span className="skill-detail-chip is-light">{text.officialVerified}</span>
+            <span className="skill-detail-chip is-warning">{text.riskFlag}</span>
+          </div>
+        </div>
+        <p className="skill-detail-summary-description">{detailModel.summaryDescription}</p>
+        <div className="skill-detail-summary-metrics">
+          {detailModel.summaryMetrics.map((metric) => (
+            <div className="skill-detail-summary-metric" key={metric.label}>
+              <span className="skill-detail-summary-metric-label">{metric.label}</span>
+              <span className="skill-detail-summary-metric-value">{metric.value}</span>
+            </div>
+          ))}
+        </div>
+      </article>
+
+      <article className="skill-detail-card is-quality">
+        <div className="skill-detail-card-title">
+          <span className="skill-detail-title-dot" />
+          <span>{text.qualityHealth}</span>
+        </div>
+        <div className="skill-detail-quality-metrics">
+          {detailModel.qualityMetrics.map((metric) => (
+            <div className="skill-detail-quality-metric" key={metric.label}>
+              <span className="skill-detail-quality-metric-label">{metric.label}</span>
+              <span className="skill-detail-quality-metric-value">{metric.value}</span>
+            </div>
+          ))}
+        </div>
+      </article>
+
       <article className="skill-detail-card is-metadata">
         <div className="skill-detail-card-title">
           <span className="skill-detail-title-dot" />

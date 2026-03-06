@@ -1,6 +1,7 @@
 # Style System Reference
 
-This reference documents the active public marketplace style system and how to extend it safely.
+This reference documents the active system style token pipeline and how to extend it safely.
+The current public marketplace module is used as the most complete concrete implementation example.
 
 ## 1. Token Layers
 

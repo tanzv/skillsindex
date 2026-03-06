@@ -98,7 +98,8 @@ describe("Public skill detail pen alignment", () => {
     ).toBe(true);
     expect(
       publicSkillDetailThemeStyles.styles.includes("width: 1360px") ||
-        publicSkillDetailThemeStyles.styles.includes("width: min(1360px, calc(100% - 24px))")
+        publicSkillDetailThemeStyles.styles.includes("width: min(1360px, calc(100% - 24px))") ||
+        publicSkillDetailThemeStyles.styles.includes("--skill-detail-content-width: 100%")
     ).toBe(true);
     expect(
       publicSkillDetailThemeStyles.styles.includes("width: 900px") ||

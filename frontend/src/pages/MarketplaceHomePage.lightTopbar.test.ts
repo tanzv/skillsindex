@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildLightTopbarPrimaryActions, buildLightTopbarUtilityActions } from "./MarketplaceHomePage.lightTopbar";
+import {
+  buildLightTopbarPrimaryActions,
+  buildLightTopbarUtilityActions,
+  buildMarketplaceTopbarActionBundle,
+  buildMarketplaceTopbarPrimaryActions,
+  resolveMarketplaceTopbarPrimaryLabels
+} from "./MarketplaceHomePage.lightTopbar";
 
 describe("MarketplaceHomePage light topbar actions", () => {
   it("includes category and download ranking actions with localized labels", () => {
@@ -85,6 +91,48 @@ describe("MarketplaceHomePage light topbar actions", () => {
       "developer"
     ]);
     expect(actions.find((action) => action.id === "workspace")?.active).toBe(true);
+  });
+
+  it("builds primary actions from shared marketplace labels", () => {
+    const onNavigate = vi.fn();
+    const toPublicPath = (path: string) => `/light${path}`;
+    const labels = resolveMarketplaceTopbarPrimaryLabels("en");
+
+    const actions = buildMarketplaceTopbarPrimaryActions({
+      onNavigate,
+      toPublicPath,
+      locale: "en",
+      activeActionID: "category"
+    });
+
+    expect(actions.map((action) => action.id)).toEqual(["category", "download-ranking"]);
+    expect(actions[0]?.label).toBe(labels.categoryNav);
+    expect(actions[1]?.label).toBe(labels.downloadRankingNav);
+    expect(actions[0]?.active).toBe(true);
+
+    actions[1]?.onClick();
+    expect(onNavigate).toHaveBeenCalledWith("/light/rankings");
+  });
+
+  it("builds bundled primary and utility actions from shared inputs", () => {
+    const onNavigate = vi.fn();
+    const onAuthAction = vi.fn();
+    const bundle = buildMarketplaceTopbarActionBundle({
+      onNavigate,
+      toPublicPath: (path: string) => `/light${path}`,
+      locale: "en",
+      hasSessionUser: false,
+      activeActionID: "category",
+      authActionLabel: "Sign In",
+      onAuthAction
+    });
+
+    expect(bundle.primaryActions.map((action) => action.id)).toEqual(["category", "download-ranking"]);
+    expect(bundle.utilityActions.map((action) => action.id)).toEqual(["global-search", "recent-jobs", "profile", "auth-action"]);
+    expect(bundle.primaryActions[0]?.active).toBe(true);
+
+    bundle.utilityActions[3]?.onClick();
+    expect(onAuthAction).toHaveBeenCalledTimes(1);
   });
 
   it("appends auth action as the last utility button when configured", () => {

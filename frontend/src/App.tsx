@@ -292,6 +292,7 @@ export default function App() {
       route !== "/" &&
       route !== "/results" &&
       route !== "/skills/:id" &&
+      route !== "/docs" &&
       route !== "/categories" &&
       route !== "/categories/:slug" &&
       route !== "/rankings";
@@ -344,11 +345,23 @@ export default function App() {
             sessionUser={sessionUser}
           />
         ) : null}
-        {route === "/docs" ? <PublicDocsPage locale={locale} onNavigate={navigate} sessionUser={sessionUser} /> : null}
+        {route === "/docs" ? (
+          <PublicDocsPage
+            locale={locale}
+            onNavigate={navigate}
+            onLogout={handleLogout}
+            onThemeModeChange={handleThemeModeChange}
+            onLocaleChange={(nextLocale) => {
+              void handleLocaleChange(nextLocale);
+            }}
+            sessionUser={sessionUser}
+          />
+        ) : null}
         {route === "/categories" ? (
           <PublicCategoriesPage
             locale={locale}
             onNavigate={navigate}
+            onLogout={handleLogout}
             onThemeModeChange={handleThemeModeChange}
             onLocaleChange={(nextLocale) => {
               void handleLocaleChange(nextLocale);
@@ -360,6 +373,7 @@ export default function App() {
           <PublicRankingPage
             locale={locale}
             onNavigate={navigate}
+            onLogout={handleLogout}
             onThemeModeChange={handleThemeModeChange}
             onLocaleChange={(nextLocale) => {
               void handleLocaleChange(nextLocale);
@@ -373,6 +387,7 @@ export default function App() {
             skillID={skillID || 0}
             onNavigate={navigate}
             sessionUser={sessionUser}
+            onLogout={handleLogout}
             onThemeModeChange={handleThemeModeChange}
             onLocaleChange={(nextLocale) => {
               void handleLocaleChange(nextLocale);
@@ -386,6 +401,13 @@ export default function App() {
             entry={prototypeMatch}
             onNavigate={navigate}
             sessionUser={sessionUser}
+            onThemeModeChange={handleThemeModeChange}
+            onLocaleChange={(nextLocale) => {
+              void handleLocaleChange(nextLocale);
+            }}
+            onLogout={() => {
+              void handleLogout();
+            }}
           />
         ) : null}
       </ConfigProvider>

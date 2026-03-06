@@ -102,10 +102,27 @@ export const marketplaceHomeSearchUtilityStyles = css`
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
+  }
+
+  .marketplace-home .marketplace-category-filter-label {
+    color: var(--marketplace-category-label-text);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .marketplace-home .marketplace-category-filter-chips {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     flex-wrap: wrap;
   }
 
-  .marketplace-home .marketplace-category-filter-group button {
+  .marketplace-home .marketplace-category-filter-chips button {
     border: 0;
     height: 30px;
     border-radius: 999px;
@@ -119,16 +136,16 @@ export const marketplaceHomeSearchUtilityStyles = css`
     transition: background-color 180ms ease, color 180ms ease;
   }
 
-  .marketplace-home .marketplace-category-filter-group button:hover {
+  .marketplace-home .marketplace-category-filter-chips button:hover {
     background: var(--marketplace-category-filter-hover-background);
   }
 
-  .marketplace-home .marketplace-category-filter-group button.is-active {
+  .marketplace-home .marketplace-category-filter-chips button.is-active {
     background: var(--marketplace-category-filter-active-background);
     color: var(--marketplace-category-filter-active-text);
   }
 
-  .marketplace-home .marketplace-category-filter-group button:focus-visible {
+  .marketplace-home .marketplace-category-filter-chips button:focus-visible {
     outline: 2px solid var(--marketplace-focus-ring);
     outline-offset: 1px;
   }
@@ -142,9 +159,20 @@ export const marketplaceHomeSearchUtilityStyles = css`
     line-height: 1.15;
   }
 
-  .marketplace-home.is-category-detail-page .marketplace-subcategory-row {
-    min-height: 44px;
+  .marketplace-home.is-category-detail-page .marketplace-search-strip {
+    min-height: 0;
     gap: 10px;
+    padding-top: 10px;
+    padding-bottom: 8px;
+  }
+
+  .marketplace-home.is-category-detail-page .marketplace-subcategory-row {
+    min-height: 46px;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--marketplace-category-filter-strip-border);
+    border-radius: 12px;
+    background: var(--marketplace-category-filter-strip-background);
   }
 
   .marketplace-home.is-category-detail-page .marketplace-subcategory-chips {
@@ -152,9 +180,9 @@ export const marketplaceHomeSearchUtilityStyles = css`
   }
 
   .marketplace-home.is-category-detail-page .marketplace-subcategory-chips button {
-    height: 32px;
-    padding: 0 13px;
-    font-size: 11px;
+    height: 34px;
+    padding: 0 14px;
+    font-size: 12px;
   }
 
   .marketplace-home.is-category-detail-page .marketplace-subcategory-chips button.is-active {
@@ -178,24 +206,32 @@ export const marketplaceHomeSearchUtilityStyles = css`
   }
 
   .marketplace-home.is-category-detail-page .marketplace-search-submit {
-    min-width: 104px;
-    height: 44px;
+    min-width: 112px;
+    height: 46px;
     border-radius: 10px;
   }
 
   .marketplace-home.is-category-detail-page .marketplace-category-filter-row {
-    min-height: 40px;
+    min-height: 44px;
     gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--marketplace-category-filter-strip-border);
+    border-radius: 12px;
+    background: var(--marketplace-category-filter-strip-background);
   }
 
-  .marketplace-home.is-category-detail-page .marketplace-category-filter-group button {
-    height: 32px;
-    padding: 0 12px;
+  .marketplace-home.is-category-detail-page .marketplace-category-filter-label {
     font-size: 11px;
   }
 
+  .marketplace-home.is-category-detail-page .marketplace-category-filter-chips button {
+    height: 34px;
+    padding: 0 13px;
+    font-size: 12px;
+  }
+
   .marketplace-home.is-light-theme .marketplace-subcategory-chips button:focus-visible,
-  .marketplace-home.is-light-theme .marketplace-category-filter-group button:focus-visible {
+  .marketplace-home.is-light-theme .marketplace-category-filter-chips button:focus-visible {
     outline-color: var(--marketplace-focus-ring);
   }
 
@@ -284,6 +320,12 @@ export const marketplaceHomeSearchUtilityStyles = css`
     padding: 0 18px;
     display: inline-flex;
     align-items: center;
+    transition: background-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .marketplace-home .marketplace-search-input:hover {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   }
 
   .marketplace-home .marketplace-search-input input {
@@ -321,7 +363,7 @@ export const marketplaceHomeSearchUtilityStyles = css`
     justify-content: center;
     white-space: nowrap;
     cursor: pointer;
-    transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+    transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
   }
 
   .marketplace-home .marketplace-search-submit {
@@ -348,14 +390,15 @@ export const marketplaceHomeSearchUtilityStyles = css`
     line-height: 1;
   }
 
-  .marketplace-home .marketplace-search-submit:hover:not(:disabled),
-  .marketplace-home .marketplace-search-filter-btn:hover {
-    filter: brightness(1.06);
+  .marketplace-home .marketplace-search-submit:hover:not(:disabled) {
+    background: #ffffff;
+    box-shadow: 0 8px 18px rgba(8, 12, 20, 0.24);
+    transform: translateY(-1px);
   }
 
-  .marketplace-home .marketplace-search-filter-btn:active,
   .marketplace-home .marketplace-search-submit:active:not(:disabled) {
     transform: translateY(1px);
+    box-shadow: none;
   }
 
   .marketplace-home .marketplace-search-filter-btn:focus-visible,

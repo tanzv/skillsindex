@@ -45,15 +45,16 @@ export const publicSkillDetailTopbarStyles = css`
   }
 
   .skill-detail-page .marketplace-topbar {
-    width: 100%;
+    width: var(--skill-detail-content-width);
+    margin: 0 auto;
     height: 86px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-    background: linear-gradient(180deg, #171717 0%, #12151b 100%);
+    border-bottom: 0;
+    background: linear-gradient(180deg, var(--skill-detail-bg-top) 0%, var(--skill-detail-bg-top-end) 100%);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 0 12px;
+    padding: 0;
   }
 
   .skill-detail-page .marketplace-topbar-left-group {
@@ -79,8 +80,8 @@ export const publicSkillDetailTopbarStyles = css`
     width: 30px;
     height: 30px;
     border-radius: 10px;
-    background: #2a2a2a;
-    color: #e5e5e5;
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-primary);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -101,14 +102,14 @@ export const publicSkillDetailTopbarStyles = css`
     font-size: 26px;
     line-height: 1;
     font-weight: 700;
-    color: #f1f1f1;
+    color: var(--skill-detail-text-primary);
   }
 
   .skill-detail-page .marketplace-topbar-brand-copy small {
     font-size: 11px;
     line-height: 1;
     font-weight: 600;
-    color: #b3b3b3;
+    color: var(--skill-detail-text-muted);
   }
 
   .skill-detail-page .marketplace-topbar-light-nav {
@@ -275,14 +276,14 @@ export const publicSkillDetailTopbarStyles = css`
   }
 
   .skill-detail-page .marketplace-topbar-status {
-    background: #2a2a2a;
-    color: #d4d4d4;
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-secondary);
     font-weight: 600;
   }
 
   .skill-detail-page .marketplace-topbar-cta {
-    background: #111111;
-    color: #e5e5e5;
+    background: var(--skill-detail-accent-bg);
+    color: var(--skill-detail-accent-text);
     font-weight: 700;
     cursor: pointer;
     transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
@@ -293,12 +294,11 @@ export const publicSkillDetailTopbarStyles = css`
   }
 
   .skill-detail-page .marketplace-topbar-brand:hover .marketplace-topbar-brand-dot {
-    background: #343438;
+    background: var(--skill-detail-surface-2);
   }
 
   .skill-detail-page .marketplace-topbar-cta:hover {
-    background: #1c1d22;
-    color: #f1f1f1;
+    filter: brightness(0.95);
   }
 
   .skill-detail-page .marketplace-topbar-cta:active {
@@ -308,7 +308,7 @@ export const publicSkillDetailTopbarStyles = css`
   .skill-detail-page .marketplace-topbar-locale-switch {
     height: 30px;
     border-radius: 9px;
-    background: #1f1f1f;
+    background: var(--skill-detail-surface-1);
     padding: 4px;
     display: inline-flex;
     align-items: center;
@@ -321,7 +321,7 @@ export const publicSkillDetailTopbarStyles = css`
     gap: 4px;
     margin-right: 2px;
     padding-right: 6px;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid var(--skill-detail-border);
   }
 
   .skill-detail-page .marketplace-topbar-locale-switch button {
@@ -330,8 +330,8 @@ export const publicSkillDetailTopbarStyles = css`
     height: 22px;
     border-radius: 6px;
     padding: 0;
-    background: #2a2a2a;
-    color: #d4d4d4;
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-secondary);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -343,14 +343,13 @@ export const publicSkillDetailTopbarStyles = css`
 
   .skill-detail-page .marketplace-topbar-locale-switch button.is-active,
   .skill-detail-page .marketplace-topbar-locale-switch button:disabled {
-    background: #2d2d2d;
-    color: #f1f1f1;
+    background: var(--skill-detail-accent-bg);
+    color: var(--skill-detail-accent-text);
     cursor: default;
   }
 
   .skill-detail-page .marketplace-topbar-locale-switch button:not(:disabled):hover {
-    background: #343438;
-    color: #f1f1f1;
+    filter: brightness(0.96);
   }
 
   .skill-detail-page .marketplace-topbar-locale-switch .is-icon-toggle .anticon {
@@ -359,115 +358,113 @@ export const publicSkillDetailTopbarStyles = css`
   }
 
   .skill-detail-page .marketplace-topbar-locale-switch .is-theme-toggle {
-    background: #262626;
-    color: #d4d4d4;
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-secondary);
   }
 
   .skill-detail-page .marketplace-topbar-locale-switch .is-theme-toggle.is-active,
   .skill-detail-page .marketplace-topbar-locale-switch .is-theme-toggle:disabled {
-    background: #d6d6d6;
-    color: #111111;
+    background: var(--skill-detail-accent-bg);
+    color: var(--skill-detail-accent-text);
   }
 
   .skill-detail-page .marketplace-topbar-locale-switch .is-theme-toggle:not(:disabled):hover {
-    background: #343438;
-    color: #f1f1f1;
+    filter: brightness(0.96);
   }
 
   .skill-detail-page .marketplace-topbar-brand:focus-visible,
   .skill-detail-page .marketplace-topbar-cta:focus-visible {
-    outline: 2px solid #3b82f6;
+    outline: 2px solid var(--skill-detail-focus-ring);
     outline-offset: 2px;
   }
 
   .skill-detail-page .marketplace-topbar-nav-button:focus-visible,
   .skill-detail-page .marketplace-topbar-utility-button:focus-visible,
   .skill-detail-page .marketplace-topbar-locale-switch button:focus-visible {
-    outline: 2px solid #3b82f6;
+    outline: 2px solid var(--skill-detail-focus-ring);
     outline-offset: 1px;
   }
 
   .skill-detail-page.is-light .marketplace-topbar {
-    border-bottom-color: #dbe4ee;
-    background: linear-gradient(180deg, #ffffff 0%, #f6f8fb 100%);
+    background: linear-gradient(180deg, var(--skill-detail-bg-top) 0%, var(--skill-detail-bg-top-end) 100%);
   }
 
   .skill-detail-page.is-light .marketplace-topbar-brand-dot {
-    background: #d7dee9;
-    color: #2f4660;
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-secondary);
   }
 
   .skill-detail-page.is-light .marketplace-topbar-brand-copy strong {
     font-size: 16px;
     font-weight: 800;
-    color: #14263d;
+    color: var(--skill-detail-text-primary);
   }
 
   .skill-detail-page.is-light .marketplace-topbar-brand-copy small {
-    color: #3f5671;
+    color: var(--skill-detail-text-muted);
   }
 
   .skill-detail-page.is-light .marketplace-topbar-status {
-    background: #e2e8f0;
-    color: #334155;
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-secondary);
   }
 
   .skill-detail-page.is-light .marketplace-topbar-cta {
-    background: #1f2937;
-    color: #f8fafc;
+    background: var(--skill-detail-accent-bg);
+    color: var(--skill-detail-accent-text);
   }
 
   .skill-detail-page.is-light .marketplace-topbar-locale-switch {
-    background: #e8edf5;
+    background: var(--skill-detail-surface-1);
   }
 
   .skill-detail-page.is-light {
-    --marketplace-nav-shell-background: rgba(148, 163, 184, 0.12);
-    --marketplace-nav-shell-border: rgba(148, 163, 184, 0.28);
-    --marketplace-nav-button-text: #334155;
-    --marketplace-nav-button-subtle-text: #64748b;
-    --marketplace-nav-button-hover-background: rgba(148, 163, 184, 0.18);
+    --marketplace-nav-shell-background: rgba(15, 23, 42, 0.05);
+    --marketplace-nav-shell-border: rgba(15, 23, 42, 0.14);
+    --marketplace-nav-button-text: #293241;
+    --marketplace-nav-button-subtle-text: #556070;
+    --marketplace-nav-button-hover-background: rgba(15, 23, 42, 0.08);
     --marketplace-nav-button-active-background: #1f2937;
     --marketplace-nav-button-active-text: #f8fafc;
-    --marketplace-nav-button-highlight-background: rgba(59, 130, 246, 0.18);
-    --marketplace-nav-badge-background: rgba(37, 99, 235, 0.2);
-    --marketplace-nav-badge-text: #1d4ed8;
-    --marketplace-nav-category-hover-border: rgba(59, 130, 246, 0.38);
-    --marketplace-nav-ranking-background: rgba(37, 99, 235, 0.12);
-    --marketplace-nav-ranking-border: rgba(37, 99, 235, 0.25);
-    --marketplace-nav-ranking-text: #1e40af;
-    --marketplace-utility-shell-background: rgba(148, 163, 184, 0.1);
-    --marketplace-utility-shell-border: rgba(148, 163, 184, 0.24);
+    --marketplace-nav-button-highlight-background: rgba(15, 23, 42, 0.1);
+    --marketplace-nav-badge-background: rgba(15, 23, 42, 0.16);
+    --marketplace-nav-badge-text: #1f2937;
+    --marketplace-nav-category-hover-border: rgba(15, 23, 42, 0.2);
+    --marketplace-nav-ranking-background: rgba(15, 23, 42, 0.08);
+    --marketplace-nav-ranking-border: rgba(15, 23, 42, 0.16);
+    --marketplace-nav-ranking-text: #1f2937;
+    --marketplace-utility-shell-background: rgba(15, 23, 42, 0.04);
+    --marketplace-utility-shell-border: rgba(15, 23, 42, 0.12);
     --marketplace-utility-button-background: #ffffff;
-    --marketplace-utility-button-border: rgba(148, 163, 184, 0.3);
-    --marketplace-utility-button-text: #334155;
-    --marketplace-utility-button-subtle-text: #475569;
-    --marketplace-utility-button-hover-background: rgba(226, 232, 240, 0.8);
+    --marketplace-utility-button-border: rgba(15, 23, 42, 0.14);
+    --marketplace-utility-button-text: #293241;
+    --marketplace-utility-button-subtle-text: #556070;
+    --marketplace-utility-button-hover-background: rgba(15, 23, 42, 0.08);
   }
 
   .skill-detail-page.is-light .marketplace-topbar-theme-switch {
-    border-right-color: rgba(15, 23, 42, 0.14);
+    border-right-color: var(--skill-detail-border);
   }
 
   .skill-detail-page.is-light .marketplace-topbar-locale-switch button {
-    background: #ffffff;
-    color: #334155;
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-secondary);
   }
 
   .skill-detail-page.is-light .marketplace-topbar-locale-switch button.is-active,
   .skill-detail-page.is-light .marketplace-topbar-locale-switch button:disabled {
-    background: #dbe4ee;
-    color: #14263d;
+    background: var(--skill-detail-accent-bg);
+    color: var(--skill-detail-accent-text);
   }
 
   .skill-detail-page.is-light .marketplace-topbar-locale-switch .is-theme-toggle {
-    background: #f2f6fc;
-    color: #475569;
+    background: var(--skill-detail-surface-3);
+    color: var(--skill-detail-text-secondary);
   }
 
   .skill-detail-page.is-light .marketplace-topbar-locale-switch .is-theme-toggle.is-active,
   .skill-detail-page.is-light .marketplace-topbar-locale-switch .is-theme-toggle:disabled {
-    background: #1f2937;
-    color: #ffffff;
+    background: var(--skill-detail-accent-bg);
+    color: var(--skill-detail-accent-text);
   }
 `;

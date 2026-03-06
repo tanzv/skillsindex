@@ -129,3 +129,73 @@ func TestOAuthGrantRevoke(t *testing.T) {
 		t.Fatalf("expected ErrOAuthGrantNotFound after revoke, got: %v", err)
 	}
 }
+
+func TestOAuthGrantListByProviders(t *testing.T) {
+	db := setupOAuthGrantServiceTestDB(t)
+	svc := NewOAuthGrantService(db)
+
+	firstUser := models.User{
+		Username:     "oauth-user-first",
+		PasswordHash: "hash",
+		Role:         models.RoleMember,
+	}
+	secondUser := models.User{
+		Username:     "oauth-user-second",
+		PasswordHash: "hash",
+		Role:         models.RoleMember,
+	}
+	if err := db.Create(&firstUser).Error; err != nil {
+		t.Fatalf("failed to create first user: %v", err)
+	}
+	if err := db.Create(&secondUser).Error; err != nil {
+		t.Fatalf("failed to create second user: %v", err)
+	}
+
+	now := time.Now().UTC().Add(1 * time.Hour)
+	if _, err := svc.UpsertGrant(context.Background(), UpsertOAuthGrantInput{
+		UserID:         firstUser.ID,
+		Provider:       models.OAuthProviderDingTalkSync,
+		ExternalUserID: "dd-1001",
+		AccessToken:    "token-dd",
+		ExpiresAt:      now,
+	}); err != nil {
+		t.Fatalf("failed to create dingtalk sync grant: %v", err)
+	}
+	if _, err := svc.UpsertGrant(context.Background(), UpsertOAuthGrantInput{
+		UserID:         secondUser.ID,
+		Provider:       models.OAuthProviderFeishuSync,
+		ExternalUserID: "fs-1001",
+		AccessToken:    "token-fs",
+		ExpiresAt:      now,
+	}); err != nil {
+		t.Fatalf("failed to create feishu sync grant: %v", err)
+	}
+	if _, err := svc.UpsertGrant(context.Background(), UpsertOAuthGrantInput{
+		UserID:         secondUser.ID,
+		Provider:       models.OAuthProviderDingTalk,
+		ExternalUserID: "dd-personal-1",
+		AccessToken:    "token-dd-personal",
+		ExpiresAt:      now,
+	}); err != nil {
+		t.Fatalf("failed to create dingtalk personal grant: %v", err)
+	}
+
+	grants, err := svc.ListGrantsByProviders(context.Background(), []models.OAuthProvider{
+		models.OAuthProviderFeishuSync,
+		models.OAuthProviderDingTalkSync,
+	})
+	if err != nil {
+		t.Fatalf("list grants failed: %v", err)
+	}
+	if len(grants) != 2 {
+		t.Fatalf("unexpected grant count: got=%d want=2", len(grants))
+	}
+
+	seen := map[models.OAuthProvider]bool{}
+	for _, item := range grants {
+		seen[item.Provider] = true
+	}
+	if !seen[models.OAuthProviderFeishuSync] || !seen[models.OAuthProviderDingTalkSync] {
+		t.Fatalf("expected feishu_sync and dingtalk_sync grants, got=%#v", seen)
+	}
+}

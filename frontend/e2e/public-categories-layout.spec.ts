@@ -88,6 +88,10 @@ test.describe("Public categories layout", () => {
     const topbarThemeLightSwitch = page.getByTestId("topbar-theme-switch-light");
     const topbarLocaleZhSwitch = page.getByTestId("topbar-locale-switch-zh");
     const topbarLocaleEnSwitch = page.getByTestId("topbar-locale-switch-en");
+    const topbarWorkspaceCta = page.locator(".marketplace-home .marketplace-topbar-secondary-cta").first();
+    const topbarAuthCta = page.locator(".marketplace-home .marketplace-topbar-cta").first();
+    const categoriesBreadcrumbHome = page.getByTestId("categories-page-breadcrumb-home");
+    const categoriesBreadcrumbCurrent = page.getByTestId("categories-page-breadcrumb-current");
     const firstCategoryCard = page.locator(".marketplace-home .marketplace-skill-row").first();
     const firstCategoryIconPlaceholder = page.getByTestId("category-icon-placeholder").first();
     const firstCategoryCardCountChip = page.locator(".marketplace-home .marketplace-card-cover-chip").first();
@@ -102,6 +106,12 @@ test.describe("Public categories layout", () => {
     await expect(topbarThemeLightSwitch).toBeVisible();
     await expect(topbarLocaleZhSwitch).toBeVisible();
     await expect(topbarLocaleEnSwitch).toBeVisible();
+    await expect(topbarWorkspaceCta).toBeVisible();
+    await expect(topbarWorkspaceCta).toHaveText("Workspace");
+    await expect(topbarAuthCta).toBeVisible();
+    await expect(topbarAuthCta).toHaveText("Sign In");
+    await expect(categoriesBreadcrumbHome).toBeVisible();
+    await expect(categoriesBreadcrumbCurrent).toHaveText("Categories");
     await expect(page.getByTestId("public-global-controls")).toHaveCount(0);
     await expect(firstCategoryCard).toBeVisible();
     await expect(firstCategoryIconPlaceholder).toHaveText("TA");
@@ -144,7 +154,11 @@ test.describe("Public categories layout", () => {
     const subcategoryButtons = subcategoryFilterRow.locator(".marketplace-subcategory-chips button");
     const sortByStarsButton = categoryFilterRow.getByRole("button", { name: "Sort: Stars" });
     const modeAiButton = categoryFilterRow.getByRole("button", { name: "Mode: AI" });
+    const resultsToolbarTitle = page.locator(".marketplace-home.is-category-detail-page .marketplace-results-toolbar h2").first();
     const resultsToolbarChips = page.locator(".marketplace-home.is-category-detail-page .marketplace-results-toolbar .marketplace-toolbar-chips span");
+    const categoryDetailBreadcrumbHome = page.getByTestId("category-detail-breadcrumb-home");
+    const categoryDetailBreadcrumbCategories = page.getByTestId("category-detail-breadcrumb-categories");
+    const categoryDetailBreadcrumbCurrent = page.getByTestId("category-detail-breadcrumb-current");
 
     await expect(subcategoryFilterRow).toBeVisible();
     await expect(categoryFilterRow).toBeVisible();
@@ -154,10 +168,13 @@ test.describe("Public categories layout", () => {
     await expect(allSubcategoriesButton).toBeVisible();
     await expect(sortByStarsButton).toBeVisible();
     await expect(modeAiButton).toBeVisible();
-    await expect(resultsToolbarChips.nth(0)).toHaveText(/Sort:.*24\/page/);
-    await expect(resultsToolbarChips.nth(1)).toHaveText("Export CSV");
-    await expect(resultsToolbarChips.nth(2)).toHaveText("Copy Cmd");
-    await expect(resultsToolbarChips.nth(3)).toHaveText("HD");
+    await expect(categoryDetailBreadcrumbHome).toBeVisible();
+    await expect(categoryDetailBreadcrumbCategories).toHaveText("Categories");
+    await expect(categoryDetailBreadcrumbCurrent).toContainText("Testing Automation");
+    await expect(resultsToolbarTitle).toContainText("Testing Automation");
+    await expect(resultsToolbarTitle).not.toHaveText("Category Results");
+    await expect(resultsToolbarTitle).toContainText(/Matched \d+/);
+    await expect(resultsToolbarChips).toHaveCount(0);
 
     const hasLargeGapBetweenSearchAndResults = await page.evaluate(() => {
       const searchStripElement = document.querySelector(".marketplace-home.is-category-detail-page .marketplace-search-strip");

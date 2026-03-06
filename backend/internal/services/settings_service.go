@@ -17,6 +17,8 @@ const (
 	SettingAllowRegistration = "allow_registration"
 	// SettingAuthEnabledProviders controls which third-party auth providers are visible on auth pages.
 	SettingAuthEnabledProviders = "auth_enabled_providers"
+	// SettingUserCenterPermissionOverrides stores per-user permissions for user center operations.
+	SettingUserCenterPermissionOverrides = "user_center_permission_overrides"
 )
 
 // SettingsService manages mutable system-level settings stored in database.

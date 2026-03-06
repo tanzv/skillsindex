@@ -85,9 +85,6 @@ export function resolveLegacyPublicRouteRedirect(pathname: string, search = "", 
   const normalizedHash = normalizeHash(hash);
 
   const { prefix, corePath } = splitPublicPrefix(pathname);
-  if (corePath === "/docs") {
-    return `${withPublicPrefix(prefix, "/categories")}${normalizedSearch}${normalizedHash}`;
-  }
   if (corePath === "/compare") {
     return `${withPublicPrefix(prefix, "/rankings")}${normalizedSearch}${normalizedHash}`;
   }

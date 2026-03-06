@@ -164,6 +164,38 @@ func (s *OAuthGrantService) FindUserByExternalID(
 	return user, nil
 }
 
+// ListGrantsByProviders returns grants filtered by provider list.
+func (s *OAuthGrantService) ListGrantsByProviders(
+	ctx context.Context,
+	providers []models.OAuthProvider,
+) ([]models.OAuthGrant, error) {
+	normalized := make([]string, 0, len(providers))
+	seen := map[string]struct{}{}
+	for _, provider := range providers {
+		value := strings.ToLower(strings.TrimSpace(string(provider)))
+		if value == "" {
+			continue
+		}
+		if _, exists := seen[value]; exists {
+			continue
+		}
+		seen[value] = struct{}{}
+		normalized = append(normalized, value)
+	}
+	if len(normalized) == 0 {
+		return []models.OAuthGrant{}, nil
+	}
+
+	var grants []models.OAuthGrant
+	if err := s.db.WithContext(ctx).
+		Where("provider IN ?", normalized).
+		Order("updated_at DESC").
+		Find(&grants).Error; err != nil {
+		return nil, fmt.Errorf("failed to list oauth grants by providers: %w", err)
+	}
+	return grants, nil
+}
+
 // RevokeGrant removes a user-provider grant.
 func (s *OAuthGrantService) RevokeGrant(ctx context.Context, userID uint, provider models.OAuthProvider) error {
 	result := s.db.WithContext(ctx).

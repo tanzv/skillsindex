@@ -12,14 +12,11 @@ import {
 } from "../lib/api";
 import { AppLocale } from "../lib/i18n";
 import type { ThemeMode } from "../lib/themeModePath";
-import {
-  TopbarActionItem,
-  buildLightTopbarPrimaryActions,
-  buildLightTopbarUtilityActions
-} from "./MarketplaceHomePage.lightTopbar";
+import MarketplacePageBreadcrumb, { type MarketplacePageBreadcrumbItem } from "../components/MarketplacePageBreadcrumb";
+import { buildMarketplaceTopbarActionBundle } from "./MarketplaceHomePage.lightTopbar";
 import MarketplaceHomeLocaleThemeSwitch from "./MarketplaceHomeLocaleThemeSwitch";
 import { marketplaceHomeCopy } from "./MarketplaceHomePage.copy";
-import PublicSkillDetailBreadcrumb from "./PublicSkillDetailBreadcrumb";
+import { buildMarketplaceWorkspaceAuthRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
 import { publicSkillDetailCopy } from "./PublicSkillDetailPage.copy";
 import PublicSkillDetailFileBrowser from "./PublicSkillDetailPage.fileBrowser";
 import PublicSkillDetailInteractionPanel from "./PublicSkillDetailPage.interactionPanel";
@@ -36,42 +33,47 @@ import {
   buildPrototypeSkillDetailSkill,
   buildSkillDetailViewModel,
   resolveFileIndexForPreset,
-  resolvePresetForFileName,
   resolveSkillDetailDataMode
 } from "./PublicSkillDetailPage.helpers";
+import {
+  buildSkillFilePath,
+  copyInstallCommand,
+  copySkillFilePath,
+  openSkillSource
+} from "./publicSkillDetail/PublicSkillDetailInstallActions";
+import {
+  deleteCommentInteraction,
+  submitCommentInteraction,
+  submitRatingInteraction,
+  toggleFavoriteInteraction
+} from "./publicSkillDetail/PublicSkillDetailInteractionActions";
+import {
+  resolveFilePresetLabel,
+  resolveInteractionFeedbackMessage,
+  scrollToFileContent
+} from "./publicSkillDetail/PublicSkillDetailPageViewHelpers";
 import { resolveSkillDetailLoadFailure } from "./PublicSkillDetailPage.loadState";
 import type { SkillDetailLoadStatus } from "./PublicSkillDetailPage.loadState";
 import PublicSkillDetailPageStyles from "./PublicSkillDetailPage.styles";
-import PublicStandardTopbar from "./PublicStandardTopbar";
+import MarketplaceTopbar from "./MarketplaceTopbar";
 import { createPublicPageNavigator } from "./publicPageNavigation";
 import { isLightPrototypePath } from "./prototypePageTheme";
-
 interface PublicSkillDetailPageProps {
   locale: AppLocale;
   skillID: number;
   onNavigate: (path: string) => void;
   sessionUser: SessionUser | null;
+  onLogout?: () => Promise<void> | void;
   onThemeModeChange?: (nextMode: ThemeMode) => void;
   onLocaleChange?: (nextLocale: AppLocale) => void;
 }
-
 type PresetKey = SkillDetailPresetKey;
-
-function resolveFilePresetLabel(preset: PresetKey): string {
-  if (preset === "readme") {
-    return "README.md";
-  }
-  if (preset === "changelog") {
-    return "CHANGELOG.md";
-  }
-  return "SKILL.md";
-}
-
 export default function PublicSkillDetailPage({
   locale,
   skillID,
   onNavigate,
   sessionUser,
+  onLogout,
   onThemeModeChange,
   onLocaleChange
 }: PublicSkillDetailPageProps) {
@@ -85,7 +87,6 @@ export default function PublicSkillDetailPage({
     () => resolveSkillDetailDataMode(import.meta.env.VITE_MARKETPLACE_HOME_MODE, modeOverride),
     [modeOverride]
   );
-
   const [skill, setSkill] = useState<MarketplaceSkill | null>(null);
   const [loadStatus, setLoadStatus] = useState<SkillDetailLoadStatus>("loading");
   const [error, setError] = useState("");
@@ -99,6 +100,7 @@ export default function PublicSkillDetailPage({
   const [viewerState, setViewerState] = useState(defaultSkillViewerState);
   const [comments, setComments] = useState<PublicSkillDetailComment[]>([]);
   const commentComposerRef = useRef<HTMLTextAreaElement | null>(null);
+  const interactionBusyLockRef = useRef(false);
 
   function applyInteractionSnapshot() {
     setInteractionStats(defaultSkillInteractionStats);
@@ -192,58 +194,60 @@ export default function PublicSkillDetailPage({
   }
 
   async function handleCopyCommand() {
-    const installCommand = String(activeSkill?.install_command || "").trim();
-    if (!installCommand || !navigator?.clipboard) {
+    const status = await copyInstallCommand({
+      skill: activeSkill,
+      clipboard: navigator?.clipboard
+    });
+    if (status === "success") {
+      setFeedback(text.copied);
+      return;
+    }
+    if (status === "missing_command") {
       setFeedback(text.copyFailed);
       return;
     }
-
-    try {
-      await navigator.clipboard.writeText(installCommand);
-      setFeedback(text.copied);
-    } catch {
-      setFeedback(text.copyFailed);
-    }
+    setFeedback(text.copyFailed);
   }
 
   async function handleCopyPath() {
-    const selectedFile = detailModel.fileEntries[selectedFileIndex];
-    const selectedFileName = selectedFile?.name || "SKILL.md";
-    const filePath = `/${detailModel.repositorySlug}/${selectedFileName}`;
-    if (!navigator?.clipboard) {
-      setFeedback(text.copyFailed);
+    const selectedFileName = detailModel.fileEntries[selectedFileIndex]?.name || "SKILL.md";
+    const status = await copySkillFilePath({
+      repositorySlug: detailModel.repositorySlug,
+      selectedFileName,
+      clipboard: navigator?.clipboard
+    });
+    if (status === "success") {
+      setFeedback(text.copied);
       return;
     }
-
-    try {
-      await navigator.clipboard.writeText(filePath);
-      setFeedback(text.copied);
-    } catch {
-      setFeedback(text.copyFailed);
-    }
+    setFeedback(text.copyFailed);
   }
 
   function handleOpenSource() {
-    const targetURL = activeSkill?.source_url;
-    if (targetURL) {
-      window.open(targetURL, "_blank", "noopener,noreferrer");
+    const opened = openSkillSource({
+      sourceURL: activeSkill?.source_url,
+      openWindow: window.open
+    });
+    if (opened) {
       return;
     }
     setFeedback(text.copyFailed);
   }
 
   async function handleInstall() {
-    const installCommand = String(activeSkill?.install_command || "").trim();
-    if (!installCommand || !navigator?.clipboard) {
+    const status = await copyInstallCommand({
+      skill: activeSkill,
+      clipboard: navigator?.clipboard
+    });
+    if (status === "missing_command") {
       setFeedback(text.installCommandMissing);
       return;
     }
-    try {
-      await navigator.clipboard.writeText(installCommand);
+    if (status === "success") {
       setFeedback(text.installed);
-    } catch {
-      setFeedback(text.copyFailed);
+      return;
     }
+    setFeedback(text.copyFailed);
   }
 
   async function refreshLiveDetail() {
@@ -254,86 +258,116 @@ export default function PublicSkillDetailPage({
   }
 
   async function handleToggleFavorite() {
-    if (!viewerState.can_interact) {
-      setFeedback(text.signInToInteract);
-      return;
-    }
-    if (interactionBusy) {
-      return;
-    }
+    await executeBusyInteraction(async () => {
+      const outcome = await toggleFavoriteInteraction({
+        canInteract: viewerState.can_interact,
+        interactionBusy,
+        favorited: viewerState.favorited,
+        skillID,
+        setFavorite: setSkillFavorite,
+        refreshLiveDetail
+      });
+      if (outcome.status === "idle") {
+        return;
+      }
+      if (outcome.status === "blocked") {
+        setFeedback(resolveInteractionFeedbackMessage(text, outcome.feedback));
+        return;
+      }
+      if (outcome.status === "failure") {
+        setFeedback(outcome.error instanceof Error ? outcome.error.message : text.loadError);
+        return;
+      }
+      setFeedback(resolveInteractionFeedbackMessage(text, outcome.feedback));
+    });
+  }
 
-    const nextFavoriteState = !viewerState.favorited;
+  async function executeBusyInteraction(action: () => Promise<void>) {
+    if (interactionBusyLockRef.current) {
+      return;
+    }
+    interactionBusyLockRef.current = true;
     setInteractionBusy(true);
     try {
-      await setSkillFavorite(skillID, nextFavoriteState);
-      await refreshLiveDetail();
-      setFeedback(nextFavoriteState ? text.favoriteSaved : text.favoriteRemoved);
-    } catch (mutationError) {
-      setFeedback(mutationError instanceof Error ? mutationError.message : text.loadError);
+      await action();
     } finally {
+      interactionBusyLockRef.current = false;
       setInteractionBusy(false);
     }
   }
 
   async function handleSubmitRating() {
     const ratingScore = normalizeRatingScore(selectedRating || viewerState.rating);
-    if (!viewerState.can_interact) {
-      setFeedback(text.signInToInteract);
-      return;
-    }
-    if (ratingScore === 0 || interactionBusy) {
-      return;
-    }
-
-    setInteractionBusy(true);
-    try {
-      await submitSkillRating(skillID, ratingScore);
-      await refreshLiveDetail();
-      setFeedback(text.ratingSubmitted);
-    } catch (mutationError) {
-      setFeedback(mutationError instanceof Error ? mutationError.message : text.loadError);
-    } finally {
-      setInteractionBusy(false);
-    }
+    await executeBusyInteraction(async () => {
+      const outcome = await submitRatingInteraction({
+        canInteract: viewerState.can_interact,
+        interactionBusy,
+        ratingScore,
+        skillID,
+        submitRating: submitSkillRating,
+        refreshLiveDetail
+      });
+      if (outcome.status === "idle") {
+        return;
+      }
+      if (outcome.status === "blocked") {
+        setFeedback(resolveInteractionFeedbackMessage(text, outcome.feedback));
+        return;
+      }
+      if (outcome.status === "failure") {
+        setFeedback(outcome.error instanceof Error ? outcome.error.message : text.loadError);
+        return;
+      }
+      setFeedback(resolveInteractionFeedbackMessage(text, outcome.feedback));
+    });
   }
 
   async function handleSubmitComment() {
-    if (!viewerState.can_interact) {
-      setFeedback(text.signInToInteract);
-      return;
-    }
-    if (!isCommentDraftValid(commentDraft) || interactionBusy) {
-      setFeedback(text.commentInvalid);
-      return;
-    }
-
-    setInteractionBusy(true);
-    try {
-      await createSkillComment(skillID, commentDraft.trim());
+    await executeBusyInteraction(async () => {
+      const outcome = await submitCommentInteraction({
+        canInteract: viewerState.can_interact,
+        interactionBusy,
+        commentDraft,
+        isCommentDraftValid,
+        skillID,
+        createComment: createSkillComment,
+        refreshLiveDetail
+      });
+      if (outcome.status === "idle") {
+        return;
+      }
+      if (outcome.status === "blocked") {
+        setFeedback(resolveInteractionFeedbackMessage(text, outcome.feedback));
+        return;
+      }
+      if (outcome.status === "failure") {
+        setFeedback(outcome.error instanceof Error ? outcome.error.message : text.loadError);
+        return;
+      }
       setCommentDraft("");
-      await refreshLiveDetail();
-      setFeedback(text.commentPosted);
-    } catch (mutationError) {
-      setFeedback(mutationError instanceof Error ? mutationError.message : text.loadError);
-    } finally {
-      setInteractionBusy(false);
-    }
+      setFeedback(resolveInteractionFeedbackMessage(text, outcome.feedback));
+    });
   }
 
   async function handleDeleteComment(commentID: number) {
-    if (!viewerState.can_interact || interactionBusy) {
-      return;
-    }
-    setInteractionBusy(true);
-    try {
-      await deleteSkillComment(skillID, commentID);
-      await refreshLiveDetail();
-      setFeedback(text.commentDeleted);
-    } catch (mutationError) {
-      setFeedback(mutationError instanceof Error ? mutationError.message : text.loadError);
-    } finally {
-      setInteractionBusy(false);
-    }
+    await executeBusyInteraction(async () => {
+      const outcome = await deleteCommentInteraction({
+        canInteract: viewerState.can_interact,
+        interactionBusy,
+        commentID,
+        skillID,
+        deleteComment: deleteSkillComment,
+        refreshLiveDetail
+      });
+      if (outcome.status === "idle") {
+        return;
+      }
+      if (outcome.status === "failure") {
+        setFeedback(outcome.error instanceof Error ? outcome.error.message : text.loadError);
+        return;
+      }
+      setFeedback(resolveInteractionFeedbackMessage(text, outcome.feedback));
+    });
   }
 
   function handleViewChangeHistory() {
@@ -360,22 +394,14 @@ export default function PublicSkillDetailPage({
     setSelectedFileIndex((previousIndex) => resolveFileIndexForPreset(nextPreset, detailModel.fileEntries, previousIndex));
   }
 
-  function handleSelectFile(nextIndex: number) {
-    const nextEntry = detailModel.fileEntries[nextIndex];
-    if (!nextEntry) {
-      return;
-    }
-    setSelectedFileIndex(nextIndex);
-    setActivePreset(resolvePresetForFileName(nextEntry.name));
-  }
-
   const selectedFile = detailModel.fileEntries[selectedFileIndex] || detailModel.fileEntries[0];
   const selectedFileName = selectedFile?.name || "SKILL.md";
-  const selectedFilePath = `/${detailModel.repositorySlug}/${selectedFileName}`;
+  const selectedFilePath = buildSkillFilePath(detailModel.repositorySlug, selectedFileName);
   const selectedPresetLabel = selectedFile?.name || resolveFilePresetLabel(activePreset);
   const activePreviewLanguage = activePreset === "skill" ? detailModel.previewLanguage : "Markdown";
+  const topPresetAriaLabel = `${text.presetHint} · ${text.switchable}`;
   const activeSkillDisplayName = String(activeSkill?.name || "").trim() || text.title;
-  const breadcrumbItems = useMemo(
+  const breadcrumbItems = useMemo<MarketplacePageBreadcrumbItem[]>(
     () => [
       {
         key: "marketplace",
@@ -404,33 +430,44 @@ export default function PublicSkillDetailPage({
   );
   const toPublicPath = routeNavigator.toPublic;
   const topbarCopy = marketplaceHomeCopy[locale] || marketplaceHomeCopy.en;
-  const lightTopbarPrimaryActions = useMemo<TopbarActionItem[]>(
+  function handleTopbarAuthAction(): void {
+    if (sessionUser) {
+      void onLogout?.();
+      return;
+    }
+    onNavigate(toPublicPath("/login"));
+  }
+
+  function handleTopbarConsoleAction(): void {
+    onNavigate("/workspace");
+  }
+  const topbarActionBundle = useMemo(
     () =>
-      buildLightTopbarPrimaryActions({
+      buildMarketplaceTopbarActionBundle({
         onNavigate,
         toPublicPath,
-        primaryPreset: "compact",
-        labels: {
-          categoryNav: topbarCopy.categoryNav,
-          downloadRankingNav: topbarCopy.downloadRankingNav
-        }
+        locale,
+        hasSessionUser: Boolean(sessionUser),
+        authActionLabel: sessionUser ? topbarCopy.signOut : topbarCopy.signIn,
+        onAuthAction: handleTopbarAuthAction
       }),
-    [onNavigate, toPublicPath, topbarCopy.categoryNav, topbarCopy.downloadRankingNav]
-  );
-  const lightTopbarUtilityActions = useMemo<TopbarActionItem[]>(
-    () =>
-      buildLightTopbarUtilityActions({
-        onNavigate,
-        toPublicPath,
-        hasSessionUser: Boolean(sessionUser)
-      }),
-    [onNavigate, sessionUser, toPublicPath]
+    [handleTopbarAuthAction, locale, onNavigate, sessionUser, toPublicPath, topbarCopy.signIn, topbarCopy.signOut]
   );
   const topbarThemeMode: ThemeMode = lightMode ? "light" : "dark";
-  const topbarBrandTitle = lightMode ? "SkillsIndex" : topbarCopy.brandTitle;
-  const topbarBrandSubtitle = lightMode ? "User Portal" : topbarCopy.brandSubtitle;
-  const topbarCtaPath = sessionUser ? toPublicPath("/workspace") : toPublicPath("/login");
-  const topActionsDisabled = loadStatus !== "ready" || !activeSkill;
+  const topbarBrandTitle = "SkillsIndex";
+  const topbarBrandSubtitle = topbarCopy.brandSubtitle;
+  const topbarRightRegistrations = useMemo(
+    () =>
+      buildMarketplaceWorkspaceAuthRightRegistrations({
+        sessionUser,
+        workspaceLabel: topbarCopy.openWorkspace,
+        signInLabel: topbarCopy.signIn,
+        signOutLabel: topbarCopy.signOut,
+        onWorkspaceClick: handleTopbarConsoleAction,
+        onAuthClick: handleTopbarAuthAction
+      }),
+    [handleTopbarAuthAction, handleTopbarConsoleAction, sessionUser, topbarCopy.openWorkspace, topbarCopy.signIn, topbarCopy.signOut]
+  );
   const stageStyle: CSSProperties = {
     width: "100%",
     minHeight: "100dvh"
@@ -440,18 +477,16 @@ export default function PublicSkillDetailPage({
     <div className={`skill-detail-stage${lightMode ? " is-light-stage" : ""}`} style={stageStyle} data-testid="skill-detail-stage">
       <PublicSkillDetailPageStyles />
       <section className={`skill-detail-page${lightMode ? " is-light" : ""}`} data-testid="skill-detail-page">
-        <PublicStandardTopbar
+        <MarketplaceTopbar
           shellClassName="animated-fade-down"
           dataAnimated
           brandTitle={topbarBrandTitle}
           brandSubtitle={topbarBrandSubtitle}
           onBrandClick={() => onNavigate(routeNavigator.toPublic("/"))}
           isLightTheme={lightMode}
-          primaryActions={lightTopbarPrimaryActions}
-          utilityActions={lightTopbarUtilityActions}
-          statusLabel={sessionUser ? topbarCopy.signedIn : topbarCopy.signedOut}
-          ctaLabel={sessionUser ? topbarCopy.openWorkspace : topbarCopy.signIn}
-          onCtaClick={() => onNavigate(topbarCtaPath)}
+          primaryActions={topbarActionBundle.primaryActions}
+          utilityActions={topbarActionBundle.utilityActions}
+          rightRegistrations={topbarRightRegistrations}
           localeThemeSwitch={
             <MarketplaceHomeLocaleThemeSwitch
               locale={locale}
@@ -465,7 +500,14 @@ export default function PublicSkillDetailPage({
         <header className="skill-detail-top">
           <div className="skill-detail-title-group">
             <h1 className="skill-detail-title">{activeSkillDisplayName}</h1>
-            <PublicSkillDetailBreadcrumb items={breadcrumbItems} />
+            <MarketplacePageBreadcrumb
+              items={breadcrumbItems}
+              ariaLabel="Skill detail breadcrumb"
+              className="skill-detail-breadcrumb"
+              buttonClassName="skill-detail-breadcrumb-button"
+              currentClassName="skill-detail-breadcrumb-current"
+              testIdPrefix="skill-detail-breadcrumb"
+            />
             <div className="skill-detail-meta-strip" aria-label="skill detail metadata">
               {topMetaEntries.map((entry) => (
                 <span key={entry.key} className={`skill-detail-meta-chip ${entry.tone}`}>
@@ -473,18 +515,36 @@ export default function PublicSkillDetailPage({
                 </span>
               ))}
             </div>
-          </div>
 
-          <div className="skill-detail-top-actions">
-            <button type="button" className="skill-detail-pill is-secondary-action" onClick={handleCopyCommand} disabled={topActionsDisabled}>
-              <span>{text.copyCommand}</span>
-            </button>
-            <button type="button" className="skill-detail-pill is-primary-action" onClick={handleInstall} disabled={topActionsDisabled}>
-              <span>{text.installWorkspace}</span>
-            </button>
-            <button type="button" className="skill-detail-pill is-neutral" onClick={handleOpenSource} disabled={topActionsDisabled}>
-              <span>{text.openOriginal}</span>
-            </button>
+            <div className="skill-detail-top-file-switch" role="tablist" aria-label={topPresetAriaLabel}>
+              <button
+                type="button"
+                className={`skill-detail-top-file-button${activePreset === "skill" ? " is-active" : ""}`}
+                onClick={() => handlePresetSwitch("skill")}
+                aria-pressed={activePreset === "skill"}
+              >
+                SKILL.md
+              </button>
+              <button
+                type="button"
+                className={`skill-detail-top-file-button${activePreset === "readme" ? " is-active" : ""}`}
+                onClick={() => handlePresetSwitch("readme")}
+                aria-pressed={activePreset === "readme"}
+              >
+                README.md
+              </button>
+              <button
+                type="button"
+                className={`skill-detail-top-file-button${activePreset === "changelog" ? " is-active" : ""}`}
+                onClick={() => handlePresetSwitch("changelog")}
+                aria-pressed={activePreset === "changelog"}
+              >
+                CHANGELOG.md
+              </button>
+              <button type="button" className="skill-detail-top-file-browse" onClick={() => scrollToFileContent()}>
+                {text.tabFiles}
+              </button>
+            </div>
           </div>
         </header>
 
@@ -502,12 +562,9 @@ export default function PublicSkillDetailPage({
               selectedFileIndex={selectedFileIndex}
               selectedFileName={selectedFileName}
               selectedFilePath={selectedFilePath}
-              selectedPresetLabel={selectedPresetLabel}
               text={text}
               onCopyPath={handleCopyPath}
               onOpenSource={handleOpenSource}
-              onPresetSwitch={handlePresetSwitch}
-              onSelectFile={handleSelectFile}
             />
 
             <PublicSkillDetailInteractionPanel

@@ -1,5 +1,6 @@
 import { SessionUser } from "../lib/api";
 import { AppLocale } from "../lib/i18n";
+import type { ThemeMode } from "../lib/themeModePath";
 import { resolvePrototypeRoute } from "../lib/prototypeRouteResolver";
 import type { PrototypeCatalogEntry } from "../lib/prototypeCatalog";
 import { extractSkillID } from "../lib/appPathnameResolver";
@@ -28,6 +29,9 @@ export interface PrototypeRouteRenderProps {
   entry: PrototypeCatalogEntry;
   onNavigate: (path: string) => void;
   sessionUser: SessionUser | null;
+  onThemeModeChange?: (nextMode: ThemeMode) => void;
+  onLocaleChange?: (nextLocale: AppLocale) => void;
+  onLogout?: () => Promise<void> | void;
 }
 
 export type PrototypeImplementationTarget =
@@ -162,6 +166,8 @@ export function renderPrototypeRouteContent(props: PrototypeRouteRenderProps) {
         locale={props.locale}
         sessionUser={props.sessionUser}
         onNavigate={props.onNavigate}
+        onThemeModeChange={props.onThemeModeChange}
+        onLocaleChange={props.onLocaleChange}
         locationKey={props.currentPath}
       />
     );
@@ -191,7 +197,17 @@ export function renderPrototypeRouteContent(props: PrototypeRouteRenderProps) {
   }
 
   if (target === "workspace") {
-    return <WorkspaceCenterPage locale={props.locale} currentPath={props.currentPath} onNavigate={props.onNavigate} sessionUser={props.sessionUser} />;
+    return (
+      <WorkspaceCenterPage
+        locale={props.locale}
+        currentPath={props.currentPath}
+        onNavigate={props.onNavigate}
+        sessionUser={props.sessionUser}
+        onThemeModeChange={props.onThemeModeChange}
+        onLocaleChange={props.onLocaleChange}
+        onLogout={props.onLogout}
+      />
+    );
   }
 
   if (target === "governance") {

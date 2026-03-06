@@ -92,6 +92,7 @@ func (a *App) Router() http.Handler {
 	r.Get("/auth/sso/callback/{provider}", a.handleSSOCallback)
 
 	r.Route("/api/v1/auth", func(apiAuth chi.Router) {
+		apiAuth.Get("/providers", a.handleAPIAuthProviders)
 		apiAuth.Get("/csrf", a.handleAPIAuthCSRF)
 		apiAuth.Post("/login", a.handleAPIAuthLogin)
 		apiAuth.Get("/me", a.handleAPIAuthMe)
@@ -203,6 +204,10 @@ func (a *App) Router() http.Handler {
 		private.Get("/api/v1/admin/settings/auth-providers", a.handleAPIAdminAuthProvidersSetting)
 		private.Post("/api/v1/admin/settings/auth-providers", a.handleAPIAdminAuthProvidersSettingUpdate)
 		private.Get("/api/v1/admin/accounts", a.handleAPIAdminAccounts)
+		private.Get("/api/v1/admin/user-center/accounts", a.handleAPIUserCenterAccounts)
+		private.Post("/api/v1/admin/user-center/sync", a.handleAPIUserCenterSync)
+		private.Get("/api/v1/admin/user-center/permissions/{userID}", a.handleAPIUserCenterPermissionsGet)
+		private.Post("/api/v1/admin/user-center/permissions/{userID}", a.handleAPIUserCenterPermissionsUpdate)
 		private.Post("/api/v1/admin/users/{userID}/role", a.handleAPIAdminUserRoleUpdate)
 		private.Post("/api/v1/admin/accounts/{userID}/status", a.handleAPIAdminAccountStatus)
 		private.Post("/api/v1/admin/accounts/{userID}/force-signout", a.handleAPIAdminAccountForceSignout)

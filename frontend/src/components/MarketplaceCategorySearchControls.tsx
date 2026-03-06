@@ -1,17 +1,21 @@
 import type { KeyboardEvent } from "react";
-import type { MarketplaceFilterForm } from "./MarketplaceHomePage.helpers";
-import type { MarketplaceText } from "./marketplaceText";
-import type { MarketplaceSubcategoryOption } from "./MarketplaceHomePage.subcategory";
-import type { MarketplaceCategoryDetailFilterOption } from "./MarketplaceCategoryDetailFilters.config";
-import MarketplaceGlobalSearchBar from "../components/MarketplaceGlobalSearchBar";
+import type { MarketplaceFilterForm } from "../pages/MarketplaceHomePage.helpers";
+import type { MarketplaceText } from "../pages/marketplaceText";
+import type { MarketplaceSubcategoryOption } from "../pages/MarketplaceHomePage.subcategory";
+import MarketplaceGlobalSearchBar from "./MarketplaceGlobalSearchBar";
 
-interface MarketplaceCategoryDetailFiltersProps {
+export interface MarketplaceCategoryFilterOption {
+  value: string;
+  label: string;
+}
+
+interface MarketplaceCategorySearchControlsProps {
   text: MarketplaceText;
   categoryName: string;
   form: MarketplaceFilterForm;
   categoryOptions: MarketplaceSubcategoryOption[];
-  sortOptions: MarketplaceCategoryDetailFilterOption[];
-  modeOptions: MarketplaceCategoryDetailFilterOption[];
+  sortOptions: MarketplaceCategoryFilterOption[];
+  modeOptions: MarketplaceCategoryFilterOption[];
   submitDisabled: boolean;
   onFilterFieldChange: (field: keyof MarketplaceFilterForm, value: string) => void;
   onSearchInputKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
@@ -21,7 +25,7 @@ interface MarketplaceCategoryDetailFiltersProps {
   onModeFilterApply: (modeValue: string) => void;
 }
 
-export default function MarketplaceCategoryDetailFilters({
+export default function MarketplaceCategorySearchControls({
   text,
   categoryName,
   form,
@@ -35,7 +39,7 @@ export default function MarketplaceCategoryDetailFilters({
   onSubcategoryFilterApply,
   onSortFilterApply,
   onModeFilterApply
-}: MarketplaceCategoryDetailFiltersProps) {
+}: MarketplaceCategorySearchControlsProps) {
   return (
     <>
       <section className="marketplace-category-heading" aria-label="Category detail heading">
@@ -74,6 +78,7 @@ export default function MarketplaceCategoryDetailFilters({
         onQueryKeyDown={onSearchInputKeyDown}
         submitLabel={text.search}
         onSubmit={onSearchSubmit}
+        showSubmitAction={false}
         submitDisabled={submitDisabled}
       />
 

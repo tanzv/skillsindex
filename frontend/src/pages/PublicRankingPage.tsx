@@ -3,11 +3,16 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { PublicMarketplaceResponse, SessionUser } from "../lib/api";
 import { AppLocale } from "../lib/i18n";
 import { ThemeMode } from "../lib/themeModePath";
+import MarketplacePageBreadcrumb, { type MarketplacePageBreadcrumbItem } from "../components/MarketplacePageBreadcrumb";
 import MarketplaceHomeLocaleThemeSwitch from "./MarketplaceHomeLocaleThemeSwitch";
-import { buildLightTopbarPrimaryActions, buildLightTopbarUtilityActions } from "./MarketplaceHomePage.lightTopbar";
+import {
+  buildMarketplaceTopbarActionBundle
+} from "./MarketplaceHomePage.lightTopbar";
+import { marketplaceHomeCopy } from "./MarketplaceHomePage.copy";
 import { buildMarketplaceFallback } from "./MarketplaceHomePage.fallback";
+import { buildMarketplaceWorkspaceAuthRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
 import MarketplaceHomePageStyles from "./MarketplaceHomePage.styles";
-import PublicStandardTopbar from "./PublicStandardTopbar";
+import MarketplaceTopbar from "./MarketplaceTopbar";
 import {
   PrototypeSplitRow,
   PrototypeUtilityHeaderActions,
@@ -34,6 +39,7 @@ import { resolvePublicRankingCopy } from "./PublicRankingPage.copy";
 export interface PublicRankingPageProps {
   locale: AppLocale;
   onNavigate: (path: string) => void;
+  onLogout?: () => Promise<void> | void;
   onThemeModeChange: (nextMode: ThemeMode) => void;
   onLocaleChange: (nextLocale: AppLocale) => void;
   sessionUser: SessionUser | null;
@@ -42,6 +48,7 @@ export interface PublicRankingPageProps {
 export default function PublicRankingPage({
   locale,
   onNavigate,
+  onLogout,
   onThemeModeChange,
   onLocaleChange,
   sessionUser
@@ -59,8 +66,10 @@ export default function PublicRankingPage({
   const isCompactLayout = viewport.width <= 900 && viewport.height >= 500;
   const isMobileLayout = isCompactLayout || /^\/mobile(\/|$)/.test(currentPath);
   const shellClassName = `prototype-shell marketplace-home-stage${isMobileLayout ? " is-mobile-stage" : ""}${lightTheme ? " is-light-stage" : ""}`;
-  const rootClassName = `marketplace-home${lightTheme ? " is-light-theme" : ""}${isMobileLayout ? " is-mobile" : ""}`;
+  const rootClassName = `marketplace-home is-ranking-page${lightTheme ? " is-light-theme" : ""}${isMobileLayout ? " is-mobile" : ""}`;
   const navigator = useMemo(() => createPublicPageNavigator(currentPath), [currentPath]);
+  const toPublicPath = navigator.toPublic;
+  const topbarLocaleCopy = useMemo(() => marketplaceHomeCopy[locale] || marketplaceHomeCopy.en, [locale]);
   const dataMode = useMemo(() => resolvePrototypeDataMode(import.meta.env.VITE_MARKETPLACE_HOME_MODE), []);
   const fallbackPayload = useMemo(
     () => buildMarketplaceFallback({ sort: "stars", page: 1 }, locale, sessionUser),
@@ -168,46 +177,72 @@ export default function PublicRankingPage({
     fontWeight: 700
   };
 
-  const topbarPrimaryActions = useMemo(
-    () =>
-      buildLightTopbarPrimaryActions({
-        onNavigate,
-        toPublicPath: navigator.toPublic,
-        labels: {
-          categoryNav: text.topbar.categoryNav,
-          downloadRankingNav: text.topbar.downloadRankingNav
-        },
-        activeActionID: "download-ranking"
-      }),
-    [navigator.toPublic, onNavigate, text.topbar.categoryNav, text.topbar.downloadRankingNav]
-  );
+  function handleTopbarAuthAction(): void {
+    if (sessionUser) {
+      void onLogout?.();
+      return;
+    }
+    onNavigate(toPublicPath("/login"));
+  }
 
-  const topbarUtilityActions = useMemo(
+  function handleTopbarConsoleAction(): void {
+    onNavigate("/workspace");
+  }
+
+  const topbarActionBundle = useMemo(
     () =>
-      buildLightTopbarUtilityActions({
+      buildMarketplaceTopbarActionBundle({
         onNavigate,
-        toPublicPath: navigator.toPublic,
-        hasSessionUser: Boolean(sessionUser)
+        toPublicPath,
+        locale,
+        hasSessionUser: Boolean(sessionUser),
+        activeActionID: "download-ranking",
+        authActionLabel: sessionUser ? topbarLocaleCopy.signOut : topbarLocaleCopy.signIn,
+        onAuthAction: handleTopbarAuthAction
       }),
-    [navigator.toPublic, onNavigate, sessionUser]
+    [handleTopbarAuthAction, locale, onNavigate, sessionUser, toPublicPath, topbarLocaleCopy.signIn, topbarLocaleCopy.signOut]
+  );
+  const topbarRightRegistrations = useMemo(
+    () =>
+      buildMarketplaceWorkspaceAuthRightRegistrations({
+        sessionUser,
+        workspaceLabel: topbarLocaleCopy.openWorkspace,
+        signInLabel: topbarLocaleCopy.signIn,
+        signOutLabel: topbarLocaleCopy.signOut,
+        onWorkspaceClick: handleTopbarConsoleAction,
+        onAuthClick: handleTopbarAuthAction
+      }),
+    [handleTopbarAuthAction, handleTopbarConsoleAction, sessionUser, topbarLocaleCopy.openWorkspace, topbarLocaleCopy.signIn, topbarLocaleCopy.signOut]
+  );
+  const breadcrumbItems = useMemo<MarketplacePageBreadcrumbItem[]>(
+    () => [
+      {
+        key: "home",
+        label: "SkillsIndex",
+        onClick: () => onNavigate(navigator.toPublic("/"))
+      },
+      {
+        key: "current",
+        label: text.title
+      }
+    ],
+    [navigator, onNavigate, text.title]
   );
 
   return (
     <div className={shellClassName}>
       <MarketplaceHomePageStyles />
       <div className={rootClassName}>
-        <PublicStandardTopbar
+        <MarketplaceTopbar
           shellClassName="animated-fade-down"
           dataAnimated
           brandTitle="SkillsIndex"
           brandSubtitle={text.topbar.brandSubtitle}
           onBrandClick={() => onNavigate(navigator.toPublic("/"))}
           isLightTheme={lightTheme}
-          primaryActions={topbarPrimaryActions}
-          utilityActions={topbarUtilityActions}
-          statusLabel={sessionUser ? text.topbar.signedIn : text.topbar.signedOut}
-          ctaLabel={sessionUser ? text.topbar.openWorkspace : text.topbar.signIn}
-          onCtaClick={() => onNavigate(sessionUser ? navigator.toPublic("/workspace") : navigator.toPublic("/login"))}
+          primaryActions={topbarActionBundle.primaryActions}
+          utilityActions={topbarActionBundle.utilityActions}
+          rightRegistrations={topbarRightRegistrations}
           localeThemeSwitch={
             <MarketplaceHomeLocaleThemeSwitch
               locale={locale}
@@ -219,6 +254,12 @@ export default function PublicRankingPage({
         />
 
         <PrototypeUtilityShell>
+          <MarketplacePageBreadcrumb
+            items={breadcrumbItems}
+            ariaLabel="Ranking page breadcrumb"
+            testIdPrefix="ranking-page-breadcrumb"
+          />
+
           {errorMessage ? <Alert type="warning" showIcon message={errorMessage} /> : null}
 
           {loading ? (

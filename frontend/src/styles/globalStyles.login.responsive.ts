@@ -1,9 +1,9 @@
 export const globalLoginStylesResponsive = `
 @media (max-width: 1400px) {
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-layout {
-    width: min(1120px, 100%);
-    grid-template-columns: minmax(0, 1fr) minmax(0, 500px);
-    align-items: center;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(420px, 480px);
+    align-items: stretch;
   }
 
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-compact-hint,
@@ -38,20 +38,22 @@ export const globalLoginStylesResponsive = `
   }
 
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-layout {
-    width: min(944px, 100%);
-    min-height: 0;
-    padding: 16px;
+    width: 100%;
+    min-height: 100dvh;
+    height: auto;
+    padding: 0;
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: 0;
+    overflow: auto;
   }
 
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .login-visual-panel {
     min-height: 0;
-    padding: 26px;
+    padding: 28px 24px 18px;
   }
 
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .login-form-panel {
-    padding: 22px;
+    padding: 24px 22px 28px;
   }
 
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-compact-hint {
@@ -79,17 +81,18 @@ export const globalLoginStylesResponsive = `
 
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-layout {
     width: 100%;
-    padding: 12px;
-    gap: 12px;
+    min-height: 100dvh;
+    padding: 0;
+    gap: 0;
   }
 
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .login-visual-panel {
-    padding: 18px;
+    padding: 22px 16px 14px;
     min-height: 0;
   }
 
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .login-form-panel {
-    padding: 16px;
+    padding: 18px 16px 22px;
   }
 
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .login-form-panel h2 {

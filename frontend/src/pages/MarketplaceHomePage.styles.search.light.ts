@@ -82,10 +82,20 @@ export const marketplaceHomeSearchLightStyles = css`
     background: #ffffff;
   }
 
+  .marketplace-home.is-light-theme .marketplace-search-input:hover {
+    background: #ffffff;
+    box-shadow: inset 0 0 0 1px rgba(17, 24, 39, 0.18);
+  }
+
   .marketplace-home.is-light-theme .marketplace-search-submit {
     border-color: transparent;
     background: #111111;
     color: #ffffff;
+  }
+
+  .marketplace-home.is-light-theme .marketplace-search-submit:hover:not(:disabled) {
+    background: #1f2937;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.2);
   }
 
   .marketplace-home.is-light-theme .marketplace-search-filter-btn {

@@ -20,12 +20,55 @@ type apiAuthUserResponse struct {
 	Status      string `json:"status"`
 }
 
+type apiAuthProviderItem struct {
+	Key       string `json:"key"`
+	StartPath string `json:"start_path"`
+}
+
+func authProviderStartPath(providerKey string) (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(providerKey)) {
+	case "dingtalk":
+		return "/auth/dingtalk/start", true
+	case "github", "google", "wecom", "microsoft":
+		return "/auth/sso/start/" + strings.ToLower(strings.TrimSpace(providerKey)), true
+	default:
+		return "", false
+	}
+}
+
+func (a *App) handleAPIAuthProviders(w http.ResponseWriter, r *http.Request) {
+	configured := a.buildAuthProviders(r.Context(), true)
+	items := make([]apiAuthProviderItem, 0, len(configured))
+	keys := make([]string, 0, len(configured))
+
+	for _, option := range configured {
+		if !option.Available {
+			continue
+		}
+		startPath, ok := authProviderStartPath(option.Key)
+		if !ok {
+			continue
+		}
+		keys = append(keys, option.Key)
+		items = append(items, apiAuthProviderItem{
+			Key:       option.Key,
+			StartPath: startPath,
+		})
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok":             true,
+		"auth_providers": keys,
+		"items":          items,
+	})
+}
+
 func (a *App) handleAPIAuthCSRF(w http.ResponseWriter, r *http.Request) {
 	token := ensureCSRFToken(w, r, a.cookieSecure)
 	if strings.TrimSpace(token) == "" {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{
 			"error":   "csrf_token_failed",
-			"message": "Failed to issue CSRF token",
+			"message": a.apiMessage(r, "api.auth.csrf_issue_failed", "Failed to issue CSRF token"),
 		})
 		return
 	}
@@ -38,7 +81,7 @@ func (a *App) handleAPIAuthLogin(w http.ResponseWriter, r *http.Request) {
 	if a.authService == nil {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
 			"error":   "service_unavailable",
-			"message": "Authentication service unavailable",
+			"message": a.apiMessage(r, "api.auth.service_unavailable", "Authentication service unavailable"),
 		})
 		return
 	}
@@ -47,7 +90,7 @@ func (a *App) handleAPIAuthLogin(w http.ResponseWriter, r *http.Request) {
 	if err := decodeJSONOrForm(r, &payload); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]any{
 			"error":   "invalid_payload",
-			"message": err.Error(),
+			"message": a.apiMessage(r, "api.auth.invalid_payload", "Invalid request payload"),
 		})
 		return
 	}
@@ -57,7 +100,7 @@ func (a *App) handleAPIAuthLogin(w http.ResponseWriter, r *http.Request) {
 	if username == "" || password == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]any{
 			"error":   "invalid_payload",
-			"message": "username and password are required",
+			"message": a.apiMessage(r, "api.auth.username_password_required", "Username and password are required"),
 		})
 		return
 	}
@@ -66,14 +109,14 @@ func (a *App) handleAPIAuthLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeJSON(w, http.StatusUnauthorized, map[string]any{
 			"error":   "unauthorized",
-			"message": "Invalid username or password",
+			"message": a.apiMessage(r, "api.auth.invalid_credentials", "Invalid username or password"),
 		})
 		return
 	}
 	if err := a.startUserSession(w, r, user.ID); err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{
 			"error":   "session_start_failed",
-			"message": "Failed to start session",
+			"message": a.apiMessage(r, "api.auth.session_start_failed", "Failed to start session"),
 		})
 		return
 	}
@@ -99,7 +142,7 @@ func (a *App) handleAPIAuthMe(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			writeJSON(w, http.StatusNotFound, map[string]any{
 				"error":   "user_not_found",
-				"message": "User not found",
+				"message": a.apiMessage(r, "api.auth.user_not_found", "User not found"),
 			})
 			return
 		}

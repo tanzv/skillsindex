@@ -96,6 +96,16 @@ func openAPIPathsPublicAuth() map[string]any {
 				},
 			},
 		},
+		"/api/v1/auth/providers": map[string]any{
+			"get": map[string]any{
+				"tags":        []string{"oauth"},
+				"summary":     "List configured third-party auth providers",
+				"description": "Public endpoint for login page to fetch enabled and currently available third-party providers.",
+				"responses": map[string]any{
+					"200": jsonResponse("Enabled and available auth providers", "AuthProvidersResponse"),
+				},
+			},
+		},
 		"/api/v1/auth/csrf": map[string]any{
 			"get": map[string]any{
 				"tags":        []string{"oauth"},

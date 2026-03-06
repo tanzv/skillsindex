@@ -235,6 +235,27 @@ func openAPISchemasCore() map[string]any {
 				},
 			},
 		},
+		"AuthProviderItem": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"key":        map[string]any{"type": "string"},
+				"start_path": map[string]any{"type": "string"},
+			},
+		},
+		"AuthProvidersResponse": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"ok": map[string]any{"type": "boolean"},
+				"auth_providers": map[string]any{
+					"type":  "array",
+					"items": map[string]any{"type": "string"},
+				},
+				"items": map[string]any{
+					"type":  "array",
+					"items": map[string]any{"$ref": "#/components/schemas/AuthProviderItem"},
+				},
+			},
+		},
 		"AccountProfileData": map[string]any{
 			"type": "object",
 			"properties": map[string]any{

@@ -14,7 +14,8 @@
     "test:visual:update-baseline": "node ./scripts/visual-regression/update-baseline.mjs",
     "test:visual:update-baseline:admin": "VISUAL_SCENARIO=admin-overview node ./scripts/visual-regression/update-baseline.mjs",
     "test:unit": "vitest run",
-    "test:unit:watch": "vitest"
+    "test:unit:watch": "vitest",
+    "test:visual:update-baseline:login": "VISUAL_SCENARIO=login node ./scripts/visual-regression/update-baseline.mjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",

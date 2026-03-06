@@ -1,3 +1,6 @@
+import type { AppLocale } from "../lib/i18n";
+import { marketplaceHomeCopy } from "./MarketplaceHomePage.copy";
+
 export type TopbarActionTone = "default" | "subtle" | "highlight";
 export type TopbarPrimaryPreset = "compact" | "full";
 
@@ -46,6 +49,27 @@ interface BuildLightTopbarUtilityActionsInput {
   extraUtilityActions?: TopbarActionItem[];
 }
 
+interface BuildMarketplaceTopbarPrimaryActionsInput {
+  onNavigate: (path: string) => void;
+  toPublicPath: (path: string) => string;
+  locale: AppLocale;
+  activeActionID?: string;
+  extraPrimaryActions?: TopbarActionItem[];
+}
+
+interface BuildMarketplaceTopbarActionBundleInput {
+  onNavigate: (path: string) => void;
+  toPublicPath: (path: string) => string;
+  locale: AppLocale;
+  hasSessionUser: boolean;
+  activeActionID?: string;
+  authActionLabel?: string;
+  onAuthAction?: () => void;
+  utilityLabels?: Pick<BuildLightTopbarLabels, "globalSearchNav" | "recentJobsNav" | "profileNav">;
+  extraPrimaryActions?: TopbarActionItem[];
+  extraUtilityActions?: TopbarActionItem[];
+}
+
 export interface NavigationActionSpec {
   id: string;
   label: string;
@@ -53,6 +77,11 @@ export interface NavigationActionSpec {
   tone?: TopbarActionTone;
   className?: string;
   badge?: string;
+}
+
+export interface MarketplaceTopbarActionBundle {
+  primaryActions: TopbarActionItem[];
+  utilityActions: TopbarActionItem[];
 }
 
 function withExtraActions(baseActions: TopbarActionItem[], extraActions: TopbarActionItem[] | undefined): TopbarActionItem[] {
@@ -80,6 +109,14 @@ function buildCompactPrimarySpecs(labels: BuildLightTopbarLabels): NavigationAct
       badge: "TOP"
     }
   ];
+}
+
+export function resolveMarketplaceTopbarPrimaryLabels(locale: AppLocale): Pick<BuildLightTopbarLabels, "categoryNav" | "downloadRankingNav"> {
+  const localizedCopy = marketplaceHomeCopy[locale] || marketplaceHomeCopy.en;
+  return {
+    categoryNav: localizedCopy.categoryNav,
+    downloadRankingNav: localizedCopy.downloadRankingNav
+  };
 }
 
 function buildFullPrimarySpecs(labels: BuildLightTopbarLabels): NavigationActionSpec[] {
@@ -191,6 +228,54 @@ export function buildLightTopbarPrimaryActions({
     activeActionID
   });
   return withExtraActions(baseActions, extraPrimaryActions);
+}
+
+export function buildMarketplaceTopbarPrimaryActions({
+  onNavigate,
+  toPublicPath,
+  locale,
+  activeActionID,
+  extraPrimaryActions
+}: BuildMarketplaceTopbarPrimaryActionsInput): TopbarActionItem[] {
+  return buildLightTopbarPrimaryActions({
+    onNavigate,
+    toPublicPath,
+    activeActionID,
+    labels: resolveMarketplaceTopbarPrimaryLabels(locale),
+    extraPrimaryActions
+  });
+}
+
+export function buildMarketplaceTopbarActionBundle({
+  onNavigate,
+  toPublicPath,
+  locale,
+  hasSessionUser,
+  activeActionID,
+  authActionLabel,
+  onAuthAction,
+  utilityLabels,
+  extraPrimaryActions,
+  extraUtilityActions
+}: BuildMarketplaceTopbarActionBundleInput): MarketplaceTopbarActionBundle {
+  return {
+    primaryActions: buildMarketplaceTopbarPrimaryActions({
+      onNavigate,
+      toPublicPath,
+      locale,
+      activeActionID,
+      extraPrimaryActions
+    }),
+    utilityActions: buildLightTopbarUtilityActions({
+      onNavigate,
+      toPublicPath,
+      hasSessionUser,
+      authActionLabel,
+      onAuthAction,
+      labels: utilityLabels,
+      extraUtilityActions
+    })
+  };
 }
 
 export function buildLightTopbarUtilityActions({
