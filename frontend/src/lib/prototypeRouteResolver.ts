@@ -129,7 +129,11 @@ export function resolvePrototypeRoute(pathname: string): PrototypeRouteResolutio
     return { family: "admin-incidents", key: "admin-incidents" };
   }
 
-  if (matchesPath(normalizedCorePath, "/admin/accounts") || matchesPath(normalizedCorePath, "/admin/roles")) {
+  if (
+    matchesPath(normalizedCorePath, "/admin/accounts") ||
+    matchesPath(normalizedCorePath, "/admin/permissions/accounts") ||
+    matchesPath(normalizedCorePath, "/admin/roles")
+  ) {
     return { family: "organization", key: "organization" };
   }
 

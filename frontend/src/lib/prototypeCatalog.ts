@@ -1,3 +1,5 @@
+import { resolvePrototypeCatalogFallbackRoute } from "./prototypeCatalogRouteFallback";
+
 export interface PrototypeCatalogEntry {
   key: string;
   name: string;
@@ -495,6 +497,12 @@ export function instantiatePrototypeRoute(routePattern: string): string {
 
 export function matchPrototypeCatalog(pathname: string): PrototypeCatalogEntry | null {
   const normalized = normalizePath(pathname);
+  const fallbackRoute = resolvePrototypeCatalogFallbackRoute(normalized);
+
+  if (fallbackRoute) {
+    return prototypeCatalog.find((entry) => entry.primaryRoute === fallbackRoute) || null;
+  }
+
   for (const entry of prototypeCatalog) {
     if (toPatternRegExp(entry.primaryRoute).test(normalized)) {
       return entry;

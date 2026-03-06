@@ -240,6 +240,16 @@ export default function App() {
     document.body.classList.add("page-admin-react");
   }, [route]);
 
+  useEffect(() => {
+    if (route !== "/skills/:id") {
+      return;
+    }
+    if (window.location.hash) {
+      return;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [locationKey, route]);
+
   async function handleLogin(username: string, password: string) {
     setSubmitLoading(true);
     try {
@@ -457,7 +467,17 @@ export default function App() {
     ) : protectedRoute === "/admin/ops/metrics" ? (
       <AdminOpsMetricsPage />
     ) : protectedRoute === "/admin/organizations" ? (
-      <OrganizationCenterPage locale={locale} onNavigate={navigate} />
+      <OrganizationCenterPage
+        locale={locale}
+        currentPath={window.location.pathname}
+        onNavigate={navigate}
+        sessionUser={sessionUser}
+        onThemeModeChange={handleThemeModeChange}
+        onLocaleChange={(nextLocale) => {
+          void handleLocaleChange(nextLocale);
+        }}
+        onLogout={handleLogout}
+      />
     ) : isAdminCatalogRoute(protectedRoute) ? (
       <AdminCatalogPage route={protectedRoute} />
     ) : isAdminSecurityRoute(protectedRoute) ? (

@@ -15,6 +15,7 @@ import GovernanceCenterPage from "./GovernanceCenterPage";
 import LoginPage from "./LoginPage";
 import MarketplaceHomePage from "./MarketplaceHomePage";
 import OrganizationCenterPage from "./OrganizationCenterPage";
+import OrganizationManagementSubpageShell from "./OrganizationManagementSubpageShell";
 import PrototypeReplicaPage from "./PrototypeReplicaPage";
 import PublicComparePage from "./PublicComparePage";
 import PublicSkillDetailPage from "./PublicSkillDetailPage";
@@ -22,6 +23,7 @@ import RecordsSyncCenterPage from "./RecordsSyncCenterPage";
 import RolloutWorkflowPage from "./RolloutWorkflowPage";
 import SystemStatePage from "./SystemStatePage";
 import WorkspaceCenterPage from "./WorkspaceCenterPage";
+import { resolveOrganizationManagementMenuItemID } from "./WorkspaceCenterPage.navigation";
 
 export interface PrototypeRouteRenderProps {
   locale: AppLocale;
@@ -96,10 +98,10 @@ function resolveAdminIncidentMode(pathname: string): { mode: AdminIncidentWorkbe
 
 function resolveAdminAccountRoleMode(pathname: string): AdminAccountRoleWorkbenchMode | null {
   const corePath = toPrototypeCorePath(pathname);
-  if (corePath === "/admin/accounts") {
+  if (corePath === "/admin/accounts" || corePath === "/admin/permissions/accounts") {
     return "account_management_list";
   }
-  if (corePath === "/admin/accounts/new") {
+  if (corePath === "/admin/accounts/new" || corePath === "/admin/permissions/accounts/new") {
     return "account_configuration_form";
   }
   if (corePath === "/admin/roles") {
@@ -144,7 +146,36 @@ export function renderPrototypeRouteContent(props: PrototypeRouteRenderProps) {
 
   const accountRoleMode = resolveAdminAccountRoleMode(props.currentPath);
   if (accountRoleMode) {
-    return <AdminAccountRoleWorkbenchPage mode={accountRoleMode} />;
+    const titleByMode: Record<AdminAccountRoleWorkbenchMode, string> = {
+      account_management_list: "Account Management List",
+      account_configuration_form: "Account Configuration Form",
+      role_management_list: "Role Management List",
+      role_configuration_form: "Role Configuration Form"
+    };
+    const subtitleByMode: Record<AdminAccountRoleWorkbenchMode, string> = {
+      account_management_list: "Manage user records while keeping organization navigation anchored in the workspace shell.",
+      account_configuration_form: "Configure account onboarding and provisioning rules with organization navigation visible.",
+      role_management_list: "Review role assignments and usage with persistent organization side navigation.",
+      role_configuration_form: "Edit role definitions while keeping workspace-level navigation and context."
+    };
+
+    return (
+      <OrganizationManagementSubpageShell
+        locale={props.locale}
+        currentPath={props.currentPath}
+        onNavigate={props.onNavigate}
+        sessionUser={props.sessionUser}
+        onThemeModeChange={props.onThemeModeChange}
+        onLocaleChange={props.onLocaleChange}
+        onLogout={props.onLogout}
+        activeMenuID={resolveOrganizationManagementMenuItemID(props.currentPath)}
+        eyebrow="Organization Management"
+        title={titleByMode[accountRoleMode]}
+        subtitle={subtitleByMode[accountRoleMode]}
+      >
+        <AdminAccountRoleWorkbenchPage mode={accountRoleMode} />
+      </OrganizationManagementSubpageShell>
+    );
   }
 
   const integrationMode = resolveAdminIntegrationMode(props.currentPath);
@@ -193,7 +224,17 @@ export function renderPrototypeRouteContent(props: PrototypeRouteRenderProps) {
   }
 
   if (target === "rollout") {
-    return <RolloutWorkflowPage locale={props.locale} currentPath={props.currentPath} onNavigate={props.onNavigate} sessionUser={props.sessionUser} />;
+    return (
+      <RolloutWorkflowPage
+        locale={props.locale}
+        currentPath={props.currentPath}
+        onNavigate={props.onNavigate}
+        sessionUser={props.sessionUser}
+        onThemeModeChange={props.onThemeModeChange}
+        onLocaleChange={props.onLocaleChange}
+        onLogout={props.onLogout}
+      />
+    );
   }
 
   if (target === "workspace") {
@@ -211,7 +252,17 @@ export function renderPrototypeRouteContent(props: PrototypeRouteRenderProps) {
   }
 
   if (target === "governance") {
-    return <GovernanceCenterPage locale={props.locale} currentPath={props.currentPath} onNavigate={props.onNavigate} sessionUser={props.sessionUser} />;
+    return (
+      <GovernanceCenterPage
+        locale={props.locale}
+        currentPath={props.currentPath}
+        onNavigate={props.onNavigate}
+        sessionUser={props.sessionUser}
+        onThemeModeChange={props.onThemeModeChange}
+        onLocaleChange={props.onLocaleChange}
+        onLogout={props.onLogout}
+      />
+    );
   }
 
   if (target === "state") {
@@ -219,7 +270,17 @@ export function renderPrototypeRouteContent(props: PrototypeRouteRenderProps) {
   }
 
   if (target === "records-sync") {
-    return <RecordsSyncCenterPage locale={props.locale} currentPath={props.currentPath} onNavigate={props.onNavigate} />;
+    return (
+      <RecordsSyncCenterPage
+        locale={props.locale}
+        currentPath={props.currentPath}
+        onNavigate={props.onNavigate}
+        sessionUser={props.sessionUser}
+        onThemeModeChange={props.onThemeModeChange}
+        onLocaleChange={props.onLocaleChange}
+        onLogout={props.onLogout}
+      />
+    );
   }
 
   if (target === "admin-integrations") {
@@ -227,7 +288,23 @@ export function renderPrototypeRouteContent(props: PrototypeRouteRenderProps) {
   }
 
   if (target === "admin-access") {
-    return <AdminSecurityPage route="/admin/access" />;
+    return (
+      <OrganizationManagementSubpageShell
+        locale={props.locale}
+        currentPath={props.currentPath}
+        onNavigate={props.onNavigate}
+        sessionUser={props.sessionUser}
+        onThemeModeChange={props.onThemeModeChange}
+        onLocaleChange={props.onLocaleChange}
+        onLogout={props.onLogout}
+        activeMenuID={resolveOrganizationManagementMenuItemID(props.currentPath)}
+        eyebrow="Organization Management"
+        title="Access Management"
+        subtitle="Control access policies with organization-level secondary navigation kept in the workspace shell."
+      >
+        <AdminSecurityPage route="/admin/access" />
+      </OrganizationManagementSubpageShell>
+    );
   }
 
   if (target === "admin-incidents") {
@@ -235,7 +312,17 @@ export function renderPrototypeRouteContent(props: PrototypeRouteRenderProps) {
   }
 
   if (target === "organization") {
-    return <OrganizationCenterPage locale={props.locale} onNavigate={props.onNavigate} />;
+    return (
+      <OrganizationCenterPage
+        locale={props.locale}
+        currentPath={props.currentPath}
+        onNavigate={props.onNavigate}
+        sessionUser={props.sessionUser}
+        onThemeModeChange={props.onThemeModeChange}
+        onLocaleChange={props.onLocaleChange}
+        onLogout={props.onLogout}
+      />
+    );
   }
 
   if (target === "admin-overview") {

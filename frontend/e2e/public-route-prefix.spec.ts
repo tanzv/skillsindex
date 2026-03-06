@@ -104,7 +104,8 @@ test.describe("Public route prefix navigation", () => {
     await page.goto("/light/skills/901");
     await page.getByRole("button", { name: "History", exact: true }).first().click();
     await expect(page).toHaveURL(/\/light\/skills\/901$/);
-    await expect(page.locator(".skill-detail-top-file-switch .skill-detail-top-file-button.is-active")).toHaveText("CHANGELOG.md");
+    await expect(page.getByTestId("skill-detail-directory-row-CHANGELOG.md")).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator(".skill-detail-doc-file-name")).toContainText("CHANGELOG.md");
   });
 
   test("docs route stays stable while legacy compare root redirects with preserved prefix", async ({ page }) => {

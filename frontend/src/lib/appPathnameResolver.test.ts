@@ -50,10 +50,14 @@ describe("normalizeAppRoute", () => {
   it("maps representative prototype routes to prototype shell route", () => {
     expect(normalizeAppRoute("/rollout")).toBe("/prototype");
     expect(normalizeAppRoute("/light/workspace")).toBe("/prototype");
+    expect(normalizeAppRoute("/workspace/activity")).toBe("/prototype");
+    expect(normalizeAppRoute("/mobile/light/workspace/actions")).toBe("/prototype");
     expect(normalizeAppRoute("/states/error")).toBe("/prototype");
     expect(normalizeAppRoute("/admin/records/exports")).toBe("/prototype");
     expect(normalizeAppRoute("/admin/integrations/list")).toBe("/prototype");
     expect(normalizeAppRoute("/admin/integrations/new")).toBe("/prototype");
     expect(normalizeAppRoute("/admin/access")).toBe("/prototype");
+    expect(normalizeAppRoute("/admin/permissions/accounts")).toBe("/prototype");
+    expect(normalizeAppRoute("/light/admin/permissions/accounts")).toBe("/prototype");
   });
 });

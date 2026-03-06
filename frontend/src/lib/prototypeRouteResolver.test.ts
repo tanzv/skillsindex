@@ -41,6 +41,8 @@ describe("resolvePrototypeRoute", () => {
     expect(resolvePrototypeRoute("/admin/access")?.key).toBe("admin-access");
     expect(resolvePrototypeRoute("/admin/incidents/12/response")?.key).toBe("admin-incidents");
     expect(resolvePrototypeRoute("/admin/accounts/new")?.key).toBe("organization");
+    expect(resolvePrototypeRoute("/admin/permissions/accounts")?.key).toBe("organization");
+    expect(resolvePrototypeRoute("/light/admin/permissions/accounts/new")?.key).toBe("organization");
     expect(resolvePrototypeRoute("/admin/roles/new")?.key).toBe("organization");
     expect(resolvePrototypeRoute("/light/admin")?.key).toBe("admin-overview");
     expect(resolvePrototypeRoute("/light/admin/overview")?.key).toBe("admin-overview");

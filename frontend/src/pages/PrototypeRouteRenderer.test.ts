@@ -1,11 +1,16 @@
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import AdminAccountRoleWorkbenchPage from "./AdminAccountRoleWorkbenchPage";
 import AdminIncidentWorkbenchPage from "./AdminIncidentWorkbenchPage";
 import AdminIntegrationWorkbenchPage from "./AdminIntegrationWorkbenchPage";
 import AdminSecurityPage from "./AdminSecurityPage";
+import GovernanceCenterPage from "./GovernanceCenterPage";
 import LoginPage from "./LoginPage";
 import MarketplaceHomePage from "./MarketplaceHomePage";
+import OrganizationCenterPage from "./OrganizationCenterPage";
+import OrganizationManagementSubpageShell from "./OrganizationManagementSubpageShell";
 import PrototypeReplicaPage from "./PrototypeReplicaPage";
 import PublicComparePage from "./PublicComparePage";
 import PublicSkillDetailPage from "./PublicSkillDetailPage";
@@ -102,6 +107,80 @@ describe("renderPrototypeRouteContent", () => {
     expect(element.props.onLogout).toBe(onLogout);
   });
 
+  it("forwards global control handlers to workspace subpages", () => {
+    const onThemeModeChange = () => undefined;
+    const onLocaleChange = () => undefined;
+    const onLogout = async () => undefined;
+    const rolloutElement = renderPrototypeRouteContent({
+      ...baseProps,
+      currentPath: "/light/rollout",
+      onThemeModeChange,
+      onLocaleChange,
+      onLogout,
+      entry: {
+        ...baseProps.entry,
+        key: "install_rollout_light",
+        primaryRoute: "/light/rollout"
+      }
+    });
+    const governanceElement = renderPrototypeRouteContent({
+      ...baseProps,
+      currentPath: "/light/governance",
+      onThemeModeChange,
+      onLocaleChange,
+      onLogout,
+      entry: {
+        ...baseProps.entry,
+        key: "governance_center_light",
+        primaryRoute: "/light/governance"
+      }
+    });
+    const recordsElement = renderPrototypeRouteContent({
+      ...baseProps,
+      currentPath: "/light/admin/records/sync-jobs",
+      onThemeModeChange,
+      onLocaleChange,
+      onLogout,
+      entry: {
+        ...baseProps.entry,
+        key: "records_sync_center_light",
+        primaryRoute: "/light/admin/records/sync-jobs"
+      }
+    });
+    const organizationElement = renderPrototypeRouteContent({
+      ...baseProps,
+      currentPath: "/light/admin/accounts/overview",
+      onThemeModeChange,
+      onLocaleChange,
+      onLogout,
+      entry: {
+        ...baseProps.entry,
+        key: "organization_management_light",
+        primaryRoute: "/light/admin/accounts/overview"
+      }
+    });
+
+    expect(rolloutElement.type).toBe(RolloutWorkflowPage);
+    expect(rolloutElement.props.onThemeModeChange).toBe(onThemeModeChange);
+    expect(rolloutElement.props.onLocaleChange).toBe(onLocaleChange);
+    expect(rolloutElement.props.onLogout).toBe(onLogout);
+
+    expect(governanceElement.type).toBe(GovernanceCenterPage);
+    expect(governanceElement.props.onThemeModeChange).toBe(onThemeModeChange);
+    expect(governanceElement.props.onLocaleChange).toBe(onLocaleChange);
+    expect(governanceElement.props.onLogout).toBe(onLogout);
+
+    expect(recordsElement.type).toBe(RecordsSyncCenterPage);
+    expect(recordsElement.props.onThemeModeChange).toBe(onThemeModeChange);
+    expect(recordsElement.props.onLocaleChange).toBe(onLocaleChange);
+    expect(recordsElement.props.onLogout).toBe(onLogout);
+
+    expect(organizationElement.type).toBe(OrganizationCenterPage);
+    expect(organizationElement.props.onThemeModeChange).toBe(onThemeModeChange);
+    expect(organizationElement.props.onLocaleChange).toBe(onLocaleChange);
+    expect(organizationElement.props.onLogout).toBe(onLogout);
+  });
+
   it("maps records export alias to records sync center page", () => {
     const element = renderPrototypeRouteContent({
       ...baseProps,
@@ -167,10 +246,46 @@ describe("renderPrototypeRouteContent", () => {
       }
     });
 
-    expect(accountsElement.type).toBe(AdminAccountRoleWorkbenchPage);
-    expect(accountsElement.props.mode).toBe("account_configuration_form");
-    expect(rolesElement.type).toBe(AdminAccountRoleWorkbenchPage);
-    expect(rolesElement.props.mode).toBe("role_configuration_form");
+    expect(accountsElement.type).toBe(OrganizationManagementSubpageShell);
+    expect(accountsElement.props.activeMenuID).toBe("org-personnel");
+    expect(accountsElement.props.children.type).toBe(AdminAccountRoleWorkbenchPage);
+    expect(accountsElement.props.children.props.mode).toBe("account_configuration_form");
+    expect(rolesElement.type).toBe(OrganizationManagementSubpageShell);
+    expect(rolesElement.props.activeMenuID).toBe("org-role");
+    expect(rolesElement.props.children.type).toBe(AdminAccountRoleWorkbenchPage);
+    expect(rolesElement.props.children.props.mode).toBe("role_configuration_form");
+  });
+
+  it("maps permissions account alias route to account management list mode", () => {
+    const accountsElement = renderPrototypeRouteContent({
+      ...baseProps,
+      currentPath: "/admin/permissions/accounts",
+      entry: {
+        ...baseProps.entry,
+        key: "account_management_list",
+        primaryRoute: "/admin/accounts"
+      }
+    });
+
+    expect(accountsElement.type).toBe(OrganizationManagementSubpageShell);
+    expect(accountsElement.props.activeMenuID).toBe("org-personnel");
+    expect(accountsElement.props.children.type).toBe(AdminAccountRoleWorkbenchPage);
+    expect(accountsElement.props.children.props.mode).toBe("account_management_list");
+  });
+
+  it("hides organization shell summary subtitle for role management routes", () => {
+    const rolesElement = renderPrototypeRouteContent({
+      ...baseProps,
+      currentPath: "/admin/roles",
+      entry: {
+        ...baseProps.entry,
+        key: "role_management_list",
+        primaryRoute: "/admin/roles"
+      }
+    });
+
+    const html = renderToStaticMarkup(React.createElement(React.Fragment, null, rolesElement));
+    expect(html).not.toContain("Review role assignments and usage with persistent organization side navigation.");
   });
 
   it("maps light incident list route to incident workbench list mode", () => {
@@ -199,8 +314,10 @@ describe("renderPrototypeRouteContent", () => {
       }
     });
 
-    expect(element.type).toBe(AdminSecurityPage);
-    expect(element.props.route).toBe("/admin/access");
+    expect(element.type).toBe(OrganizationManagementSubpageShell);
+    expect(element.props.activeMenuID).toBe("org-permission");
+    expect(element.props.children.type).toBe(AdminSecurityPage);
+    expect(element.props.children.props.route).toBe("/admin/access");
   });
 
   it("falls back to prototype replica when mapping is missing", () => {
