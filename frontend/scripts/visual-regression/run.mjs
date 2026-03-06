@@ -153,6 +153,29 @@ const scenarios = {
         });
       });
     }
+  },
+  "workspace-activity": {
+    routePath: "/workspace/activity",
+    waitSelector: "#workspace-activity",
+    baselineRelativePath: "prototype-baselines/workspace_activity.png",
+    outputPrefix: "workspace-activity",
+    setupRoutes: async (page) => {
+      await page.route("**/api/v1/auth/me", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            user: {
+              id: 102,
+              username: "workspace.user",
+              display_name: "Workspace User",
+              role: "operator",
+              status: "active"
+            }
+          })
+        });
+      });
+    }
   }
 };
 
@@ -175,6 +198,21 @@ async function waitForServer(url, timeoutMs) {
   }
 
   throw new Error(`Timed out waiting for server: ${url}`);
+}
+
+async function waitForFile(filePath, timeoutMs) {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      await access(filePath, constants.F_OK);
+      return;
+    } catch {
+      // Ignore file access errors until timeout.
+    }
+    await delay(100);
+  }
+
+  throw new Error(`Timed out waiting for screenshot file: ${filePath}`);
 }
 
 async function readPNG(filePath) {
@@ -260,6 +298,7 @@ async function main() {
     await delay(500);
   }
 
+  await waitForFile(actualImagePath, 10_000);
   const actualImage = await readPNG(actualImagePath);
   if (actualImage.width !== baselineImage.width || actualImage.height !== baselineImage.height) {
     throw new Error(

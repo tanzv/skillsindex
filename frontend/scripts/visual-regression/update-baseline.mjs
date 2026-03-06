@@ -124,6 +124,29 @@ const scenarios = {
         });
       });
     }
+  },
+  "workspace-activity": {
+    routePath: "/workspace/activity",
+    waitSelector: "#workspace-activity",
+    outputRelativePath: "prototype-baselines/workspace_activity.png",
+    viewport: { width: 512, height: 342 },
+    setupRoutes: async (page) => {
+      await page.route("**/api/v1/auth/me", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            user: {
+              id: 102,
+              username: "workspace.user",
+              display_name: "Workspace User",
+              role: "operator",
+              status: "active"
+            }
+          })
+        });
+      });
+    }
   }
 };
 
