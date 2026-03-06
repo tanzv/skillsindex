@@ -215,12 +215,15 @@ test.describe("Login prototype alignment", () => {
   test("login stage is marked as no-drag region", async ({ page }) => {
     await mockAnonymousAuth(page);
     await page.goto("/login");
-    const stage = page.locator(".login-page-stage");
-    await expect(stage).toBeVisible();
+    await expect(page.locator(".auth-shell.auth-shell-prototype")).toBeVisible();
 
-    const dragMeta = await stage.evaluate((element) => {
-      const stageStyles = window.getComputedStyle(element);
-      const button = element.querySelector("button");
+    const dragMeta = await page.evaluate(() => {
+      const stage = document.querySelector(".login-page-stage") || document.querySelector(".auth-shell.auth-shell-prototype");
+      if (!stage) {
+        return null;
+      }
+      const stageStyles = window.getComputedStyle(stage);
+      const button = stage.querySelector("button");
       const buttonStyles = button ? window.getComputedStyle(button) : null;
       return {
         stageAppRegion: stageStyles.getPropertyValue("-webkit-app-region").trim(),
@@ -229,6 +232,10 @@ test.describe("Login prototype alignment", () => {
       };
     });
 
+    expect(dragMeta).not.toBeNull();
+    if (!dragMeta) {
+      return;
+    }
     expect(dragMeta.stageAppRegion).toBe("no-drag");
     expect(dragMeta.stageUserDrag).toBe("none");
     expect(dragMeta.buttonAppRegion).toBe("no-drag");

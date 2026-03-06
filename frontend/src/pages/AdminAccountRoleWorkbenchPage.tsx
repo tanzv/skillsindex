@@ -1,8 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { fetchConsoleJSON } from "../lib/api";
-import { resolvePrototypeDataMode } from "./prototypeDataFallback";
+import { fetchConsoleJSON, postConsoleJSON } from "../lib/api";
+import {
+  AccountStatusFilter,
+  applyAccountEdit,
+  buildAccountEditMutationRequests,
+  buildRoleSummary,
+  filterAccounts,
+  normalizeAccountStatus,
+  normalizeRoleName,
+  sortAccountsByUpdatedAt
+} from "./AdminAccountRoleWorkbenchPage.helpers";
+import AdminAccountEditorModal, { AdminAccountEditorValues } from "./AdminAccountEditorModal";
+import AdminAccountRoleWorkbenchTable, { AccountWorkbenchTableRow } from "./AdminAccountRoleWorkbenchTable";
+import AdminSubpageSummaryPanel from "./AdminSubpageSummaryPanel";
 import { buildAccountRoleWorkbenchFallback } from "./adminWorkbenchFallback";
+import { resolvePrototypeDataMode } from "./prototypeDataFallback";
 
 export type AdminAccountRoleWorkbenchMode =
   | "account_management_list"
@@ -49,12 +62,14 @@ const modeTitle: Record<AdminAccountRoleWorkbenchMode, string> = {
   role_configuration_form: "Role Configuration Form"
 };
 
-function formatDateTime(value: string): string {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return "N/A";
-  }
-  return parsed.toLocaleString();
+const accountStatusFilters: Array<{ value: AccountStatusFilter; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "active", label: "Active" },
+  { value: "disabled", label: "Disabled" }
+];
+
+function isRoleMode(mode: AdminAccountRoleWorkbenchMode): boolean {
+  return mode === "role_management_list" || mode === "role_configuration_form";
 }
 
 async function fetchAccountRoleWorkbenchData(mode: AdminAccountRoleWorkbenchMode): Promise<AccountRoleWorkbenchData> {
@@ -70,11 +85,6 @@ async function fetchAccountRoleWorkbenchData(mode: AdminAccountRoleWorkbenchMode
   return { accounts, registration, authProviders };
 }
 
-function normalizeRole(roleValue: string): string {
-  const role = String(roleValue || "member").trim().toLowerCase();
-  return role || "member";
-}
-
 export default function AdminAccountRoleWorkbenchPage({ mode }: AdminAccountRoleWorkbenchPageProps) {
   const dataMode = useMemo(
     () => resolvePrototypeDataMode(import.meta.env.VITE_ADMIN_PROTOTYPE_MODE || import.meta.env.VITE_MARKETPLACE_HOME_MODE),
@@ -85,6 +95,18 @@ export default function AdminAccountRoleWorkbenchPage({ mode }: AdminAccountRole
   const [error, setError] = useState("");
   const [degraded, setDegraded] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<AccountStatusFilter>("all");
+  const [editableAccounts, setEditableAccounts] = useState<AdminAccountItem[]>([]);
+  const [editingAccountID, setEditingAccountID] = useState<number | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorSubmitting, setEditorSubmitting] = useState(false);
+  const [editorError, setEditorError] = useState("");
+
+  useEffect(() => {
+    setSearchQuery("");
+    setStatusFilter("all");
+  }, [mode]);
 
   useEffect(() => {
     let active = true;
@@ -128,122 +150,217 @@ export default function AdminAccountRoleWorkbenchPage({ mode }: AdminAccountRole
     };
   }, [dataMode, mode, refreshKey]);
 
+  const roleMode = isRoleMode(mode);
   const accounts = data?.accounts.items || [];
-  const total = data?.accounts.total ?? accounts.length;
-  const activeAccounts = useMemo(() => accounts.filter((item) => item.status === "active").length, [accounts]);
-  const disabledAccounts = total - activeAccounts;
-  const roleSummary = useMemo(() => {
-    const counts = new Map<string, number>();
-    accounts.forEach((item) => {
-      const key = normalizeRole(item.role);
-      counts.set(key, (counts.get(key) || 0) + 1);
-    });
-    return Array.from(counts.entries()).sort((left, right) => right[1] - left[1]);
+  const total = data?.accounts.total ?? editableAccounts.length;
+  const loadedAccounts = editableAccounts.length;
+  const sortedAccounts = useMemo(() => sortAccountsByUpdatedAt(editableAccounts), [editableAccounts]);
+  const filteredAccounts = useMemo(() => {
+    if (roleMode) {
+      return sortedAccounts;
+    }
+    return filterAccounts(sortedAccounts, searchQuery, statusFilter);
+  }, [roleMode, searchQuery, sortedAccounts, statusFilter]);
+  const activeAccounts = useMemo(
+    () => editableAccounts.filter((account) => normalizeAccountStatus(account.status) === "active").length,
+    [editableAccounts]
+  );
+  const disabledAccounts = useMemo(
+    () => editableAccounts.filter((account) => normalizeAccountStatus(account.status) === "disabled").length,
+    [editableAccounts]
+  );
+  const roleSummary = useMemo(() => buildRoleSummary(editableAccounts), [editableAccounts]);
+
+  useEffect(() => {
+    setEditableAccounts(accounts);
   }, [accounts]);
 
-  const topRows = useMemo(() => {
-    if (mode === "role_management_list" || mode === "role_configuration_form") {
-      return roleSummary.map(([role, count]) => ({
-        primary: role,
-        secondary: `${count} users`,
-        status: count > 0 ? "active" : "empty",
+  const topRows = useMemo<AccountWorkbenchTableRow[]>(() => {
+    if (roleMode) {
+      return roleSummary.map((summary) => ({
+        kind: "role",
+        primary: summary.role,
+        secondary: `${summary.count} accounts`,
+        status: summary.count > 0 ? "active" : "disabled",
         updatedAt: ""
       }));
     }
 
-    return accounts.slice(0, 12).map((item) => ({
+    return filteredAccounts.map((item) => ({
+      kind: "account",
+      id: item.id,
       primary: item.username,
       secondary: item.role,
       status: item.status,
       updatedAt: item.updated_at
     }));
-  }, [accounts, mode, roleSummary]);
+  }, [filteredAccounts, roleMode, roleSummary]);
 
   const refresh = () => {
     setRefreshKey((value) => value + 1);
   };
 
+  const editingAccount = useMemo(
+    () => editableAccounts.find((account) => account.id === editingAccountID) || null,
+    [editableAccounts, editingAccountID]
+  );
+
+  function openEditor(accountID: number) {
+    setEditorError("");
+    setEditingAccountID(accountID);
+    setEditorOpen(true);
+  }
+
+  function closeEditor() {
+    if (editorSubmitting) {
+      return;
+    }
+    setEditorError("");
+    setEditorOpen(false);
+    setEditingAccountID(null);
+  }
+
+  async function submitEditor(values: AdminAccountEditorValues) {
+    if (editingAccountID === null || !editingAccount) {
+      return;
+    }
+
+    setEditorSubmitting(true);
+    setEditorError("");
+    try {
+      const normalizedRole = normalizeRoleName(values.role);
+      const normalizedStatus = normalizeAccountStatus(values.status);
+      const mutationRequests = buildAccountEditMutationRequests({
+        accountID: editingAccountID,
+        currentRole: editingAccount.role,
+        currentStatus: editingAccount.status,
+        nextRole: normalizedRole,
+        nextStatus: normalizedStatus
+      });
+      if (mutationRequests.length === 0) {
+        setEditorOpen(false);
+        setEditingAccountID(null);
+        return;
+      }
+      await Promise.all(mutationRequests.map((request) => postConsoleJSON(request.path, request.payload)));
+
+      const nextUpdatedAt = new Date().toISOString();
+      setEditableAccounts((previousAccounts) =>
+        applyAccountEdit(previousAccounts, editingAccountID, {
+          username: editingAccount.username,
+          role: normalizedRole,
+          status: normalizedStatus,
+          updatedAtISO: nextUpdatedAt
+        })
+      );
+      setEditorOpen(false);
+      setEditingAccountID(null);
+    } catch (submissionError) {
+      setEditorError(submissionError instanceof Error ? submissionError.message : "Failed to update account settings");
+    } finally {
+      setEditorSubmitting(false);
+    }
+  }
+
   if (loading) {
     return (
-      <div className="page-grid">
+      <div className="page-grid account-workbench">
         <section className="panel panel-hero loading">Loading account and role workbench...</section>
       </div>
     );
   }
 
   return (
-    <div className="page-grid">
-      <section className="panel panel-hero">
-        <h2>{modeTitle[mode]}</h2>
-        <p>Operational account posture and role distribution loaded from admin JSON APIs.</p>
-        <div style={{ marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <span className={degraded || dataMode === "prototype" ? "pill muted" : "pill active"}>
-            {dataMode === "prototype" ? "Prototype dataset" : degraded ? "Fallback prototype data" : "Live backend data"}
-          </span>
-          <span className={data?.registration.allow_registration ? "pill active" : "pill muted"}>
-            Registration {data?.registration.allow_registration ? "enabled" : "disabled"}
-          </span>
-          {data?.authProviders?.auth_providers?.length ? (
-            <span className="pill muted">Auth providers: {data.authProviders.auth_providers.join(", ")}</span>
-          ) : null}
-          <button type="button" onClick={refresh} style={{ borderRadius: 10, padding: "8px 14px", cursor: "pointer" }}>
+    <div className="page-grid account-workbench">
+      <AdminSubpageSummaryPanel
+        title={modeTitle[mode]}
+        status={
+          <div className="account-workbench-status-strip">
+            <span className={degraded || dataMode === "prototype" ? "pill muted" : "pill active"}>
+              {dataMode === "prototype" ? "Prototype dataset" : degraded ? "Fallback prototype data" : "Live backend data"}
+            </span>
+            <span className={data?.registration.allow_registration ? "pill active" : "pill muted"}>
+              Registration {data?.registration.allow_registration ? "enabled" : "disabled"}
+            </span>
+            {data?.authProviders?.auth_providers?.length ? (
+              <span className="pill muted">Auth providers: {data.authProviders.auth_providers.join(", ")}</span>
+            ) : null}
+          </div>
+        }
+        actions={
+          <button type="button" onClick={refresh} className="panel-action-button">
             Refresh
           </button>
-        </div>
-        {degraded && error ? <p style={{ marginTop: 0, color: "#f4c9ce", fontSize: "0.78rem" }}>Degraded mode: {error}</p> : null}
-        <div className="metric-row">
-          <article className="metric-card">
-            <span>Total Accounts</span>
-            <strong>{total}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Active Accounts</span>
-            <strong>{activeAccounts}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Disabled Accounts</span>
-            <strong>{disabledAccounts}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Distinct Roles</span>
-            <strong>{roleSummary.length}</strong>
-          </article>
-        </div>
-      </section>
+        }
+        controls={
+          !roleMode ? (
+            <div className="account-workbench-filter-panel">
+              <div className="account-workbench-filter-row">
+                <label className="account-workbench-field">
+                  <span className="account-workbench-field-label">Search</span>
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Search by username, role, or status"
+                    className="account-workbench-search-input"
+                  />
+                </label>
+                <div className="account-workbench-field">
+                  <span className="account-workbench-field-label">Status</span>
+                  <div className="account-workbench-filter-group">
+                    {accountStatusFilters.map((filter) => {
+                      const selected = statusFilter === filter.value;
+                      return (
+                        <button
+                          key={filter.value}
+                          type="button"
+                          onClick={() => setStatusFilter(filter.value)}
+                          className={`account-workbench-filter-button${selected ? " is-active" : ""}`}
+                          aria-pressed={selected}
+                        >
+                          {filter.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              <p className="account-workbench-filter-summary">
+                Showing {filteredAccounts.length} of {loadedAccounts} loaded accounts
+                {total !== loadedAccounts ? ` (total directory size: ${total})` : ""}.
+              </p>
+            </div>
+          ) : null
+        }
+        notice={degraded && error ? `Degraded mode: ${error}` : undefined}
+        metrics={[
+          { id: "total-accounts", label: "Total Accounts", value: total },
+          { id: "loaded-accounts", label: "Loaded Accounts", value: loadedAccounts },
+          { id: "active-accounts", label: "Active Accounts", value: activeAccounts },
+          { id: "disabled-accounts", label: "Disabled Accounts", value: disabledAccounts },
+          { id: "distinct-roles", label: "Distinct Roles", value: roleSummary.length }
+        ]}
+      />
 
-      <section className="panel">
-        <h3 style={{ marginTop: 0 }}>
-          {mode === "role_management_list" || mode === "role_configuration_form" ? "Role Distribution" : "Account Snapshot"}
-        </h3>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>{mode === "role_management_list" || mode === "role_configuration_form" ? "Role" : "Username"}</th>
-                <th>{mode === "role_management_list" || mode === "role_configuration_form" ? "Users" : "Role"}</th>
-                <th>Status</th>
-                <th>Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topRows.length === 0 ? (
-                <tr>
-                  <td colSpan={4}>No records returned.</td>
-                </tr>
-              ) : (
-                topRows.map((row, index) => (
-                  <tr key={`account-role-row-${index}`}>
-                    <td>{row.primary}</td>
-                    <td>{row.secondary}</td>
-                    <td>{row.status || "N/A"}</td>
-                    <td>{row.updatedAt ? formatDateTime(row.updatedAt) : "N/A"}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <AdminAccountRoleWorkbenchTable roleMode={roleMode} rows={topRows} onEditAccount={openEditor} />
+      <AdminAccountEditorModal
+        open={!roleMode && editorOpen}
+        submitting={editorSubmitting}
+        errorMessage={editorError}
+        account={
+          editingAccount
+            ? {
+                id: editingAccount.id,
+                username: editingAccount.username,
+                role: editingAccount.role,
+                status: normalizeAccountStatus(editingAccount.status)
+              }
+            : null
+        }
+        onCancel={closeEditor}
+        onSubmit={submitEditor}
+      />
     </div>
   );
 }
