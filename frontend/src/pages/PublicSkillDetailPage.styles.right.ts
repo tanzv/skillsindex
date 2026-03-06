@@ -225,7 +225,7 @@ export const publicSkillDetailRightStyles = css`
 
   .skill-detail-action-main {
     width: 100%;
-    min-height: 42px;
+    min-height: 44px;
     border-radius: 9px;
     background: var(--skill-detail-accent-bg);
     color: var(--skill-detail-accent-text);
@@ -278,13 +278,13 @@ export const publicSkillDetailRightStyles = css`
 
   .skill-detail-action-button.is-large {
     width: 100%;
-    min-height: 36px;
+    min-height: 44px;
     padding: 6px 8px;
   }
 
   .skill-detail-action-button.is-small {
     width: 100%;
-    min-height: 34px;
+    min-height: 44px;
     padding: 6px 8px;
   }
 
@@ -367,8 +367,8 @@ export const publicSkillDetailRightStyles = css`
   }
 
   .skill-detail-rating-button {
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     border-radius: 8px;
     background: var(--skill-detail-surface-1);
     color: var(--skill-detail-text-primary);
@@ -488,7 +488,7 @@ export const publicSkillDetailRightStyles = css`
 
   .skill-detail-comment-delete {
     width: 90px;
-    min-height: 32px;
+    min-height: 44px;
     border-radius: 7px;
     background: var(--skill-detail-surface-3);
     color: var(--skill-detail-text-secondary);

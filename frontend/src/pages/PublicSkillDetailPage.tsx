@@ -12,11 +12,10 @@ import {
 } from "../lib/api";
 import { AppLocale } from "../lib/i18n";
 import type { ThemeMode } from "../lib/themeModePath";
-import MarketplacePageBreadcrumb, { type MarketplacePageBreadcrumbItem } from "../components/MarketplacePageBreadcrumb";
 import { buildMarketplaceTopbarActionBundle } from "./MarketplaceHomePage.lightTopbar";
 import MarketplaceHomeLocaleThemeSwitch from "./MarketplaceHomeLocaleThemeSwitch";
 import { marketplaceHomeCopy } from "./MarketplaceHomePage.copy";
-import { buildMarketplaceWorkspaceAuthRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
+import { buildMarketplaceWorkspaceAccessRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
 import { publicSkillDetailCopy } from "./PublicSkillDetailPage.copy";
 import PublicSkillDetailFileBrowser from "./PublicSkillDetailPage.fileBrowser";
 import PublicSkillDetailInteractionPanel from "./PublicSkillDetailPage.interactionPanel";
@@ -33,6 +32,7 @@ import {
   buildPrototypeSkillDetailSkill,
   buildSkillDetailViewModel,
   resolveFileIndexForPreset,
+  resolvePresetForFileName,
   resolveSkillDetailDataMode
 } from "./PublicSkillDetailPage.helpers";
 import {
@@ -49,9 +49,9 @@ import {
 } from "./publicSkillDetail/PublicSkillDetailInteractionActions";
 import {
   resolveFilePresetLabel,
-  resolveInteractionFeedbackMessage,
-  scrollToFileContent
+  resolveInteractionFeedbackMessage
 } from "./publicSkillDetail/PublicSkillDetailPageViewHelpers";
+import PublicSkillDetailBreadcrumb from "./publicSkillDetail/PublicSkillDetailBreadcrumb";
 import { resolveSkillDetailLoadFailure } from "./PublicSkillDetailPage.loadState";
 import type { SkillDetailLoadStatus } from "./PublicSkillDetailPage.loadState";
 import PublicSkillDetailPageStyles from "./PublicSkillDetailPage.styles";
@@ -373,9 +373,7 @@ export default function PublicSkillDetailPage({
   function handleViewChangeHistory() {
     const changelogIndex = detailModel.fileEntries.findIndex((entry) => entry.name.toLowerCase().includes("changelog"));
     setActivePreset("changelog");
-    if (changelogIndex >= 0) {
-      setSelectedFileIndex(changelogIndex);
-    }
+    if (changelogIndex >= 0) setSelectedFileIndex(changelogIndex);
     setFeedback(text.addedCompare);
   }
 
@@ -389,37 +387,18 @@ export default function PublicSkillDetailPage({
     setFeedback(text.postComment);
   }
 
-  function handlePresetSwitch(nextPreset: PresetKey) {
-    setActivePreset(nextPreset);
-    setSelectedFileIndex((previousIndex) => resolveFileIndexForPreset(nextPreset, detailModel.fileEntries, previousIndex));
+  function handleSelectFileFromTree(nextFileIndex: number) {
+    const targetEntry = detailModel.fileEntries[nextFileIndex];
+    if (!targetEntry) return;
+    setActivePreset(resolvePresetForFileName(targetEntry.name));
+    setSelectedFileIndex(nextFileIndex);
   }
-
   const selectedFile = detailModel.fileEntries[selectedFileIndex] || detailModel.fileEntries[0];
   const selectedFileName = selectedFile?.name || "SKILL.md";
   const selectedFilePath = buildSkillFilePath(detailModel.repositorySlug, selectedFileName);
   const selectedPresetLabel = selectedFile?.name || resolveFilePresetLabel(activePreset);
   const activePreviewLanguage = activePreset === "skill" ? detailModel.previewLanguage : "Markdown";
-  const topPresetAriaLabel = `${text.presetHint} · ${text.switchable}`;
   const activeSkillDisplayName = String(activeSkill?.name || "").trim() || text.title;
-  const breadcrumbItems = useMemo<MarketplacePageBreadcrumbItem[]>(
-    () => [
-      {
-        key: "marketplace",
-        label: text.breadcrumbRoot,
-        onClick: () => onNavigate(routeNavigator.toPublic("/"))
-      },
-      {
-        key: "skill",
-        label: activeSkillDisplayName,
-        onClick: () => onNavigate(routeNavigator.toPublic(`/skills/${skillID}`))
-      },
-      {
-        key: "file",
-        label: selectedPresetLabel
-      }
-    ],
-    [activeSkillDisplayName, onNavigate, routeNavigator, selectedPresetLabel, skillID, text.breadcrumbRoot]
-  );
   const topMetaEntries = useMemo(
     () => [
       { key: "entry", value: `${text.metaEntryLabel} ${resolveFilePresetLabel(activePreset)}`, tone: "is-neutral" },
@@ -438,9 +417,6 @@ export default function PublicSkillDetailPage({
     onNavigate(toPublicPath("/login"));
   }
 
-  function handleTopbarConsoleAction(): void {
-    onNavigate("/workspace");
-  }
   const topbarActionBundle = useMemo(
     () =>
       buildMarketplaceTopbarActionBundle({
@@ -458,15 +434,16 @@ export default function PublicSkillDetailPage({
   const topbarBrandSubtitle = topbarCopy.brandSubtitle;
   const topbarRightRegistrations = useMemo(
     () =>
-      buildMarketplaceWorkspaceAuthRightRegistrations({
+      buildMarketplaceWorkspaceAccessRightRegistrations({
         sessionUser,
+        signedInLabel: topbarCopy.signedIn,
+        signedOutLabel: topbarCopy.signedOut,
         workspaceLabel: topbarCopy.openWorkspace,
         signInLabel: topbarCopy.signIn,
-        signOutLabel: topbarCopy.signOut,
-        onWorkspaceClick: handleTopbarConsoleAction,
-        onAuthClick: handleTopbarAuthAction
+        onNavigate,
+        toPublicPath
       }),
-    [handleTopbarAuthAction, handleTopbarConsoleAction, sessionUser, topbarCopy.openWorkspace, topbarCopy.signIn, topbarCopy.signOut]
+    [onNavigate, sessionUser, toPublicPath, topbarCopy.openWorkspace, topbarCopy.signIn, topbarCopy.signedIn, topbarCopy.signedOut]
   );
   const stageStyle: CSSProperties = {
     width: "100%",
@@ -496,17 +473,15 @@ export default function PublicSkillDetailPage({
             />
           }
         />
-
         <header className="skill-detail-top">
           <div className="skill-detail-title-group">
             <h1 className="skill-detail-title">{activeSkillDisplayName}</h1>
-            <MarketplacePageBreadcrumb
-              items={breadcrumbItems}
-              ariaLabel="Skill detail breadcrumb"
-              className="skill-detail-breadcrumb"
-              buttonClassName="skill-detail-breadcrumb-button"
-              currentClassName="skill-detail-breadcrumb-current"
-              testIdPrefix="skill-detail-breadcrumb"
+            <PublicSkillDetailBreadcrumb
+              rootLabel={text.breadcrumbRoot}
+              skillLabel={activeSkillDisplayName}
+              currentLabel={selectedPresetLabel}
+              onNavigateRoot={() => onNavigate(routeNavigator.toPublic("/"))}
+              onNavigateSkill={() => onNavigate(routeNavigator.toPublic(`/skills/${skillID}`))}
             />
             <div className="skill-detail-meta-strip" aria-label="skill detail metadata">
               {topMetaEntries.map((entry) => (
@@ -515,45 +490,11 @@ export default function PublicSkillDetailPage({
                 </span>
               ))}
             </div>
-
-            <div className="skill-detail-top-file-switch" role="tablist" aria-label={topPresetAriaLabel}>
-              <button
-                type="button"
-                className={`skill-detail-top-file-button${activePreset === "skill" ? " is-active" : ""}`}
-                onClick={() => handlePresetSwitch("skill")}
-                aria-pressed={activePreset === "skill"}
-              >
-                SKILL.md
-              </button>
-              <button
-                type="button"
-                className={`skill-detail-top-file-button${activePreset === "readme" ? " is-active" : ""}`}
-                onClick={() => handlePresetSwitch("readme")}
-                aria-pressed={activePreset === "readme"}
-              >
-                README.md
-              </button>
-              <button
-                type="button"
-                className={`skill-detail-top-file-button${activePreset === "changelog" ? " is-active" : ""}`}
-                onClick={() => handlePresetSwitch("changelog")}
-                aria-pressed={activePreset === "changelog"}
-              >
-                CHANGELOG.md
-              </button>
-              <button type="button" className="skill-detail-top-file-browse" onClick={() => scrollToFileContent()}>
-                {text.tabFiles}
-              </button>
-            </div>
           </div>
         </header>
-
         {loadStatus === "loading" ? <div className="skill-detail-loading">{text.loading}</div> : null}
-
         {loadStatus === "error" ? <div className="skill-detail-error">{error || text.loadError}</div> : null}
-
         {loadStatus === "not_found" ? <div className="skill-detail-empty">{text.notFound}</div> : null}
-
         {loadStatus === "ready" && activeSkill ? (
           <main className="skill-detail-main">
             <PublicSkillDetailFileBrowser
@@ -565,8 +506,8 @@ export default function PublicSkillDetailPage({
               text={text}
               onCopyPath={handleCopyPath}
               onOpenSource={handleOpenSource}
+              onSelectFile={handleSelectFileFromTree}
             />
-
             <PublicSkillDetailInteractionPanel
               comments={comments}
               commentDraft={commentDraft}

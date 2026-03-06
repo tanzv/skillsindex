@@ -317,15 +317,28 @@ export function resolveFileIndexForPreset(
   if (fileEntries.length === 0) {
     return 0;
   }
+  const boundedFallbackIndex = Math.max(0, Math.min(fallbackIndex, fileEntries.length - 1));
+  const fallbackEntry = fileEntries[boundedFallbackIndex];
+  const fallbackPreset = resolvePresetForFileName(fallbackEntry?.name || "");
 
   if (preset === "readme") {
+    if (fallbackPreset === "readme") {
+      return boundedFallbackIndex;
+    }
     const readmeIndex = findFileIndexByPattern(fileEntries, [/readme\.md$/i, /readme/i]);
-    return readmeIndex >= 0 ? readmeIndex : Math.min(fallbackIndex, fileEntries.length - 1);
+    return readmeIndex >= 0 ? readmeIndex : boundedFallbackIndex;
   }
 
   if (preset === "changelog") {
+    if (fallbackPreset === "changelog") {
+      return boundedFallbackIndex;
+    }
     const changelogIndex = findFileIndexByPattern(fileEntries, [/changelog\.md$/i, /change[-_]?log/i, /release[-_]?notes/i, /history/i]);
-    return changelogIndex >= 0 ? changelogIndex : Math.min(fallbackIndex, fileEntries.length - 1);
+    return changelogIndex >= 0 ? changelogIndex : boundedFallbackIndex;
+  }
+
+  if (fallbackPreset === "skill") {
+    return boundedFallbackIndex;
   }
 
   const sqlIndex = findFileIndexByPattern(fileEntries, [/\.sql$/i, /migration/i, /query/i]);
@@ -336,7 +349,7 @@ export function resolveFileIndexForPreset(
   if (skillIndex >= 0) {
     return skillIndex;
   }
-  return Math.min(fallbackIndex, fileEntries.length - 1);
+  return boundedFallbackIndex;
 }
 
 function inferRepositoryLabel(skill: MarketplaceSkill, slug: string): string {

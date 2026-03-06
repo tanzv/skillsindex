@@ -100,6 +100,19 @@ describe("PublicSkillDetailPage.helpers", () => {
     expect(resolveFileIndexForPreset("changelog", fileEntries)).toBe(2);
   });
 
+  it("keeps fallback index when fallback file already belongs to the selected preset", () => {
+    const fileEntries = [
+      { name: "SKILL.md", size: "1.2KB" },
+      { name: "README.md", size: "2.4KB" },
+      { name: "CHANGELOG.md", size: "0.9KB" },
+      { name: "examples/custom_flow.yaml", size: "1.1KB" }
+    ];
+
+    expect(resolveFileIndexForPreset("skill", fileEntries, 3)).toBe(3);
+    expect(resolveFileIndexForPreset("readme", fileEntries, 1)).toBe(1);
+    expect(resolveFileIndexForPreset("changelog", fileEntries, 2)).toBe(2);
+  });
+
   it("resolves preset key from file name patterns", () => {
     expect(resolvePresetForFileName("README.md")).toBe("readme");
     expect(resolvePresetForFileName("docs/CHANGELOG.md")).toBe("changelog");

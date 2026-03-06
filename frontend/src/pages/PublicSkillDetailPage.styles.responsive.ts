@@ -81,6 +81,10 @@ export const publicSkillDetailResponsiveStyles = css`
       width: 100%;
     }
 
+    .skill-detail-page:not(.is-visual-baseline) .skill-detail-top-file-tabs {
+      width: 100%;
+    }
+
     .skill-detail-page:not(.is-visual-baseline) .skill-detail-main {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -162,6 +166,29 @@ export const publicSkillDetailResponsiveStyles = css`
       padding: 8px 0;
     }
 
+    .skill-detail-page:not(.is-visual-baseline) .marketplace-topbar-brand {
+      min-height: 44px;
+      padding: 6px 0;
+    }
+
+    .skill-detail-page:not(.is-visual-baseline) .marketplace-topbar-nav-button,
+    .skill-detail-page:not(.is-visual-baseline) .marketplace-topbar-utility-button,
+    .skill-detail-page:not(.is-visual-baseline) .marketplace-topbar-status,
+    .skill-detail-page:not(.is-visual-baseline) .marketplace-topbar-cta {
+      min-height: 44px;
+    }
+
+    .skill-detail-page:not(.is-visual-baseline) .marketplace-topbar-locale-switch {
+      min-height: 44px;
+      height: auto;
+    }
+
+    .skill-detail-page:not(.is-visual-baseline) .marketplace-topbar-locale-switch button {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+    }
+
     .skill-detail-page:not(.is-visual-baseline) .marketplace-topbar-brand-copy strong {
       font-size: 18px;
     }
@@ -185,6 +212,12 @@ export const publicSkillDetailResponsiveStyles = css`
       font-size: 24px;
     }
 
+    .skill-detail-page:not(.is-visual-baseline) .skill-detail-breadcrumb-button,
+    .skill-detail-page:not(.is-visual-baseline) .skill-detail-breadcrumb-current {
+      min-height: 36px;
+      padding: 6px 4px;
+    }
+
     .skill-detail-page:not(.is-visual-baseline) .skill-detail-pill {
       width: 100%;
       justify-content: center;
@@ -192,8 +225,35 @@ export const publicSkillDetailResponsiveStyles = css`
 
     .skill-detail-page:not(.is-visual-baseline) .skill-detail-top-file-button,
     .skill-detail-page:not(.is-visual-baseline) .skill-detail-top-file-browse {
-      flex: 1 1 calc(50% - 4px);
+      min-height: 44px;
       justify-content: center;
+    }
+
+    .skill-detail-page:not(.is-visual-baseline) .skill-detail-top-file-switch {
+      flex-wrap: wrap;
+      overflow: visible;
+    }
+
+    .skill-detail-page:not(.is-visual-baseline) .skill-detail-top-file-tabs {
+      flex: 1 1 100%;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      overflow: visible;
+      padding-bottom: 0;
+    }
+
+    .skill-detail-page:not(.is-visual-baseline) .skill-detail-top-file-button {
+      width: 100%;
+    }
+
+    .skill-detail-page:not(.is-visual-baseline) .skill-detail-top-file-browse {
+      width: 100%;
+      flex: 1 1 100%;
+    }
+
+    .skill-detail-page:not(.is-visual-baseline) .skill-detail-doc-toolbar .skill-detail-file-info-actions button {
+      min-height: 44px;
     }
 
     .skill-detail-page:not(.is-visual-baseline) .skill-detail-top-file-current {

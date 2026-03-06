@@ -1,6 +1,153 @@
 import { css } from "@emotion/react";
 
 export const publicSkillDetailDocumentStyles = css`
+  .skill-detail-directory-shell {
+    width: 100%;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--skill-detail-surface-2) 74%, transparent);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid color-mix(in srgb, var(--skill-detail-border-strong) 42%, transparent);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .skill-detail-page.is-light .skill-detail-directory-shell {
+    background: color-mix(in srgb, var(--skill-detail-surface-1) 86%, transparent);
+    box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.04);
+  }
+
+  .skill-detail-directory-head {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .skill-detail-directory-title {
+    margin: 0;
+    color: var(--skill-detail-text-primary);
+    font-size: 12px;
+    line-height: 1.35;
+    font-weight: 700;
+  }
+
+  .skill-detail-directory-meta {
+    margin: 0;
+    color: var(--skill-detail-text-muted);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 600;
+  }
+
+  .skill-detail-directory-tree {
+    width: 100%;
+    max-height: 188px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-right: 2px;
+  }
+
+  .skill-detail-directory-row {
+    width: 100%;
+    min-height: 32px;
+    border-radius: 8px;
+    border: 0;
+    background: transparent;
+    color: var(--skill-detail-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    cursor: pointer;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-right: 10px;
+    padding-left: calc(10px + (var(--skill-detail-tree-depth, 1) - 1) * 16px);
+    transition: background-color 160ms ease, color 160ms ease;
+  }
+
+  .skill-detail-directory-row.is-directory .skill-detail-directory-row-label {
+    font-weight: 700;
+  }
+
+  .skill-detail-directory-row:hover {
+    background: color-mix(in srgb, var(--skill-detail-surface-3) 62%, transparent);
+    color: var(--skill-detail-text-primary);
+  }
+
+  .skill-detail-directory-row:focus-visible {
+    outline: 2px solid var(--skill-detail-focus-ring);
+    outline-offset: 1px;
+  }
+
+  .skill-detail-directory-row.is-selected {
+    background: color-mix(in srgb, var(--skill-detail-accent-bg) 18%, transparent);
+    color: var(--skill-detail-text-primary);
+  }
+
+  .skill-detail-directory-row.is-selected .skill-detail-directory-row-icon.is-file {
+    background: color-mix(in srgb, var(--skill-detail-accent-bg) 74%, transparent);
+  }
+
+  .skill-detail-directory-row-caret {
+    width: 10px;
+    color: var(--skill-detail-text-muted);
+    font-size: 10px;
+    line-height: 1;
+    text-align: center;
+    flex: 0 0 auto;
+  }
+
+  .skill-detail-directory-row-icon {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    flex: 0 0 auto;
+    background: color-mix(in srgb, var(--skill-detail-surface-3) 78%, transparent);
+  }
+
+  .skill-detail-directory-row-icon.is-directory {
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--skill-detail-accent-bg) 32%, transparent);
+  }
+
+  .skill-detail-directory-row-icon.is-file {
+    border-radius: 50%;
+    width: 8px;
+    height: 8px;
+    background: color-mix(in srgb, var(--skill-detail-text-muted) 72%, transparent);
+  }
+
+  .skill-detail-directory-row-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    line-height: 1.35;
+    font-weight: 600;
+  }
+
+  .skill-detail-page.is-light .skill-detail-directory-row {
+    color: var(--skill-detail-text-secondary);
+  }
+
+  .skill-detail-page.is-light .skill-detail-directory-row:hover {
+    background: color-mix(in srgb, var(--skill-detail-surface-3) 78%, transparent);
+    color: var(--skill-detail-text-primary);
+  }
+
+  .skill-detail-page.is-light .skill-detail-directory-row.is-selected {
+    background: color-mix(in srgb, var(--skill-detail-accent-bg) 12%, transparent);
+  }
+
   .skill-detail-card.is-file-tree.is-preview-only {
     border: 1px solid color-mix(in srgb, var(--skill-detail-border-strong) 72%, transparent);
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -77,6 +224,11 @@ export const publicSkillDetailDocumentStyles = css`
 
   .skill-detail-doc-toolbar .skill-detail-file-info-actions button:hover {
     filter: brightness(1.06);
+  }
+
+  .skill-detail-doc-toolbar .skill-detail-file-info-actions button:focus-visible {
+    outline: 2px solid var(--skill-detail-focus-ring);
+    outline-offset: 1px;
   }
 
   .skill-detail-page.is-light .skill-detail-doc-toolbar {

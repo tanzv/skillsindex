@@ -127,6 +127,12 @@ describe("Public skill detail pen alignment", () => {
     ).toBe(true);
     expect(publicSkillDetailThemeStyles.styles).toContain("background: #242424");
     expect(publicSkillDetailThemeStyles.styles).toContain("border-radius: 16px");
+    expect(publicSkillDetailThemeStyles.styles).toContain("grid-template-columns: repeat(2, minmax(0, 1fr))");
+    expect(publicSkillDetailThemeStyles.styles).toContain("width: 44px;");
+    expect(publicSkillDetailThemeStyles.styles).toContain("height: 44px;");
+    expect(publicSkillDetailThemeStyles.styles).toContain("min-height: 44px;");
+    expect(publicSkillDetailThemeStyles.styles).toContain("--skill-detail-inline-padding");
+    expect(publicSkillDetailThemeStyles.styles).toContain("--skill-detail-content-width: min(");
   });
 
   it("keeps top-level copy synchronized with pen text", () => {
@@ -163,5 +169,15 @@ describe("Public skill detail pen alignment", () => {
     if (compareNode) {
       expect(String(compareNode?.content || "")).toBe(publicSkillDetailCopy.zh.compareSkill);
     }
+  });
+
+  it("removes duplicate top preset tabs and keeps tree-driven file selection semantics", () => {
+    const filePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "./PublicSkillDetailPage.tsx");
+    const source = readFileSync(filePath, "utf8");
+
+    expect(source).not.toContain('role="tablist"');
+    expect(source).not.toContain('role="tab"');
+    expect(source).not.toContain("skill-detail-top-file-button");
+    expect(source).toContain("onSelectFile={handleSelectFileFromTree}");
   });
 });

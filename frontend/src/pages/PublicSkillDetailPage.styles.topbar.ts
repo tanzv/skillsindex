@@ -72,6 +72,7 @@ export const publicSkillDetailTopbarStyles = css`
     align-items: center;
     gap: 10px;
     padding: 0;
+    min-height: 34px;
     cursor: pointer;
     transition: opacity 180ms ease, transform 180ms ease;
   }
@@ -131,7 +132,7 @@ export const publicSkillDetailTopbarStyles = css`
 
   .skill-detail-page .marketplace-topbar-nav-button {
     border: 0;
-    height: 30px;
+    min-height: 34px;
     border-radius: 8px;
     padding: 0 10px;
     background: transparent;
@@ -222,7 +223,7 @@ export const publicSkillDetailTopbarStyles = css`
 
   .skill-detail-page .marketplace-topbar-utility-button {
     border: 1px solid var(--marketplace-utility-button-border);
-    height: 30px;
+    min-height: 34px;
     border-radius: 8px;
     padding: 0 10px;
     background: var(--marketplace-utility-button-background);
@@ -263,7 +264,7 @@ export const publicSkillDetailTopbarStyles = css`
 
   .skill-detail-page .marketplace-topbar-status,
   .skill-detail-page .marketplace-topbar-cta {
-    min-height: 32px;
+    min-height: 34px;
     border: 0;
     border-radius: 9px;
     padding: 0 10px;
@@ -306,7 +307,7 @@ export const publicSkillDetailTopbarStyles = css`
   }
 
   .skill-detail-page .marketplace-topbar-locale-switch {
-    height: 30px;
+    min-height: 34px;
     border-radius: 9px;
     background: var(--skill-detail-surface-1);
     padding: 4px;
@@ -326,8 +327,8 @@ export const publicSkillDetailTopbarStyles = css`
 
   .skill-detail-page .marketplace-topbar-locale-switch button {
     border: 0;
-    width: 22px;
-    height: 22px;
+    width: 30px;
+    height: 30px;
     border-radius: 6px;
     padding: 0;
     background: var(--skill-detail-surface-3);

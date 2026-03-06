@@ -137,55 +137,108 @@ export const publicSkillDetailBaseStyles = css`
   }
 
   .skill-detail-breadcrumb {
-    min-height: 20px;
+    min-height: 26px;
     max-width: 100%;
     display: flex;
     align-items: center;
     overflow: hidden;
   }
 
-  .skill-detail-breadcrumb .ant-breadcrumb {
+  .skill-detail-breadcrumb-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
     width: 100%;
-    color: var(--skill-detail-text-muted);
-    font-size: 12px;
-    line-height: 1.35;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
   }
 
-  .skill-detail-breadcrumb .ant-breadcrumb-link,
-  .skill-detail-breadcrumb .ant-breadcrumb-separator {
-    color: var(--skill-detail-text-muted);
+  .skill-detail-breadcrumb-node {
+    min-width: 0;
+    max-width: clamp(72px, 20vw, 300px);
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .skill-detail-breadcrumb-separator {
+    color: color-mix(in srgb, var(--skill-detail-text-muted) 88%, transparent);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 700;
+    user-select: none;
+    flex: 0 0 auto;
+  }
+
+  .skill-detail-breadcrumb-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .skill-detail-breadcrumb-button {
-    border: 0;
+    border: 1px solid transparent;
     background: transparent;
-    color: inherit;
-    font: inherit;
+    color: var(--skill-detail-text-muted);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 650;
     cursor: pointer;
-    padding: 0;
-    transition: color 160ms ease;
+    min-height: 26px;
+    border-radius: 999px;
+    padding: 0 10px;
+    max-width: 100%;
+    display: inline-flex;
+    align-items: center;
+    transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+  }
+
+  .skill-detail-breadcrumb-button:focus-visible {
+    outline: 2px solid var(--skill-detail-focus-ring);
+    outline-offset: 2px;
+    border-radius: 999px;
   }
 
   .skill-detail-breadcrumb-button:hover {
-    color: var(--skill-detail-text-secondary);
+    color: var(--skill-detail-text-primary);
+    border-color: color-mix(in srgb, var(--skill-detail-border-strong) 62%, transparent);
+    background: color-mix(in srgb, var(--skill-detail-surface-3) 76%, transparent);
+    transform: translateY(-1px);
   }
 
   .skill-detail-breadcrumb-current {
-    color: inherit;
+    color: var(--skill-detail-text-primary);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 700;
+    min-height: 26px;
+    border-radius: 999px;
+    padding: 0 10px;
+    max-width: 100%;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid color-mix(in srgb, var(--skill-detail-border-strong) 64%, transparent);
+    background: color-mix(in srgb, var(--skill-detail-accent-bg) 20%, transparent);
   }
 
-  .skill-detail-page.is-light .skill-detail-breadcrumb .ant-breadcrumb,
-  .skill-detail-page.is-light .skill-detail-breadcrumb .ant-breadcrumb-link,
-  .skill-detail-page.is-light .skill-detail-breadcrumb .ant-breadcrumb-separator {
-    color: var(--skill-detail-text-muted);
+  .skill-detail-page.is-light .skill-detail-breadcrumb-button {
+    color: var(--skill-detail-text-secondary);
   }
 
   .skill-detail-page.is-light .skill-detail-breadcrumb-button:hover {
-    color: var(--skill-detail-text-secondary);
+    color: var(--skill-detail-text-primary);
+    border-color: color-mix(in srgb, var(--skill-detail-border-strong) 70%, transparent);
+    background: color-mix(in srgb, var(--skill-detail-surface-2) 84%, transparent);
+  }
+
+  .skill-detail-page.is-light .skill-detail-breadcrumb-current {
+    border-color: color-mix(in srgb, var(--skill-detail-border-strong) 78%, transparent);
+    background: color-mix(in srgb, var(--skill-detail-accent-bg) 14%, transparent);
   }
 
   .skill-detail-meta-strip {
@@ -234,66 +287,6 @@ export const publicSkillDetailBaseStyles = css`
   .skill-detail-page.is-light .skill-detail-meta-chip.is-success {
     background: var(--skill-detail-surface-1);
     color: var(--skill-detail-text-secondary);
-  }
-
-  .skill-detail-top-file-switch {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: nowrap;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
-
-  .skill-detail-top-file-switch::-webkit-scrollbar {
-    display: none;
-  }
-
-  .skill-detail-top-file-button,
-  .skill-detail-top-file-browse {
-    flex: 0 0 auto;
-    white-space: nowrap;
-    min-height: 30px;
-    border-radius: 8px;
-    padding: 5px 10px;
-    border: 0;
-    background: color-mix(in srgb, var(--skill-detail-surface-2) 72%, transparent);
-    color: var(--skill-detail-text-secondary);
-    font-family: "JetBrains Mono", monospace;
-    font-size: 11px;
-    line-height: 1;
-    font-weight: 700;
-    cursor: pointer;
-    transition:
-      filter var(--skill-detail-motion-fast) var(--skill-detail-ease-standard),
-      background-color var(--skill-detail-motion-fast) var(--skill-detail-ease-standard),
-      box-shadow var(--skill-detail-motion-fast) var(--skill-detail-ease-standard);
-  }
-
-  .skill-detail-top-file-button.is-active {
-    background: color-mix(in srgb, var(--skill-detail-accent-bg) 88%, transparent);
-    color: var(--skill-detail-accent-text);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skill-detail-border-strong) 54%, transparent);
-  }
-
-  .skill-detail-top-file-button:hover,
-  .skill-detail-top-file-browse:hover {
-    filter: brightness(1.08);
-  }
-
-  .skill-detail-page.is-light .skill-detail-top-file-button,
-  .skill-detail-page.is-light .skill-detail-top-file-browse {
-    background: color-mix(in srgb, var(--skill-detail-surface-1) 84%, transparent);
-    color: var(--skill-detail-text-secondary);
-  }
-
-  .skill-detail-page.is-light .skill-detail-top-file-button.is-active {
-    background: var(--skill-detail-accent-bg);
-    color: var(--skill-detail-accent-text);
   }
 
   .skill-detail-top-actions {

@@ -227,8 +227,9 @@ test.describe("Public skill detail interaction flow", () => {
     await expect(page.locator(".skill-detail-code-panel")).toHaveClass(/is-sql/);
     await expect(page.locator(".skill-detail-meta-strip")).toContainText("language sql");
 
-    await page.locator(".skill-detail-top-file-switch .skill-detail-top-file-button", { hasText: "README.md" }).first().click();
-    await expect(page.locator(".skill-detail-top-file-switch .skill-detail-top-file-button.is-active")).toContainText("README.md");
+    await page.getByTestId("skill-detail-directory-row-README.md").click();
+    await expect(page.getByTestId("skill-detail-directory-row-README.md")).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator(".skill-detail-doc-file-name")).toContainText("README.md");
     await expect(page.locator(".skill-detail-code-content")).toContainText("Overview");
     await expect(page.locator(".skill-detail-code-head .skill-detail-file-state-hint")).toContainText("/sql-performance-lab/README.md");
     await expect(page.locator(".skill-detail-code-head .skill-detail-file-state-meta")).toContainText("Markdown");

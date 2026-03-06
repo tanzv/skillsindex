@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { type ReactNode } from "react";
 import { SkillDetailCopy } from "./PublicSkillDetailPage.copy";
 import { SkillDetailViewModel } from "./PublicSkillDetailPage.helpers";
+import PublicSkillDetailDirectoryTree from "./publicSkillDetail/PublicSkillDetailDirectoryTree";
 
 type FilePresetKey = "skill" | "readme" | "changelog";
 
@@ -13,6 +14,7 @@ interface PublicSkillDetailFileBrowserProps {
   text: SkillDetailCopy;
   onCopyPath: () => void;
   onOpenSource: () => void;
+  onSelectFile: (nextFileIndex: number) => void;
 }
 
 type DocumentHeadingLevel = 1 | 2 | 3;
@@ -223,9 +225,11 @@ export default function PublicSkillDetailFileBrowser({
   selectedFilePath,
   text,
   onCopyPath,
-  onOpenSource
+  onOpenSource,
+  onSelectFile
 }: PublicSkillDetailFileBrowserProps) {
   const selectedEntry = detailModel.fileEntries[selectedFileIndex] || detailModel.fileEntries[0];
+  const selectedEntryPath = String(selectedEntry?.name || selectedFileName);
   const filePathLabel = (text.filePathHint.split(":")[0] || "Path").trim();
   const resolvedFilePathHint = `${filePathLabel}: ${selectedFilePath}`;
   const previewContent = detailModel.presetPreviewContent[activePreset] || detailModel.fileCodePreview;
@@ -242,7 +246,20 @@ export default function PublicSkillDetailFileBrowser({
 
   return (
     <div className="skill-detail-left-col">
-      <article id="skill-detail-file-content" className="skill-detail-card is-file-tree is-preview-only">
+      <article
+        id="skill-detail-file-content"
+        className="skill-detail-card is-file-tree is-preview-only"
+        role="region"
+        aria-label={text.fileBrowserTitle}
+      >
+        <PublicSkillDetailDirectoryTree
+          fileEntries={detailModel.fileEntries}
+          rootLabel={text.fileTreeRoot}
+          selectedFilePath={selectedEntryPath}
+          title={text.fileBrowserTitle}
+          onSelectFile={onSelectFile}
+        />
+
         <div className="skill-detail-file-head skill-detail-doc-toolbar">
           <div className="skill-detail-doc-toolbar-main">
             <span className="skill-detail-doc-file-icon" aria-hidden="true" />
