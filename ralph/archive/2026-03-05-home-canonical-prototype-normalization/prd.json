@@ -8,7 +8,7 @@
       "title": "Publish homepage-derived prototype standards to agent documentation",
       "description": "As a design maintainer, I want a single homepage-derived standard document so that all prototype updates follow the same constraints and interaction contract.",
       "acceptanceCriteria": [
-        "Update agents/prototype-design-standards.md with homepage canonical contract and hard constraints",
+        "Update agents/standards/prototype-design-standards.md with homepage canonical contract and hard constraints",
         "Document MCP-only editing policy for .pen updates",
         "Typecheck passes"
       ],

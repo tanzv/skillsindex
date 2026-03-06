@@ -4,9 +4,9 @@
 - 目标文件：`prototypes/skillsindex_framework/skillsindex_framework.pen`
 - 目标页面：`j0pbU`、`phuBz`、`sNW38`
 - 对齐标准：
-  - `agents/prototype-design-standards.md`
-  - `agents/tokens.md`
-  - `agents/review-checklist.md`
+  - `agents/standards/prototype-design-standards.md`
+  - `agents/standards/tokens.md`
+  - `agents/standards/review-checklist.md`
 
 ## 改动点
 
@@ -49,4 +49,4 @@
 
 ## 变更文件列表
 - `prototypes/skillsindex_framework/skillsindex_framework.pen`
-- `agents/subagent-pixel-polish-report-2026-02-27.md`
+- `agents/records/audit/subagent-pixel-polish-report-2026-02-27.md`

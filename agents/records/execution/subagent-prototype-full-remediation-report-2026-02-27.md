@@ -27,16 +27,16 @@ Deliver a style-system-driven remediation pass for key homepage/admin pages with
 
 - Prototype file: `prototypes/skillsindex_framework/skillsindex_framework.pen`
 - Core standards:
-  - `agents/prototype-design-standards.md`
-  - `agents/tokens.md`
-  - `agents/review-checklist.md`
+  - `agents/standards/prototype-design-standards.md`
+  - `agents/standards/tokens.md`
+  - `agents/standards/review-checklist.md`
   - `docs/plans/2026-02-27-unified-prototype-style-system.md`
 - Evidence and score artifacts:
-  - `agents/prototype-page-scorecard-2026-02-27.md`
-  - `agents/prototype-page-scorecard-2026-02-27-pass2.md`
-  - `agents/p1-p2-optimization-execution-report-2026-02-27.md`
-  - `agents/final-acceptance-checklist-2026-02-27.md`
-  - `agents/subagent-pixel-polish-report-2026-02-27.md`
+  - `agents/records/audit/prototype-page-scorecard-2026-02-27.md`
+  - `agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md`
+  - `agents/records/execution/p1-p2-optimization-execution-report-2026-02-27.md`
+  - `agents/records/audit/final-acceptance-checklist-2026-02-27.md`
+  - `agents/records/audit/subagent-pixel-polish-report-2026-02-27.md`
 
 ## 3. Scope Control
 
@@ -65,7 +65,7 @@ Deliver a style-system-driven remediation pass for key homepage/admin pages with
 
 | Risk Cluster | Baseline Evidence | Impact |
 |---|---|---|
-| Dark workflow pages had excessive bright accents | `agents/prototype-page-scorecard-2026-02-27.md` (`P1=5`, bright accent density up to `22`) | Focus drift, weak scan path |
+| Dark workflow pages had excessive bright accents | `agents/records/audit/prototype-page-scorecard-2026-02-27.md` (`P1=5`, bright accent density up to `22`) | Focus drift, weak scan path |
 | Governance/sync family had hierarchy flattening in dense blocks | Same scorecard + review checklist criteria | L2/L3 confusion, action misfocus |
 | Dark homepage cards had weak unselected boundaries | Pixel polish baseline notes | Low discoverability of selected state |
 
@@ -120,7 +120,7 @@ Note: This table is representative. Full style deltas are reflected in the `.pen
 | `ReuoM` | 85 | 94 | P1 | P3 | 18 | 0 |
 | `phuBz` | 86 | 95 | P1 | P3 | 19 | 0 |
 
-Source: `agents/p1-p2-optimization-execution-report-2026-02-27.md`
+Source: `agents/records/execution/p1-p2-optimization-execution-report-2026-02-27.md`
 
 ### 7.2 Stabilization/Parity Pages (No Regression in This Scope)
 
@@ -135,8 +135,8 @@ Source: `agents/p1-p2-optimization-execution-report-2026-02-27.md`
 | `j0pbU` | dark | Card state readability improved and verified by screenshot review |
 
 Sources:  
-`agents/prototype-page-scorecard-2026-02-27-pass2.md`  
-`agents/final-acceptance-checklist-2026-02-27.md`
+`agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md`  
+`agents/records/audit/final-acceptance-checklist-2026-02-27.md`
 
 ### 7.3 Scope Page Sign-off Register
 
@@ -144,18 +144,18 @@ Sign-off timestamp for this documentation verification pass: `2026-02-27 09:51:3
 
 | Page ID | Theme | Reviewer Role | Last Verified (UTC) | Verification Source | Sign-off |
 |---|---|---|---|---|---|
-| `j0pbU` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/final-acceptance-checklist-2026-02-27.md` Section 2 | PASS |
-| `95uPl` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
-| `phuBz` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
-| `sNW38` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
-| `Onzo0` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
-| `LCu0c` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
-| `ReuoM` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
-| `mbfPP` | light | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
-| `GBDSq` | light | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
-| `iTgm0` | light | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
-| `r0yUw` | light | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
-| `DqDxJ` | light | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
+| `j0pbU` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/records/audit/final-acceptance-checklist-2026-02-27.md` Section 2 | PASS |
+| `95uPl` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
+| `phuBz` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
+| `sNW38` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
+| `Onzo0` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
+| `LCu0c` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
+| `ReuoM` | dark | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
+| `mbfPP` | light | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
+| `GBDSq` | light | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
+| `iTgm0` | light | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
+| `r0yUw` | light | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
+| `DqDxJ` | light | Prototype Remediation Execution | 2026-02-27 09:51:38 UTC | `agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md` | PASS |
 
 ## 8. Verification Protocol (Reproducible)
 
@@ -175,12 +175,12 @@ Expected outcomes:
 
 | Run ID | Executed At (UTC) | Command | Result Summary |
 |---|---|---|---|
-| LOG-001 | 2026-02-27 09:51:38 UTC | `rg -n "\\| (sNW38|Onzo0|LCu0c|ReuoM|phuBz|95uPl|mbfPP|GBDSq|iTgm0|r0yUw|DqDxJ) \\|" agents/prototype-page-scorecard-2026-02-27-pass2.md` | 11 scoped admin/governance lines matched; all listed as `PASS` with `P3` severity and score range `92-95` |
-| LOG-002 | 2026-02-27 09:51:38 UTC | `rg -n "Average score target|P1 backlog cleared|P2 backlog cleared|Dark homepage card border exists|Action panel visual distinction|Release readiness" agents/final-acceptance-checklist-2026-02-27.md` | Acceptance checkpoints confirmed: `95.66`, `P1=0`, `P2=0`, homepage border PASS, action panel distinction PASS, release status ACCEPTED |
+| LOG-001 | 2026-02-27 09:51:38 UTC | `rg -n "\\| (sNW38|Onzo0|LCu0c|ReuoM|phuBz|95uPl|mbfPP|GBDSq|iTgm0|r0yUw|DqDxJ) \\|" agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md` | 11 scoped admin/governance lines matched; all listed as `PASS` with `P3` severity and score range `92-95` |
+| LOG-002 | 2026-02-27 09:51:38 UTC | `rg -n "Average score target|P1 backlog cleared|P2 backlog cleared|Dark homepage card border exists|Action panel visual distinction|Release readiness" agents/records/audit/final-acceptance-checklist-2026-02-27.md` | Acceptance checkpoints confirmed: `95.66`, `P1=0`, `P2=0`, homepage border PASS, action panel distinction PASS, release status ACCEPTED |
 
 ## 9. Acceptance Traceability Matrix
 
-### 9.1 Review Checklist Item Mapping (`agents/review-checklist.md`)
+### 9.1 Review Checklist Item Mapping (`agents/standards/review-checklist.md`)
 
 | Control Objective | Checklist Item IDs | Evidence | Status |
 |---|---|---|---|
@@ -191,7 +191,7 @@ Expected outcomes:
 | Dark/light hierarchy parity maintained | `§2.5`, `§3.C.10` | Dark/light page pairs retained across governance/sync family | PASS |
 | Module exit criteria satisfied | `§6.1`, `§6.3`, `§6.4` | 64/64 quick-gate, no unresolved P1, parity screenshots referenced in acceptance artifacts | PASS |
 
-### 9.2 Final Acceptance Mapping (`agents/final-acceptance-checklist-2026-02-27.md`)
+### 9.2 Final Acceptance Mapping (`agents/records/audit/final-acceptance-checklist-2026-02-27.md`)
 
 | Acceptance Item | Acceptance Section | Evidence | Status |
 |---|---|---|---|
@@ -212,8 +212,8 @@ Source note: scope score `96.1` is inherited from the v2.0 remediation matrix fo
 
 Cross-artifact quality checkpoints:
 
-- Admin pass-2 scorecard average: **95.59 / 100** (`agents/prototype-page-scorecard-2026-02-27-pass2.md`)
-- Final acceptance snapshot average: **95.66 / 100** (`agents/final-acceptance-checklist-2026-02-27.md`)
+- Admin pass-2 scorecard average: **95.59 / 100** (`agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md`)
+- Final acceptance snapshot average: **95.66 / 100** (`agents/records/audit/final-acceptance-checklist-2026-02-27.md`)
 - `P1=0`, `P2=0` maintained in both final acceptance and pass-2 score artifacts
 
 ## 11. Risks and Limitations
@@ -227,8 +227,8 @@ Cross-artifact quality checkpoints:
 1. Apply the same dark boundary rules to remaining non-target dark pages.
 2. Keep a single score source per run to avoid metric drift across snapshots.
 3. If tokens are adjusted, update both:
-   - `agents/tokens.md`
-   - `agents/prototype-design-standards.md`
+   - `agents/standards/tokens.md`
+   - `agents/standards/prototype-design-standards.md`
 4. For every new pass, append version history and refresh:
    - scope matrix
    - page delta table
@@ -237,4 +237,4 @@ Cross-artifact quality checkpoints:
 ## 13. Files Changed
 
 1. `prototypes/skillsindex_framework/skillsindex_framework.pen`
-2. `agents/subagent-prototype-full-remediation-report-2026-02-27.md`
+2. `agents/records/execution/subagent-prototype-full-remediation-report-2026-02-27.md`

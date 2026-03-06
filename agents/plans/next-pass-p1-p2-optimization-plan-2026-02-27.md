@@ -1,7 +1,7 @@
 # Next Pass Optimization Plan (P1/P2)
 
 Date: 2026-02-27
-Input scorecard: `agents/prototype-page-scorecard-2026-02-27.md`
+Input scorecard: `agents/records/audit/prototype-page-scorecard-2026-02-27.md`
 Prototype target: `prototypes/skillsindex_framework/skillsindex_framework.pen`
 
 ## 1. Objective

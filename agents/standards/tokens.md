@@ -2,7 +2,7 @@
 
 Version: 1.0
 Last Updated: 2026-02-27
-Source: `agents/prototype-design-standards.md`
+Source: `agents/standards/prototype-design-standards.md`
 
 ## 1. Usage
 
@@ -136,5 +136,5 @@ Use these tokens before introducing any new raw color or spacing value.
 2. Use `--accent-action-*` only for CTA and active controls.
 3. Use semantic colors only for semantic meaning.
 4. Keep dark/light hierarchy equivalent when switching themes.
-5. If a new token is required, update this file and `agents/prototype-design-standards.md` in the same change.
+5. If a new token is required, update this file and `agents/standards/prototype-design-standards.md` in the same change.
 

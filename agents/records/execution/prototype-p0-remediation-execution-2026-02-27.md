@@ -2,7 +2,7 @@
 
 ## 执行范围
 
-基于 `agents/prototype-fine-grained-audit-2026-02-27.md` 的 P0 项执行：
+基于 `agents/records/audit/prototype-fine-grained-audit-2026-02-27.md` 的 P0 项执行：
 
 1. 互动系统前台可评审化
 2. 用户账号中心 `/account/*` 子页补齐

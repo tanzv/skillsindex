@@ -2,7 +2,7 @@
 
 Version: 1.0
 Last Updated: 2026-02-27
-Source: `agents/prototype-design-standards.md`, `agents/tokens.md`
+Source: `agents/standards/prototype-design-standards.md`, `agents/standards/tokens.md`
 
 ## 1. Review Method
 

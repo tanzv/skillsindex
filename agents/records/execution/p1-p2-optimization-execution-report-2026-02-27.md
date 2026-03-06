@@ -1,7 +1,7 @@
 # P1/P2 Optimization Execution Report
 
 Date: 2026-02-27
-Plan reference: `agents/next-pass-p1-p2-optimization-plan-2026-02-27.md`
+Plan reference: `agents/plans/next-pass-p1-p2-optimization-plan-2026-02-27.md`
 Prototype file: `prototypes/skillsindex_framework/skillsindex_framework.pen`
 
 ## 1. Execution Scope
@@ -51,7 +51,7 @@ Target pages from the plan:
 
 1. Screenshot re-check completed for all nine target pages.
 2. `snapshot_layout(problemsOnly=true)` confirmed no new layout errors in admin scope.
-3. Results are consistent with `agents/prototype-page-scorecard-2026-02-27-pass2.md`.
+3. Results are consistent with `agents/records/audit/prototype-page-scorecard-2026-02-27-pass2.md`.
 
 ## 6. Conclusion
 

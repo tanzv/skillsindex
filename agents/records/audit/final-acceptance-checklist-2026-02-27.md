@@ -3,9 +3,9 @@
 Date: 2026-02-27
 Prototype file: `prototypes/skillsindex_framework/skillsindex_framework.pen`
 Related standards:
-- `agents/prototype-design-standards.md`
-- `agents/tokens.md`
-- `agents/review-checklist.md`
+- `agents/standards/prototype-design-standards.md`
+- `agents/standards/tokens.md`
+- `agents/standards/review-checklist.md`
 
 ## 1. Global Acceptance
 
