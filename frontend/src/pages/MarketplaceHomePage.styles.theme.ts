@@ -3,6 +3,9 @@ import {
   marketplaceHomeThemeCategoryTokenLightStyles,
   marketplaceHomeThemeCategoryTokenStyles
 } from "./MarketplaceHomePage.styles.theme.categoryTokens";
+import { marketplaceHomeTopbarNavigationStyles } from "./MarketplaceHomePage.styles.theme.topbarNavigation";
+import { marketplaceHomeTopbarPrimaryOverflowStyles } from "./MarketplaceHomePage.styles.theme.topbarPrimaryOverflow";
+import { marketplaceHomeWorkspaceUserControlStyles } from "./MarketplaceHomePage.styles.theme.workspaceUserControls";
 
 export const marketplaceHomeThemeStyles = css`
   @import url("https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap");
@@ -10,27 +13,37 @@ export const marketplaceHomeThemeStyles = css`
   @keyframes marketplaceFadeDown {
     from {
       opacity: 0;
+      transform: translateY(-8px);
+      filter: blur(3px);
     }
     to {
       opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
     }
   }
 
   @keyframes marketplaceFadeUp {
     from {
       opacity: 0;
+      transform: translateY(10px);
+      filter: blur(3px);
     }
     to {
       opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
     }
   }
 
   @keyframes marketplaceHomePageEnter {
     from {
       opacity: 0;
+      transform: translateY(6px);
     }
     to {
       opacity: 1;
+      transform: translateY(0);
     }
   }
 
@@ -79,11 +92,20 @@ export const marketplaceHomeThemeStyles = css`
     --marketplace-content-gutter: clamp(16px, 2.2vw, 28px);
     --marketplace-nav-shell-background: rgba(255, 255, 255, 0.04);
     --marketplace-nav-shell-border: rgba(255, 255, 255, 0.06);
+    --marketplace-nav-button-border: color-mix(in srgb, var(--marketplace-nav-shell-border) 88%, transparent);
     --marketplace-nav-button-text: #e4e4e7;
     --marketplace-nav-button-subtle-text: #a1a1aa;
     --marketplace-nav-button-hover-background: rgba(255, 255, 255, 0.09);
+    --marketplace-nav-button-hover-border: rgba(255, 255, 255, 0.22);
+    --marketplace-nav-button-hover-shadow:
+      0 7px 18px color-mix(in srgb, #000000 24%, transparent),
+      inset 0 1px 0 color-mix(in srgb, #ffffff 14%, transparent);
     --marketplace-nav-button-active-background: #f5f5f5;
+    --marketplace-nav-button-active-border: rgba(255, 255, 255, 0.16);
     --marketplace-nav-button-active-text: #101010;
+    --marketplace-nav-button-active-shadow:
+      0 10px 24px color-mix(in srgb, #000000 28%, transparent),
+      inset 0 1px 0 color-mix(in srgb, #ffffff 36%, transparent);
     --marketplace-nav-button-highlight-background: rgba(255, 255, 255, 0.14);
     --marketplace-nav-badge-background: rgba(255, 255, 255, 0.16);
     --marketplace-nav-badge-text: #fafafa;
@@ -177,6 +199,8 @@ export const marketplaceHomeThemeStyles = css`
     transition: opacity 180ms ease, transform 180ms ease;
   }
 
+  ${marketplaceHomeWorkspaceUserControlStyles}
+
   .marketplace-home .marketplace-topbar-brand-dot {
     width: 30px;
     height: 30px;
@@ -219,101 +243,33 @@ export const marketplaceHomeThemeStyles = css`
     gap: 8px;
   }
 
-  .marketplace-home .marketplace-topbar-light-nav {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    max-width: min(100%, 820px);
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding: 4px;
-    border-radius: 11px;
-    border: 1px solid var(--marketplace-nav-shell-border);
-    background: var(--marketplace-nav-shell-background);
-  }
+  ${marketplaceHomeTopbarNavigationStyles}
 
-  .marketplace-home .marketplace-topbar-light-nav::-webkit-scrollbar {
-    display: none;
-  }
-
-  .marketplace-home .marketplace-topbar-nav-button {
-    border: 0;
-    height: 30px;
-    border-radius: 8px;
-    padding: 0 10px;
-    background: transparent;
-    color: var(--marketplace-nav-button-text);
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
-  }
-
-  .marketplace-home .marketplace-topbar-nav-button .marketplace-topbar-action-label {
-    white-space: nowrap;
-  }
-
-  .marketplace-home .marketplace-topbar-nav-button .marketplace-topbar-action-badge {
-    min-width: 22px;
-    height: 16px;
-    border-radius: 999px;
-    padding: 0 6px;
-    background: var(--marketplace-nav-badge-background);
-    color: var(--marketplace-nav-badge-text);
-    font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
-    font-weight: 700;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .marketplace-home .marketplace-topbar-nav-button.is-subtle {
-    color: var(--marketplace-nav-button-subtle-text);
-  }
-
-  .marketplace-home .marketplace-topbar-nav-button.is-highlight {
-    background: var(--marketplace-nav-button-highlight-background);
-  }
-
-  .marketplace-home .marketplace-topbar-nav-button.is-category-action {
-    border: 1px solid transparent;
-  }
-
-  .marketplace-home .marketplace-topbar-nav-button.is-category-action:not(.is-active):not(:disabled):hover {
-    border-color: var(--marketplace-nav-category-hover-border);
-  }
-
-  .marketplace-home .marketplace-topbar-nav-button.is-download-ranking-action {
-    background: var(--marketplace-nav-ranking-background);
-    border: 1px solid var(--marketplace-nav-ranking-border);
-    color: var(--marketplace-nav-ranking-text);
-  }
-
-  .marketplace-home .marketplace-topbar-nav-button.is-download-ranking-action:not(.is-active):not(:disabled):hover {
-    background: var(--marketplace-nav-button-hover-background);
-    border-color: var(--marketplace-nav-category-hover-border);
-  }
+  ${marketplaceHomeTopbarPrimaryOverflowStyles}
 
   .marketplace-home .marketplace-topbar-nav-button.is-active {
-    background: var(--marketplace-nav-button-active-background);
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, #ffffff 92%, var(--marketplace-nav-button-active-background)) 0%,
+        var(--marketplace-nav-button-active-background) 100%
+      );
     color: var(--marketplace-nav-button-active-text);
+    border-color: var(--marketplace-nav-button-active-border);
+    box-shadow: var(--marketplace-nav-button-active-shadow);
     font-weight: 700;
     cursor: default;
   }
 
   .marketplace-home .marketplace-topbar-nav-button:disabled {
-    opacity: 0.5;
+    opacity: 0.62;
     cursor: not-allowed;
   }
 
   .marketplace-home .marketplace-topbar-nav-button:not(.is-active):not(:disabled):hover {
     background: var(--marketplace-nav-button-hover-background);
+    border-color: var(--marketplace-nav-button-hover-border);
+    box-shadow: var(--marketplace-nav-button-hover-shadow);
     transform: translateY(-1px);
   }
 
@@ -478,6 +434,7 @@ export const marketplaceHomeThemeStyles = css`
   }
 
   .marketplace-home .marketplace-topbar-brand:focus-visible,
+  .marketplace-home .workspace-topbar-user-trigger:focus-visible,
   .marketplace-home .marketplace-topbar-secondary-cta:focus-visible,
   .marketplace-home .marketplace-topbar-cta:focus-visible {
     outline: 2px solid #3b82f6;
@@ -518,11 +475,20 @@ export const marketplaceHomeThemeStyles = css`
     --marketplace-topbar-border: #d4d4d4;
     --marketplace-nav-shell-background: rgba(255, 255, 255, 0.9);
     --marketplace-nav-shell-border: #d4d4d4;
+    --marketplace-nav-button-border: #dcdce0;
     --marketplace-nav-button-text: #27272a;
     --marketplace-nav-button-subtle-text: #71717a;
     --marketplace-nav-button-hover-background: #efefef;
+    --marketplace-nav-button-hover-border: #c9c9cf;
+    --marketplace-nav-button-hover-shadow:
+      0 6px 16px color-mix(in srgb, #111111 10%, transparent),
+      inset 0 1px 0 #ffffff;
     --marketplace-nav-button-active-background: #111111;
+    --marketplace-nav-button-active-border: #111111;
     --marketplace-nav-button-active-text: #ffffff;
+    --marketplace-nav-button-active-shadow:
+      0 8px 18px color-mix(in srgb, #111111 18%, transparent),
+      inset 0 1px 0 color-mix(in srgb, #ffffff 20%, transparent);
     --marketplace-nav-button-highlight-background: #e4e4e7;
     --marketplace-nav-badge-background: #111111;
     --marketplace-nav-badge-text: #ffffff;

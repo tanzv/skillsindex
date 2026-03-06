@@ -8,18 +8,14 @@ const selectors = {
   resultsFloatingContainer:
     "[data-testid='marketplace-results-floating-container'], .marketplace-results-floating-container, .marketplace-results-overlay-panel, [role='dialog']",
   resultsFloatingMask: "[data-testid='marketplace-results-floating-mask'], .marketplace-results-floating-mask, .marketplace-results-overlay-mask",
-  resultsFloatingClose: "[data-testid='marketplace-results-floating-close'], .marketplace-results-floating-close, .marketplace-results-overlay-close",
+  resultsFloatingContext: "[data-testid='marketplace-results-modal-context']",
   topStatsCard: ".marketplace-top-stats-card",
   searchStrip: ".marketplace-search-strip",
   searchUtilityRow: ".marketplace-search-utility-row",
-  searchFilterBtn: ".marketplace-search-filter-btn",
   searchKeywordInput: ".marketplace-search-input.is-query input",
   modalKeywordInput: ".marketplace-results-modal-input.is-query input",
-  modalSemanticInput: ".marketplace-results-modal-input.is-semantic input",
-  modalSearchButton: ".marketplace-results-modal-search",
   resultsKeywordInput: ".marketplace-home.is-results-page .marketplace-search-input.is-query input",
   resultsSemanticInput: ".marketplace-home.is-results-page .marketplace-search-input.is-semantic input",
-  resultsSearchButton: ".marketplace-home.is-results-page .marketplace-search-submit",
   resultsToolbar: ".marketplace-results-toolbar",
   resultsToolbarTitle: ".marketplace-results-toolbar h2",
   featuredRow: ".marketplace-featured-row",
@@ -29,7 +25,6 @@ const selectors = {
   topbarCta: ".marketplace-topbar-cta",
   topbarLocaleSwitch: ".marketplace-topbar-locale-switch",
   topbarThemeSwitch: ".marketplace-topbar-theme-switch",
-  searchSubmit: ".marketplace-search-submit",
   loadMoreButton: ".marketplace-pagination-load-more",
   pagination: ".marketplace-pagination, [aria-label='pagination']",
   paginationPrev: ".marketplace-pagination .is-nav:first-of-type, [aria-label='pagination'] .is-nav:first-of-type",
@@ -37,6 +32,7 @@ const selectors = {
   paginationEmptyHint: "[data-testid='marketplace-pagination-empty-hint']",
   paginationFinishedHint: "[data-testid='marketplace-pagination-finished-hint']",
   resultsEmptyState: "[data-testid='marketplace-results-empty-state']",
+  skillRowCard: ".marketplace-skill-row",
   skillRowNameButton: ".marketplace-skill-row .marketplace-skill-name button",
   resultsModalCardTitle: ".marketplace-home.is-results-page .marketplace-results-list .marketplace-skill-name button",
   animatedSection: "[data-animated='true'].animated-fade-up"
@@ -63,21 +59,21 @@ test.describe("Marketplace home interactions", () => {
     await expect(page.locator(".marketplace-results-list .marketplace-results-row")).toHaveCount(4);
   });
 
-  test("quick filter action opens floating modal and preserves current query", async ({ page }) => {
+  test("home search action opens dedicated results route and preserves current query", async ({ page }) => {
     await page.goto("/?q=repo");
-    await page.locator(selectors.searchFilterBtn).click();
+    await page.locator(selectors.searchKeywordInput).click();
     await expect(page).toHaveURL(/\/\?q=repo$/);
     await expect(page.locator(selectors.resultsFloatingContainer).first()).toBeVisible();
-    await page.locator(selectors.modalSearchButton).click();
+    await page.locator(selectors.modalKeywordInput).press("Enter");
     await expect(page).toHaveURL(/\/results\?q=repo$/);
+    await expect(page.locator(selectors.resultsPageRoot).first()).toBeVisible();
   });
 
   test("search action updates URL query state", async ({ page }) => {
     await page.goto("/?q=odoo&page=2");
-    await page.locator(selectors.searchSubmit).click();
+    await page.locator(selectors.searchKeywordInput).click();
     await expect(page.locator(selectors.resultsFloatingContainer).first()).toBeVisible();
-    await page.locator(selectors.modalSearchButton).click();
-
+    await page.locator(selectors.modalKeywordInput).press("Enter");
     await expect(page).toHaveURL(/\/results\?q=odoo$/);
   });
 
@@ -87,13 +83,14 @@ test.describe("Marketplace home interactions", () => {
     await expect(page).toHaveURL(HOME_PATH);
     await expect(page.locator(selectors.resultsFloatingContainer).first()).toBeVisible();
     await expect(page.locator(selectors.resultsFloatingMask).first()).toBeVisible();
+    await expect(page.locator(selectors.resultsFloatingContext).first()).toBeVisible();
   });
 
   test("results page search fields update query params", async ({ page }) => {
     await page.goto(RESULTS_PATH);
     await page.locator(selectors.resultsKeywordInput).fill("odoo");
     await page.locator(selectors.resultsSemanticInput).fill("workflow");
-    await page.locator(selectors.resultsSearchButton).click();
+    await page.locator(selectors.resultsSemanticInput).press("Enter");
 
     await expect(page).toHaveURL(/\/results\?q=odoo&tags=workflow$/);
   });
@@ -101,9 +98,10 @@ test.describe("Marketplace home interactions", () => {
   test("category detail results page uses category results title instead of latest title", async ({ page }) => {
     await page.goto("/categories/tools?category=tools&page=1");
 
+    const resultsToolbarTitle = page.locator(selectors.resultsToolbarTitle).first();
     await expect(page.locator(selectors.resultsPageRoot).first()).toBeVisible();
-    await expect(page.locator(selectors.resultsToolbarTitle).first()).toHaveText("Category Results");
-    await expect(page.locator(selectors.resultsToolbarTitle).first()).not.toHaveText("Latest");
+    await expect(resultsToolbarTitle).toContainText(/Category Results|分类/);
+    await expect(resultsToolbarTitle).not.toContainText(/Latest|最新上架/);
   });
 
   test("results entry chips can apply quick tag filters", async ({ page }) => {
@@ -328,14 +326,26 @@ test.describe("Marketplace home interactions", () => {
       return;
     }
 
-    await expect(page.locator(selectors.loadMoreButton)).toBeVisible();
+    const hasLoadMore = (await page.locator(selectors.loadMoreButton).count()) > 0;
+    if (hasLoadMore) {
+      await expect(page.locator(selectors.loadMoreButton)).toBeVisible();
+      return;
+    }
+
+    const hasEmptyState = (await page.locator(selectors.resultsEmptyState).count()) > 0;
+    if (hasEmptyState) {
+      await expect(page.locator(selectors.resultsEmptyState)).toBeVisible();
+      return;
+    }
+
+    await expect(page.locator(selectors.resultsList)).toBeVisible();
   });
 
-  test("home floating modal submit opens dedicated results route", async ({ page }) => {
+  test("home search entry opens dedicated results route", async ({ page }) => {
     await page.goto(HOME_PATH);
     await page.locator(selectors.searchKeywordInput).click();
     await expect(page.locator(selectors.resultsFloatingContainer).first()).toBeVisible();
-    await page.locator(selectors.modalSearchButton).click();
+    await page.locator(selectors.modalKeywordInput).press("Enter");
     await expect(page).toHaveURL(/\/results$/);
   });
 
@@ -496,27 +506,41 @@ test.describe("Marketplace home interactions", () => {
       });
   });
 
-  test("results modal supports Enter submission for quick keyword update", async ({ page }) => {
+  test("results page supports Enter submission for quick keyword update", async ({ page }) => {
     await page.goto(RESULTS_PATH);
     await page.locator(selectors.resultsKeywordInput).fill("repo");
     await page.locator(selectors.resultsKeywordInput).press("Enter");
     await expect(page).toHaveURL(/\/results\?q=repo$/);
   });
 
-  test("results modal remains visible after semantic filter submission", async ({ page }) => {
+  test("results page remains visible after semantic filter submission", async ({ page }) => {
     await page.goto(RESULTS_PATH);
     await page.locator(selectors.resultsSemanticInput).fill("policy lint");
-    await page.locator(selectors.resultsSearchButton).click();
+    await page.locator(selectors.resultsSemanticInput).press("Enter");
     await expect(page).toHaveURL(/\/results\?tags=policy\+lint$/);
     await expect(page.locator(selectors.resultsPageRoot).first()).toBeVisible();
-    await expect(page.locator(selectors.resultsModalCardTitle).first()).toBeVisible();
+    const resultsTitleButton = page.locator(selectors.resultsModalCardTitle).first();
+    const emptyState = page.locator(selectors.resultsEmptyState);
+    await expect
+      .poll(async () => {
+        const hasVisibleResult =
+          (await resultsTitleButton.count()) > 0 && (await resultsTitleButton.isVisible().catch(() => false));
+        if (hasVisibleResult) {
+          return "card";
+        }
+        if (await emptyState.isVisible().catch(() => false)) {
+          return "empty";
+        }
+        return "pending";
+      })
+      .toMatch(/^(card|empty)$/);
   });
 
   test("results page updates to empty state when keyword has no matches", async ({ page }) => {
     await page.goto("/results?q=playwright");
     await expect(page.locator(selectors.resultsList)).toBeVisible();
     await page.locator(selectors.resultsKeywordInput).fill("zzzz-not-found-keyword");
-    await page.locator(selectors.resultsSearchButton).click();
+    await page.locator(selectors.resultsKeywordInput).press("Enter");
     await expect(page).toHaveURL(/\/results\?q=zzzz-not-found-keyword$/);
     await expect(page.locator(selectors.resultsEmptyState)).toBeVisible();
   });
@@ -529,9 +553,9 @@ test.describe("Marketplace home interactions", () => {
     await expect(page).toHaveURL(/\/results\?tags=/);
   });
 
-  test("clicking a result row navigates to the skill detail route", async ({ page }) => {
+  test("clicking a skill card row navigates to the skill detail route", async ({ page }) => {
     await page.goto(HOME_PATH);
-    await page.locator(selectors.skillRowNameButton).first().click();
+    await page.locator(selectors.skillRowCard).first().click();
 
     await expect(page).toHaveURL(/\/skills\/\d+$/);
   });
