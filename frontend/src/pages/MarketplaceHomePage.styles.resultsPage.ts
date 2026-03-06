@@ -10,6 +10,22 @@ export const marketplaceHomeResultsPageStyles = css`
     }
   }
 
+  @keyframes marketplaceResultsInputSweep {
+    from {
+      opacity: 0;
+      transform: translateX(-42%);
+    }
+
+    28% {
+      opacity: 0.48;
+    }
+
+    to {
+      opacity: 0;
+      transform: translateX(42%);
+    }
+  }
+
   .marketplace-results-overlay {
     --marketplace-results-mask: var(--si-color-overlay-mask, rgba(15, 23, 42, 0.56));
     --marketplace-results-canvas-background: var(--si-color-surface-alt, #d6d6d6);
@@ -165,6 +181,9 @@ export const marketplaceHomeResultsPageStyles = css`
   }
 
   .marketplace-results-overlay .marketplace-results-modal-input {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     height: 46px;
     height: var(--marketplace-results-input-height, 46px);
     border-radius: 12px;
@@ -173,12 +192,59 @@ export const marketplaceHomeResultsPageStyles = css`
     padding: 0 16px;
     display: inline-flex;
     align-items: center;
-    transition: box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease;
+    transition:
+      box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .marketplace-results-overlay .marketplace-results-modal-input::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      120deg,
+      transparent 10%,
+      color-mix(in srgb, var(--marketplace-results-chip-active-border) 34%, transparent) 48%,
+      transparent 86%
+    );
+    opacity: 0;
+    transform: translateX(-42%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .marketplace-results-overlay .marketplace-results-modal-input > * {
+    position: relative;
+    z-index: 1;
   }
 
   .marketplace-results-overlay .marketplace-results-modal-input:hover {
     border-color: var(--marketplace-results-chip-active-border);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--marketplace-results-chip-active-border) 28%, transparent);
+    background: color-mix(in srgb, var(--marketplace-results-input-background) 92%, var(--marketplace-results-chip-active-background));
+    box-shadow:
+      0 10px 22px rgba(15, 23, 42, 0.08),
+      0 0 0 1px color-mix(in srgb, var(--marketplace-results-chip-active-border) 42%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .marketplace-results-overlay .marketplace-results-modal-input:hover::before {
+    animation: marketplaceResultsInputSweep 860ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .marketplace-results-overlay .marketplace-results-modal-input:focus-within {
+    border-color: var(--marketplace-results-chip-active-border);
+    background: color-mix(in srgb, var(--marketplace-results-input-background) 90%, var(--marketplace-results-chip-active-background));
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--marketplace-results-chip-active-border) 26%, transparent),
+      0 10px 24px rgba(15, 23, 42, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .marketplace-results-overlay .marketplace-results-modal-input:focus-within::before {
+    animation: marketplaceResultsInputSweep 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .marketplace-results-overlay .marketplace-results-modal-input input {
@@ -198,9 +264,7 @@ export const marketplaceHomeResultsPageStyles = css`
   }
 
   .marketplace-results-overlay .marketplace-results-modal-input input:focus-visible {
-    outline: 2px solid #3b82f6;
-    outline-offset: 1px;
-    border-radius: 6px;
+    outline: none;
   }
 
   .marketplace-results-overlay .marketplace-results-modal-search {
@@ -500,6 +564,19 @@ export const marketplaceHomeResultsPageStyles = css`
   @media (prefers-reduced-motion: reduce) {
     .marketplace-results-overlay {
       animation: none;
+    }
+
+    .marketplace-results-overlay .marketplace-results-modal-input {
+      transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+      transform: none;
+    }
+
+    .marketplace-results-overlay .marketplace-results-modal-input::before,
+    .marketplace-results-overlay .marketplace-results-modal-input:hover::before,
+    .marketplace-results-overlay .marketplace-results-modal-input:focus-within::before {
+      animation: none;
+      opacity: 0;
+      transform: none;
     }
   }
 `;

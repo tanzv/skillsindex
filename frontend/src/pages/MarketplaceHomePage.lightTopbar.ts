@@ -292,6 +292,7 @@ export function buildLightTopbarUtilityActions({
       id: "global-search",
       label: labels?.globalSearchNav || "Global Search",
       tone: "subtle",
+      className: "is-search-trigger",
       onClick: () => onNavigate(toPublicPath("/results"))
     },
     {

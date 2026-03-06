@@ -17,6 +17,10 @@ export interface ThemeTokenMap {
   "--si-color-accent-contrast": string;
   "--si-color-success-bg": string;
   "--si-color-success-text": string;
+  "--si-color-warning-bg": string;
+  "--si-color-warning-text": string;
+  "--si-color-danger-bg": string;
+  "--si-color-danger-text": string;
   "--si-color-overlay-mask": string;
   "--si-shadow-overlay": string;
   "--si-size-marketplace-top-recommend-row-height": string;
@@ -184,6 +188,10 @@ const darkThemeTokens: ThemeTokenMap = {
   "--si-color-accent-contrast": "#111111",
   "--si-color-success-bg": "#14532d",
   "--si-color-success-text": "#bbf7d0",
+  "--si-color-warning-bg": "#3f2f0a",
+  "--si-color-warning-text": "#fde68a",
+  "--si-color-danger-bg": "#3f1012",
+  "--si-color-danger-text": "#fecaca",
   "--si-color-overlay-mask": "rgba(3, 8, 16, 0.74)",
   "--si-shadow-overlay": "0 24px 40px rgba(0, 0, 0, 0.34)",
   ...marketplaceDimensionTokens
@@ -206,6 +214,10 @@ const lightThemeTokens: ThemeTokenMap = {
   "--si-color-accent-contrast": "#e5e5e5",
   "--si-color-success-bg": "#ecfdf3",
   "--si-color-success-text": "#065f46",
+  "--si-color-warning-bg": "#fef3c7",
+  "--si-color-warning-text": "#92400e",
+  "--si-color-danger-bg": "#fee2e2",
+  "--si-color-danger-text": "#991b1b",
   "--si-color-overlay-mask": "rgba(15, 23, 42, 0.34)",
   "--si-shadow-overlay": "0 18px 34px rgba(0, 0, 0, 0.12)",
   ...marketplaceDimensionTokens

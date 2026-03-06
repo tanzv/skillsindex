@@ -5,6 +5,7 @@ import {
 } from "./MarketplaceHomePage.styles.theme.categoryTokens";
 import { marketplaceHomeTopbarNavigationStyles } from "./MarketplaceHomePage.styles.theme.topbarNavigation";
 import { marketplaceHomeTopbarPrimaryOverflowStyles } from "./MarketplaceHomePage.styles.theme.topbarPrimaryOverflow";
+import { marketplaceHomeWorkspaceSearchTriggerStyles } from "./MarketplaceHomePage.styles.theme.workspaceSearchTrigger";
 import { marketplaceHomeWorkspaceUserControlStyles } from "./MarketplaceHomePage.styles.theme.workspaceUserControls";
 
 export const marketplaceHomeThemeStyles = css`
@@ -246,6 +247,8 @@ export const marketplaceHomeThemeStyles = css`
   ${marketplaceHomeTopbarNavigationStyles}
 
   ${marketplaceHomeTopbarPrimaryOverflowStyles}
+
+  ${marketplaceHomeWorkspaceSearchTriggerStyles}
 
   .marketplace-home .marketplace-topbar-nav-button.is-active {
     background:

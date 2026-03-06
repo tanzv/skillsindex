@@ -164,5 +164,6 @@ describe("MarketplaceHomePage light topbar actions", () => {
     });
 
     expect(actions.map((action) => action.id)).toEqual(["global-search", "recent-jobs", "profile"]);
+    expect(actions[0]?.className).toContain("is-search-trigger");
   });
 });

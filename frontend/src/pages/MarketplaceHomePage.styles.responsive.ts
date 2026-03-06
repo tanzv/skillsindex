@@ -43,6 +43,10 @@ export const marketplaceHomeResponsiveStyles = css`
     flex-wrap: wrap;
   }
 
+  .marketplace-home.is-mobile .workspace-topbar-shell .marketplace-topbar-utility-button.is-search-trigger {
+    inline-size: 100%;
+  }
+
   .marketplace-home.is-mobile .workspace-topbar-primary-groups-shell {
     justify-content: space-between;
     align-items: flex-start;

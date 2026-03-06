@@ -9,7 +9,7 @@ import {
   buildMarketplaceTopbarActionBundle,
 } from "./MarketplaceHomePage.lightTopbar";
 import { marketplaceHomeCopy } from "./MarketplaceHomePage.copy";
-import { buildMarketplaceWorkspaceAuthRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
+import { buildMarketplaceWorkspaceAccessRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
 import MarketplaceHomePageStyles from "./MarketplaceHomePage.styles";
 import {
   PrototypeSplitRow,
@@ -96,10 +96,6 @@ export default function PublicDocsPage({
     onNavigate(toPublicPath("/login"));
   }
 
-  function handleTopbarConsoleAction(): void {
-    onNavigate("/workspace");
-  }
-
   const topbarActionBundle = useMemo(
     () =>
       buildMarketplaceTopbarActionBundle({
@@ -114,21 +110,23 @@ export default function PublicDocsPage({
   );
   const topbarRightRegistrations = useMemo(
     () =>
-      buildMarketplaceWorkspaceAuthRightRegistrations({
+      buildMarketplaceWorkspaceAccessRightRegistrations({
         sessionUser,
+        signedInLabel: topbarLocaleCopy.signedIn,
+        signedOutLabel: topbarLocaleCopy.signedOut,
         workspaceLabel: topbarLocaleCopy.openWorkspace,
         signInLabel: topbarLocaleCopy.signIn,
-        signOutLabel: topbarLocaleCopy.signOut,
-        onWorkspaceClick: handleTopbarConsoleAction,
-        onAuthClick: handleTopbarAuthAction
+        onNavigate,
+        toPublicPath
       }),
     [
-      handleTopbarAuthAction,
-      handleTopbarConsoleAction,
+      onNavigate,
       sessionUser,
+      toPublicPath,
       topbarLocaleCopy.openWorkspace,
       topbarLocaleCopy.signIn,
-      topbarLocaleCopy.signOut,
+      topbarLocaleCopy.signedIn,
+      topbarLocaleCopy.signedOut,
     ],
   );
   const endpointMetadata = useMemo<EndpointMetadata[]>(

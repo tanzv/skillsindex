@@ -1,6 +1,4 @@
 export const globalLoginStylesTheme = `
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap");
-
 .page-login-react,
 .page-login-react-light {
   --login-font-base: "Noto Sans SC", "Noto Sans", sans-serif;

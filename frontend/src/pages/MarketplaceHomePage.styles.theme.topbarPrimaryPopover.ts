@@ -221,6 +221,21 @@ export const marketplaceHomeTopbarPrimaryPopoverStyles = css`
       0 8px 18px color-mix(in srgb, #000000 18%, transparent);
   }
 
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-overflow-group.is-active {
+    border-color: color-mix(in srgb, var(--marketplace-nav-button-active-border) 72%, #ffffff 28%);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, #ffffff 10%, transparent),
+      0 10px 22px color-mix(in srgb, #000000 22%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--marketplace-nav-button-active-border) 18%, transparent);
+  }
+
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-overflow-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
   .marketplace-home .workspace-topbar-shell .workspace-topbar-overflow-group-title {
     margin: 0;
     color: color-mix(in srgb, var(--marketplace-nav-button-text) 88%, #f8fafc 12%);
@@ -230,6 +245,24 @@ export const marketplaceHomeTopbarPrimaryPopoverStyles = css`
     letter-spacing: 0.05em;
     text-transform: uppercase;
     font-family: "JetBrains Mono", monospace;
+  }
+
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-overflow-group-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    min-height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--marketplace-nav-shell-border) 78%, #ffffff 22%);
+    background: color-mix(in srgb, var(--marketplace-topbar-background-alt) 82%, #0f1726 18%);
+    color: color-mix(in srgb, var(--marketplace-nav-button-subtle-text) 74%, #f8fafc 26%);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.04em;
   }
 
   .marketplace-home .workspace-topbar-shell .workspace-topbar-overflow-group-actions {

@@ -10,7 +10,7 @@ import {
 } from "./MarketplaceHomePage.lightTopbar";
 import { marketplaceHomeCopy } from "./MarketplaceHomePage.copy";
 import { buildMarketplaceFallback } from "./MarketplaceHomePage.fallback";
-import { buildMarketplaceWorkspaceAuthRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
+import { buildMarketplaceWorkspaceAccessRightRegistrations } from "./MarketplaceTopbarRightRegistrations";
 import MarketplaceHomePageStyles from "./MarketplaceHomePage.styles";
 import MarketplaceTopbar from "./MarketplaceTopbar";
 import {
@@ -185,10 +185,6 @@ export default function PublicRankingPage({
     onNavigate(toPublicPath("/login"));
   }
 
-  function handleTopbarConsoleAction(): void {
-    onNavigate("/workspace");
-  }
-
   const topbarActionBundle = useMemo(
     () =>
       buildMarketplaceTopbarActionBundle({
@@ -204,15 +200,24 @@ export default function PublicRankingPage({
   );
   const topbarRightRegistrations = useMemo(
     () =>
-      buildMarketplaceWorkspaceAuthRightRegistrations({
+      buildMarketplaceWorkspaceAccessRightRegistrations({
         sessionUser,
+        signedInLabel: topbarLocaleCopy.signedIn,
+        signedOutLabel: topbarLocaleCopy.signedOut,
         workspaceLabel: topbarLocaleCopy.openWorkspace,
         signInLabel: topbarLocaleCopy.signIn,
-        signOutLabel: topbarLocaleCopy.signOut,
-        onWorkspaceClick: handleTopbarConsoleAction,
-        onAuthClick: handleTopbarAuthAction
+        onNavigate,
+        toPublicPath
       }),
-    [handleTopbarAuthAction, handleTopbarConsoleAction, sessionUser, topbarLocaleCopy.openWorkspace, topbarLocaleCopy.signIn, topbarLocaleCopy.signOut]
+    [
+      onNavigate,
+      sessionUser,
+      toPublicPath,
+      topbarLocaleCopy.openWorkspace,
+      topbarLocaleCopy.signIn,
+      topbarLocaleCopy.signedIn,
+      topbarLocaleCopy.signedOut
+    ]
   );
   const breadcrumbItems = useMemo<MarketplacePageBreadcrumbItem[]>(
     () => [

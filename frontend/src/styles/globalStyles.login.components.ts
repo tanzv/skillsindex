@@ -233,23 +233,23 @@ export const globalLoginStylesComponents = `
   animation: loginPanelEnter 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.oauth-provider-item:nth-child(1) {
+.oauth-provider-item:nth-of-type(1) {
   animation-delay: 40ms;
 }
 
-.oauth-provider-item:nth-child(2) {
+.oauth-provider-item:nth-of-type(2) {
   animation-delay: 100ms;
 }
 
-.oauth-provider-item:nth-child(3) {
+.oauth-provider-item:nth-of-type(3) {
   animation-delay: 160ms;
 }
 
-.oauth-provider-item:nth-child(4) {
+.oauth-provider-item:nth-of-type(4) {
   animation-delay: 220ms;
 }
 
-.oauth-provider-item:nth-child(5) {
+.oauth-provider-item:nth-of-type(5) {
   animation-delay: 260ms;
 }
 
