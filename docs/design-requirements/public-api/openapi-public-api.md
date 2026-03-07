@@ -1,29 +1,119 @@
-# OpenAPI 与公开 API 需求
+# OpenAPI 与公开 API 需求（当前实现基线）
 
-## 1. 文档与入口
+## 1. 文档定位
 
-### FR-API-001 文档入口
+本文件以当前仓库实现为基线，收口 `FR-API-001~010` 的真实 API 家族、鉴权边界、错误语义与 OpenAPI 覆盖范围。
 
-系统必须提供：
+当前结论：
+
+1. `FR-API` 主体已进入 `已覆盖`
+2. 但 API Key 的最小权限边界仍与 `FR-KEY` 共享一部分未闭环问题
+3. 因此本文同时区分“当前实现”与“当前已知差距”
+
+## 2. 文档与入口
+
+### FR-API-001 OpenAPI 文档入口
+
+当前已实现入口：
 
 1. `GET /openapi.json`
 2. `GET /openapi.yaml`
 3. `GET /docs/swagger`
 4. `GET /docs/api`
-5. `GET /docs/openapi.json`（兼容入口）
-6. `GET /docs/openapi.yaml`（兼容入口）
+5. `GET /docs/openapi.json`
+6. `GET /docs/openapi.yaml`
 
-### FR-API-002 文档一致性
+说明：
 
-OpenAPI 文档中的路径、参数、响应结构需与真实行为一致。
+1. `/docs/openapi.*` 为兼容入口
+2. OpenAPI 输出同时覆盖公开 API、会话型 API 与后台治理 API
 
-## 2. 公开检索 API
+### FR-API-002 OpenAPI 一致性要求
 
-### FR-API-003 关键词检索 API
+当前口径要求：
 
-入口：`GET /api/v1/skills/search`
+1. OpenAPI 中出现的路径必须在真实路由中可访问
+2. 需求文档中的鉴权模型必须与 OpenAPI `security` 描述一致
+3. 路由别名与兼容入口必须被显式记录
 
-参数：
+## 3. 当前 API 家族边界
+
+### FR-API-003 匿名公开只读 API
+
+当前真实的匿名公开只读 API 包括：
+
+1. `GET /api/v1/public/marketplace`
+2. `GET /api/v1/public/skills/{skillID}`
+
+#### 3.1 `/api/v1/public/marketplace`
+
+当前参数：
+
+1. `q`
+2. `tags`
+3. `category`
+4. `subcategory`
+5. `sort`
+6. `mode`
+7. `page`
+
+当前行为：
+
+1. `sort` 当前支持 `recent|stars|quality`
+2. `mode` 当前支持 `keyword|ai`
+3. 关键字模式使用分页查询，页面大小当前固定为 24
+4. `mode=ai` 且 `q` 非空时，返回单页语义结果，当前内部最多取 48 条
+5. 返回体当前包含：
+   - `filters`
+   - `stats`
+   - `pagination`
+   - `categories`
+   - `top_tags`
+   - `filter_options`
+   - `items`
+   - `session_user`
+   - `can_access_dashboard`
+6. 即使是匿名接口，当存在有效 session cookie 时，仍会附带当前会话用户上下文
+
+当前错误语义：
+
+1. `503 service_unavailable`
+2. `500 summary_query_failed`
+3. `500 category_query_failed`
+4. `500 search_failed`
+5. `500 ai_search_failed`
+
+#### 3.2 `/api/v1/public/skills/{skillID}`
+
+当前行为：
+
+1. 仅返回当前可见的技能详情
+2. 返回体当前包含：
+   - `skill`
+   - `stats`
+   - `viewer_state`
+   - `comments`
+   - `comments_limit`
+3. `comments_limit` 当前固定为 80
+4. 若存在有效 session，`viewer_state` 会补充当前用户互动状态
+5. `viewer_state.can_interact` 取决于当前用户是否具备后台访问能力
+
+当前错误语义：
+
+1. 参数非法或技能不存在时返回 `404 skill_not_found`
+2. 详情查询内部失败时返回 `500 detail_query_failed`
+3. 服务不可用时返回 `503 service_unavailable`
+
+### FR-API-004 API Key 保护的公开检索 API
+
+当前只有以下两类公开检索 API 走 API Key 鉴权：
+
+1. `GET /api/v1/skills/search`
+2. `GET /api/v1/skills/ai-search`
+
+#### 3.3 `/api/v1/skills/search`
+
+当前参数：
 
 1. `q`
 2. `tags`
@@ -32,67 +122,116 @@ OpenAPI 文档中的路径、参数、响应结构需与真实行为一致。
 5. `sort`
 6. `page`
 7. `limit`
+8. `api_key`（query 方式时）
 
-返回：`items/page/limit/total`
+当前行为：
 
-### FR-API-004 AI 检索 API
+1. 仅检索 `visibility=public` 技能
+2. `page` 默认 1
+3. `limit` 默认 20，最大 100
+4. `sort` 当前支持 `recent|stars|quality`
+5. 不支持的 `sort` 当前会自动回落到 `recent`，不会返回 400
+6. 返回体当前为：`items/page/limit/total`
+7. 当前所需 scope：`skills.search.read`
 
-入口：`GET /api/v1/skills/ai-search`
+当前错误语义：
 
-参数：`q`（语义查询） + `limit`
+1. `401 api_key_invalid`
+2. `403 api_key_scope_denied`
+3. `500 search_failed`
 
-返回：`items/total`
+#### 3.4 `/api/v1/skills/ai-search`
 
-## 3. 会话型 API（非 API Key 公开接口）
+当前参数：
 
-### FR-API-005 会话型 API 范围
+1. `q`
+2. `limit`
+3. `api_key`（query 方式时）
+
+当前行为：
+
+1. 当前所需 scope：`skills.ai_search.read`
+2. `limit` 默认 20，最大 100
+3. 当前不提供分页，仅返回 `items/total`
+4. 当 `q` 为空时，当前实现返回 200 与空结果，而不是 400
+5. 仅检索 `visibility=public` 技能
+
+当前错误语义：
+
+1. `401 api_key_invalid`
+2. `403 api_key_scope_denied`
+3. `500 ai_search_failed`
+
+### FR-API-005 会话型 API（不走 API Key）
 
 以下接口属于“登录会话 + CSRF”模型，不走 API Key：
 
-1. `GET /api/v1/dingtalk/me`
-2. `POST /skills/{skillID}/favorite`
-3. `POST /skills/{skillID}/rating`
-4. `POST /skills/{skillID}/comments`
-5. `POST /skills/{skillID}/comments/{commentID}/delete`
-6. `POST /admin/apikeys/create`
-7. `POST /admin/apikeys/{keyID}/revoke`
+1. `/api/v1/auth/logout`
+2. `/api/v1/account/*`
+3. `/api/v1/dingtalk/me`
+4. `/api/v1/skills/{skillID}/favorite`
+5. `/api/v1/skills/{skillID}/rating`
+6. `/api/v1/skills/{skillID}/comments`
+7. `/api/v1/skills/{skillID}/comments/{commentID}/delete`
+8. `/api/v1/admin/apikeys*`
+9. `/api/v1/admin/accounts*`
+10. `/api/v1/admin/ops/*`
 
-### FR-API-006 会话型 API 认证与安全约束
+当前安全要求：
 
-1. 必须为已登录用户会话
-2. 对 POST 请求必须通过 CSRF 校验
-3. 具体资源操作仍需通过角色权限与资源归属校验
+1. 必须存在有效登录会话
+2. 所有非安全方法必须通过全局 CSRF 校验
+3. 资源级权限仍由会话用户角色与归属关系决定
 
-## 4. 鉴权
+## 4. 当前鉴权边界
 
-### FR-API-007 API Key 鉴权策略
+### FR-API-006 API Key 传递与校验链路
 
-公开 API 必须鉴权，支持：
+当前 API Key 支持两种传递方式：
 
-1. query 参数 `api_key`
-2. `Authorization: Bearer <key>`
+1. `?api_key=<token>`
+2. `Authorization: Bearer <token>`
 
-校验优先级：
+当前校验顺序：
 
-1. 命中静态配置 API key 集合即通过
-2. 否则走数据库 key 校验（未撤销且未过期）
+1. 先从 query 读取 `api_key`
+2. 若不存在，则尝试读取 `Authorization: Bearer`
+3. 若命中静态配置 key 集合 `a.apiKeys`，当前直接放行
+4. 否则走数据库 key 校验：必须未撤销且未过期
+5. 若路径存在 required scope，则继续校验 scope
+6. scope 不满足时返回 `403 api_key_scope_denied`
+7. 其余失败返回 `401 api_key_invalid`
 
-失败行为：
+### FR-API-007 当前已知边界与兼容行为
 
-- 返回 `401`，错误体 `{error:"unauthorized",message:"Missing or invalid API key"}`
+当前已知兼容行为：
 
-### FR-API-008 可见性约束
+1. 静态配置 key 当前不走数据库 scope 模型，是兼容路径，不是最终目标态
+2. API Key 作用范围目前只绑定两条检索接口，不覆盖会话型 API
+3. 匿名公开只读 API 与 API Key 公开检索 API 已分离，不应混写成一个安全模型
 
-公开 API 仅返回 `visibility=public` 技能。
+### FR-API-008 可见性与上下文约束
 
-### FR-API-009 兼容性要求
+当前规则：
 
-1. 非破坏性变更优先（新增字段可选）
-2. 破坏性变更需版本化策略（后续迭代要求）
+1. 公开检索与公开详情默认只暴露公共可见技能
+2. 匿名只读 API 可附带 session 上下文，但不会因为缺少 session 而拒绝请求
+3. 会话型 API 则必须通过 `currentUser` 解析与会话有效性校验
 
-### FR-API-010 路由覆盖要求
+## 5. 当前兼容与错误码口径
 
-OpenAPI 文档与需求文档应共同覆盖下列两类接口：
+### FR-API-009 当前兼容策略
 
-1. 公开 API Key 接口（检索类）
-2. 会话型接口（互动、集成、后台关键动作）
+1. 当前公开检索 API 仍以“向后兼容新增字段”为默认策略
+2. OpenAPI 文档中已显式区分 `401` 与 `403`
+3. 匿名公开 API 与 API Key 保护 API 已在路径级区分
+
+### FR-API-010 当前剩余差距
+
+以下问题仍属于共享契约差距，而非本文已闭环能力：
+
+1. 静态配置 key 绕过 scope 校验
+2. 搜索接口尚未定义 `429` 或统一非法参数错误模型
+3. AI 搜索尚未提供分页契约
+4. 更细粒度公开 API scope 仍未展开到详情、互动或审计读取能力
+5. 企业 SSO、后台 API 与公开 API 的统一错误码字典仍需进一步收束

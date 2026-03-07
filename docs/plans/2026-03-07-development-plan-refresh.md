@@ -1,350 +1,184 @@
-# SkillsIndex Development Plan Refresh
+# SkillsIndex 开发计划刷新（2026-03-07，第二次收口后）
 
-> **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
+## 1. 当前执行快照
 
-**Goal:** Refresh the development plan based on the current implementation state, the active worktree changes, and the latest requirement baseline, then define the next delivery phases.
-
-**Architecture:** Treat the codebase as three coordinated tracks: product capability delivery, platform contract hardening, and release-quality verification. Short-term work should first stabilize the active frontend workspace/governance refactor, then synchronize requirement status with real implementation, and only then open the next wave of gap-closure development.
+### 1.1 已完成的需求收口
 
-**Tech Stack:** Go backend (Chi, GORM), React 18 frontend (TypeScript, Vite, Ant Design), Playwright E2E, visual regression, Markdown planning docs.
+截至 2026 年 3 月 7 日，以下共享契约文档已按当前真实实现完成收口：
 
----
+1. 身份与访问管理：认证、会话、账号中心、后台账号治理
+2. 开放能力：OpenAPI、匿名公开 API、API Key 保护检索 API
+3. 平台基础：APIKey / AuditLog / UserSession / PasswordResetToken 数据契约
+4. 运维治理：metrics、alerts、audit export、release gates、recovery drills、release / backup / approval 记录
 
-## 1. Current Execution Snapshot
+### 1.2 当前仍在进行中的开发事实
 
-### 1.1 Recently completed execution
+当前分支仍有两类工作并行：
 
-1. `ralph/progress.txt` shows `pages-directory-maintainability-refactor` completed on `2026-03-06`.
-2. Verification evidence already exists for the completed refactor:
-   - `cd frontend && npm run test:unit`
-   - `cd frontend && npm run test:e2e`
-   - `cd frontend && npm run test:visual`
-   - `cd frontend && npm run build`
-   - `./scripts/check_max_lines.sh`
-3. This means the recent frontend maintainability pass can be treated as the new baseline rather than ongoing feature risk.
+1. 前端工作区 / 治理页的结构与视觉稳定化
+2. 后端治理能力的契约硬化与残余差距关闭
 
-### 1.2 Current active worktree focus
+### 1.3 当前真实能力基线
 
-The current working tree indicates an in-progress frontend information architecture consolidation rather than a brand-new feature stream. Main signals:
+当前仓库已经具备以下可用能力：
 
-1. Workspace/governance navigation and shell composition are being refactored:
-   - `frontend/src/App.tsx`
-   - `frontend/src/components/BackendWorkbenchShell.tsx`
-   - `frontend/src/pages/WorkspaceCenterPage.tsx`
-   - `frontend/src/pages/WorkspaceDashboardPageContent.tsx`
-   - `frontend/src/pages/WorkspaceCenterPage.navigation.ts`
-2. Prototype routing and catalog alignment are being simplified:
-   - `frontend/src/lib/prototypeCatalog.ts`
-   - `frontend/src/lib/prototypeRouteResolver.ts`
-   - `frontend/src/pages/PrototypeRouteRenderer.tsx`
-3. One legacy page is being removed:
-   - `frontend/src/pages/RolloutWorkflowPage.tsx`
-4. Regression assets and tests are already being adjusted in parallel:
-   - `frontend/e2e/prototype-routes-completion.spec.ts`
-   - `frontend/src/pages/WorkspaceCenterPage.navigation.test.ts`
-   - `frontend/src/pages/WorkspacePrototypePageShell.test.ts`
-   - `frontend/src/components/BackendWorkbenchShell.test.tsx`
-
-### 1.3 Backend capability baseline already present
-
-The backend already exposes more governance and target-state routes than the requirement documents currently admit. Representative implemented route groups include:
-
-1. Async jobs:
-   - `/api/v1/admin/jobs`
-   - `/api/v1/admin/jobs/{jobID}`
-   - `/api/v1/admin/jobs/{jobID}/retry`
-   - `/api/v1/admin/jobs/{jobID}/cancel`
-2. Sync governance:
-   - `/api/v1/admin/sync-runs`
-   - `/api/v1/admin/sync-policies`
-3. Account governance:
-   - `/api/v1/admin/accounts`
-   - `/api/v1/admin/accounts/{userID}/status`
-   - `/api/v1/admin/accounts/{userID}/force-signout`
-   - `/api/v1/admin/accounts/{userID}/password-reset`
-4. Organization and moderation governance:
-   - `/api/v1/admin/organizations`
-   - `/api/v1/admin/moderation`
-5. API key scope and SSO governance:
-   - `/api/v1/admin/apikeys/{keyID}/scopes`
-   - `/api/v1/admin/sso/providers`
-   - `/api/v1/admin/sso/users/sync`
+1. 会话 cookie + 服务端会话记录 + 强退时间戳
+2. 账号中心资料、密码、会话、忘记密码主链路
+3. 平台账号状态治理、强制下线、管理员重置密码
+4. API Key 生命周期：创建、列表、详情、撤销、轮换、scope 更新
+5. 公开匿名 API：市场聚合与技能详情
+6. API Key 保护检索 API：关键词搜索与 AI 搜索
+7. 运维 API：metrics、alerts、审计导出、门禁快照、恢复演练、发布、审批、备份计划 / 运行记录
 
-This indicates the codebase is ahead of the current requirement status labels for several modules.
+## 2. 当前判断
 
----
+### 2.1 已完成的“文档真相对齐”阶段
 
-## 2. Updated Development Judgment
-
-### 2.1 Done and accepted baseline
+已完成：
 
-Treat the following as completed baseline work unless regression appears:
-
-1. Frontend/backend separation foundation
-2. Public and admin route API exposure baseline
-3. Recent frontend page maintainability refactor
-4. Requirement directory cleanup and capability-layer README restructuring
-
-### 2.2 Work currently in progress
+1. 第一阶段：身份与访问管理文档收口
+2. 第二阶段：OpenAPI / API Key / 数据与审计 / 运维文档收口
 
-The active in-flight stream is:
+这意味着：
 
-1. Workspace/dashboard/governance information hierarchy consolidation
-2. Prototype route simplification and obsolete page removal
-3. Sidebar, topbar, and shell composition cleanup
-4. Focused regression coverage updates for the new route and layout model
-
-### 2.3 Highest current planning gaps
-
-The biggest remaining planning gaps are not “missing pages”, but mismatch between implementation, requirement status, and delivery sequencing:
-
-1. Requirement documents still mark several implemented modules as target-state only
-2. Session/account lifecycle model is still not fully self-consistent
-3. API key security boundary and scope model are not fully aligned with implementation
-4. Data model, audit model, and moderation/version access constraints remain under-specified
-5. Release-quality gates for the next capability wave are not yet staged into a single delivery plan
-
----
-
-## 3. Near-Term Execution Plan (Current Branch Stabilization)
-
-### Task 1: Finish workspace and governance route consolidation
-
-**Files:**
-- Modify: `frontend/src/App.tsx`
-- Modify: `frontend/src/components/BackendWorkbenchShell.tsx`
-- Modify: `frontend/src/pages/WorkspaceCenterPage.tsx`
-- Modify: `frontend/src/pages/WorkspaceCenterPage.navigation.ts`
-- Modify: `frontend/src/pages/WorkspaceCenterPageSectionViews.tsx`
-- Create/Modify: `frontend/src/pages/WorkspaceDashboardPageContent.tsx`
-- Remove/verify removal: `frontend/src/pages/RolloutWorkflowPage.tsx`
-
-**Expected outcome:**
-1. One stable route model for workspace/governance/records/admin shells
-2. No orphaned route references to removed rollout-specific pages
-3. Navigation, anchor mode, and section mode behave consistently in dark/light/mobile variants
-
-**Verification:**
-- `cd frontend && npm run test:unit -- WorkspaceCenterPage.navigation`
-- `cd frontend && npm run test:unit -- PrototypeRouteRenderer`
-- `cd frontend && npm run test:e2e -- prototype-routes-completion`
-
-### Task 2: Close the prototype catalog and shell regression loop
+1. 共享契约冲突已显著减少
+2. 需求文档与当前实现之间的主要偏差已从“描述错误”转向“真实缺口待开发”
 
-**Files:**
-- Modify: `frontend/src/lib/prototypeCatalog.ts`
-- Modify: `frontend/src/lib/prototypeCatalogRouteFallback.ts`
-- Modify: `frontend/src/lib/prototypeRouteResolver.ts`
-- Modify: `frontend/src/pages/PrototypeRouteRenderer.tsx`
-- Test: `frontend/src/lib/prototypeRouteResolver.test.ts`
-- Test: `frontend/src/pages/PrototypeRouteRenderer.test.ts`
-- Test: `frontend/src/components/BackendWorkbenchShell.test.tsx`
+### 2.2 当前最高优先级不再是“继续改文档”，而是“按文档关闭实现缺口”
 
-**Expected outcome:**
-1. Prototype catalog entries match active route families
-2. Removed/merged pages no longer appear in catalog resolution
-3. Shell-level route handling is deterministic
+接下来应把开发重心切换到以下 P0 缺口：
 
-**Verification:**
-- `cd frontend && npm run test:unit -- prototypeRouteResolver`
-- `cd frontend && npm run test:unit -- BackendWorkbenchShell`
+1. API Key 最小权限边界硬化
+2. 审计模型增强
+3. 忘记密码链路审计补齐
 
-### Task 3: Re-baseline visual and layout evidence for the current frontend pass
+## 3. 立即执行的开发计划（P0）
 
-**Files:**
-- Modify: `frontend/e2e/prototype-routes-completion.spec.ts`
-- Update artifacts: `frontend/prototype-baselines/*`
-- Review style bridge files touched in current branch
+### 3.1 API Key 安全边界硬化
 
-**Expected outcome:**
-1. Visual baselines reflect the consolidated route and shell structure
-2. Current branch can be reviewed as one coherent frontend pass
+目标：让 API Key 从“有 scope”升级为“真正最小权限可控”。
 
-**Verification:**
-- `cd frontend && npm run test:visual`
-- `cd frontend && npm run build`
+实施项：
 
----
+1. 收紧静态配置 key 的放行逻辑，不再无条件绕过 scope 校验
+2. 修复空 scope / 非法 scope 的宽松放行行为，改为明确兼容策略或拒绝策略
+3. 统一 `401 api_key_invalid` / `403 api_key_scope_denied` 的实现与 OpenAPI 文档
+4. 为静态 key、legacy key、scope 迁移编写回归测试
 
-## 4. Plan Refresh for Requirement and Delivery Alignment
+验收：
 
-### Task 4: Synchronize requirement status with real implementation
+1. 无 scope 或非法 scope 不再隐式获得高权限
+2. 静态 key 的权限行为可被测试验证
+3. OpenAPI、实现、测试三者一致
 
-**Files:**
-- Modify: `docs/design-requirements/overview/functional-coverage-matrix.md`
-- Modify: `docs/design-requirements/overview/requirement-traceability.md`
-- Modify: `docs/design-requirements/test-acceptance/test-acceptance.md`
-- Modify: `docs/design-requirements/README.md`
+### 3.2 审计模型增强
 
-**Scope:**
-1. Reclassify modules from `目标态（待实现）` to `部分覆盖` where routes or APIs already exist
-2. Separate “route exists” from “requirement closed” and “release ready”
-3. Make the requirement layer reflect the current codebase truthfully
+目标：让当前治理动作具备安全、合规、排障三类可追溯能力。
 
-**Verification:**
-- Manual document consistency review
-- Optional grep-based check for all route references against `backend/internal/web/app_routing.go`
+实施项：
 
-### Task 5: Resolve the identity and access contract gaps
+1. 为 `AuditLog` 评估并补齐 `request_id`、`result`、`reason`、`source_ip`
+2. 统一账号治理、API Key、运维治理事件的审计字段语义
+3. 明确 `details` 中可序列化 payload 的最小结构
+4. 为审计导出补充字段级验证与导出回归测试
 
-**Files:**
-- Modify: `docs/design-requirements/auth-rbac/auth-session-rbac.md`
-- Modify: `docs/design-requirements/auth-rbac/account-management.md`
-- Modify: `docs/design-requirements/auth-rbac/account-center-implementation.md`
-- Modify: `docs/design-requirements/admin-governance/admin-account-operations.md`
-- Modify: `docs/design-requirements/data-model/data-model-constraints.md`
+验收：
 
-**Scope:**
-1. Define the real session model and revocation semantics
-2. Define account lifecycle states and transitions
-3. Align self-service account actions with admin governance actions
-4. Ensure the data model and audit model can support these flows
+1. 关键事件具备结构化上下文
+2. 导出 JSON / CSV 可读且字段稳定
+3. 需求文档与导出字段一一对应
 
-**Verification:**
-- Requirement review against existing backend endpoints
-- Confirm all affected FRs map to acceptance scenarios in `test-acceptance.md`
+### 3.3 忘记密码审计补齐
 
-### Task 6: Resolve the API key and security boundary gaps
+目标：把当前“安全链路已存在，但审计不全”的状态补成闭环。
 
-**Files:**
-- Modify: `docs/design-requirements/public-api/openapi-public-api.md`
-- Modify: `docs/design-requirements/public-api/api-key-scope-governance.md`
-- Modify: `docs/design-requirements/non-functional/nfr.md`
-- Modify: `docs/design-requirements/test-acceptance/test-acceptance.md`
+实施项：
 
-**Scope:**
-1. Decide which interfaces are permanently `session + CSRF` only
-2. Remove or explicitly govern static key bypass behavior
-3. Unify scope naming with implementation
-4. Define 401/403/429/error behavior and pagination/limit constraints
+1. 为 password reset request 增加审计策略
+2. 为 password reset confirm 增加审计策略
+3. 定义审计成功 / 失败 / 限流场景的最小事件口径
 
-**Verification:**
-- Review against backend API key service and OpenAPI paths
-- Ensure acceptance cases exist for invalid key, scope denied, rotate, revoke, expiry
+验收：
 
----
+1. request / confirm / limit 都有可验证日志或审计结果
+2. 不引入账号枚举风险
 
-## 5. Next Delivery Wave (Post-Alignment Development)
+## 4. 后续开发计划（P1）
 
-### Phase A: Governance contract hardening
+### 4.1 导入、同步、任务、版本链路闭环
 
-Priority: P0
+优先补齐：
 
-1. Finalize session, account, audit, and API key contracts
-2. Finalize moderation case state model and organization/workspace ownership rules
-3. Finalize version-history visibility and deletion/archive rules
+1. `job -> run -> version -> audit` 统一链路
+2. 分页、排序、过滤与失败分支契约
+3. 回滚与历史版本可追溯规则
 
-**Exit criteria:**
-- No major cross-document contradiction remains in auth, governance, API security, or audit design
+### 4.2 组织管理与内容审核治理闭环
 
-### Phase B: Backend gap closure for incomplete governance flows
+优先补齐：
 
-Priority: P0/P1
+1. 组织角色治理与最后 owner 保护
+2. 审核案件状态机与内容状态机分离
+3. 组织 / 审核动作与审计字段统一
 
-1. Complete account governance behavior where routes exist but contracts are incomplete
-2. Complete moderation workflow semantics
-3. Complete organization membership safeguards and owner protection semantics
-4. Complete sync job/run/version chain semantics and access rules
+## 5. 平台与发布闭环计划（P1/P2）
 
-**Verification:**
-- `go test ./backend/internal/...`
-- targeted handler/service regression suites
+### 5.1 企业 SSO
 
-### Phase C: Frontend governance experience completion
+补齐：
 
-Priority: P1
+1. 协议级最小契约
+2. 本地账号映射
+3. 离职回收与禁用联动
 
-1. Finish real governance workbench page flows for accounts, organizations, moderation, jobs, and sync runs
-2. Align frontend states with the updated backend contracts
-3. Eliminate prototype-only navigation assumptions in governed routes
+### 5.2 运维门禁接入发布流程
 
-**Verification:**
-- focused frontend unit tests
-- Playwright flows for governance operations
-- visual regression on critical admin pages
+补齐：
 
-### Phase D: Platform foundation hardening
+1. release gate 的 CI / CD 接入
+2. 备份演练与恢复验证自动化
+3. 更真实的 4xx / 5xx / latency 指标来源
 
-Priority: P1/P2
+### 5.3 全量验收闭环
 
-1. Expand data model constraints and indexes for discovery, governance, and audit use cases
-2. Add observability and ops acceptance baselines
-3. Add performance and release-gate evidence paths to the plan
+补齐：
 
-**Verification:**
-- `go test ./...`
-- `cd frontend && npm run build`
-- NFR evidence collection tasks
+1. 账号 / API Key / SSO / 导入同步 / 组织审核的专项验收
+2. 公开 API 与后台 API 契约测试
+3. 前后端 E2E 与视觉回归证据
 
----
+## 6. 建议的 4 个开发窗口
 
-## 6. Recommended Sequence for the Next 4 Development Windows
+### Window 1
 
-### Window 1: Stabilize current branch
+1. 完成 API Key 安全边界硬化
+2. 完成 password reset 审计补齐
 
-1. Finish workspace/governance route consolidation
-2. Make unit/e2e/visual/build green again
-3. Merge only after layout and routing behavior are stable
+### Window 2
 
-### Window 2: Refresh requirement truth
+1. 完成审计模型增强
+2. 同步更新导出与测试
 
-1. Update requirement status documents to match the real implementation baseline
-2. Mark `部分覆盖` vs `目标态（待实现）`
-3. Produce one authoritative status snapshot for product, engineering, and QA
+### Window 3
 
-### Window 3: Close platform contract gaps
+1. 进入导入 / 同步 / 任务 / 版本链路闭环
+2. 同步补齐相关需求与验收
 
-1. Identity/session/account contract pass
-2. API key/security contract pass
-3. Data model/audit contract pass
+### Window 4
 
-### Window 4: Open the next implementation stream
+1. 进入组织治理与内容审核治理
+2. 为企业 SSO 与运维门禁自动化做准备
 
-1. Governance flow completion
-2. Organization and moderation completion
-3. Release-quality regression and NFR proof gathering
+## 7. 当前主要风险
 
----
+1. 文档已对齐后，真实风险集中在“实现层宽松兼容行为”而非“描述错误”
+2. 若不先处理 API Key 与审计模型，后续组织、审核、SSO 的安全边界仍会反复返工
+3. 前端分支工作若先于契约硬化继续扩散，后续联调成本会上升
 
-## 7. Delivery Risks and Controls
+## 8. 当前建议
 
-### Main risks
+建议立即进入以下顺序：
 
-1. Continuing frontend refactor without freezing route semantics will cause repeated test churn
-2. Continuing feature delivery without updating requirement status will keep planning inaccurate
-3. Implementing governance flows before session/account/security contracts are finalized will create rework
-4. Leaving API key scope naming and permission boundaries inconsistent will create security drift
-
-### Controls
-
-1. Do not open a new major feature stream before the current workspace/governance refactor is verified
-2. Complete requirement status synchronization before new “gap closure” claims are made
-3. Treat identity/session/API security/data model as shared contracts and review them before feature expansion
-4. Keep verification evidence attached to each phase, not only at release time
-
----
-
-## 8. Verification Gate for This Plan Refresh
-
-Before claiming the next phase is ready, run and record:
-
-1. `cd frontend && npm run test:unit`
-2. `cd frontend && npm run test:e2e`
-3. `cd frontend && npm run test:visual`
-4. `cd frontend && npm run build`
-5. `go test ./...`
-6. `./scripts/check_max_lines.sh`
-
-If any of these cannot run, capture the skipped command, the reason, and the residual risk in the next update.
-
----
-
-## 9. Immediate Recommendation
-
-The immediate recommendation is:
-
-1. Finish and verify the active frontend workspace/governance consolidation branch
-2. Refresh requirement status documents to reflect actual backend and frontend coverage
-3. Start the next implementation wave only after the contract layer is cleaned up
-
-This sequencing minimizes rework and makes the next development plan measurable.
+1. 先做 API Key 安全边界硬化
+2. 再做审计模型增强与 password reset 审计补齐
+3. 然后进入导入 / 同步 / 任务 / 版本链路闭环
