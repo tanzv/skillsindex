@@ -20,7 +20,6 @@ import PrototypeReplicaPage from "./PrototypeReplicaPage";
 import PublicComparePage from "./PublicComparePage";
 import PublicSkillDetailPage from "./PublicSkillDetailPage";
 import RecordsSyncCenterPage from "./RecordsSyncCenterPage";
-import RolloutWorkflowPage from "./RolloutWorkflowPage";
 import SystemStatePage from "./SystemStatePage";
 import WorkspaceCenterPage from "./WorkspaceCenterPage";
 import { resolveOrganizationManagementMenuItemID } from "./WorkspaceCenterPage.navigation";
@@ -41,7 +40,6 @@ export type PrototypeImplementationTarget =
   | "public-skill"
   | "public-compare"
   | "public-login"
-  | "rollout"
   | "workspace"
   | "governance"
   | "state"
@@ -221,20 +219,6 @@ export function renderPrototypeRouteContent(props: PrototypeRouteRenderProps) {
 
   if (target === "public-login") {
     return <LoginPage loading={false} locale={props.locale} onLocaleChange={() => undefined} onSubmit={async () => undefined} />;
-  }
-
-  if (target === "rollout") {
-    return (
-      <RolloutWorkflowPage
-        locale={props.locale}
-        currentPath={props.currentPath}
-        onNavigate={props.onNavigate}
-        sessionUser={props.sessionUser}
-        onThemeModeChange={props.onThemeModeChange}
-        onLocaleChange={props.onLocaleChange}
-        onLogout={props.onLogout}
-      />
-    );
   }
 
   if (target === "workspace") {

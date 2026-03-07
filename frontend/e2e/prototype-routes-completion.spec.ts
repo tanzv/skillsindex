@@ -199,6 +199,27 @@ async function expectSidebarButtonHeightAtMost(locator: Locator, maxHeight: numb
   expect(bounds.height).toBeLessThanOrEqual(maxHeight);
 }
 
+async function expectSidebarHeightRatioAtMost(page: Page, locator: Locator, maxRatio: number): Promise<void> {
+  const [bounds, viewport] = await Promise.all([locator.boundingBox(), page.viewportSize()]);
+  expect(bounds).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  if (!bounds || !viewport) {
+    return;
+  }
+  expect(bounds.height).toBeLessThanOrEqual(viewport.height * maxRatio);
+}
+
+async function expectTopOffsetAtMost(reference: Locator, target: Locator, maxOffset: number): Promise<void> {
+  const [referenceBounds, targetBounds] = await Promise.all([reference.boundingBox(), target.boundingBox()]);
+  expect(referenceBounds).not.toBeNull();
+  expect(targetBounds).not.toBeNull();
+  if (!referenceBounds || !targetBounds) {
+    return;
+  }
+  const delta = Math.abs(targetBounds.y - referenceBounds.y);
+  expect(delta).toBeLessThanOrEqual(maxOffset);
+}
+
 interface PanelThemeVisual {
   mode: string | null;
   panelToken: string;
@@ -330,20 +351,26 @@ async function mockAccessManagement(page: Page): Promise<void> {
 }
 
 test.describe("Prototype route completion coverage", () => {
-  test("public routes /rollout and /light/workspace render concrete content", async ({ page }) => {
+  test("public route /rollout falls back to workspace dashboard and /light/workspace renders concrete content", async ({ page }) => {
     await forceEnglishLocale(page);
     await mockAuth(page, false);
     await mockMarketplace(page);
 
     await page.goto("/rollout");
-    await expect(page.getByRole("heading", { name: /Install and Rollout Workflow/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Team Workspace", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Queue Insights", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Risk Watchlist", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Team Activity Feed", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("complementary")).toHaveCount(0);
     await expect(page.getByText("Prototype Replica", { exact: true })).toHaveCount(0);
 
     await page.goto("/light/workspace");
-    await expect(page.getByRole("heading", { name: /Team Workspace/ })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Team Workspace", exact: true })).toHaveCount(0);
     await expect(page.getByText("Installed Skills", { exact: true })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Team Activity Feed", exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Queue Insights", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Risk Watchlist", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Team Activity Feed", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("complementary")).toHaveCount(0);
     await expect(page.getByText("Prototype Replica", { exact: true })).toHaveCount(0);
   });
 
@@ -408,9 +435,10 @@ test.describe("Prototype route completion coverage", () => {
 
     await page.goto("/admin/accounts/new");
     await expect(page.getByRole("heading", { name: "Account Configuration Form", exact: true }).first()).toBeVisible();
-    await expect(primaryNavigation.getByRole("button", { name: "Workspace Sections", exact: true })).toBeVisible();
-    await expect(primaryNavigation.getByRole("button", { name: "Related Hubs", exact: true })).toBeVisible();
-    await expect(primaryNavigation.getByRole("button", { name: "Organization Management", exact: true })).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "Skill Management", exact: true })).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "User Management", exact: true })).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "System Settings", exact: true })).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "Workspace Panel", exact: true })).toBeVisible();
     const personnelManagementButton = sidebar.getByRole("button", { name: "Personnel Management", exact: true });
     const permissionManagementButton = sidebar.getByRole("button", { name: "Permission Management", exact: true });
     const roleManagementButton = sidebar.getByRole("button", { name: "Role Management", exact: true });
@@ -422,8 +450,10 @@ test.describe("Prototype route completion coverage", () => {
     await expectSidebarButtonHeightAtMost(permissionManagementButton, 72);
     await expectSidebarButtonHeightAtMost(roleManagementButton, 72);
     await expect(sidebar.getByRole("button", { name: "Overview", exact: true })).toHaveCount(0);
-    await expect(sidebar.getByRole("button", { name: "Rollout Workflow", exact: true })).toHaveCount(0);
+    await expect(sidebar.getByRole("button", { name: "Records Sync", exact: true })).toBeVisible();
     await expect(page.getByText("Prototype Replica", { exact: true })).toHaveCount(0);
+    await expectSidebarHeightRatioAtMost(page, sidebar, 0.9);
+    await expectTopOffsetAtMost(sidebar, page.locator(".page-grid.account-workbench").first(), 10);
     const darkAccountPanelVisual = await readPanelThemeVisual(page, ".account-workbench .panel");
     expect(darkAccountPanelVisual.foundPanel).toBe(true);
     expect(darkAccountPanelVisual.mode).toBe("dark");
@@ -441,13 +471,15 @@ test.describe("Prototype route completion coverage", () => {
 
     await page.goto("/admin/accounts/new");
     await expect(page.getByRole("heading", { name: "Account Configuration Form", exact: true }).first()).toBeVisible();
+    await expectTopOffsetAtMost(sidebar, page.locator(".page-grid.account-workbench").first(), 10);
 
     await sidebar.getByRole("button", { name: "Permission Management", exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/access$/);
     await expect(page.getByRole("heading", { name: "Access Governance", exact: true })).toBeVisible();
-    await expect(primaryNavigation.getByRole("button", { name: "Workspace Sections", exact: true })).toBeVisible();
-    await expect(primaryNavigation.getByRole("button", { name: "Related Hubs", exact: true })).toBeVisible();
-    await expect(primaryNavigation.getByRole("button", { name: "Organization Management", exact: true })).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "Skill Management", exact: true })).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "User Management", exact: true })).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "System Settings", exact: true })).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "Workspace Panel", exact: true })).toBeVisible();
     await expect(sidebar.getByRole("button", { name: "Permission Management", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page.getByText("Prototype Replica", { exact: true })).toHaveCount(0);
     const darkAccessPanelVisual = await readPanelThemeVisual(page, ".panel");
@@ -472,6 +504,8 @@ test.describe("Prototype route completion coverage", () => {
     await expect(page).toHaveURL(/\/admin\/roles$/);
     await expect(page.getByRole("heading", { name: "Role Management List", exact: true }).first()).toBeVisible();
     await expect(sidebar.getByRole("button", { name: "Role Management", exact: true })).toHaveAttribute("aria-current", "page");
+    await expectSidebarHeightRatioAtMost(page, sidebar, 0.9);
+    await expectTopOffsetAtMost(sidebar, page.locator(".page-grid.account-workbench").first(), 10);
     const darkRolePanelVisual = await readPanelThemeVisual(page, ".account-workbench .panel");
     expect(darkRolePanelVisual.foundPanel).toBe(true);
     expect(darkRolePanelVisual.mode).toBe("dark");
@@ -534,27 +568,27 @@ test.describe("Prototype route completion coverage", () => {
 });
 
 test.describe("Workspace section route navigation", () => {
-  test("workspace primary menu keeps only first-level actions", async ({ page }) => {
+  test("workspace route renders dashboard-only surface", async ({ page }) => {
     await forceEnglishLocale(page);
     await mockAuth(page, false);
     await mockMarketplace(page);
 
-    await page.goto("/workspace/activity");
+    await page.goto("/workspace");
     const primaryNavigation = page.getByRole("group", { name: "Primary navigation", exact: true });
-    const sidebar = page.getByRole("complementary");
-
-    await expect(primaryNavigation.getByRole("button", { name: "Activity Feed", exact: true })).toHaveCount(0);
-    await expect(primaryNavigation.getByRole("button", { name: "Workspace Sections", exact: true })).toHaveAttribute("aria-current", "page");
-    await expect(sidebar.getByRole("button", { name: "Core Workspace", exact: true })).toBeVisible();
-    await expect(sidebar.getByRole("button", { name: "Execution Center", exact: true })).toBeVisible();
-    await expect(sidebar.getByRole("button", { name: "Policy and Actions", exact: true })).toBeVisible();
-    await expect(sidebar.getByRole("button", { name: "Related Hubs", exact: true })).toBeVisible();
-    await expect(sidebar.getByRole("button", { name: "Organization Management", exact: true })).toBeVisible();
-    await expect(sidebar.getByRole("button", { name: "Activity Feed", exact: true })).toHaveAttribute("aria-current", "page");
-    await expect(sidebar.getByRole("button", { name: "Overview", exact: true })).toBeVisible();
-    await expect(sidebar.getByRole("button", { name: "Queue Execution", exact: true })).toHaveCount(0);
-    await expect(page).toHaveURL(/\/workspace\/activity$/);
-    await expect(page.getByRole("heading", { name: "Team Activity Feed", exact: true })).toBeVisible();
-    await expect(page.getByText("Workspace Statistics Panels", { exact: true })).toHaveCount(0);
+    await expect(page.getByRole("complementary")).toHaveCount(0);
+    await expect(primaryNavigation.getByRole("button", { name: "Skill Management", exact: true })).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "User Management", exact: true })).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "System Settings", exact: true })).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "Workspace Panel", exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/\/workspace$/);
+    await expect(page.getByRole("heading", { name: "Team Workspace", exact: true })).toHaveCount(0);
+    await expect(page.getByText("Installed Skills", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Queue Insights", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Risk Watchlist", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Team Activity Feed", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Activity Feed", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Queue Execution", exact: true })).toHaveCount(0);
+    await expect(page.getByText("Marketplace Actions", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Prototype Replica", { exact: true })).toHaveCount(0);
   });
 });

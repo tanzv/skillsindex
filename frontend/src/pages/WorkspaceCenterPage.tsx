@@ -27,6 +27,7 @@ import {
 import { buildWorkspaceTopbarMenuActions } from "./WorkspaceTopbarMenuActions.helpers";
 import WorkspaceTopbar from "./WorkspaceTopbar";
 import WorkspaceCenterPageContent from "./WorkspaceCenterPageContent";
+import WorkspaceDashboardPageContent from "./WorkspaceDashboardPageContent";
 import { WorkspaceContentLayout } from "./WorkspaceCenterPage.styles";
 import { WorkspacePrototypePageGrid } from "./WorkspacePrototypePageShell.styles";
 
@@ -127,7 +128,7 @@ export default function WorkspaceCenterPage({
     [onNavigate, pageNavigator.toPublic, sessionUser]
   );
 
-  const sidebarGroups = useMemo(
+  const allSidebarGroups = useMemo(
     () =>
       buildWorkspaceSidebarNavigation({
         text,
@@ -137,6 +138,7 @@ export default function WorkspaceCenterPage({
       }),
     [text, pageNavigator.toPublic, pageNavigator.toAdmin]
   );
+  const sidebarGroups = useMemo(() => allSidebarGroups, [allSidebarGroups]);
   const activeSidebarGroupID = useMemo(
     () => resolveWorkspaceSidebarActiveGroupID(sidebarGroups, activeWorkspaceMenuID),
     [activeWorkspaceMenuID, sidebarGroups]
@@ -163,7 +165,7 @@ export default function WorkspaceCenterPage({
       fallbackPath: pageNavigator.toPublic("/workspace")
     });
   }, [activeWorkspaceMenuID, onNavigate, pageNavigator, topbarMenuGroups]);
-
+  const isDashboardRoute = activeSectionPage === "overview";
   const topbarPrimaryActions = useMemo(
     () =>
       buildWorkspaceCenterTopbarPrimaryActions({
@@ -236,46 +238,46 @@ export default function WorkspaceCenterPage({
 
         <PrototypeUtilityShell>
           <WorkspaceContentLayout>
-            <WorkspacePrototypePageGrid>
-              <WorkspaceSidebarMenu
-                sidebarTitle={text.sidebarMenuTitle}
-                sidebarHint={text.sidebarMenuHint}
-                sidebarMeta={[
-                  {
-                    id: "installed-skills",
-                    label: `${text.installed}: ${snapshot.metrics.installedSkills}`
-                  },
-                  {
-                    id: "alerts",
-                    label: `${text.alerts}: ${snapshot.metrics.alerts}`,
-                    tone: snapshot.metrics.alerts > 0 ? "accent" : "neutral"
-                  }
-                ]}
-                primaryGroupTitle={text.sidebarMenuTitle}
-                primaryEntries={sidebarPrimaryEntries}
-                activeSidebarGroupID={effectiveSidebarGroupID}
-                activeSidebarGroup={activeSidebarGroup}
-                activeMenuID={activeWorkspaceMenuID}
-                onSelectPrimaryGroup={(entry) => {
-                  setSelectedSidebarPrimaryGroupID(entry.groupID);
-                  onNavigate(entry.target);
-                }}
-                onSelectMenuItem={(item) => onNavigate(item.target)}
-              />
-
-              <WorkspaceCenterPageContent
+            {isDashboardRoute ? (
+              <WorkspaceDashboardPageContent
                 text={text}
                 locale={locale}
                 loading={loading}
                 error={error}
                 degradedMessage={degradedMessage}
                 snapshot={snapshot}
-                activeSectionPage={activeSectionPage}
-                onNavigate={onNavigate}
-                toPublicPath={pageNavigator.toPublic}
-                toAdminPath={pageNavigator.toAdmin}
               />
-            </WorkspacePrototypePageGrid>
+            ) : (
+              <WorkspacePrototypePageGrid>
+                <WorkspaceSidebarMenu
+                  sidebarTitle={text.sidebarMenuTitle}
+                  sidebarHint=""
+                  primaryGroupTitle={text.sidebarMenuTitle}
+                  primaryEntries={sidebarPrimaryEntries}
+                  activeSidebarGroupID={effectiveSidebarGroupID}
+                  activeSidebarGroup={activeSidebarGroup}
+                  activeMenuID={activeWorkspaceMenuID}
+                  onSelectPrimaryGroup={(entry) => {
+                    setSelectedSidebarPrimaryGroupID(entry.groupID);
+                    onNavigate(entry.target);
+                  }}
+                  onSelectMenuItem={(item) => onNavigate(item.target)}
+                />
+
+                <WorkspaceCenterPageContent
+                  text={text}
+                  locale={locale}
+                  loading={loading}
+                  error={error}
+                  degradedMessage={degradedMessage}
+                  snapshot={snapshot}
+                  activeSectionPage={activeSectionPage}
+                  onNavigate={onNavigate}
+                  toPublicPath={pageNavigator.toPublic}
+                  toAdminPath={pageNavigator.toAdmin}
+                />
+              </WorkspacePrototypePageGrid>
+            )}
           </WorkspaceContentLayout>
         </PrototypeUtilityShell>
       </div>

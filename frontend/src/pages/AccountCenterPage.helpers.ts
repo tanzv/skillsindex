@@ -102,3 +102,25 @@ export function buildAccountProfilePreviewItems(
     }
   ];
 }
+
+export function resolveAvatarInitials(displayName: string, fallback: string): string {
+  const normalized = String(displayName || "").trim();
+  if (!normalized) {
+    return String(fallback || "U").trim().slice(0, 2).toUpperCase() || "U";
+  }
+
+  const segments = normalized
+    .split(/\s+/)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+
+  if (segments.length === 0) {
+    return "U";
+  }
+
+  if (segments.length === 1) {
+    return segments[0].slice(0, 2).toUpperCase();
+  }
+
+  return `${segments[0][0] || ""}${segments[segments.length - 1][0] || ""}`.toUpperCase();
+}

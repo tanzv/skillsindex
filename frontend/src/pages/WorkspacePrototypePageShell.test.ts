@@ -7,8 +7,8 @@ import type { WorkspaceSidebarGroup } from "./WorkspaceCenterPage.navigation";
 
 const sidebarGroups: WorkspaceSidebarGroup[] = [
   {
-    id: "sections",
-    title: "Workspace Sections",
+    id: "workspace-panel",
+    title: "Workspace Panel",
     items: [
       {
         id: "section-overview",
@@ -19,14 +19,14 @@ const sidebarGroups: WorkspaceSidebarGroup[] = [
     ]
   },
   {
-    id: "hubs",
-    title: "Related Hubs",
+    id: "system-settings",
+    title: "System Settings",
     items: [
       {
-        id: "hub-rollout",
-        label: "Rollout Workflow",
+        id: "system-governance",
+        label: "Governance Center",
         kind: "route",
-        target: "/rollout"
+        target: "/governance"
       }
     ]
   }
@@ -34,8 +34,8 @@ const sidebarGroups: WorkspaceSidebarGroup[] = [
 
 const organizationSidebarOnly: WorkspaceSidebarGroup[] = [
   {
-    id: "organization-management",
-    title: "Organization Management",
+    id: "user-management",
+    title: "User Management",
     items: [
       {
         id: "org-personnel",
@@ -52,7 +52,7 @@ describe("WorkspacePrototypePageShell", () => {
     const html = renderToStaticMarkup(
       React.createElement(WorkspacePrototypePageShell, {
         locale: "en",
-        currentPath: "/rollout",
+        currentPath: "/governance",
         onNavigate: () => undefined,
         sessionUser: {
           id: 1,
@@ -61,30 +61,50 @@ describe("WorkspacePrototypePageShell", () => {
           display_name: "Alice",
           status: "active"
         },
-        activeMenuID: "hub-rollout",
+        activeMenuID: "system-governance",
         sidebarGroups,
         sidebarMeta: [
           { id: "status", label: "Green lane", tone: "accent" },
           { id: "queue", label: "12 items ready" }
         ],
-        eyebrow: "Rollout Control",
-        title: "Install and Rollout Workflow",
+        eyebrow: "System Settings",
+        title: "Governance Center",
         subtitle: "Drive intake and observation from one surface.",
-        summaryMetrics: [
-          { id: "quality", label: "Quality", value: "9.1 / 10" }
-        ],
+        summaryMetrics: [{ id: "quality", label: "Quality", value: "9.1 / 10" }],
         children: React.createElement("div", null, "Subpage content")
       })
     );
 
     expect(html).toContain("SkillsIndex");
-    expect(html).toContain("Rollout Workflow");
-    expect(html).toContain("Related Hubs");
+    expect(html).toContain("Governance Center");
+    expect(html).toContain("System Settings");
     expect(html).not.toContain("Overview");
-    expect(html).toContain("Install and Rollout Workflow");
     expect(html).toContain("Subpage content");
-    expect(html).toContain("Green lane");
     expect(html).toContain("workspace-topbar-toggle-icon-button");
+  });
+
+  it("renders a dedicated scroll container for the content area", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(WorkspacePrototypePageShell, {
+        locale: "en",
+        currentPath: "/governance",
+        onNavigate: () => undefined,
+        sessionUser: {
+          id: 1,
+          username: "alice",
+          role: "admin",
+          display_name: "Alice",
+          status: "active"
+        },
+        activeMenuID: "system-governance",
+        sidebarGroups,
+        title: "Governance Center",
+        subtitle: "Drive intake and observation from one surface.",
+        children: React.createElement("div", null, "Subpage content")
+      })
+    );
+
+    expect(html).toContain("workspace-shell-content-scroll");
   });
 
   it("keeps topbar menu groups stable when sidebar is narrowed to organization mode", () => {
@@ -111,8 +131,8 @@ describe("WorkspacePrototypePageShell", () => {
     );
 
     expect(html).toContain("Personnel Management");
-    expect(html).toContain("Workspace Sections");
-    expect(html).toContain("Related Hubs");
+    expect(html).toContain("Workspace Panel");
+    expect(html).toContain("System Settings");
     expect(html).toContain("marketplace-topbar-nav-button is-active");
   });
 

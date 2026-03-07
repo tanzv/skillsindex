@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { AppstoreOutlined, DownOutlined } from "@ant-design/icons";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { SessionUser } from "../lib/api";
 import GlobalUserControlDropdown from "../components/GlobalUserControlDropdown";
@@ -6,12 +7,12 @@ import type { GlobalUserControlService } from "../lib/globalUserControlService";
 import type { AppLocale } from "../lib/i18n";
 import type { TopbarActionItem } from "./MarketplaceHomePage.lightTopbar";
 import MarketplaceTopbarBase from "./MarketplaceTopbarBase";
+import type { MarketplaceTopbarRightRegistration } from "./MarketplaceTopbar.rightRegistry";
 import {
   renderMarketplaceTopbarActionButton,
   renderMarketplaceTopbarRightRegistrations,
   resolveMarketplaceTopbarRightRegistrations
 } from "./MarketplaceTopbar.shared";
-import type { MarketplaceTopbarRightRegistration } from "./MarketplaceTopbar.rightRegistry";
 import {
   resolveWorkspaceOverflowPresentation,
   resolveWorkspacePrimaryActionPresentation,
@@ -34,6 +35,8 @@ interface WorkspaceTopbarProps {
 }
 
 const WORKSPACE_OVERFLOW_PANEL_ID = "workspace-topbar-overflow-panel";
+type WorkspaceTopbarSurface = "none" | "primary-overflow" | "user-menu";
+
 export default function WorkspaceTopbar({
   locale,
   isLightTheme,
@@ -48,33 +51,38 @@ export default function WorkspaceTopbar({
   defaultPrimaryExpanded = false
 }: WorkspaceTopbarProps) {
   const profile = useMemo(() => resolveWorkspaceTopbarUserProfile(sessionUser, locale), [locale, sessionUser]);
-  const [isPrimaryExpanded, setIsPrimaryExpanded] = useState(defaultPrimaryExpanded);
+  const [activeSurface, setActiveSurface] = useState<WorkspaceTopbarSurface>(
+    defaultPrimaryExpanded ? "primary-overflow" : "none"
+  );
   const interactionScopeRef = useRef<HTMLDivElement | null>(null);
   const primaryActionPresentation = useMemo(
     () => resolveWorkspacePrimaryActionPresentation(primaryActions),
     [primaryActions]
   );
   const hasPrimaryOverflow = primaryActionPresentation.hiddenActions.length > 0;
+  const isPrimaryExpanded = activeSurface === "primary-overflow";
+  const isUserMenuOpen = activeSurface === "user-menu";
   const topbarCopy = useMemo(() => {
     if (locale === "zh") {
       return {
         more: "\u66f4\u591a",
         hide: "\u6536\u8d77",
-        expandAria: "\u5c55\u5f00\u4e3b\u5bfc\u822a\u9762\u677f",
-        collapseAria: "\u6536\u8d77\u4e3b\u5bfc\u822a\u9762\u677f",
+        expandAria: "\u5c55\u5f00\u5e94\u7528\u5bfc\u822a\u9762\u677f",
+        collapseAria: "\u6536\u8d77\u5e94\u7528\u5bfc\u822a\u9762\u677f",
         primaryNavigationAria: "\u4e3b\u5bfc\u822a",
         primaryControlsAria: "\u4e3b\u5bfc\u822a\u63a7\u5236",
-        expandedPanelAria: "\u5df2\u5c55\u5f00\u7684\u5de5\u4f5c\u53f0\u5bfc\u822a\u9762\u677f",
+        expandedPanelAria: "\u5df2\u5c55\u5f00\u7684\u5e94\u7528\u5bfc\u822a\u9762\u677f"
       };
     }
+
     return {
       more: "More",
       hide: "Hide",
-      expandAria: "Expand primary navigation panel",
-      collapseAria: "Collapse primary navigation panel",
+      expandAria: "Expand app navigation panel",
+      collapseAria: "Collapse app navigation panel",
       primaryNavigationAria: "Primary navigation",
       primaryControlsAria: "Primary navigation controls",
-      expandedPanelAria: "Expanded workspace navigation panel",
+      expandedPanelAria: "Expanded app navigation panel"
     };
   }, [locale]);
 
@@ -89,13 +97,13 @@ export default function WorkspaceTopbar({
         return;
       }
       if (!interactionScopeElement.contains(event.target)) {
-        setIsPrimaryExpanded(false);
+        setActiveSurface("none");
       }
     };
 
     const handleDocumentKeyDown = (event: KeyboardEvent): void => {
       if (event.key === "Escape") {
-        setIsPrimaryExpanded(false);
+        setActiveSurface("none");
       }
     };
 
@@ -109,9 +117,25 @@ export default function WorkspaceTopbar({
 
   useEffect(() => {
     if (!hasPrimaryOverflow && isPrimaryExpanded) {
-      setIsPrimaryExpanded(false);
+      setActiveSurface("none");
     }
   }, [hasPrimaryOverflow, isPrimaryExpanded]);
+
+  const handleUserDropdownOpenChange = useCallback((open: boolean): void => {
+    setActiveSurface(open ? "user-menu" : "none");
+  }, []);
+
+  const hiddenPrimaryActions = useMemo(
+    () =>
+      primaryActionPresentation.hiddenActions.map((action) => ({
+        ...action,
+        onClick: () => {
+          setActiveSurface("none");
+          action.onClick();
+        }
+      })),
+    [primaryActionPresentation.hiddenActions]
+  );
 
   const userCenterTrigger = useMemo(
     () => (
@@ -120,9 +144,11 @@ export default function WorkspaceTopbar({
         displayName={profile.displayName}
         subtitle={profile.subtitle}
         avatarFallback="WU"
+        open={isUserMenuOpen}
+        onOpenChange={handleUserDropdownOpenChange}
       />
     ),
-    [profile.displayName, profile.subtitle, userControlService]
+    [handleUserDropdownOpenChange, isUserMenuOpen, profile.displayName, profile.subtitle, userControlService]
   );
 
   const resolvedRightRegistrations = useMemo(
@@ -147,7 +173,6 @@ export default function WorkspaceTopbar({
     () => renderMarketplaceTopbarRightRegistrations(resolvedRightRegistrations),
     [resolvedRightRegistrations]
   );
-  const hiddenPrimaryActions = primaryActionPresentation.hiddenActions;
   const primaryActionsForRender = hasPrimaryOverflow
     ? primaryActionPresentation.visibleActions
     : primaryActions;
@@ -164,37 +189,12 @@ export default function WorkspaceTopbar({
       className: "is-primary-nav-toggle",
       ariaLabel: isPrimaryExpanded ? topbarCopy.collapseAria : topbarCopy.expandAria,
       onClick: () => {
-        setIsPrimaryExpanded((previousExpanded) => !previousExpanded);
+        setActiveSurface((previousSurface) =>
+          previousSurface === "primary-overflow" ? "none" : "primary-overflow"
+        );
       }
     };
   }, [hasPrimaryOverflow, isPrimaryExpanded, topbarCopy.collapseAria, topbarCopy.expandAria, topbarCopy.hide, topbarCopy.more]);
-
-  const primaryTrailingContent = useMemo(() => {
-    if (!primaryToggleAction) {
-      return null;
-    }
-    return (
-      <button
-        type="button"
-        className={`workspace-topbar-toggle-icon-button ${isPrimaryExpanded ? "is-expanded" : "is-collapsed"}`}
-        aria-label={primaryToggleAction.ariaLabel}
-        aria-expanded={isPrimaryExpanded}
-        aria-controls={WORKSPACE_OVERFLOW_PANEL_ID}
-        aria-haspopup="menu"
-        onClick={primaryToggleAction.onClick}
-      >
-        <span className="workspace-topbar-toggle-button-content" aria-hidden="true">
-          <span className="workspace-topbar-toggle-label">{primaryToggleAction.label}</span>
-          {!isPrimaryExpanded ? (
-            <span className="workspace-topbar-toggle-badge">
-              <span className="workspace-topbar-toggle-badge-count">{hiddenPrimaryActions.length}</span>
-            </span>
-          ) : null}
-          <span className="workspace-topbar-toggle-icon">⌄</span>
-        </span>
-      </button>
-    );
-  }, [hiddenPrimaryActions.length, isPrimaryExpanded, primaryToggleAction]);
 
   const primaryGroups = useMemo(
     () => resolveWorkspaceTopbarPrimaryGroups(primaryActionsForRender, locale),
@@ -223,14 +223,9 @@ export default function WorkspaceTopbar({
             </div>
           ))}
         </div>
-        {primaryTrailingContent ? (
-          <div className="workspace-topbar-primary-inline-toggle" role="group" aria-label={topbarCopy.primaryControlsAria}>
-            {primaryTrailingContent}
-          </div>
-        ) : null}
       </div>
     );
-  }, [primaryGroups, primaryTrailingContent, topbarCopy.primaryControlsAria, topbarCopy.primaryNavigationAria]);
+  }, [primaryGroups, topbarCopy.primaryNavigationAria]);
 
   const expandedPrimaryPanel = useMemo(() => {
     if (!hasPrimaryOverflow || hiddenPrimaryActions.length === 0) {
@@ -280,6 +275,40 @@ export default function WorkspaceTopbar({
     );
   }, [hasPrimaryOverflow, hiddenPrimaryActions, isPrimaryExpanded, locale, topbarCopy.expandedPanelAria]);
 
+  const primaryTrailingContent = useMemo(() => {
+    if (!primaryToggleAction) {
+      return null;
+    }
+
+    return (
+      <div className="workspace-topbar-primary-inline-toggle" role="group" aria-label={topbarCopy.primaryControlsAria}>
+        <button
+          type="button"
+          className={`workspace-topbar-toggle-icon-button ${isPrimaryExpanded ? "is-expanded" : "is-collapsed"}`}
+          aria-label={primaryToggleAction.ariaLabel}
+          aria-expanded={isPrimaryExpanded}
+          aria-controls={WORKSPACE_OVERFLOW_PANEL_ID}
+          aria-haspopup="menu"
+          title={primaryToggleAction.label}
+          onClick={primaryToggleAction.onClick}
+        >
+          <span className="workspace-topbar-toggle-button-content" aria-hidden="true">
+            <span className="workspace-topbar-toggle-glyph-shell">
+              <AppstoreOutlined className="workspace-topbar-toggle-panel-icon" />
+            </span>
+            {!isPrimaryExpanded ? (
+              <span className="workspace-topbar-toggle-badge">
+                <span className="workspace-topbar-toggle-badge-count">{hiddenPrimaryActions.length}</span>
+              </span>
+            ) : null}
+            <DownOutlined className="workspace-topbar-toggle-icon" />
+          </span>
+        </button>
+        {expandedPrimaryPanel}
+      </div>
+    );
+  }, [expandedPrimaryPanel, hiddenPrimaryActions.length, isPrimaryExpanded, primaryToggleAction, topbarCopy.primaryControlsAria]);
+
   return (
     <div ref={interactionScopeRef} className="workspace-topbar-interaction-scope">
       <MarketplaceTopbarBase
@@ -291,9 +320,9 @@ export default function WorkspaceTopbar({
         isLightTheme={isLightTheme}
         primaryActions={[]}
         primaryNavigationContent={primaryNavigationContent}
+        primaryTrailingContent={primaryTrailingContent}
         renderPrimaryActionButton={(action) => renderMarketplaceTopbarActionButton(action, "primary")}
         rightContent={rightContent}
-        belowContent={expandedPrimaryPanel}
       />
     </div>
   );

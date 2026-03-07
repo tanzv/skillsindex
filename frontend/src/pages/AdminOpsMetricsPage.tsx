@@ -1,5 +1,7 @@
 import { CSSProperties, useEffect, useMemo, useState } from "react";
+
 import { AdminOpsMetricsResponse, OpsMetrics, fetchAdminOpsMetrics } from "../lib/api";
+import AdminSubpageSummaryPanel from "./AdminSubpageSummaryPanel";
 
 type OpsMetricKey = keyof OpsMetrics;
 type Severity = "normal" | "warning" | "critical";
@@ -58,17 +60,8 @@ const severityPalette: Record<Severity, { tone: string; border: string; backgrou
 };
 
 const subtleTextColor = "var(--si-color-text-secondary)";
-const heroPanelStyle: CSSProperties = {
-  background:
-    "linear-gradient(120deg, color-mix(in srgb, var(--si-color-surface) 94%, var(--si-color-accent) 6%), color-mix(in srgb, var(--si-color-panel) 90%, var(--si-color-accent) 10%))",
-  color: "var(--si-color-text-primary)"
-};
-
-const heroMetricCardStyle: CSSProperties = {
-  border: "1px solid color-mix(in srgb, var(--si-color-border) 72%, transparent)",
-  borderRadius: 12,
-  padding: "10px 12px",
-  background: "color-mix(in srgb, var(--si-color-surface) 74%, transparent)"
+const spotlightCardStyle: CSSProperties = {
+  borderLeft: "4px solid color-mix(in srgb, var(--si-color-accent) 64%, transparent)"
 };
 
 export default function AdminOpsMetricsPage() {
@@ -113,6 +106,7 @@ export default function AdminOpsMetricsPage() {
     if (!item) {
       return [];
     }
+
     return metricDefinitions.map((definition) => {
       const value = toSafeCount(item[definition.key]);
       const severity = getSeverity(value, definition.warningAt, definition.criticalAt);
@@ -132,6 +126,7 @@ export default function AdminOpsMetricsPage() {
     const incidentPressure = (valueByKey.get("open_incidents") || 0) + (valueByKey.get("pending_moderation_cases") || 0);
     const pipelineFriction = (valueByKey.get("unresolved_jobs") || 0) + (valueByKey.get("failed_sync_runs_24h") || 0);
     const platformTrust = (valueByKey.get("disabled_accounts") || 0) + (valueByKey.get("stale_integrations") || 0);
+
     return [
       { label: "Incident Pressure", value: incidentPressure, target: "Contain unresolved reliability signals." },
       { label: "Pipeline Friction", value: pipelineFriction, target: "Restore flow for automated jobs and sync." },
@@ -152,7 +147,7 @@ export default function AdminOpsMetricsPage() {
       <div className="panel error">
         <h3 style={{ marginTop: 0 }}>Unable to load operations metrics</h3>
         <p style={{ marginBottom: 16 }}>{error}</p>
-        <button type="button" onClick={retryFetch} style={{ padding: "8px 14px", borderRadius: 8, cursor: "pointer" }}>
+        <button type="button" onClick={retryFetch} className="panel-action-button">
           Retry
         </button>
       </div>
@@ -161,49 +156,48 @@ export default function AdminOpsMetricsPage() {
 
   if (!data?.item || metrics.length === 0) {
     return (
-      <div className="panel">
-        <h3 style={{ marginTop: 0 }}>No metrics available</h3>
-        <p>The metrics endpoint returned an empty payload. Retry after telemetry pipelines complete a full cycle.</p>
-        <button type="button" onClick={retryFetch} style={{ padding: "8px 14px", borderRadius: 8, cursor: "pointer" }}>
-          Refresh
-        </button>
+      <div className="page-grid">
+        <AdminSubpageSummaryPanel
+          title="Operations Command Dashboard"
+          status={<span className="pill muted">No data</span>}
+          actions={
+            <button type="button" onClick={retryFetch} className="panel-action-button">
+              Refresh
+            </button>
+          }
+          notice="The metrics endpoint returned an empty payload. Retry after telemetry pipelines complete a full cycle."
+          metrics={[{ id: "tracked-events", label: "Tracked Events", value: 0 }]}
+        />
       </div>
     );
   }
 
   return (
     <div className="page-grid" style={{ gap: 18 }}>
-      <section
-        className="panel panel-hero"
-        style={heroPanelStyle}
-      >
-        <h2 style={{ marginBottom: 8 }}>Operations Command Dashboard</h2>
-        <p style={{ marginTop: 0, opacity: 0.92 }}>
-          Live baseline for reliability, moderation capacity, and integration stability. Use the risk queue to prioritize response.
-        </p>
-        <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", marginTop: 14 }}>
-          <article style={heroMetricCardStyle}>
-            <span style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Critical Signals</span>
-            <strong style={{ fontSize: 22 }}>{summary.critical}</strong>
-          </article>
-          <article style={heroMetricCardStyle}>
-            <span style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Warning Signals</span>
-            <strong style={{ fontSize: 22 }}>{summary.warning}</strong>
-          </article>
-          <article style={heroMetricCardStyle}>
-            <span style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Tracked Events</span>
-            <strong style={{ fontSize: 22 }}>{summary.total}</strong>
-          </article>
-        </div>
-      </section>
+      <AdminSubpageSummaryPanel
+        title="Operations Command Dashboard"
+        status={
+          <>
+            <span className="pill active">Live baseline</span>
+            <span className="pill muted">Last refresh: {lastLoadedAt || "Unavailable"}</span>
+          </>
+        }
+        actions={
+          <button type="button" onClick={retryFetch} className="panel-action-button">
+            Refresh Metrics
+          </button>
+        }
+        notice="Use the risk queue to prioritize response across reliability, moderation, and integration stability."
+        metrics={[
+          { id: "critical-signals", label: "Critical Signals", value: summary.critical },
+          { id: "warning-signals", label: "Warning Signals", value: summary.warning },
+          { id: "tracked-events", label: "Tracked Events", value: summary.total }
+        ]}
+      />
 
       <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
         {quickContextCards.map((card) => (
-          <article
-            key={card.label}
-            className="panel"
-            style={{ borderLeft: "4px solid color-mix(in srgb, var(--si-color-accent) 64%, transparent)" }}
-          >
+          <article key={card.label} className="panel" style={spotlightCardStyle}>
             <span style={{ display: "block", color: subtleTextColor }}>{card.label}</span>
             <strong style={{ fontSize: 26, lineHeight: 1.25 }}>{card.value}</strong>
             <p style={{ marginBottom: 0, fontSize: 13 }}>{card.target}</p>
@@ -259,18 +253,6 @@ export default function AdminOpsMetricsPage() {
             <p style={{ marginBottom: 0, marginTop: 8 }}>{metric.description}</p>
           </article>
         ))}
-      </section>
-
-      <section className="panel" style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <div>
-          <h3 style={{ marginTop: 0, marginBottom: 8 }}>Operational Notes</h3>
-          <p style={{ margin: 0, color: subtleTextColor }}>
-            Last refresh: {lastLoadedAt || "Unavailable"}.
-          </p>
-        </div>
-        <button type="button" onClick={retryFetch} style={{ padding: "8px 14px", borderRadius: 8, cursor: "pointer", height: 38 }}>
-          Refresh Metrics
-        </button>
       </section>
     </div>
   );

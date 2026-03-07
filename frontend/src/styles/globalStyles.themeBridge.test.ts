@@ -14,6 +14,8 @@ describe("global theme bridge styles", () => {
   });
 
   it("keeps account workbench panel and table surfaces token-driven", () => {
+    expect(globalAccountWorkbenchStyles).toContain(".page-grid.account-workbench {");
+    expect(globalAccountWorkbenchStyles).toContain("margin-top: 0;");
     expect(globalAccountWorkbenchStyles).toContain(".account-workbench .panel {");
     expect(globalAccountWorkbenchStyles).toContain("background: var(--account-workbench-panel-bg);");
     expect(globalAccountWorkbenchStyles).toContain(".account-workbench th,");

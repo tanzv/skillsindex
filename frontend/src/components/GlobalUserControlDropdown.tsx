@@ -1,60 +1,30 @@
 import {
+  DownOutlined,
   GlobalOutlined,
   LogoutOutlined,
   MoonOutlined,
+  RightOutlined,
   SunOutlined,
   TranslationOutlined,
   UserOutlined
 } from "@ant-design/icons";
-import { Dropdown, type MenuProps } from "antd";
+import { Dropdown, type DropdownProps } from "antd";
 import { useMemo } from "react";
 
-import {
-  buildGlobalUserControlCommands,
-  type GlobalUserControlCommand,
-  type GlobalUserControlCommandKey,
-  type GlobalUserControlService
+import type {
+  GlobalUserControlActionItem,
+  GlobalUserControlIconKey,
+  GlobalUserControlInlineRowItem,
+  GlobalUserControlSection,
+  GlobalUserControlService
 } from "../lib/globalUserControlService";
 import { resolveAvatarInitials } from "./ExpandableNavBar.helpers";
-
-interface GlobalUserControlLabels {
-  themeGroup: string;
-  localeGroup: string;
-  sessionGroup: string;
-  darkTheme: string;
-  lightTheme: string;
-  chineseLocale: string;
-  englishLocale: string;
-  signOut: string;
-}
-
-const defaultLabels: GlobalUserControlLabels = {
-  themeGroup: "Theme",
-  localeGroup: "Language",
-  sessionGroup: "Session",
-  darkTheme: "Dark Theme",
-  lightTheme: "Light Theme",
-  chineseLocale: "Chinese",
-  englishLocale: "English",
-  signOut: "Sign Out"
-};
-
-const commandIconMap: Record<GlobalUserControlCommandKey, JSX.Element> = {
-  "theme-dark": <MoonOutlined />,
-  "theme-light": <SunOutlined />,
-  "locale-zh": <TranslationOutlined />,
-  "locale-en": <GlobalOutlined />,
-  logout: <LogoutOutlined />
-};
-
-const commandGroupOrder: GlobalUserControlCommand["group"][] = ["theme", "locale", "session"];
 
 export interface GlobalUserControlDropdownProps {
   service: GlobalUserControlService;
   displayName: string;
   subtitle?: string;
   avatarFallback?: string;
-  labels?: Partial<GlobalUserControlLabels>;
   triggerAriaLabel?: string;
   triggerDataTestId?: string;
   overlayClassName?: string;
@@ -62,77 +32,121 @@ export interface GlobalUserControlDropdownProps {
   avatarClassName?: string;
   metaClassName?: string;
   iconClassName?: string;
-  menuGroupClassName?: string;
-  menuItemClassName?: string;
+  onOpenChange?: (open: boolean) => void;
+  open?: boolean;
+  placement?: DropdownProps["placement"];
 }
 
-function resolveGroupLabel(
-  group: GlobalUserControlCommand["group"],
-  labels: GlobalUserControlLabels
-): string {
-  if (group === "theme") {
-    return labels.themeGroup;
-  }
-  if (group === "locale") {
-    return labels.localeGroup;
-  }
-  return labels.sessionGroup;
+function resolvePanelAriaLabel(locale: GlobalUserControlService["localeCode"]): string {
+  return locale === "zh" ? "\u7528\u6237\u4e2d\u5fc3\u9762\u677f" : "User center panel";
 }
 
-function resolveCommandLabel(
-  key: GlobalUserControlCommandKey,
-  labels: GlobalUserControlLabels
-): string {
-  if (key === "theme-dark") {
-    return labels.darkTheme;
+function resolveIcon(icon: GlobalUserControlIconKey | undefined): JSX.Element | null {
+  if (icon === "moon") {
+    return <MoonOutlined />;
   }
-  if (key === "theme-light") {
-    return labels.lightTheme;
+  if (icon === "sun") {
+    return <SunOutlined />;
   }
-  if (key === "locale-zh") {
-    return labels.chineseLocale;
+  if (icon === "translation") {
+    return <TranslationOutlined />;
   }
-  if (key === "locale-en") {
-    return labels.englishLocale;
+  if (icon === "globe") {
+    return <GlobalOutlined />;
   }
-  return labels.signOut;
+  if (icon === "logout") {
+    return <LogoutOutlined />;
+  }
+  if (icon === "profile") {
+    return <UserOutlined />;
+  }
+  return null;
 }
 
-function buildMenuItems(
-  commands: GlobalUserControlCommand[],
-  labels: GlobalUserControlLabels,
-  menuGroupClassName: string,
-  menuItemClassName: string
-): MenuProps["items"] {
-  const groupedCommands = new Map<GlobalUserControlCommand["group"], GlobalUserControlCommand[]>();
-  for (const command of commands) {
-    const currentGroupCommands = groupedCommands.get(command.group) || [];
-    currentGroupCommands.push(command);
-    groupedCommands.set(command.group, currentGroupCommands);
+function renderSectionItem(
+  item: GlobalUserControlActionItem | GlobalUserControlInlineRowItem,
+  onActionExecute: (execute: () => void | Promise<void>) => void
+): JSX.Element {
+  if (item.kind === "inline-row") {
+    return (
+      <div key={item.key} className="workspace-topbar-user-inline-row" data-item-key={item.key}>
+        {item.groups.map((group) => (
+          <div key={group.key} className="workspace-topbar-user-segmented-group" data-group-key={group.key}>
+            <span className="workspace-topbar-user-segmented-label">{group.label}</span>
+            <div className="workspace-topbar-user-segmented-options" role="group" aria-label={group.label}>
+              {group.options.map((option) => {
+                const optionIcon = resolveIcon(option.icon);
+                const optionClassName = [
+                  "workspace-topbar-user-segmented-option",
+                  option.active ? "is-active" : "",
+                  option.disabled ? "is-disabled" : ""
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    className={optionClassName}
+                    onClick={() => onActionExecute(option.execute)}
+                    disabled={option.disabled}
+                    aria-pressed={option.active}
+                  >
+                    {optionIcon ? <span className="workspace-topbar-user-segmented-option-icon">{optionIcon}</span> : null}
+                    <span>{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
-  return commandGroupOrder
-    .map((group) => {
-      const items = groupedCommands.get(group) || [];
-      if (items.length === 0) {
-        return null;
-      }
-      return {
-        type: "group" as const,
-        label: <span className={menuGroupClassName}>{resolveGroupLabel(group, labels)}</span>,
-        children: items.map((command) => ({
-          key: command.key,
-          icon: commandIconMap[command.key],
-          disabled: command.disabled,
-          label: (
-            <span className={`${menuItemClassName}${command.active ? " is-active" : ""}`}>
-              {resolveCommandLabel(command.key, labels)}
-            </span>
-          )
-        }))
-      };
-    })
-    .filter(Boolean);
+  const icon = resolveIcon(item.icon);
+  const actionClassName = [
+    "workspace-topbar-user-action",
+    item.active ? "is-active" : "",
+    item.tone === "danger" ? "is-danger" : "",
+    item.disabled ? "is-disabled" : ""
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <button
+      key={item.key}
+      type="button"
+      className={actionClassName}
+      onClick={() => onActionExecute(item.execute)}
+      disabled={item.disabled}
+    >
+      <span className="workspace-topbar-user-action-leading">
+        {icon ? <span className="workspace-topbar-user-action-icon">{icon}</span> : null}
+        <span className="workspace-topbar-user-action-copy">
+          <strong>{item.label}</strong>
+          {item.description ? <small>{item.description}</small> : null}
+        </span>
+      </span>
+      <RightOutlined className="workspace-topbar-user-action-arrow" />
+    </button>
+  );
+}
+
+function renderSections(
+  sections: GlobalUserControlSection[],
+  onActionExecute: (execute: () => void | Promise<void>) => void
+): JSX.Element[] {
+  return sections.map((section) => (
+    <section key={section.id} className="workspace-topbar-user-section" data-section-id={section.id}>
+      <p className="workspace-topbar-user-section-label">{section.label}</p>
+      <div className="workspace-topbar-user-section-body">
+        {section.items.map((item) => renderSectionItem(item, onActionExecute))}
+      </div>
+    </section>
+  ));
 }
 
 export default function GlobalUserControlDropdown({
@@ -140,52 +154,62 @@ export default function GlobalUserControlDropdown({
   displayName,
   subtitle = "",
   avatarFallback = "WU",
-  labels,
-  triggerAriaLabel = "Open user center menu",
+  triggerAriaLabel,
   triggerDataTestId = "workspace-user-center-trigger",
   overlayClassName = "workspace-topbar-user-dropdown",
   triggerClassName = "workspace-topbar-user-trigger",
   avatarClassName = "workspace-topbar-avatar",
   metaClassName = "workspace-topbar-user-meta",
   iconClassName = "workspace-topbar-user-icon",
-  menuGroupClassName = "workspace-topbar-user-menu-group",
-  menuItemClassName = "workspace-topbar-user-menu-item"
+  onOpenChange,
+  open,
+  placement = "bottomRight"
 }: GlobalUserControlDropdownProps) {
-  const resolvedLabels: GlobalUserControlLabels = useMemo(
-    () => ({ ...defaultLabels, ...(labels || {}) }),
-    [labels]
-  );
-  const userCommands = useMemo(() => buildGlobalUserControlCommands(service), [service]);
-  const commandByKey = useMemo(
-    () => new Map(userCommands.map((command) => [command.key, command])),
-    [userCommands]
-  );
-  const menuItems = useMemo(
-    () => buildMenuItems(userCommands, resolvedLabels, menuGroupClassName, menuItemClassName),
-    [menuGroupClassName, menuItemClassName, resolvedLabels, userCommands]
-  );
   const initials = useMemo(() => resolveAvatarInitials(displayName, avatarFallback), [avatarFallback, displayName]);
+  const resolvedTriggerClassName = [triggerClassName, open ? "is-open" : ""].filter(Boolean).join(" ");
+  const panelAriaLabel = useMemo(() => resolvePanelAriaLabel(service.localeCode), [service.localeCode]);
+  const effectiveTriggerAriaLabel = triggerAriaLabel || panelAriaLabel;
 
-  const menu = useMemo<MenuProps>(
-    () => ({
-      items: menuItems,
-      onClick: ({ key }) => {
-        const command = commandByKey.get(String(key) as GlobalUserControlCommandKey);
-        if (!command || command.disabled) {
-          return;
-        }
-        void command.execute();
-      }
-    }),
-    [commandByKey, menuItems]
+  const handleActionExecute = (execute: () => void | Promise<void>): void => {
+    onOpenChange?.(false);
+    void execute();
+  };
+
+  const panelContent = useMemo(
+    () => (
+      <div className="workspace-topbar-user-panel" data-testid="workspace-user-center-panel" role="dialog" aria-label={panelAriaLabel}>
+        <div className="workspace-topbar-user-panel-header">
+          <span className={`${avatarClassName} is-panel-avatar`} aria-hidden="true">
+            {initials}
+          </span>
+          <div className="workspace-topbar-user-panel-meta">
+            <strong>{displayName}</strong>
+            {subtitle ? <small>{subtitle}</small> : null}
+          </div>
+        </div>
+        <div className="workspace-topbar-user-panel-sections">{renderSections(service.sections, handleActionExecute)}</div>
+      </div>
+    ),
+    [avatarClassName, displayName, handleActionExecute, initials, panelAriaLabel, service.sections, subtitle]
   );
 
   return (
-    <Dropdown menu={menu} trigger={["click"]} placement="bottomLeft" classNames={{ root: overlayClassName }}>
+    <Dropdown
+      menu={{ items: [] }}
+      popupRender={() => panelContent}
+      trigger={["click"]}
+      placement={placement}
+      classNames={{ root: overlayClassName }}
+      onOpenChange={onOpenChange}
+      open={open}
+      destroyOnHidden
+    >
       <button
         type="button"
-        className={triggerClassName}
-        aria-label={triggerAriaLabel}
+        className={resolvedTriggerClassName}
+        aria-label={effectiveTriggerAriaLabel}
+        aria-haspopup="dialog"
+        aria-expanded={open === undefined ? undefined : open}
         data-testid={triggerDataTestId}
       >
         <span className={avatarClassName} aria-hidden="true">
@@ -195,7 +219,7 @@ export default function GlobalUserControlDropdown({
           <strong>{displayName}</strong>
           {subtitle ? <small>{subtitle}</small> : null}
         </span>
-        <UserOutlined className={iconClassName} />
+        <DownOutlined className={iconClassName} />
       </button>
     </Dropdown>
   );

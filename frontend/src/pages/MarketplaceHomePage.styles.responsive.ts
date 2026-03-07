@@ -104,13 +104,19 @@ export const marketplaceHomeResponsiveStyles = css`
     padding-left: 0;
   }
 
-  .marketplace-home.is-mobile .workspace-topbar-primary-inline-toggle::before {
-    display: none;
+  .marketplace-home.is-mobile .workspace-topbar-primary-inline-toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
   }
 
-  .marketplace-home.is-mobile .marketplace-topbar-below-content {
-    width: 100%;
-    padding: 0 var(--marketplace-content-gutter);
+  .marketplace-home.is-mobile .workspace-topbar-primary-inline-toggle > .workspace-topbar-toggle-icon-button {
+    align-self: flex-end;
+  }
+
+  .marketplace-home.is-mobile .workspace-topbar-primary-inline-toggle::before {
+    display: none;
   }
 
   .marketplace-home.is-mobile .marketplace-topbar-left-accessory {

@@ -60,38 +60,38 @@ interface WorkspaceTopbarLocaleText {
 function resolveWorkspaceTopbarLocaleText(locale: AppLocale): WorkspaceTopbarLocaleText {
   if (locale === "zh") {
     return {
-      overflowDefaultGroupTitle: "\u5de5\u4f5c\u53f0\u83dc\u5355",
-      overflowMarketplaceGroupTitle: "\u5e02\u573a\u5bfc\u822a",
-      overflowAccessGroupTitle: "\u5165\u53e3\u5bfc\u822a",
-      overflowSectionsGroupTitle: "\u5de5\u4f5c\u53f0\u5206\u533a",
+      overflowDefaultGroupTitle: "\u5e94\u7528\u83dc\u5355",
+      overflowMarketplaceGroupTitle: "\u5e02\u573a\u5165\u53e3",
+      overflowAccessGroupTitle: "\u7cfb\u7edf\u5165\u53e3",
+      overflowSectionsGroupTitle: "\u5e94\u7528\u5206\u533a",
       overflowHubsGroupTitle: "\u5173\u8054\u4e2d\u5fc3",
       overflowOrganizationGroupTitle: "\u7ec4\u7ec7\u7ba1\u7406",
-      workspaceNavigationLabel: "\u5de5\u4f5c\u53f0\u5bfc\u822a",
-      workspaceTagLabel: "\u5de5\u4f5c\u53f0",
-      accessNavigationLabel: "\u5165\u53e3\u5bfc\u822a",
+      workspaceNavigationLabel: "\u5e94\u7528\u5bfc\u822a",
+      workspaceTagLabel: "\u5e94\u7528",
+      accessNavigationLabel: "\u7cfb\u7edf\u5165\u53e3",
       accessTagLabel: "\u5165\u53e3",
-      quickNavigationLabel: "\u5feb\u901f\u5bfc\u822a",
-      quickTagLabel: "\u5feb\u6377",
+      quickNavigationLabel: "\u5168\u5c40\u5165\u53e3",
+      quickTagLabel: "\u5168\u5c40",
       guestUser: "\u8bbf\u5ba2\u7528\u6237",
-      workspaceVisitor: "\u5de5\u4f5c\u53f0\u8bbf\u5ba2"
+      workspaceVisitor: "\u5e94\u7528\u8bbf\u5ba2"
     };
   }
 
   return {
-    overflowDefaultGroupTitle: "Workspace Menu",
-    overflowMarketplaceGroupTitle: "Marketplace Navigation",
-    overflowAccessGroupTitle: "Access Navigation",
-    overflowSectionsGroupTitle: "Workspace Sections",
+    overflowDefaultGroupTitle: "App Menu",
+    overflowMarketplaceGroupTitle: "Marketplace",
+    overflowAccessGroupTitle: "System Access",
+    overflowSectionsGroupTitle: "App Sections",
     overflowHubsGroupTitle: "Related Hubs",
     overflowOrganizationGroupTitle: "Organization Management",
-    workspaceNavigationLabel: "Workspace Navigation",
-    workspaceTagLabel: "Workspace",
-    accessNavigationLabel: "Access Navigation",
+    workspaceNavigationLabel: "App Navigation",
+    workspaceTagLabel: "App",
+    accessNavigationLabel: "System Access",
     accessTagLabel: "Access",
-    quickNavigationLabel: "Quick Navigation",
-    quickTagLabel: "Quick",
+    quickNavigationLabel: "Global Links",
+    quickTagLabel: "Global",
     guestUser: "Guest User",
-    workspaceVisitor: "Workspace Visitor"
+    workspaceVisitor: "App Visitor"
   };
 }
 
@@ -304,7 +304,10 @@ export function resolveWorkspaceOverflowPresentation(actions: TopbarActionItem[]
 
   return {
     titleText: text.overflowDefaultGroupTitle,
-    hintText: "",
+    hintText:
+      locale === "zh"
+        ? "\u4ece\u8fd9\u91cc\u8bbf\u95ee\u5e94\u7528\u5206\u533a\u3001\u5e02\u573a\u5165\u53e3\u4e0e\u7cfb\u7edf\u5165\u53e3\u3002"
+        : "Use this global menu to reach app sections, marketplace surfaces, and system entry points.",
     metrics: [],
     groups
   };

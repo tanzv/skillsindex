@@ -4,6 +4,7 @@ import {
   buildAccountProfileDraft,
   formatAccountDate,
   profileCompletenessScore,
+  resolveAvatarInitials,
   sanitizeAccountProfileDraft
 } from "./AccountCenterPage.helpers";
 
@@ -67,5 +68,12 @@ describe("AccountCenterPage.helpers", () => {
   it("formats account date safely", () => {
     expect(formatAccountDate("invalid", "en", "n/a")).toBe("n/a");
     expect(formatAccountDate("2026-02-01T10:00:00Z", "en", "n/a")).toMatch(/\d/);
+  });
+
+  it("resolves avatar initials with deterministic fallbacks", () => {
+    expect(resolveAvatarInitials("Alex Smith", "user")).toBe("AS");
+    expect(resolveAvatarInitials("alex", "user")).toBe("AL");
+    expect(resolveAvatarInitials(" ", "user")).toBe("US");
+    expect(resolveAvatarInitials(" ", "")).toBe("U");
   });
 });

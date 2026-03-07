@@ -4,11 +4,13 @@ export const WorkspaceContentLayout = styled.div`
   display: block;
   align-items: start;
   width: 100%;
+  min-height: 0;
 `;
 
 export const WorkspaceMainColumn = styled.div`
   display: grid;
   gap: 14px;
+  min-height: 0;
 `;
 
 export const WorkspaceSectionAnchor = styled.section`

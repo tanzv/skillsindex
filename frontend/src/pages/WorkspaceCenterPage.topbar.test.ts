@@ -28,10 +28,10 @@ describe("WorkspaceCenterPage.topbar", () => {
       onClick: () => onNavigate(navigator.toPublic("/workspace"))
     };
     const hubAction = {
-      id: "hub-rollout",
-      label: "Rollout",
-      className: "is-menu-entry is-menu-group-hubs",
-      onClick: () => onNavigate(navigator.toPublic("/rollout"))
+      id: "system-governance",
+      label: "Governance",
+      className: "is-menu-entry is-menu-group-system-settings",
+      onClick: () => onNavigate(navigator.toPublic("/governance"))
     };
 
     const actions = buildWorkspaceCenterTopbarPrimaryActions({
@@ -50,7 +50,7 @@ describe("WorkspaceCenterPage.topbar", () => {
       "open-marketplace",
       "open-dashboard",
       "section-overview",
-      "hub-rollout"
+      "system-governance"
     ]);
     expect(actions[0]?.className).toContain("is-marketplace-entry-action");
     expect(actions[4]?.className).toContain("is-backend-entry-action");
@@ -69,7 +69,7 @@ describe("WorkspaceCenterPage.topbar", () => {
     expect(onNavigate).toHaveBeenNthCalledWith(4, "/light/");
     expect(onNavigate).toHaveBeenNthCalledWith(5, "/light/admin/overview");
     expect(onNavigate).toHaveBeenNthCalledWith(6, "/light/workspace");
-    expect(onNavigate).toHaveBeenNthCalledWith(7, "/light/rollout");
+    expect(onNavigate).toHaveBeenNthCalledWith(7, "/light/governance");
   });
 
   it("uses sign-in route for dashboard action when session is missing", () => {

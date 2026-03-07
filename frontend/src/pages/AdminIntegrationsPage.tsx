@@ -1,5 +1,7 @@
-import { CSSProperties, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+
 import { AdminIntegrationsResponse, fetchAdminIntegrations } from "../lib/api";
+import AdminSubpageSummaryPanel from "./AdminSubpageSummaryPanel";
 
 function formatDateTime(value: string): string {
   const parsed = new Date(value);
@@ -8,24 +10,6 @@ function formatDateTime(value: string): string {
   }
   return parsed.toLocaleString();
 }
-
-const integrationActionButtonStyle: CSSProperties = {
-  border: "1px solid color-mix(in srgb, var(--si-color-border) 78%, transparent)",
-  background: "color-mix(in srgb, var(--si-color-panel) 90%, transparent)",
-  color: "var(--si-color-text-primary)",
-  borderRadius: 10,
-  padding: "8px 14px",
-  fontWeight: 700,
-  cursor: "pointer"
-};
-
-const integrationQuietButtonStyle: CSSProperties = {
-  ...integrationActionButtonStyle,
-  background: "color-mix(in srgb, var(--si-color-surface) 58%, transparent)",
-  color: "var(--si-color-text-secondary)",
-  cursor: "not-allowed",
-  opacity: 0.74
-};
 
 export default function AdminIntegrationsPage() {
   const [data, setData] = useState<AdminIntegrationsResponse | null>(null);
@@ -74,6 +58,7 @@ export default function AdminIntegrationsPage() {
         ).delivered_at
       );
   const hasData = connectors.length > 0 || logs.length > 0;
+  const refresh = () => setReloadVersion((value) => value + 1);
 
   if (loading) {
     return (
@@ -84,18 +69,14 @@ export default function AdminIntegrationsPage() {
       </div>
     );
   }
+
   if (error) {
     return (
       <div className="page-grid">
         <section className="panel panel-hero error">
           <h2>Integration Command Center</h2>
-          <p>Failed to load the latest integration data.</p>
           <p>{error}</p>
-          <button
-            type="button"
-            style={integrationActionButtonStyle}
-            onClick={() => setReloadVersion((value) => value + 1)}
-          >
+          <button type="button" className="panel-action-button" onClick={refresh}>
             Retry request
           </button>
         </section>
@@ -106,95 +87,56 @@ export default function AdminIntegrationsPage() {
   if (!hasData) {
     return (
       <div className="page-grid">
-        <section className="panel panel-hero">
-          <h2>Integration Command Center</h2>
-          <p>No connector or webhook records were returned for this workspace.</p>
-          <div className="metric-row">
-            <article className="metric-card">
-              <span>Total Connectors</span>
-              <strong>0</strong>
-            </article>
-            <article className="metric-card">
-              <span>Webhook Deliveries</span>
-              <strong>0</strong>
-            </article>
-          </div>
-          <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              style={integrationActionButtonStyle}
-              onClick={() => setReloadVersion((value) => value + 1)}
-            >
+        <AdminSubpageSummaryPanel
+          title="Integration Command Center"
+          status={<span className="pill muted">No records</span>}
+          actions={
+            <button type="button" className="panel-action-button" onClick={refresh}>
               Refresh data
             </button>
-            <span className="pill muted">No records</span>
-          </div>
-        </section>
+          }
+          notice="No connector or webhook records were returned for this workspace."
+          metrics={[
+            { id: "total-connectors", label: "Total Connectors", value: 0 },
+            { id: "webhook-deliveries", label: "Webhook Deliveries", value: 0 }
+          ]}
+        />
       </div>
     );
   }
 
   return (
     <div className="page-grid">
-      <section className="panel panel-hero">
-        <h2>Integration Command Center</h2>
-        <p>
-          Unified operations view for connector readiness, webhook reliability, and rapid recovery actions.
-        </p>
-        <div style={{ marginBottom: 14, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <span className="pill active">Live telemetry</span>
-          <span className="pill muted">Latest delivery: {latestDeliveryAt}</span>
-        </div>
-        <div style={{ marginBottom: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button
-            type="button"
-            style={integrationActionButtonStyle}
-            onClick={() => setReloadVersion((value) => value + 1)}
-          >
-            Refresh now
-          </button>
-          <button
-            type="button"
-            style={integrationQuietButtonStyle}
-            disabled
-          >
-            Rotate secrets
-          </button>
-          <button
-            type="button"
-            style={integrationQuietButtonStyle}
-            disabled
-          >
-            Export audit snapshot
-          </button>
-        </div>
-        <div className="metric-row">
-          <article className="metric-card">
-            <span>Total Connectors</span>
-            <strong>{data?.total || connectors.length}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Enabled Connectors</span>
-            <strong>{enabledConnectors}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Disabled Connectors</span>
-            <strong>{disabledConnectors}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Webhook Deliveries</span>
-            <strong>{data?.webhook_total || logs.length}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Healthy Deliveries</span>
-            <strong>{healthyDeliveries}</strong>
-          </article>
-          <article className="metric-card">
-            <span>Failed Deliveries</span>
-            <strong>{failedDeliveries}</strong>
-          </article>
-        </div>
-      </section>
+      <AdminSubpageSummaryPanel
+        title="Integration Command Center"
+        status={
+          <>
+            <span className="pill active">Live telemetry</span>
+            <span className="pill muted">Latest delivery: {latestDeliveryAt}</span>
+          </>
+        }
+        actions={
+          <>
+            <button type="button" className="panel-action-button" onClick={refresh}>
+              Refresh now
+            </button>
+            <button type="button" className="panel-action-button" disabled>
+              Rotate secrets
+            </button>
+            <button type="button" className="panel-action-button" disabled>
+              Export audit snapshot
+            </button>
+          </>
+        }
+        metrics={[
+          { id: "total-connectors", label: "Total Connectors", value: data?.total || connectors.length },
+          { id: "enabled-connectors", label: "Enabled Connectors", value: enabledConnectors },
+          { id: "disabled-connectors", label: "Disabled Connectors", value: disabledConnectors },
+          { id: "webhook-deliveries", label: "Webhook Deliveries", value: data?.webhook_total || logs.length },
+          { id: "healthy-deliveries", label: "Healthy Deliveries", value: healthyDeliveries },
+          { id: "failed-deliveries", label: "Failed Deliveries", value: failedDeliveries }
+        ]}
+      />
 
       <section className="panel">
         <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
@@ -223,9 +165,7 @@ export default function AdminIntegrationsPage() {
                     <td>{item.name}</td>
                     <td>{item.provider}</td>
                     <td>
-                      <span className={item.enabled ? "pill active" : "pill muted"}>
-                        {item.enabled ? "Enabled" : "Disabled"}
-                      </span>
+                      <span className={item.enabled ? "pill active" : "pill muted"}>{item.enabled ? "Enabled" : "Disabled"}</span>
                     </td>
                     <td>{item.description || "No description"}</td>
                     <td>{formatDateTime(item.updated_at)}</td>
@@ -240,9 +180,7 @@ export default function AdminIntegrationsPage() {
       <section className="panel">
         <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
           <h3>Webhook Recent Deliveries</h3>
-          <span className={failedDeliveries > 0 ? "pill muted" : "pill active"}>
-            {failedDeliveries > 0 ? "Needs attention" : "Healthy"}
-          </span>
+          <span className={failedDeliveries > 0 ? "pill muted" : "pill active"}>{failedDeliveries > 0 ? "Needs attention" : "Healthy"}</span>
         </div>
         <div className="table-wrap">
           <table>
@@ -258,15 +196,13 @@ export default function AdminIntegrationsPage() {
             <tbody>
               {logs.length === 0 ? (
                 <tr>
-                  <td colSpan={5}>No webhook delivery records</td>
+                  <td colSpan={5}>No delivery records</td>
                 </tr>
               ) : (
                 logs.map((item) => (
                   <tr key={item.id}>
                     <td>{item.event_type}</td>
-                    <td>
-                      <span className={item.status_code >= 400 ? "pill muted" : "pill active"}>{item.outcome}</span>
-                    </td>
+                    <td>{item.outcome}</td>
                     <td>{item.status_code}</td>
                     <td>{item.endpoint}</td>
                     <td>{formatDateTime(item.delivered_at)}</td>

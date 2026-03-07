@@ -165,7 +165,7 @@ export default function GovernanceCenterPage({
       onThemeModeChange={onThemeModeChange}
       onLocaleChange={onLocaleChange}
       onLogout={onLogout}
-      activeMenuID="hub-governance"
+      activeMenuID="system-governance"
       sidebarGroups={sidebarGroups}
       sidebarMeta={[
         { id: "governance-score", label: `${policyScore.toFixed(1)} ${text.scoreLabel}`, tone: "accent" },

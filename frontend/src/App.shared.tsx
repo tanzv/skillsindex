@@ -91,6 +91,12 @@ export function resolveLegacyPublicRouteRedirect(pathname: string, search = "", 
   return null;
 }
 
+export function shouldShowPublicGlobalControls(route: AppRoute, pathname: string): boolean {
+  void route;
+  void pathname;
+  return false;
+}
+
 export const SideLocaleSwitch = styled.div`
   display: inline-flex;
   align-items: center;
@@ -129,7 +135,7 @@ export const LocaleSwitchButton = styled.button<{ $active?: boolean }>`
 `;
 
 export const QuickJumpSection = styled.section`
-  margin-top: 10px;
+  margin-top: 0;
   border-radius: 12px;
   border: 1px solid rgba(17, 25, 31, 0.13);
   background: rgba(255, 250, 242, 0.84);

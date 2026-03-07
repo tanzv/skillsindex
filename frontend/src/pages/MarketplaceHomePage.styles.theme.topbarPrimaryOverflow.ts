@@ -20,19 +20,20 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
     max-width: min(100%, 980px);
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    border-radius: 16px;
-    border: 1px solid color-mix(in srgb, var(--marketplace-nav-shell-border) 88%, #000000 12%);
+    gap: 8px;
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--marketplace-nav-shell-border) 76%, #ffffff 24%);
     background:
       linear-gradient(
         180deg,
-        color-mix(in srgb, var(--marketplace-topbar-background-alt) 80%, #101827) 20%,
-        color-mix(in srgb, var(--marketplace-topbar-background) 86%, #0d141f) 14%
+        color-mix(in srgb, var(--marketplace-topbar-background-alt) 76%, transparent) 0%,
+        color-mix(in srgb, var(--marketplace-topbar-background) 84%, #09111d 16%) 100%
       );
     box-shadow:
-      0 12px 28px color-mix(in srgb, #000000 24%, transparent),
-      inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
-    padding: 7px 9px;
+      0 14px 30px color-mix(in srgb, #000000 22%, transparent),
+      inset 0 1px 0 color-mix(in srgb, #ffffff 10%, transparent);
+    backdrop-filter: blur(14px) saturate(122%);
+    padding: 8px 10px;
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
@@ -53,8 +54,8 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
   .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-group {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    padding: 2px 4px;
+    gap: 8px;
+    padding: 2px 3px;
     border: 0;
     background: transparent;
     position: relative;
@@ -91,7 +92,7 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
     align-items: center;
     gap: 6px;
     padding: 0 2px 0 0;
-    color: color-mix(in srgb, var(--marketplace-nav-button-subtle-text) 72%, #f8fafc 28%);
+    color: color-mix(in srgb, var(--marketplace-nav-button-subtle-text) 60%, #f8fafc 40%);
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
     font-weight: 700;
@@ -129,14 +130,23 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
   }
 
   .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button {
-    min-height: 34px;
-    border-radius: 999px;
-    padding-inline: 12px;
+    min-height: 36px;
+    border-radius: 12px;
+    padding-inline: 13px;
     border-color: transparent;
     background: transparent;
     box-shadow: none;
     font-size: 13px;
     font-weight: 600;
+    color: color-mix(in srgb, var(--marketplace-nav-button-text) 76%, #ffffff 24%);
+  }
+
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button .marketplace-topbar-action-badge {
+    min-width: 20px;
+    height: 18px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--si-color-accent) 14%, transparent);
+    color: color-mix(in srgb, var(--marketplace-nav-button-text) 88%, #ffffff 12%);
   }
 
   .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button .marketplace-topbar-action-label {
@@ -204,21 +214,22 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
   }
 
   .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button:not(.is-active):not(:disabled):hover {
-    background: color-mix(in srgb, var(--marketplace-nav-shell-border) 38%, transparent);
-    border-color: transparent;
-    box-shadow: none;
+    background: color-mix(in srgb, var(--marketplace-nav-shell-border) 28%, transparent);
+    border-color: color-mix(in srgb, var(--marketplace-nav-shell-border) 18%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 6%, transparent);
+    color: color-mix(in srgb, var(--marketplace-nav-button-text) 88%, #ffffff 12%);
   }
 
   .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button:not(.is-active):not(:disabled):hover::after {
-    background: color-mix(in srgb, var(--marketplace-nav-category-hover-border) 76%, transparent);
-    opacity: 0.55;
+    background: color-mix(in srgb, var(--marketplace-nav-category-hover-border) 56%, transparent);
+    opacity: 0.6;
   }
 
   .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-active {
-    background: color-mix(in srgb, var(--marketplace-nav-shell-border) 38%, transparent);
-    border-color: transparent;
-    box-shadow: none;
-    color: color-mix(in srgb, var(--marketplace-nav-button-text) 96%, #ffffff 4%);
+    background: color-mix(in srgb, var(--si-color-accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--si-color-accent) 18%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
+    color: color-mix(in srgb, var(--marketplace-nav-button-text) 98%, #ffffff 2%);
   }
 
   .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-active::after {
@@ -238,14 +249,28 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
     background: color-mix(in srgb, var(--si-color-accent) 16%, transparent);
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-marketplace-entry-action {
-    border-color: transparent;
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-marketplace-entry-action,
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-open-dashboard-action,
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-highlight {
     background: transparent;
+    border-color: transparent;
+    color: color-mix(in srgb, var(--marketplace-nav-button-text) 76%, #ffffff 24%);
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-marketplace-entry-action:not(.is-active):not(:disabled):hover {
-    border-color: transparent;
-    background: color-mix(in srgb, var(--si-color-accent) 10%, transparent);
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-marketplace-entry-action:not(.is-active):not(:disabled):hover,
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-open-dashboard-action:not(.is-active):not(:disabled):hover,
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-highlight:not(.is-active):not(:disabled):hover {
+    background: color-mix(in srgb, var(--marketplace-nav-shell-border) 28%, transparent);
+    border-color: color-mix(in srgb, var(--marketplace-nav-shell-border) 18%, transparent);
+    color: color-mix(in srgb, var(--marketplace-nav-button-text) 88%, #ffffff 12%);
+  }
+
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-marketplace-entry-action.is-active,
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-open-dashboard-action.is-active,
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-highlight.is-active {
+    background: color-mix(in srgb, var(--si-color-accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--si-color-accent) 18%, transparent);
+    color: color-mix(in srgb, var(--marketplace-nav-button-text) 98%, #ffffff 2%);
   }
 
   .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-top-action {

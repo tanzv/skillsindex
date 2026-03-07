@@ -19,7 +19,6 @@ import {
 import { buildWorkspaceTopbarMenuActions } from "./WorkspaceTopbarMenuActions.helpers";
 import {
   WorkspaceActionRow,
-  WorkspaceContentLayout,
   WorkspaceHeroSubtitle,
   WorkspaceHeroTextStack,
   WorkspaceHeroTitle,
@@ -28,17 +27,22 @@ import {
   WorkspaceMetricValue
 } from "./WorkspaceCenterPage.styles";
 import MarketplaceHomePageStyles from "./MarketplaceHomePage.styles";
-import { PrototypeLoadingCenter, PrototypeUtilityShell } from "./prototypeCssInJs";
+import { PrototypeLoadingCenter } from "./prototypeCssInJs";
 import { isLightPrototypePath } from "./prototypePageTheme";
 import { createPublicPageNavigator } from "./publicPageNavigation";
 import WorkspaceSurfaceCard from "./WorkspaceSurfaceCard";
 import WorkspaceTopbar from "./WorkspaceTopbar";
 import {
+  WorkspacePrototypeContentLayoutFrame,
+  WorkspacePrototypeContentScroll,
   WorkspacePrototypeEyebrow,
   WorkspacePrototypePageGrid,
+  WorkspacePrototypeRoot,
+  WorkspacePrototypeStage,
   WorkspacePrototypeSummaryHeader,
   WorkspacePrototypeSummaryMetricCard,
-  WorkspacePrototypeSummaryMetricGrid
+  WorkspacePrototypeSummaryMetricGrid,
+  WorkspacePrototypeUtilityFrame
 } from "./WorkspacePrototypePageShell.styles";
 
 interface WorkspaceShellSummaryMetric {
@@ -88,7 +92,7 @@ export default function WorkspacePrototypePageShell({
   sidebarGroups,
   topbarMenuGroups,
   sidebarTitle,
-  sidebarHint,
+  sidebarHint: _sidebarHint,
   sidebarMeta = [],
   sidebarMode = "auto",
   eyebrow,
@@ -198,12 +202,14 @@ export default function WorkspacePrototypePageShell({
   );
   const shouldRenderSecondarySidebar =
     sidebarMode === "secondary" || (sidebarMode === "auto" && sidebarPrimaryEntries.length <= 1);
+  const resolvedSidebarTitle = sidebarTitle || activeSidebarGroup?.title || text.sidebarMenuTitle;
+  const resolvedSidebarHint = "";
 
   return (
-    <div className={shellClassName}>
+    <WorkspacePrototypeStage className={shellClassName}>
       <MarketplaceHomePageStyles />
 
-      <div className={rootClassName}>
+      <WorkspacePrototypeRoot className={rootClassName}>
         <WorkspaceTopbar
           locale={locale}
           isLightTheme={isLightTheme}
@@ -217,13 +223,13 @@ export default function WorkspacePrototypePageShell({
           rightRegistrations={[]}
         />
 
-        <PrototypeUtilityShell>
-          <WorkspaceContentLayout>
+        <WorkspacePrototypeUtilityFrame>
+          <WorkspacePrototypeContentLayoutFrame>
             <WorkspacePrototypePageGrid>
               {shouldRenderSecondarySidebar ? (
                 <WorkspaceSecondarySidebarMenu
-                  sidebarTitle={sidebarTitle || text.sidebarMenuTitle}
-                  sidebarHint={sidebarHint || text.sidebarMenuHint}
+                  sidebarTitle={resolvedSidebarTitle}
+                  sidebarHint={resolvedSidebarHint}
                   sidebarMeta={sidebarMeta}
                   sidebarGroup={activeSidebarGroup}
                   activeMenuID={activeMenuID}
@@ -231,8 +237,8 @@ export default function WorkspacePrototypePageShell({
                 />
               ) : (
                 <WorkspaceSidebarMenu
-                  sidebarTitle={sidebarTitle || text.sidebarMenuTitle}
-                  sidebarHint={sidebarHint || text.sidebarMenuHint}
+                  sidebarTitle={resolvedSidebarTitle}
+                  sidebarHint={resolvedSidebarHint}
                   sidebarMeta={sidebarMeta}
                   primaryGroupTitle={text.sidebarMenuTitle}
                   primaryEntries={sidebarPrimaryEntries}
@@ -247,8 +253,9 @@ export default function WorkspacePrototypePageShell({
                 />
               )}
 
-              <WorkspaceMainColumn>
-                {!hideSummaryHeader ? (
+              <WorkspacePrototypeContentScroll className="workspace-shell-content-scroll">
+                <WorkspaceMainColumn>
+                  {!hideSummaryHeader ? (
                   <WorkspaceSurfaceCard tone="hero">
                     <WorkspacePrototypeSummaryHeader>
                       <WorkspaceHeroTextStack>
@@ -272,22 +279,23 @@ export default function WorkspacePrototypePageShell({
                   </WorkspaceSurfaceCard>
                 ) : null}
 
-                {notice ? <Alert type="warning" showIcon message={notice} /> : null}
-                {success ? <Alert type="success" showIcon message={success} /> : null}
-                {error ? <Alert type="error" showIcon message={error} /> : null}
+                  {notice ? <Alert type="warning" showIcon message={notice} /> : null}
+                  {success ? <Alert type="success" showIcon message={success} /> : null}
+                  {error ? <Alert type="error" showIcon message={error} /> : null}
 
-                {loading ? (
-                  <PrototypeLoadingCenter>
-                    <Spin description={loadingText || text.loading} />
-                  </PrototypeLoadingCenter>
-                ) : (
-                  children
-                )}
-              </WorkspaceMainColumn>
+                  {loading ? (
+                    <PrototypeLoadingCenter>
+                      <Spin description={loadingText || text.loading} />
+                    </PrototypeLoadingCenter>
+                  ) : (
+                    children
+                  )}
+                </WorkspaceMainColumn>
+              </WorkspacePrototypeContentScroll>
             </WorkspacePrototypePageGrid>
-          </WorkspaceContentLayout>
-        </PrototypeUtilityShell>
-      </div>
-    </div>
+          </WorkspacePrototypeContentLayoutFrame>
+        </WorkspacePrototypeUtilityFrame>
+      </WorkspacePrototypeRoot>
+    </WorkspacePrototypeStage>
   );
 }

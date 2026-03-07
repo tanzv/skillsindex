@@ -3,7 +3,6 @@ export type PrototypeRouteFamily =
   | "public-skill"
   | "public-compare"
   | "public-login"
-  | "rollout"
   | "workspace"
   | "governance"
   | "state"
@@ -19,7 +18,6 @@ export type PrototypeRouteKey =
   | "public-skill"
   | "public-compare"
   | "public-login"
-  | "rollout"
   | "workspace"
   | "governance"
   | "state-loading"
@@ -84,7 +82,7 @@ export function resolvePrototypeRoute(pathname: string): PrototypeRouteResolutio
   }
 
   if (matchesPath(normalizedCorePath, "/rollout")) {
-    return { family: "rollout", key: "rollout" };
+    return { family: "workspace", key: "workspace" };
   }
 
   if (matchesPath(normalizedCorePath, "/workspace")) {

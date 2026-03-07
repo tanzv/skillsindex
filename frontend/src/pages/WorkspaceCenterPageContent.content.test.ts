@@ -115,7 +115,8 @@ describe("WorkspaceCenterPageContent", () => {
 
     expect(html).toContain("Response Command Preview");
     expect(html).toContain("workspace queue --skill 2 --status risk");
-    expect(html).toContain("Open Rollout");
+    expect(html).toContain("Governance Center");
+    expect(html).toContain("Open Records");
     expect(html).not.toContain("Workspace Statistics Panels");
   });
 

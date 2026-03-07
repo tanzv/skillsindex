@@ -45,18 +45,12 @@ interface BuildWorkspaceSidebarNavigationInput {
   text: Pick<
     WorkspaceCenterCopy,
     | "sidebarSectionsTitle"
-    | "sidebarCoreTitle"
-    | "sidebarExecutionTitle"
-    | "sidebarPolicyActionsTitle"
-    | "sidebarHubsTitle"
-    | "sidebarOrganizationTitle"
     | "sidebarOverview"
     | "sidebarActivity"
     | "sidebarQueue"
     | "sidebarPolicy"
     | "sidebarRunbook"
     | "sidebarQuickActions"
-    | "sidebarRollout"
     | "sidebarGovernance"
     | "sidebarRecords"
     | "sidebarPersonnelManagement"
@@ -200,8 +194,80 @@ export function buildWorkspaceSidebarNavigation({
 
   return [
     {
-      id: "workspace-core",
-      title: text.sidebarCoreTitle,
+      id: "skill-management",
+      title: "Skill Management",
+      items: [
+        {
+          id: "skill-code-repository",
+          label: "Code Repository",
+          kind: "route",
+          target: toAdminPath("/admin/ingestion/repository")
+        },
+        {
+          id: "skill-library",
+          label: "Skill",
+          kind: "route",
+          target: toAdminPath("/admin/skills")
+        },
+        {
+          id: "skill-sync-records",
+          label: text.sidebarRecords,
+          kind: "route",
+          target: toAdminPath("/admin/records/sync-jobs")
+        }
+      ]
+    },
+    {
+      id: "user-management",
+      title: "User Management",
+      items: [
+        {
+          id: "org-personnel",
+          label: text.sidebarPersonnelManagement,
+          kind: "route",
+          target: toAdminPath("/admin/accounts")
+        },
+        {
+          id: "org-permission",
+          label: text.sidebarPermissionManagement,
+          kind: "route",
+          target: toAdminPath("/admin/access")
+        },
+        {
+          id: "org-role",
+          label: text.sidebarRoleManagement,
+          kind: "route",
+          target: toAdminPath("/admin/roles")
+        },
+        {
+          id: "user-sync-records",
+          label: text.sidebarRecords,
+          kind: "route",
+          target: toAdminPath("/admin/records/sync-jobs")
+        }
+      ]
+    },
+    {
+      id: "system-settings",
+      title: "System Settings",
+      items: [
+        {
+          id: "system-login-configuration",
+          label: "Login Configuration",
+          kind: "route",
+          target: toAdminPath("/admin/access")
+        },
+        {
+          id: "system-governance",
+          label: text.sidebarGovernance,
+          kind: "route",
+          target: toPublicPath("/governance")
+        }
+      ]
+    },
+    {
+      id: "workspace-panel",
+      title: "Workspace Panel",
       items: [
         {
           id: "section-overview",
@@ -214,13 +280,7 @@ export function buildWorkspaceSidebarNavigation({
           label: text.sidebarActivity,
           kind: sectionKind,
           target: resolveSectionTarget(sectionMode, toPublicPath, "section-activity", "workspace-activity")
-        }
-      ]
-    },
-    {
-      id: "workspace-execution",
-      title: text.sidebarExecutionTitle,
-      items: [
+        },
         {
           id: "section-queue",
           label: text.sidebarQueue,
@@ -232,13 +292,7 @@ export function buildWorkspaceSidebarNavigation({
           label: text.sidebarRunbook,
           kind: sectionKind,
           target: resolveSectionTarget(sectionMode, toPublicPath, "section-runbook", "workspace-runbook")
-        }
-      ]
-    },
-    {
-      id: "workspace-policy-actions",
-      title: text.sidebarPolicyActionsTitle,
-      items: [
+        },
         {
           id: "section-policy",
           label: text.sidebarPolicy,
@@ -252,47 +306,15 @@ export function buildWorkspaceSidebarNavigation({
           target: resolveSectionTarget(sectionMode, toPublicPath, "section-actions", "workspace-quick-actions")
         }
       ]
-    },
-    {
-      id: "hubs",
-      title: text.sidebarHubsTitle,
-      items: [
-        { id: "hub-rollout", label: text.sidebarRollout, kind: "route", target: toPublicPath("/rollout") },
-        { id: "hub-governance", label: text.sidebarGovernance, kind: "route", target: toPublicPath("/governance") },
-        { id: "hub-records", label: text.sidebarRecords, kind: "route", target: toAdminPath("/admin/records/sync-jobs") }
-      ]
-    },
-    {
-      id: "organization-management",
-      title: text.sidebarOrganizationTitle,
-      items: [
-        { id: "org-personnel", label: text.sidebarPersonnelManagement, kind: "route", target: toAdminPath("/admin/accounts") },
-        { id: "org-permission", label: text.sidebarPermissionManagement, kind: "route", target: toAdminPath("/admin/access") },
-        { id: "org-role", label: text.sidebarRoleManagement, kind: "route", target: toAdminPath("/admin/roles") }
-      ]
     }
   ];
 }
 
 export function collapseWorkspaceSidebarGroupsForTopbar(
   groups: WorkspaceSidebarGroup[],
-  sidebarSectionsTitle: string
+  _sidebarSectionsTitle: string
 ): WorkspaceSidebarGroup[] {
-  const workspaceGroups = groups.filter((group) => group.id.startsWith("workspace-"));
-  const nonWorkspaceGroups = groups.filter((group) => !group.id.startsWith("workspace-"));
-
-  if (workspaceGroups.length === 0) {
-    return groups;
-  }
-
-  const workspaceItems = workspaceGroups.flatMap((group) => group.items);
-  const collapsedWorkspaceGroup: WorkspaceSidebarGroup = {
-    id: "sections",
-    title: sidebarSectionsTitle,
-    items: workspaceItems
-  };
-
-  return [collapsedWorkspaceGroup, ...nonWorkspaceGroups];
+  return groups;
 }
 
 export function resolveWorkspaceSidebarPanelMode(currentPath: string): WorkspaceSidebarPanelMode {
@@ -317,7 +339,7 @@ export function resolveWorkspaceSidebarGroupsByPanelMode(
   panelMode: WorkspaceSidebarPanelMode
 ): WorkspaceSidebarGroup[] {
   if (panelMode === "organization-secondary") {
-    return groups.filter((group) => group.id === "organization-management");
+    return groups.filter((group) => group.id === "user-management");
   }
   return groups;
 }

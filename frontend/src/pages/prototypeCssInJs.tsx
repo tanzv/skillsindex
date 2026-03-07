@@ -155,15 +155,17 @@ export const PrototypeCodeBlock = styled.pre`
 `;
 
 export const PrototypeUtilityShell = styled.div`
-  width: min(1412px, calc(100% - 1rem));
-  margin: 52px auto 0;
+  --prototype-utility-shell-horizontal-gap: 1rem;
+  --prototype-utility-shell-top-margin: clamp(6px, 1.2vw, 14px);
+  width: min(1412px, calc(100% - var(--prototype-utility-shell-horizontal-gap)));
+  margin: var(--prototype-utility-shell-top-margin) auto 0;
   display: grid;
   gap: 12px;
   padding-bottom: 16px;
 
   @media (max-width: 960px) {
-    width: min(1412px, calc(100% - 0.75rem));
-    margin-top: 16px;
+    --prototype-utility-shell-horizontal-gap: 0.75rem;
+    --prototype-utility-shell-top-margin: 6px;
   }
 `;
 

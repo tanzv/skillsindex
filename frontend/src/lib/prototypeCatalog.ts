@@ -38,13 +38,6 @@ export const prototypeCatalog: PrototypeCatalogEntry[] = [
     "previewURL": "/prototypes/previews/skill_compare.png"
   },
   {
-    "key": "install_rollout",
-    "name": "Install and Rollout Workflow",
-    "path": "install_rollout",
-    "primaryRoute": "/rollout",
-    "previewURL": "/prototypes/previews/install_rollout.png"
-  },
-  {
     "key": "team_workspace",
     "name": "Team Workspace",
     "path": "team_workspace",
@@ -92,13 +85,6 @@ export const prototypeCatalog: PrototypeCatalogEntry[] = [
     "path": "skill_compare_light",
     "primaryRoute": "/light/compare",
     "previewURL": "/prototypes/previews/skill_compare_light.png"
-  },
-  {
-    "key": "install_rollout_light",
-    "name": "Install and Rollout Workflow Light",
-    "path": "install_rollout_light",
-    "primaryRoute": "/light/rollout",
-    "previewURL": "/prototypes/previews/install_rollout_light.png"
   },
   {
     "key": "team_workspace_light",

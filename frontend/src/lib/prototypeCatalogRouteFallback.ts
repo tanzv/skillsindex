@@ -18,6 +18,12 @@ export function resolvePrototypeCatalogFallbackRoute(pathname: string): string |
   if (/^\/(?:mobile\/)?workspace(?:\/[^/?#]+)?$/.test(normalized)) {
     return "/workspace";
   }
+  if (/^\/(?:light\/|mobile\/light\/)rollout(?:\/[^/?#]+)?$/.test(normalized)) {
+    return "/light/workspace";
+  }
+  if (/^\/(?:mobile\/)?rollout(?:\/[^/?#]+)?$/.test(normalized)) {
+    return "/workspace";
+  }
 
   return null;
 }

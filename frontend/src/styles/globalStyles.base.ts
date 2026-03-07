@@ -224,17 +224,6 @@ input {
   width: min(1440px, 100%);
 }
 
-.main-header h2 {
-  margin: 0;
-  font-family: "Syne", sans-serif;
-  font-size: clamp(1.7rem, 2.4vw, 2.5rem);
-  letter-spacing: -0.02em;
-}
-
-.main-header p {
-  margin-top: 8px;
-  color: var(--text-soft);
-}
 
 .page-grid {
   margin-top: 18px;

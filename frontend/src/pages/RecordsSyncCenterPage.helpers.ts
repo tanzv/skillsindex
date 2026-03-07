@@ -22,6 +22,21 @@ function pickNumber(value: Record<string, unknown>, keys: string[], fallback = 0
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function normalizePrototypeAdminPath(pathname: string): string {
+  const normalizedPath = pathname.replace(/\/+$/, "") || "/";
+
+  if (normalizedPath === "/mobile/light" || normalizedPath.startsWith("/mobile/light/")) {
+    return normalizedPath.slice("/mobile/light".length) || "/";
+  }
+  if (normalizedPath === "/mobile" || normalizedPath.startsWith("/mobile/")) {
+    return normalizedPath.slice("/mobile".length) || "/";
+  }
+  if (normalizedPath === "/light" || normalizedPath.startsWith("/light/")) {
+    return normalizedPath.slice("/light".length) || "/";
+  }
+  return normalizedPath;
+}
+
 export function asRecord(value: unknown): Record<string, unknown> {
   if (value && typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
@@ -109,4 +124,14 @@ export function resolveAdminBase(pathname: string): string {
     return "/light/admin";
   }
   return "/admin";
+}
+
+export function resolveRecordsSyncActiveMenuID(pathname: string): string {
+  const normalizedPath = normalizePrototypeAdminPath(pathname);
+
+  if (normalizedPath.startsWith("/admin/ingestion")) {
+    return "skill-code-repository";
+  }
+
+  return "skill-sync-records";
 }

@@ -18,27 +18,21 @@ import {
 
 const textFixture = {
   sidebarSectionsTitle: "Workspace Sections",
-  sidebarCoreTitle: "Core Workspace",
-  sidebarExecutionTitle: "Execution Center",
-  sidebarPolicyActionsTitle: "Policy and Actions",
-  sidebarHubsTitle: "Related Hubs",
-  sidebarOrganizationTitle: "Organization Management",
   sidebarOverview: "Overview",
   sidebarActivity: "Activity Feed",
   sidebarQueue: "Queue Execution",
   sidebarPolicy: "Policy Summary",
   sidebarRunbook: "Runbook Preview",
   sidebarQuickActions: "Quick Actions",
-  sidebarRollout: "Rollout Workflow",
   sidebarGovernance: "Governance Center",
-  sidebarRecords: "Records Sync",
+  sidebarRecords: "Sync Records",
   sidebarPersonnelManagement: "Personnel Management",
   sidebarPermissionManagement: "Permission Management",
   sidebarRoleManagement: "Role Management"
 };
 
 describe("WorkspaceCenterPage.navigation", () => {
-  it("builds multi-level workspace groups with stable anchor targets by default", () => {
+  it("builds grouped navigation for skill, user, system and workspace panels", () => {
     const navigator = createPublicPageNavigator("/workspace");
     const groups = buildWorkspaceSidebarNavigation({
       text: textFixture,
@@ -46,27 +40,29 @@ describe("WorkspaceCenterPage.navigation", () => {
       toAdminPath: navigator.toAdmin
     });
 
-    expect(groups).toHaveLength(5);
-    expect(groups[0]?.id).toBe("workspace-core");
-    expect(groups[1]?.id).toBe("workspace-execution");
-    expect(groups[2]?.id).toBe("workspace-policy-actions");
-    expect(groups[3]?.id).toBe("hubs");
-    expect(groups[4]?.id).toBe("organization-management");
+    expect(groups).toHaveLength(4);
+    expect(groups.map((group) => group.id)).toEqual([
+      "skill-management",
+      "user-management",
+      "system-settings",
+      "workspace-panel"
+    ]);
     expect(groups[0]?.items.map((item) => item.target)).toEqual([
+      "/admin/ingestion/repository",
+      "/admin/skills",
+      "/admin/records/sync-jobs"
+    ]);
+    expect(groups[3]?.items.map((item) => item.target)).toEqual([
       "workspace-overview",
       "workspace-activity",
-    ]);
-    expect(groups[1]?.items.map((item) => item.target)).toEqual([
       "workspace-queue",
       "workspace-runbook",
-    ]);
-    expect(groups[2]?.items.map((item) => item.target)).toEqual([
       "workspace-policy",
       "workspace-quick-actions"
     ]);
   });
 
-  it("preserves prefix family in route targets", () => {
+  it("preserves prefix family in grouped route targets", () => {
     const navigator = createPublicPageNavigator("/light/workspace");
     const groups = buildWorkspaceSidebarNavigation({
       text: textFixture,
@@ -74,20 +70,25 @@ describe("WorkspaceCenterPage.navigation", () => {
       toAdminPath: navigator.toAdmin
     });
 
-    expect(groups[3]?.items.map((item) => item.target)).toEqual([
-      "/light/rollout",
-      "/light/governance",
+    expect(groups[0]?.items.map((item) => item.target)).toEqual([
+      "/light/admin/ingestion/repository",
+      "/light/admin/skills",
       "/light/admin/records/sync-jobs"
     ]);
-    expect(groups[4]?.items.map((item) => item.target)).toEqual([
+    expect(groups[1]?.items.map((item) => item.target)).toEqual([
       "/light/admin/accounts",
       "/light/admin/access",
-      "/light/admin/roles"
+      "/light/admin/roles",
+      "/light/admin/records/sync-jobs"
+    ]);
+    expect(groups[2]?.items.map((item) => item.target)).toEqual([
+      "/light/admin/access",
+      "/light/governance"
     ]);
   });
 
-  it("builds workspace anchor routes for subpages when anchor route mode is enabled", () => {
-    const navigator = createPublicPageNavigator("/light/rollout");
+  it("builds workspace anchor routes for workspace panel when anchor route mode is enabled", () => {
+    const navigator = createPublicPageNavigator("/light/workspace");
     const groups = buildWorkspaceSidebarNavigation({
       text: textFixture,
       toPublicPath: navigator.toPublic,
@@ -95,7 +96,7 @@ describe("WorkspaceCenterPage.navigation", () => {
       sectionMode: "route"
     });
 
-    expect(groups.slice(0, 3).flatMap((group) => group.items.map((item) => item.kind))).toEqual([
+    expect(groups[3]?.items.map((item) => item.kind)).toEqual([
       "route",
       "route",
       "route",
@@ -103,7 +104,7 @@ describe("WorkspaceCenterPage.navigation", () => {
       "route",
       "route"
     ]);
-    expect(groups.slice(0, 3).flatMap((group) => group.items.map((item) => item.target))).toEqual([
+    expect(groups[3]?.items.map((item) => item.target)).toEqual([
       "/light/workspace#workspace-overview",
       "/light/workspace#workspace-activity",
       "/light/workspace#workspace-queue",
@@ -122,7 +123,7 @@ describe("WorkspaceCenterPage.navigation", () => {
       sectionMode: "workspace-route"
     });
 
-    expect(groups.slice(0, 3).flatMap((group) => group.items.map((item) => item.target))).toEqual([
+    expect(groups[3]?.items.map((item) => item.target)).toEqual([
       "/light/workspace",
       "/light/workspace/activity",
       "/light/workspace/queue",
@@ -166,11 +167,12 @@ describe("WorkspaceCenterPage.navigation", () => {
 
     const organizationGroups = resolveWorkspaceSidebarGroupsByPanelMode(groups, "organization-secondary");
     expect(organizationGroups).toHaveLength(1);
-    expect(organizationGroups[0]?.id).toBe("organization-management");
+    expect(organizationGroups[0]?.id).toBe("user-management");
     expect(organizationGroups[0]?.items.map((item) => item.id)).toEqual([
       "org-personnel",
       "org-permission",
-      "org-role"
+      "org-role",
+      "user-sync-records"
     ]);
   });
 
@@ -183,28 +185,36 @@ describe("WorkspaceCenterPage.navigation", () => {
     });
 
     expect(resolveWorkspaceSidebarPrimaryGroupEntries(groups)).toEqual([
-      { id: "primary-workspace-core", label: "Core Workspace", target: "workspace-overview", groupID: "workspace-core" },
-      { id: "primary-workspace-execution", label: "Execution Center", target: "workspace-queue", groupID: "workspace-execution" },
       {
-        id: "primary-workspace-policy-actions",
-        label: "Policy and Actions",
-        target: "workspace-policy",
-        groupID: "workspace-policy-actions"
+        id: "primary-skill-management",
+        label: "Skill Management",
+        target: "/admin/ingestion/repository",
+        groupID: "skill-management"
       },
-      { id: "primary-hubs", label: "Related Hubs", target: "/rollout", groupID: "hubs" },
       {
-        id: "primary-organization-management",
-        label: "Organization Management",
+        id: "primary-user-management",
+        label: "User Management",
         target: "/admin/accounts",
-        groupID: "organization-management"
+        groupID: "user-management"
+      },
+      {
+        id: "primary-system-settings",
+        label: "System Settings",
+        target: "/admin/access",
+        groupID: "system-settings"
+      },
+      {
+        id: "primary-workspace-panel",
+        label: "Workspace Panel",
+        target: "workspace-overview",
+        groupID: "workspace-panel"
       }
     ]);
 
-    expect(resolveWorkspaceSidebarActiveGroupID(groups, "section-policy")).toBe("workspace-policy-actions");
-    expect(resolveWorkspaceSidebarActiveGroupID(groups, "section-queue")).toBe("workspace-execution");
-    expect(resolveWorkspaceSidebarActiveGroupID(groups, "hub-governance")).toBe("hubs");
-    expect(resolveWorkspaceSidebarActiveGroupID(groups, "org-role")).toBe("organization-management");
-    expect(resolveWorkspaceSidebarActiveGroupID(groups, "missing-item")).toBe("workspace-core");
+    expect(resolveWorkspaceSidebarActiveGroupID(groups, "section-policy")).toBe("workspace-panel");
+    expect(resolveWorkspaceSidebarActiveGroupID(groups, "org-role")).toBe("user-management");
+    expect(resolveWorkspaceSidebarActiveGroupID(groups, "system-governance")).toBe("system-settings");
+    expect(resolveWorkspaceSidebarActiveGroupID(groups, "missing-item")).toBe("skill-management");
   });
 
   it("flattens grouped navigation into first-level menu order", () => {
@@ -217,34 +227,35 @@ describe("WorkspaceCenterPage.navigation", () => {
     const flatItems = flattenWorkspaceSidebarPrimaryMenu(groups);
 
     expect(flatItems.map((item) => item.id)).toEqual([
-      "group-workspace-core",
-      "section-overview",
-      "section-activity",
-      "group-workspace-execution",
-      "section-queue",
-      "section-runbook",
-      "group-workspace-policy-actions",
-      "section-policy",
-      "section-actions",
-      "group-hubs",
-      "hub-rollout",
-      "hub-governance",
-      "hub-records",
-      "group-organization-management",
+      "group-skill-management",
+      "skill-code-repository",
+      "skill-library",
+      "skill-sync-records",
+      "group-user-management",
       "org-personnel",
       "org-permission",
-      "org-role"
+      "org-role",
+      "user-sync-records",
+      "group-system-settings",
+      "system-login-configuration",
+      "system-governance",
+      "group-workspace-panel",
+      "section-overview",
+      "section-activity",
+      "section-queue",
+      "section-runbook",
+      "section-policy",
+      "section-actions"
     ]);
     expect(flatItems.filter((item) => item.kind === "label").map((item) => item.label)).toEqual([
-      "Core Workspace",
-      "Execution Center",
-      "Policy and Actions",
-      "Related Hubs",
-      "Organization Management"
+      "Skill Management",
+      "User Management",
+      "System Settings",
+      "Workspace Panel"
     ]);
   });
 
-  it("collapses workspace groups to a stable topbar sections group", () => {
+  it("keeps topbar groups aligned with the first-level sidebar groups", () => {
     const navigator = createPublicPageNavigator("/workspace");
     const groups = buildWorkspaceSidebarNavigation({
       text: textFixture,
@@ -255,11 +266,12 @@ describe("WorkspaceCenterPage.navigation", () => {
 
     const topbarGroups = collapseWorkspaceSidebarGroupsForTopbar(groups, textFixture.sidebarSectionsTitle);
     expect(topbarGroups.map((group) => group.id)).toEqual([
-      "sections",
-      "hubs",
-      "organization-management"
+      "skill-management",
+      "user-management",
+      "system-settings",
+      "workspace-panel"
     ]);
-    expect(topbarGroups[0]?.items.map((item) => item.id)).toEqual([
+    expect(topbarGroups[3]?.items.map((item) => item.id)).toEqual([
       "section-overview",
       "section-activity",
       "section-queue",

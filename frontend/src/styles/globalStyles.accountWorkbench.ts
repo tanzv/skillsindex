@@ -22,6 +22,10 @@ export const globalAccountWorkbenchStyles = `
   --account-workbench-control-text: var(--account-workbench-text-secondary);
 }
 
+.page-grid.account-workbench {
+  margin-top: 0;
+}
+
 .account-workbench .panel {
   background: var(--account-workbench-panel-bg);
   border-color: var(--account-workbench-border-strong);

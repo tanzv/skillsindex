@@ -1,24 +1,18 @@
 import { css } from "@emotion/react";
 
 export const marketplaceHomeTopbarPrimaryPopoverStyles = css`
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-below-content {
-    width: 100%;
-    padding: 0 var(--marketplace-content-gutter);
-    position: relative;
-    min-height: 0;
-    z-index: 24;
-  }
-
   .marketplace-home .workspace-topbar-shell .workspace-topbar-overflow-wrapper {
     position: absolute;
-    top: 12px;
-    left: 0;
+    top: calc(100% + 12px);
+    left: auto;
+    right: 0;
     z-index: 44;
-    width: min(960px, calc(100vw - (var(--marketplace-content-gutter) * 2)));
+    width: clamp(560px, 50vw, 760px);
+    max-width: min(760px, calc(100vw - (var(--marketplace-content-gutter) * 2)));
     max-height: 0;
     opacity: 0;
     transform: translateY(-8px) scale(0.992);
-    transform-origin: top left;
+    transform-origin: top right;
     overflow: hidden;
     pointer-events: none;
     visibility: hidden;
@@ -43,35 +37,56 @@ export const marketplaceHomeTopbarPrimaryPopoverStyles = css`
   }
 
   .marketplace-home .workspace-topbar-shell .workspace-topbar-toggle-icon-button {
-    border: 1px solid color-mix(in srgb, var(--marketplace-nav-shell-border) 84%, #ffffff 16%);
-    background: color-mix(in srgb, var(--marketplace-topbar-background-alt) 82%, #0d1626 18%);
-    height: 34px;
-    min-width: 84px;
+    border: 1px solid color-mix(in srgb, var(--marketplace-nav-shell-border) 78%, #ffffff 22%);
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--marketplace-topbar-background-alt) 86%, #0d1626 14%),
+        color-mix(in srgb, var(--marketplace-topbar-background) 90%, #08111d 10%)
+      );
+    height: 38px;
+    min-width: 0;
     border-radius: 999px;
-    padding: 0 11px;
+    padding: 0 10px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
     color: color-mix(in srgb, var(--marketplace-nav-button-text) 92%, #f8fafc 8%);
     cursor: pointer;
-    box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
+    box-shadow:
+      0 12px 24px color-mix(in srgb, #020617 24%, transparent),
+      inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
+    backdrop-filter: blur(18px) saturate(130%);
     transition:
       border-color 170ms ease,
       background-color 170ms ease,
       box-shadow 170ms ease,
-      color 170ms ease;
+      color 170ms ease,
+      transform 170ms ease;
   }
 
   .marketplace-home .workspace-topbar-shell .workspace-topbar-toggle-icon-button:hover {
     border-color: color-mix(in srgb, var(--marketplace-nav-category-hover-border) 78%, #ffffff 22%);
-    background: color-mix(in srgb, var(--marketplace-nav-button-hover-background) 80%, #101a2c 20%);
-    box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 10%, transparent);
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--marketplace-nav-button-hover-background) 82%, #101a2c 18%),
+        color-mix(in srgb, var(--marketplace-topbar-background) 88%, #0b1420 12%)
+      );
+    box-shadow:
+      0 16px 28px color-mix(in srgb, #020617 28%, transparent),
+      inset 0 1px 0 color-mix(in srgb, #ffffff 10%, transparent);
+    transform: translateY(-1px);
   }
 
   .marketplace-home .workspace-topbar-shell .workspace-topbar-toggle-icon-button.is-expanded {
-    border-color: color-mix(in srgb, var(--marketplace-nav-button-active-border) 68%, #ffffff 32%);
-    background: color-mix(in srgb, var(--marketplace-nav-button-active-background) 16%, #0f1726 84%);
+    border-color: color-mix(in srgb, var(--si-color-accent) 36%, #ffffff 14%);
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--si-color-accent) 12%, var(--marketplace-nav-button-hover-background) 88%),
+        color-mix(in srgb, var(--marketplace-topbar-background) 86%, #0b1420 14%)
+      );
     color: color-mix(in srgb, var(--marketplace-nav-button-text) 96%, #ffffff 4%);
   }
 
@@ -83,24 +98,28 @@ export const marketplaceHomeTopbarPrimaryPopoverStyles = css`
   .marketplace-home .workspace-topbar-shell .workspace-topbar-toggle-button-content {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-toggle-label {
-    font-size: 9px;
-    font-weight: 700;
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-toggle-glyph-shell {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--marketplace-nav-shell-border) 28%, transparent);
+  }
+
+  .marketplace-home .workspace-topbar-shell .workspace-topbar-toggle-panel-icon {
+    font-size: 12px;
     line-height: 1;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: inherit;
-    font-family: "JetBrains Mono", monospace;
   }
 
   .marketplace-home .workspace-topbar-shell .workspace-topbar-toggle-icon {
     display: inline-flex;
     line-height: 1;
     font-size: 10px;
-    font-weight: 700;
     opacity: 0.92;
     transition: transform 220ms ease;
   }
@@ -117,7 +136,7 @@ export const marketplaceHomeTopbarPrimaryPopoverStyles = css`
     align-items: center;
     justify-content: center;
     padding: 0 6px;
-    background: color-mix(in srgb, var(--marketplace-nav-button-active-background) 24%, #0f172a 76%);
+    background: color-mix(in srgb, var(--si-color-accent) 16%, transparent);
     box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 10%, transparent);
   }
 
@@ -155,7 +174,8 @@ export const marketplaceHomeTopbarPrimaryPopoverStyles = css`
     content: "";
     position: absolute;
     top: -7px;
-    left: 28px;
+    left: auto;
+    right: 18px;
     width: 14px;
     height: 14px;
     border-top: 1px solid color-mix(in srgb, var(--marketplace-nav-shell-border) 94%, #ffffff 6%);
@@ -200,7 +220,7 @@ export const marketplaceHomeTopbarPrimaryPopoverStyles = css`
 
   .marketplace-home .workspace-topbar-shell .workspace-topbar-overflow-groups {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 12px;
   }
 

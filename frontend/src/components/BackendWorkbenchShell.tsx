@@ -14,8 +14,6 @@ interface BackendWorkbenchText {
   homeSubtitle: string;
   signOut: string;
   quickJump: string;
-  controlCenter: string;
-  architecture: string;
 }
 
 interface BackendWorkbenchPrimarySection {
@@ -32,7 +30,6 @@ interface BackendWorkbenchShellProps {
     username: string;
     role: string;
   };
-  currentNavItem?: NavigationItem;
   navItems: NavigationItem[];
   navByPath: Map<ProtectedRoute, NavigationItem>;
   quickRoutes: ProtectedRoute[];
@@ -95,7 +92,6 @@ export default function BackendWorkbenchShell({
   locale,
   submitLoading,
   sessionUser,
-  currentNavItem,
   navItems,
   navByPath,
   quickRoutes,
@@ -217,11 +213,6 @@ export default function BackendWorkbenchShell({
         </aside>
 
         <main className="backend-main-panel">
-          <header className="main-header">
-            <h2>{currentNavItem?.title || text.controlCenter}</h2>
-            <p>{currentNavItem?.subtitle || text.architecture}</p>
-          </header>
-
           {quickRoutes.length > 0 ? (
             <QuickJumpSection aria-label="quick route jump">
               <QuickJumpLabel>{text.quickJump}</QuickJumpLabel>

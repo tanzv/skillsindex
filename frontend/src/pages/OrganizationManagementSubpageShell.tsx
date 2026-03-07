@@ -72,7 +72,7 @@ export default function OrganizationManagementSubpageShell({
       sidebarGroups={sidebarGroups}
       topbarMenuGroups={topbarMenuGroups}
       sidebarTitle={workspaceText.sidebarOrganizationTitle}
-      sidebarHint={workspaceText.sidebarMenuHint}
+      sidebarHint=""
       sidebarMode="secondary"
       hideSummaryHeader
       eyebrow={eyebrow}

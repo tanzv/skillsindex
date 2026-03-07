@@ -162,7 +162,7 @@ export function renderActivitySection(context: WorkspaceSectionLayoutContext) {
 }
 
 export function renderQueueSection(context: WorkspaceSectionLayoutContext) {
-  const { onNavigate, queueInsightRows, snapshot, text, toPublicPath } = context;
+  const { onNavigate, queueInsightRows, snapshot, text, toAdminPath, toPublicPath } = context;
   const spotlightEntry = resolveWorkspaceExecutionSpotlight(snapshot.queueEntries);
 
   return (
@@ -188,7 +188,7 @@ export function renderQueueSection(context: WorkspaceSectionLayoutContext) {
               </WorkspaceTagCloud>
               <WorkspaceActionRow>
                 <Button onClick={() => onNavigate(toPublicPath(`/skills/${spotlightEntry.id}`))}>{text.openDetail}</Button>
-                <Button onClick={() => onNavigate(toPublicPath("/rollout"))}>{text.openRollout}</Button>
+                <Button onClick={() => onNavigate(toAdminPath("/admin/records/sync-jobs"))}>{text.openRecords}</Button>
               </WorkspaceActionRow>
             </>
           ) : (
@@ -225,7 +225,7 @@ export function renderQueueSection(context: WorkspaceSectionLayoutContext) {
 }
 
 export function renderPolicySection(context: WorkspaceSectionLayoutContext) {
-  const { onNavigate, snapshot, text, toPublicPath } = context;
+  const { onNavigate, snapshot, text, toAdminPath, toPublicPath } = context;
 
   return (
     <WorkspaceSubpageGrid>
@@ -242,7 +242,7 @@ export function renderPolicySection(context: WorkspaceSectionLayoutContext) {
           ))}
           <WorkspaceActionRow>
             <Button onClick={() => onNavigate(toPublicPath("/governance"))}>{text.sidebarGovernance}</Button>
-            <Button onClick={() => onNavigate(toPublicPath("/rollout"))}>{text.sidebarRollout}</Button>
+            <Button onClick={() => onNavigate(toAdminPath("/admin/records/sync-jobs"))}>{text.sidebarRecords}</Button>
           </WorkspaceActionRow>
         </WorkspaceSurfaceCard>
       </WorkspaceSectionAnchor>
@@ -277,7 +277,7 @@ export function renderPolicySection(context: WorkspaceSectionLayoutContext) {
 }
 
 export function renderRunbookSection(context: WorkspaceSectionLayoutContext) {
-  const { onNavigate, riskWatchlist, snapshot, text, toPublicPath } = context;
+  const { onNavigate, riskWatchlist, snapshot, text, toAdminPath, toPublicPath } = context;
   const runbookEntry = resolveWorkspaceRunbookEntry(snapshot.queueEntries);
 
   return (
@@ -324,7 +324,7 @@ export function renderRunbookSection(context: WorkspaceSectionLayoutContext) {
           <WorkspacePanelHeading>{text.responseChecklist}</WorkspacePanelHeading>
           <WorkspaceActionRow>
             <Button onClick={() => onNavigate(toPublicPath("/governance"))}>{text.sidebarGovernance}</Button>
-            <Button onClick={() => onNavigate(toPublicPath("/rollout"))}>{text.openRollout}</Button>
+            <Button onClick={() => onNavigate(toAdminPath("/admin/records/sync-jobs"))}>{text.openRecords}</Button>
           </WorkspaceActionRow>
         </WorkspaceSurfaceCard>
       </WorkspaceSubpageRail>
@@ -359,7 +359,7 @@ export function renderActionsSection(context: WorkspaceSectionLayoutContext) {
               <Button onClick={() => onNavigate(toAdminPath("/admin/skills"))}>{text.openSkills}</Button>
               <Button onClick={() => onNavigate(toAdminPath("/admin/records/sync-jobs"))}>{text.openRecords}</Button>
               <Button onClick={() => onNavigate(toAdminPath("/admin/ops/audit-export"))}>{text.openAudit}</Button>
-              <Button onClick={() => onNavigate(toPublicPath("/rollout"))}>{text.openQueueRollout}</Button>
+              <Button onClick={() => onNavigate(toPublicPath("/governance"))}>{text.sidebarGovernance}</Button>
             </WorkspaceQuickActionGrid>
           </WorkspaceActionCluster>
         </WorkspaceSurfaceCard>
@@ -369,7 +369,7 @@ export function renderActionsSection(context: WorkspaceSectionLayoutContext) {
             <WorkspaceActionClusterTitle>{text.linkedHubActions}</WorkspaceActionClusterTitle>
             <WorkspaceQuickActionGrid>
               <Button onClick={() => onNavigate(toPublicPath("/governance"))}>{text.sidebarGovernance}</Button>
-              <Button onClick={() => onNavigate(toPublicPath("/rollout"))}>{text.sidebarRollout}</Button>
+              <Button onClick={() => onNavigate(toAdminPath("/admin/records/sync-jobs"))}>{text.sidebarRecords}</Button>
               <Button onClick={() => onNavigate(toAdminPath("/admin/accounts"))}>{text.sidebarPersonnelManagement}</Button>
               <Button onClick={() => onNavigate(toAdminPath("/admin/roles"))}>{text.sidebarRoleManagement}</Button>
             </WorkspaceQuickActionGrid>

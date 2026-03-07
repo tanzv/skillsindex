@@ -1,12 +1,8 @@
-import { Button, Card, Input, Select, Space, Switch, Tag, Typography } from "antd";
+import { Button, Input, Select, Switch, Tag, Typography } from "antd";
 import type { Dispatch, SetStateAction } from "react";
 
-import type { PrototypePagePalette } from "./prototypePageTheme";
 import type { SyncPolicyRecord, SyncRunDetailSummary, SyncRunRecord } from "./RecordsSyncCenterPage.types";
 import {
-  PrototypeCodeBlock,
-  PrototypeDeckColumns,
-  PrototypeEmptyText,
   PrototypeFieldLabel,
   PrototypeFormLabel,
   PrototypeInlineForm,
@@ -14,10 +10,24 @@ import {
   PrototypeListActions,
   PrototypeListMain,
   PrototypeListRow,
-  PrototypeSideLinks,
   PrototypeStack
 } from "./prototypeCssInJs";
 import { statusColor } from "./RecordsSyncCenterPage.helpers";
+import {
+  WorkspaceActionCluster,
+  WorkspaceActionClusterTitle,
+  WorkspaceCodeBlock,
+  WorkspaceInlineMetricGrid,
+  WorkspaceInlineMetricItem,
+  WorkspaceMetricLabel,
+  WorkspaceMetricValue,
+  WorkspaceMutedText,
+  WorkspacePanelHeading,
+  WorkspaceQuickActionGrid,
+  WorkspaceSubpageGrid,
+  WorkspaceSubpageRail
+} from "./WorkspaceCenterPage.styles";
+import WorkspaceSurfaceCard from "./WorkspaceSurfaceCard";
 
 interface RecordsSyncCenterPageContentText {
   apply: string;
@@ -45,7 +55,6 @@ interface RecordsSyncCenterPageContentText {
 
 interface RecordsSyncCenterPageContentProps {
   text: RecordsSyncCenterPageContentText;
-  palette: PrototypePagePalette;
   adminBase: string;
   ownerFilter: string;
   onOwnerFilterChange: (nextValue: string) => void;
@@ -65,9 +74,25 @@ interface RecordsSyncCenterPageContentProps {
   onNavigate: (path: string) => void;
 }
 
+const baseRunRowStyle = {
+  background: "color-mix(in srgb, var(--si-color-muted-surface) 80%, transparent)",
+  borderColor: "color-mix(in srgb, var(--si-color-border) 70%, transparent)",
+  boxShadow: "none"
+} as const;
+
+const activeRunRowStyle = {
+  background: "color-mix(in srgb, var(--si-color-accent) 10%, var(--si-color-surface) 90%)",
+  borderColor: "color-mix(in srgb, var(--si-color-accent) 32%, var(--si-color-border) 68%)",
+  boxShadow: "none"
+} as const;
+
+const detailCodeBlockStyle = {
+  maxHeight: "220px",
+  overflow: "auto"
+} as const;
+
 export default function RecordsSyncCenterPageContent({
   text,
-  palette,
   adminBase,
   ownerFilter,
   onOwnerFilterChange,
@@ -86,17 +111,15 @@ export default function RecordsSyncCenterPageContent({
   savingPolicy,
   onNavigate
 }: RecordsSyncCenterPageContentProps) {
+  const selectedRun = runs.find((run) => run.id === selectedRunID) || null;
+
   return (
-    <PrototypeDeckColumns>
+    <WorkspaceSubpageGrid>
       <PrototypeStack>
-        <Card
-          variant="borderless"
-          style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-          styles={{ body: { padding: 12, display: "grid", gap: 10 } }}
-        >
-          <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-            {text.runList}
-          </Typography.Title>
+        <WorkspaceSurfaceCard tone="panel">
+          <WorkspacePanelHeading>{text.runList}</WorkspacePanelHeading>
+          <WorkspaceMutedText>{selectedRun ? `#${selectedRun.id} · ${selectedRun.scope || text.unknown}` : text.noRuns}</WorkspaceMutedText>
+
           <PrototypeInlineForm>
             <PrototypeFormLabel>
               <PrototypeFieldLabel>{text.ownerFilter}</PrototypeFieldLabel>
@@ -106,86 +129,80 @@ export default function RecordsSyncCenterPageContent({
               <PrototypeFieldLabel>{text.limit}</PrototypeFieldLabel>
               <Input value={limit} onChange={(event) => onLimitChange(event.target.value)} />
             </PrototypeFormLabel>
-            <Button onClick={onRefresh} loading={refreshing}>
+            <Button type="primary" onClick={onRefresh} loading={refreshing}>
               {text.apply}
             </Button>
           </PrototypeInlineForm>
 
           <PrototypeList>
-            {runs.map((run) => (
-              <PrototypeListRow key={run.id}>
-                <PrototypeListMain>
-                  <Typography.Text strong style={{ color: palette.cardTitle, fontSize: "0.78rem" }}>
-                    #{run.id} · {run.scope || text.unknown}
-                  </Typography.Text>
-                  <Typography.Text style={{ color: palette.cardText, fontSize: "0.72rem", lineHeight: 1.42 }}>
-                    {run.trigger || text.unknown}
-                  </Typography.Text>
-                  <Typography.Text style={{ color: palette.cardText, fontSize: "0.72rem", lineHeight: 1.42 }}>
-                    {run.owner_username || text.unknown} · {run.actor_username || text.unknown}
-                  </Typography.Text>
-                  <Typography.Text style={{ color: palette.cardText, fontSize: "0.72rem", lineHeight: 1.42 }}>
-                    {run.candidates} / {run.synced} / {run.failed}
-                  </Typography.Text>
-                </PrototypeListMain>
-                <PrototypeListActions>
-                  <Tag color={statusColor(run.status)}>{run.status || text.unknown}</Tag>
-                  <Tag>{Math.round(run.duration_ms)} ms</Tag>
-                  <Button size="small" type={run.id === selectedRunID ? "primary" : "default"} onClick={() => onSelectRun(run.id)}>
-                    {text.openDetail}
-                  </Button>
-                </PrototypeListActions>
-              </PrototypeListRow>
-            ))}
-            {runs.length === 0 ? <PrototypeEmptyText>{text.noRuns}</PrototypeEmptyText> : null}
+            {runs.map((run) => {
+              const isActive = run.id === selectedRunID;
+              return (
+                <PrototypeListRow key={run.id} style={isActive ? activeRunRowStyle : baseRunRowStyle}>
+                  <PrototypeListMain>
+                    <Typography.Text strong style={{ color: "var(--si-color-text-primary)", fontSize: "0.8rem" }}>
+                      #{run.id} · {run.scope || text.unknown}
+                    </Typography.Text>
+                    <Typography.Text style={{ color: "var(--si-color-text-secondary)", fontSize: "0.73rem", lineHeight: 1.48 }}>
+                      {run.trigger || text.unknown}
+                    </Typography.Text>
+                    <Typography.Text style={{ color: "var(--si-color-text-secondary)", fontSize: "0.73rem", lineHeight: 1.48 }}>
+                      {run.owner_username || text.unknown} · {run.actor_username || text.unknown}
+                    </Typography.Text>
+                    <Typography.Text style={{ color: "var(--si-color-text-secondary)", fontSize: "0.73rem", lineHeight: 1.48 }}>
+                      {run.candidates} / {run.synced} / {run.failed}
+                    </Typography.Text>
+                    {run.error_summary ? (
+                      <Typography.Text style={{ color: "var(--si-color-text-secondary)", fontSize: "0.72rem", lineHeight: 1.48 }}>
+                        {run.error_summary}
+                      </Typography.Text>
+                    ) : null}
+                  </PrototypeListMain>
+                  <PrototypeListActions>
+                    <Tag color={statusColor(run.status)}>{run.status || text.unknown}</Tag>
+                    <Tag>{Math.round(run.duration_ms)} ms</Tag>
+                    <Button size="small" type={isActive ? "primary" : "default"} onClick={() => onSelectRun(run.id)}>
+                      {text.openDetail}
+                    </Button>
+                  </PrototypeListActions>
+                </PrototypeListRow>
+              );
+            })}
+            {runs.length === 0 ? <WorkspaceMutedText>{text.noRuns}</WorkspaceMutedText> : null}
           </PrototypeList>
-        </Card>
+        </WorkspaceSurfaceCard>
 
-        <Card
-          variant="borderless"
-          style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-          styles={{ body: { padding: 12, display: "grid", gap: 10 } }}
-        >
-          <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-            {text.runDetail}
-          </Typography.Title>
-          <PrototypeListRow>
-            <PrototypeListMain>
-              <Typography.Text style={{ color: "#bfd8fc", fontSize: "0.71rem", lineHeight: 1.42 }}>
-                {text.status}: {detailSummary.status}
-              </Typography.Text>
-              <Typography.Text style={{ color: "#bfd8fc", fontSize: "0.71rem", lineHeight: 1.42 }}>
-                {text.duration}: {detailSummary.durationMs} ms
-              </Typography.Text>
-              <Typography.Text style={{ color: "#bfd8fc", fontSize: "0.71rem", lineHeight: 1.42 }}>
-                {text.started}: {detailSummary.started}
-              </Typography.Text>
-              <Typography.Text style={{ color: "#bfd8fc", fontSize: "0.71rem", lineHeight: 1.42 }}>
-                {text.finished}: {detailSummary.finished}
-              </Typography.Text>
-            </PrototypeListMain>
-          </PrototypeListRow>
-          <Typography.Text
-            style={{ color: "#b6d3f7", fontSize: "0.74rem", letterSpacing: "0.03em", textTransform: "uppercase", fontWeight: 700 }}
-          >
-            {text.detailsJSON}
-          </Typography.Text>
-          <PrototypeCodeBlock>{JSON.stringify(detailPayload || {}, null, 2)}</PrototypeCodeBlock>
-        </Card>
+        <WorkspaceSurfaceCard tone="panel">
+          <WorkspacePanelHeading>{text.runDetail}</WorkspacePanelHeading>
+          <WorkspaceInlineMetricGrid>
+            <WorkspaceInlineMetricItem>
+              <WorkspaceMetricLabel>{text.status}</WorkspaceMetricLabel>
+              <WorkspaceMetricValue>{detailSummary.status}</WorkspaceMetricValue>
+            </WorkspaceInlineMetricItem>
+            <WorkspaceInlineMetricItem>
+              <WorkspaceMetricLabel>{text.duration}</WorkspaceMetricLabel>
+              <WorkspaceMetricValue>{`${detailSummary.durationMs} ms`}</WorkspaceMetricValue>
+            </WorkspaceInlineMetricItem>
+            <WorkspaceInlineMetricItem>
+              <WorkspaceMetricLabel>{text.started}</WorkspaceMetricLabel>
+              <WorkspaceMetricValue>{detailSummary.started}</WorkspaceMetricValue>
+            </WorkspaceInlineMetricItem>
+            <WorkspaceInlineMetricItem>
+              <WorkspaceMetricLabel>{text.finished}</WorkspaceMetricLabel>
+              <WorkspaceMetricValue>{detailSummary.finished}</WorkspaceMetricValue>
+            </WorkspaceInlineMetricItem>
+          </WorkspaceInlineMetricGrid>
+          <PrototypeFormLabel>
+            <PrototypeFieldLabel>{text.detailsJSON}</PrototypeFieldLabel>
+            <WorkspaceCodeBlock style={detailCodeBlockStyle}>{JSON.stringify(detailPayload || {}, null, 2)}</WorkspaceCodeBlock>
+          </PrototypeFormLabel>
+        </WorkspaceSurfaceCard>
       </PrototypeStack>
 
-      <PrototypeStack>
-        <Card
-          variant="borderless"
-          style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-          styles={{ body: { padding: 12, display: "grid", gap: 10 } }}
-        >
-          <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-            {text.policy}
-          </Typography.Title>
-          <Typography.Paragraph style={{ margin: 0, color: palette.cardText, fontSize: "0.78rem", lineHeight: 1.46 }}>
-            {text.policyHint}
-          </Typography.Paragraph>
+      <WorkspaceSubpageRail>
+        <WorkspaceSurfaceCard tone="panel">
+          <WorkspacePanelHeading>{text.policy}</WorkspacePanelHeading>
+          <WorkspaceMutedText>{text.policyHint}</WorkspaceMutedText>
           <PrototypeFormLabel>
             <PrototypeFieldLabel>{text.enabled}</PrototypeFieldLabel>
             <Switch checked={policy.enabled} onChange={(value) => setPolicy((previous) => ({ ...previous, enabled: value }))} />
@@ -216,29 +233,40 @@ export default function RecordsSyncCenterPageContent({
               }
             />
           </PrototypeFormLabel>
-          <Space wrap>
-            <Button type="primary" onClick={onSavePolicy} loading={savingPolicy}>
-              {text.savePolicy}
-            </Button>
-          </Space>
-        </Card>
+          <Button type="primary" onClick={onSavePolicy} loading={savingPolicy}>
+            {text.savePolicy}
+          </Button>
+        </WorkspaceSurfaceCard>
 
-        <Card
-          variant="borderless"
-          style={{ borderRadius: 13, border: `1px solid ${palette.sideHighlightBorder}`, background: palette.sideHighlightBackground }}
-          styles={{ body: { padding: 12, display: "grid", gap: 8 } }}
-        >
-          <Typography.Title level={4} style={{ margin: 0, color: "#f3fbff", fontSize: "0.95rem" }}>
-            {text.quickActions}
-          </Typography.Title>
-          <PrototypeSideLinks>
-            <Button onClick={() => onNavigate(`${adminBase}/records/imports`)}>Imports</Button>
-            <Button onClick={() => onNavigate(`${adminBase}/records/sync-jobs`)}>Sync Jobs</Button>
-            <Button onClick={() => onNavigate(`${adminBase}/records/exports`)}>Exports</Button>
-            <Button onClick={() => onNavigate(`${adminBase}/ops/metrics`)}>Ops Metrics</Button>
-          </PrototypeSideLinks>
-        </Card>
-      </PrototypeStack>
-    </PrototypeDeckColumns>
+        <WorkspaceSurfaceCard tone="panel">
+          <WorkspaceActionCluster>
+            <WorkspaceActionClusterTitle>{text.runDetail}</WorkspaceActionClusterTitle>
+            <WorkspaceMutedText>{selectedRun ? `#${selectedRun.id} · ${selectedRun.scope || text.unknown}` : text.noRuns}</WorkspaceMutedText>
+            <WorkspaceInlineMetricGrid>
+              <WorkspaceInlineMetricItem>
+                <WorkspaceMetricLabel>{text.status}</WorkspaceMetricLabel>
+                <WorkspaceMetricValue>{detailSummary.status}</WorkspaceMetricValue>
+              </WorkspaceInlineMetricItem>
+              <WorkspaceInlineMetricItem>
+                <WorkspaceMetricLabel>{text.duration}</WorkspaceMetricLabel>
+                <WorkspaceMetricValue>{`${detailSummary.durationMs} ms`}</WorkspaceMetricValue>
+              </WorkspaceInlineMetricItem>
+            </WorkspaceInlineMetricGrid>
+          </WorkspaceActionCluster>
+        </WorkspaceSurfaceCard>
+
+        <WorkspaceSurfaceCard tone="quick">
+          <WorkspaceActionCluster>
+            <WorkspaceActionClusterTitle>{text.quickActions}</WorkspaceActionClusterTitle>
+            <WorkspaceQuickActionGrid>
+              <Button onClick={() => onNavigate(`${adminBase}/records/imports`)}>Imports</Button>
+              <Button onClick={() => onNavigate(`${adminBase}/records/sync-jobs`)}>Sync Jobs</Button>
+              <Button onClick={() => onNavigate(`${adminBase}/records/exports`)}>Exports</Button>
+              <Button onClick={() => onNavigate(`${adminBase}/ops/metrics`)}>Ops Metrics</Button>
+            </WorkspaceQuickActionGrid>
+          </WorkspaceActionCluster>
+        </WorkspaceSurfaceCard>
+      </WorkspaceSubpageRail>
+    </WorkspaceSubpageGrid>
   );
 }

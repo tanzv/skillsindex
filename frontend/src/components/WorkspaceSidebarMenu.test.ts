@@ -16,11 +16,11 @@ const sidebarGroup: WorkspaceSidebarGroup = {
 
 const primaryEntries: WorkspaceSidebarPrimaryGroupEntry[] = [
   { id: "group-sections", label: "Workspace Sections", target: "/workspace", groupID: "sections" },
-  { id: "group-hubs", label: "Related Hubs", target: "/rollout", groupID: "hubs" }
+  { id: "group-hubs", label: "Related Hubs", target: "/governance", groupID: "hubs" }
 ];
 
 describe("WorkspaceSidebarMenu", () => {
-  it("renders primary and secondary menu groups with active states", () => {
+  it("renders flattened menu groups with active states", () => {
     const html = renderToStaticMarkup(
       React.createElement(WorkspaceSidebarMenu, {
         sidebarTitle: "Navigation",
@@ -40,14 +40,51 @@ describe("WorkspaceSidebarMenu", () => {
     );
 
     expect(html).toContain("Navigation");
-    expect(html).toContain("Switch section and submenu quickly.");
+    expect(html).not.toContain("Switch section and submenu quickly.");
     expect(html).toContain("Stable");
     expect(html).toContain("8 pending");
     expect(html).toContain("Primary Menu");
     expect(html).toContain("Workspace Sections");
     expect(html).toContain("Overview");
     expect(html).toContain("Activity Feed");
-    expect(html).toContain("aria-current=\"page\"");
+    expect(html).toContain('aria-current="page"');
+  });
+
+  it("renders a sidebar collapse control in expanded state by default", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(WorkspaceSidebarMenu, {
+        sidebarTitle: "Navigation",
+        sidebarHint: "Switch section and submenu quickly.",
+        primaryGroupTitle: "Primary Menu",
+        primaryEntries,
+        activeSidebarGroupID: "sections",
+        activeSidebarGroup: sidebarGroup,
+        activeMenuID: "section-overview",
+        onSelectPrimaryGroup: vi.fn(),
+        onSelectMenuItem: vi.fn()
+      })
+    );
+
+    expect(html).toContain("workspace-sidebar-collapse-toggle");
+    expect(html).toContain('aria-expanded="true"');
+  });
+
+  it("avoids rendering a duplicate sidebar title when it matches the active primary group", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(WorkspaceSidebarMenu, {
+        sidebarTitle: "Workspace Sections",
+        sidebarHint: "Switch section and submenu quickly.",
+        primaryGroupTitle: "Primary Menu",
+        primaryEntries,
+        activeSidebarGroupID: "sections",
+        activeSidebarGroup: sidebarGroup,
+        activeMenuID: "section-overview",
+        onSelectPrimaryGroup: vi.fn(),
+        onSelectMenuItem: vi.fn()
+      })
+    );
+
+    expect(html.match(/Workspace Sections/g)?.length).toBe(1);
   });
 
   it("omits group sections when data is unavailable", () => {
@@ -65,8 +102,6 @@ describe("WorkspaceSidebarMenu", () => {
       })
     );
 
-    expect(html).toContain("Navigation");
-    expect(html).toContain("Fallback mode");
     expect(html).not.toContain("Primary Menu");
   });
 
@@ -85,7 +120,6 @@ describe("WorkspaceSidebarMenu", () => {
       })
     );
 
-    expect(html).toContain("Navigation");
     expect(html).not.toContain("Primary Menu");
   });
 });

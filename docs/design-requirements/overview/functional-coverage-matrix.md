@@ -19,7 +19,7 @@
 | 账号体系 | `/register` `/login` `/logout` | 注册、登录、会话、注销 | 游客/登录用户 | `auth-rbac/auth-session-rbac.md` | 已覆盖 |
 | 互动系统 | 收藏/评分/评论接口 | 收藏切换、评分 1~5、评论发布删除 | member/admin/super_admin | `interactions/interaction-system.md` | 已覆盖 |
 | 本地化 | `/zh` `/zh/*` `/skillsmp` | 别名路由与语言切换 | 游客/登录用户 | `marketplace/marketplace-discovery.md` | 已覆盖 |
-| 账号中心 | `/account/*`（目标态） | 资料维护、密码修改、会话管理、忘记密码 | 登录用户 | `auth-rbac/account-management.md` `auth-rbac/account-center-implementation.md` | 目标态（待实现） |
+| 账号中心 | `/account/*` | 资料维护、密码修改、会话管理、忘记密码链路 | 登录用户 | `auth-rbac/account-management.md` `auth-rbac/account-center-implementation.md` | 部分覆盖 |
 
 ## 3. 管理端功能覆盖矩阵
 
@@ -28,16 +28,16 @@
 | 后台导航 | `/admin/*` `/dashboard/*` | 分区导航、总览指标 | member/admin/super_admin | `admin-governance/admin-dashboard-governance.md` | 已覆盖 |
 | 导入中心 | `/skills/manual` `/skills/upload` `/skills/repo` `/skills/skillmp` | 四类导入 | member/admin/super_admin | `ingestion-sync/ingestion-channels.md` | 已覆盖 |
 | 记录治理 | `/skills/{skillID}/visibility` `/sync` `/delete` | 可见性、重同步、删除 | owner/admin/super_admin | `ingestion-sync/sync-lifecycle-records.md` | 已覆盖 |
-| 定时同步治理 | `/admin/sync-policies/*`（目标态） | 同步策略配置、定时触发、失败重试 | admin/super_admin | `ingestion-sync/scheduled-sync-version-history.md` | 目标态（待实现） |
-| 同步运行记录 | `/admin/sync-runs/*`（目标态） | 每次同步运行状态、耗时、错误可追踪 | member/admin/super_admin | `ingestion-sync/scheduled-sync-version-history.md` | 目标态（待实现） |
-| Skill 版本与历史 | `/skills/{skillID}/versions/*`（目标态） | 版本快照、diff 对比、受控回滚 | owner/admin/super_admin | `ingestion-sync/scheduled-sync-version-history.md` | 目标态（待实现） |
+| 定时同步治理 | `/admin/sync-policies/*` | 同步策略配置、定时触发、失败重试 | admin/super_admin | `ingestion-sync/scheduled-sync-version-history.md` | 部分覆盖 |
+| 同步运行记录 | `/admin/sync-runs/*` | 每次同步运行状态、耗时、错误可追踪 | member/admin/super_admin | `ingestion-sync/scheduled-sync-version-history.md` | 部分覆盖 |
+| Skill 版本与历史 | `/skills/{skillID}/versions/*` | 版本快照、diff 对比、受控回滚 | owner/admin/super_admin | `ingestion-sync/scheduled-sync-version-history.md` | 部分覆盖 |
 | API Key 管理 | `/admin/apikeys/create` `/admin/apikeys/{keyID}/revoke` | 创建、撤销、状态过滤 | member/admin/super_admin | `admin-governance/admin-dashboard-governance.md` | 已覆盖 |
 | 用户管理 | `/admin/users/{userID}/role` | 角色变更与最后 super_admin 保护 | super_admin | `admin-governance/admin-dashboard-governance.md` | 已覆盖 |
 | 审计治理 | 审计分区 | 关键操作可追溯 | admin/super_admin | `admin-governance/admin-dashboard-governance.md` | 已覆盖 |
-| 账号治理扩展 | `/admin/accounts/*`（目标态） | 账号状态治理、管理员重置密码、会话强退 | admin/super_admin | `auth-rbac/account-management.md` `admin-governance/admin-account-operations.md` | 目标态（待实现） |
-| 组织协作治理 | `/admin/organizations/*`（目标态） | 组织创建、成员角色治理、组织技能共享 | owner/admin/super_admin | `admin-governance/organization-workspace-governance.md` | 目标态（待实现） |
-| 内容审核治理 | `/admin/moderation/*`（目标态） | 举报、审核、隐藏/删除、申诉闭环 | admin/super_admin | `admin-governance/content-moderation-governance.md` | 目标态（待实现） |
-| 异步任务治理 | `/admin/jobs/*`（目标态） | 导入/同步任务编排、重试、取消、可观测 | member/admin/super_admin | `ingestion-sync/async-sync-job-orchestration.md` | 目标态（待实现） |
+| 账号治理扩展 | `/admin/accounts/*` | 账号状态治理、管理员重置密码、会话强退 | admin/super_admin | `auth-rbac/account-management.md` `admin-governance/admin-account-operations.md` | 部分覆盖 |
+| 组织协作治理 | `/admin/organizations/*` | 组织创建、成员角色治理、组织技能共享 | owner/admin/super_admin | `admin-governance/organization-workspace-governance.md` | 部分覆盖 |
+| 内容审核治理 | `/admin/moderation/*` | 举报、审核、隐藏/删除、申诉闭环 | admin/super_admin | `admin-governance/content-moderation-governance.md` | 部分覆盖 |
+| 异步任务治理 | `/admin/jobs/*` | 导入/同步任务编排、重试、取消、可观测 | member/admin/super_admin | `ingestion-sync/async-sync-job-orchestration.md` | 部分覆盖 |
 
 ## 4. 公共能力与跨端覆盖矩阵
 
@@ -49,10 +49,10 @@
 | 钉钉集成 | OAuth 授权、回调、授权撤销、profile 查询 | `integrations/dingtalk-oauth.md` | 已覆盖 |
 | 数据模型约束 | 主实体、唯一约束、级联与一致性 | `data-model/data-model-constraints.md` | 已覆盖 |
 | 非功能 | 性能、可靠性、安全、可观测性 | `non-functional/nfr.md` | 已覆盖 |
-| API Key 细粒度授权 | scope、最小权限、轮换与 403 区分 | `public-api/api-key-scope-governance.md` | 目标态（待实现） |
-| 企业身份与 SSO | OIDC/SAML、账号映射、离职回收 | `integrations/enterprise-sso-extension.md` | 目标态（待实现） |
-| 运维合规基线 | 审计留存、告警、备份恢复、发布门禁 | `non-functional/operations-compliance-observability.md` | 目标态（待实现） |
-| 全量变更追踪 | 每个 Skill 的同步版本链与变更明细可追溯 | `ingestion-sync/scheduled-sync-version-history.md` | 目标态（待实现） |
+| API Key 细粒度授权 | scope、最小权限、轮换与 403 区分 | `public-api/api-key-scope-governance.md` | 部分覆盖 |
+| 企业身份与 SSO | OIDC/SAML、账号映射、离职回收 | `integrations/enterprise-sso-extension.md` | 部分覆盖 |
+| 运维合规基线 | 审计留存、告警、备份恢复、发布门禁 | `non-functional/operations-compliance-observability.md` | 部分覆盖 |
+| 全量变更追踪 | 每个 Skill 的同步版本链与变更明细可追溯 | `ingestion-sync/scheduled-sync-version-history.md` | 部分覆盖 |
 
 ## 5. 端到端场景覆盖（用户端 + 管理端）
 
@@ -104,7 +104,7 @@
 2. `auth-rbac/auth-session-rbac.md`
 3. `overview/requirement-traceability.md`
 
-### E2E-005 目标态账号治理闭环（待实现）
+### E2E-005 账号治理闭环（当前部分覆盖）
 
 1. 用户更新资料并修改密码
 2. 管理员禁用账号并强制下线
@@ -116,7 +116,7 @@
 2. `admin-governance/admin-account-operations.md`
 3. `test-acceptance/test-acceptance.md`
 
-### E2E-006 组织协作与审核治理闭环（待实现）
+### E2E-006 组织协作与审核治理闭环（当前部分覆盖）
 
 1. 创建组织并邀请成员
 2. 将技能绑定组织并执行协作治理
@@ -128,7 +128,7 @@
 2. `admin-governance/content-moderation-governance.md`
 3. `overview/requirement-traceability.md`
 
-### E2E-007 定时同步与版本追踪闭环（待实现）
+### E2E-007 定时同步与版本追踪闭环（当前部分覆盖）
 
 1. 配置同步策略并按计划触发
 2. 生成同步运行记录并完成成功同步
@@ -156,5 +156,6 @@
 
 为避免“已实现能力”与“目标完整能力”混淆，状态解释如下：
 
-1. `已覆盖`：需求已定义且当前实现可追溯到对应功能
-2. `目标态（待实现）`：需求已完成设计，作为后续实现范围
+1. `已覆盖`：需求已定义且当前实现、路由与验收口径均已闭环
+2. `部分覆盖`：当前已有实现或路由/API 已接入，但契约、场景或验收仍需继续闭环
+3. `目标态（待实现）`：需求已完成设计，但当前尚未进入有效实现范围

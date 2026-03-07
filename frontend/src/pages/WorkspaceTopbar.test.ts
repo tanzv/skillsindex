@@ -69,19 +69,19 @@ describe("WorkspaceTopbar", () => {
     expect(html).toContain("Five");
     expect(html).toContain("workspace-topbar-toggle-icon-button");
     expect(html).toContain("workspace-topbar-toggle-button-content");
-    expect(html).toContain("workspace-topbar-toggle-label");
-    expect(html).toContain(">More<");
+    expect(html).toContain("workspace-topbar-toggle-panel-icon");
     expect(html).toContain("workspace-topbar-toggle-badge");
     expect(html).toContain("workspace-topbar-toggle-badge-count");
     expect(html).toContain(">1<");
     expect(html).toContain("workspace-topbar-primary-inline-toggle");
     expect(html).toContain("workspace-topbar-primary-group-label");
-    expect(html).toContain(">Quick<");
+    expect(html).toContain(">Global<");
     expect(html).toContain("workspace-topbar-interaction-scope");
     expect(html).toContain("workspace-topbar-overflow-wrapper is-collapsed");
-    expect(html).toContain("aria-controls=\"workspace-topbar-overflow-panel\"");
-    expect(html).toContain("aria-label=\"Expand primary navigation panel\"");
-    expect(html).toContain("aria-hidden=\"true\"");
+    expect(html).toContain('aria-controls="workspace-topbar-overflow-panel"');
+    expect(html).toContain('aria-label="Expand app navigation panel"');
+    expect(html).toContain('title="More"');
+    expect(html).toContain('aria-hidden="true"');
   });
 
   it("renders hidden actions in a secondary panel when navigation is expanded", () => {
@@ -114,13 +114,14 @@ describe("WorkspaceTopbar", () => {
     );
 
     expect(html).toContain("workspace-topbar-overflow-wrapper is-expanded");
-    expect(html).toContain("id=\"workspace-topbar-overflow-panel\"");
+    expect(html).toContain('id="workspace-topbar-overflow-panel"');
     expect(html).toContain("workspace-topbar-overflow-group");
     expect(html).toContain("workspace-topbar-overflow-title");
+    expect(html).toContain("App Menu");
     expect(html).toContain("Six");
-    expect(html).toContain("workspace-topbar-toggle-label");
-    expect(html).toContain(">Hide<");
-    expect(html).toContain("aria-label=\"Collapse primary navigation panel\"");
+    expect(html).toContain("workspace-topbar-toggle-panel-icon");
+    expect(html).toContain('title="Hide"');
+    expect(html).toContain('aria-label="Collapse app navigation panel"');
   });
 
   it("groups overflow actions by workspace menu group token", () => {
@@ -144,9 +145,9 @@ describe("WorkspaceTopbar", () => {
           { id: "section-queue", label: "Queue", className: "is-menu-entry is-menu-group-sections", onClick: () => undefined },
           { id: "section-policy", label: "Policy", className: "is-menu-entry is-menu-group-sections", onClick: () => undefined },
           { id: "open-dashboard", label: "Open Dashboard", className: "is-open-dashboard-action is-backend-entry-action", onClick: () => undefined },
-          { id: "hub-rollout", label: "Rollout Workflow", className: "is-menu-entry is-menu-group-hubs", onClick: () => undefined },
-          { id: "hub-governance", label: "Governance Center", className: "is-menu-entry is-menu-group-hubs", onClick: () => undefined },
-          { id: "org-role", label: "Role Management", className: "is-menu-entry is-menu-group-organization-management", onClick: () => undefined }
+          { id: "system-login-configuration", label: "Login Configuration", className: "is-menu-entry is-menu-group-system-settings", onClick: () => undefined },
+          { id: "system-governance", label: "Governance Center", className: "is-menu-entry is-menu-group-system-settings", onClick: () => undefined },
+          { id: "org-role", label: "Role Management", className: "is-menu-entry is-menu-group-user-management", onClick: () => undefined }
         ],
         utilityActions: [],
         rightRegistrations: [],
@@ -155,11 +156,11 @@ describe("WorkspaceTopbar", () => {
     );
 
     expect(html).toContain("workspace-topbar-overflow-wrapper is-expanded");
-    expect(html).toContain("Related Hubs");
-    expect(html).toContain("Organization Management");
+    expect(html).toContain("System Settings");
+    expect(html).toContain("User Management");
     expect(html).toContain("workspace-topbar-overflow-group-header");
     expect(html).toContain("workspace-topbar-overflow-group-count");
-    expect(html).toContain("Rollout Workflow");
+    expect(html).toContain("Login Configuration");
     expect(html).toContain("Role Management");
   });
 
@@ -223,8 +224,8 @@ describe("WorkspaceTopbar", () => {
 
     expect(html).toContain("workspace-topbar-toggle-icon-button");
     expect(html).toContain(">2<");
-    expect(html).toContain("Marketplace Navigation");
-    expect(html).toContain("aria-hidden=\"true\"");
+    expect(html).toContain("Marketplace");
+    expect(html).toContain('aria-hidden="true"');
   });
 
   it("renders localized toggle and overflow labels for zh locale", () => {
@@ -257,10 +258,11 @@ describe("WorkspaceTopbar", () => {
       })
     );
 
-    expect(html).toContain(">\u6536\u8d77<");
-    expect(html).toContain("\u5e02\u573a\u5bfc\u822a");
-    expect(html).toContain("\u8bbf\u5ba2\u7528\u6237");
-    expect(html).toContain("aria-label=\"\u6536\u8d77\u4e3b\u5bfc\u822a\u9762\u677f\"");
-    expect(html).toContain("aria-label=\"\u5df2\u5c55\u5f00\u7684\u5de5\u4f5c\u53f0\u5bfc\u822a\u9762\u677f\"");
+    expect(html).toContain('\u5e02\u573a\u5165\u53e3');
+    expect(html).toContain('\u8bbf\u5ba2\u7528\u6237');
+    expect(html).toContain('\u5e94\u7528\u83dc\u5355');
+    expect(html).toContain('aria-label="\u6536\u8d77\u5e94\u7528\u5bfc\u822a\u9762\u677f"');
+    expect(html).toContain('aria-label="\u5df2\u5c55\u5f00\u7684\u5e94\u7528\u5bfc\u822a\u9762\u677f"');
+    expect(html).toContain('title="\u6536\u8d77"');
   });
 });

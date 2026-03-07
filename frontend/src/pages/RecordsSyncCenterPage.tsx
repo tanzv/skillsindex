@@ -5,10 +5,16 @@ import { fetchConsoleJSON, postConsoleJSON } from "../lib/api";
 import { AppLocale } from "../lib/i18n";
 import { getWorkspaceCenterCopy } from "./WorkspaceCenterPage.copy";
 import { buildWorkspaceSidebarNavigation } from "./WorkspaceCenterPage.navigation";
-import { asRecord, buildSyncRunDetailSummary, parseSyncPolicy, parseSyncRun, resolveAdminBase } from "./RecordsSyncCenterPage.helpers";
+import {
+  asRecord,
+  buildSyncRunDetailSummary,
+  parseSyncPolicy,
+  parseSyncRun,
+  resolveAdminBase,
+  resolveRecordsSyncActiveMenuID
+} from "./RecordsSyncCenterPage.helpers";
 import RecordsSyncCenterPageContent from "./RecordsSyncCenterPageContent";
 import type { RecordsSyncCenterPageProps, SyncPolicyRecord, SyncRunRecord } from "./RecordsSyncCenterPage.types";
-import { createPrototypePalette, isLightPrototypePath } from "./prototypePageTheme";
 import { createPublicPageNavigator } from "./publicPageNavigation";
 import WorkspacePrototypePageShell from "./WorkspacePrototypePageShell";
 
@@ -69,8 +75,7 @@ export default function RecordsSyncCenterPage({
   const text = copy[locale];
   const workspaceText = useMemo(() => getWorkspaceCenterCopy(locale), [locale]);
   const adminBase = useMemo(() => resolveAdminBase(currentPath), [currentPath]);
-  const lightMode = useMemo(() => isLightPrototypePath(currentPath), [currentPath]);
-  const palette = useMemo(() => createPrototypePalette(lightMode), [lightMode]);
+  const activeMenuID = useMemo(() => resolveRecordsSyncActiveMenuID(currentPath), [currentPath]);
   const pageNavigator = useMemo(() => createPublicPageNavigator(currentPath), [currentPath]);
 
   const [loading, setLoading] = useState(true);
@@ -196,7 +201,7 @@ export default function RecordsSyncCenterPage({
       onThemeModeChange={onThemeModeChange}
       onLocaleChange={onLocaleChange}
       onLogout={onLogout}
-      activeMenuID="hub-records"
+      activeMenuID={activeMenuID}
       sidebarGroups={sidebarGroups}
       sidebarMeta={[
         { id: "records-policy", label: policy.enabled ? text.enabledState : text.disabledState, tone: "accent" },
@@ -216,7 +221,7 @@ export default function RecordsSyncCenterPage({
           <Button onClick={() => onNavigate(`${adminBase}/jobs`)}>{text.openJobs}</Button>
           <Button onClick={() => onNavigate(`${adminBase}/sync-policy/repository`)}>{text.openPolicy}</Button>
           <Button onClick={() => onNavigate(`${adminBase}/records/exports`)}>{text.openExports}</Button>
-          <Button type="primary" onClick={() => void refreshAll(selectedRunID || undefined)} loading={savingPolicy}>
+          <Button type="primary" onClick={() => void refreshAll(selectedRunID || undefined)} loading={loading && !savingPolicy}>
             {text.refresh}
           </Button>
         </>
@@ -228,7 +233,6 @@ export default function RecordsSyncCenterPage({
     >
       <RecordsSyncCenterPageContent
         text={text}
-        palette={palette}
         adminBase={adminBase}
         ownerFilter={ownerFilter}
         onOwnerFilterChange={setOwnerFilter}

@@ -1,8 +1,8 @@
-import { Alert, Avatar, Button, Card, Input, Segmented, Select, Space, Spin, Tag, Typography } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { Spin } from "antd";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { AppLocale } from "../lib/i18n";
 import { fetchConsoleJSON, postConsoleJSON } from "../lib/api";
+import { AppLocale } from "../lib/i18n";
 import type { AccountRoute } from "./AccountWorkbenchPage";
 import { getAccountCenterCopy } from "./AccountCenterPage.copy";
 import {
@@ -10,25 +10,20 @@ import {
   type AccountProfilePayload,
   buildAccountProfileDraft,
   buildAccountProfilePreviewItems,
-  formatAccountDate,
   profileCompletenessScore,
+  resolveAvatarInitials,
   sanitizeAccountProfileDraft
 } from "./AccountCenterPage.helpers";
 import AccountProfileEditorModal from "./AccountProfileEditorModal";
+import { AccountCenterSections } from "./accountCenter/AccountCenterPage.sections";
 import {
-  PrototypeDeckColumns,
-  PrototypeEmptyText,
-  PrototypeHeaderLayout,
-  PrototypeList,
-  PrototypeListActions,
-  PrototypeListMain,
-  PrototypeListRow,
-  PrototypeLoadingCenter,
-  PrototypeMetricGrid,
-  PrototypePageGrid,
-  PrototypeSideLinks,
-  PrototypeStack
-} from "./prototypeCssInJs";
+  accountRouteBySection,
+  accountSectionByRoute,
+  type AccountRevokeMode,
+  type AccountSection,
+  type AccountSessionsPayload
+} from "./accountCenter/AccountCenterPage.types";
+import { PrototypeLoadingCenter } from "./prototypeCssInJs";
 import { createPrototypePalette, isLightPrototypePath } from "./prototypePageTheme";
 
 interface AccountCenterPageProps {
@@ -37,54 +32,9 @@ interface AccountCenterPageProps {
   onNavigate: (path: string) => void;
 }
 
-interface AccountSessionItem {
-  session_id: string;
-  user_agent: string;
-  issued_ip: string;
-  last_seen: string;
-  expires_at: string;
-  is_current: boolean;
-}
-
-interface AccountSessionsPayload {
-  current_session_id: string;
-  session_issued_at: string | null;
-  session_expires_at: string | null;
-  total: number;
-  items: AccountSessionItem[];
-}
-
-const sectionByRoute: Record<AccountRoute, "profile" | "security" | "sessions"> = {
-  "/account/profile": "profile",
-  "/account/security": "security",
-  "/account/sessions": "sessions"
-};
-
-function resolveAvatarInitials(displayName: string, fallback: string): string {
-  const normalized = String(displayName || "").trim();
-  if (!normalized) {
-    return String(fallback || "U").trim().slice(0, 2).toUpperCase() || "U";
-  }
-
-  const segments = normalized
-    .split(/\s+/)
-    .map((segment) => segment.trim())
-    .filter(Boolean);
-
-  if (segments.length === 0) {
-    return "U";
-  }
-
-  if (segments.length === 1) {
-    return segments[0].slice(0, 2).toUpperCase();
-  }
-
-  return `${segments[0][0] || ""}${segments[segments.length - 1][0] || ""}`.toUpperCase();
-}
-
 export default function AccountCenterPage({ locale, route, onNavigate }: AccountCenterPageProps) {
   const text = getAccountCenterCopy(locale);
-  const activeSection = sectionByRoute[route];
+  const activeSection = accountSectionByRoute[route];
   const lightMode = isLightPrototypePath(window.location.pathname);
   const palette = useMemo(() => createPrototypePalette(lightMode), [lightMode]);
 
@@ -100,7 +50,7 @@ export default function AccountCenterPage({ locale, route, onNavigate }: Account
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [revokeMode, setRevokeMode] = useState<"keep" | "revoke">("keep");
+  const [revokeMode, setRevokeMode] = useState<AccountRevokeMode>("keep");
 
   const completeness = useMemo(() => profileCompletenessScore(profilePayload), [profilePayload]);
   const profileDraft = useMemo(() => buildAccountProfileDraft(profilePayload), [profilePayload]);
@@ -123,7 +73,7 @@ export default function AccountCenterPage({ locale, route, onNavigate }: Account
   const primaryProfileName = profileDraft.displayName || profileUser?.username || text.never;
   const avatarInitials = resolveAvatarInitials(primaryProfileName, profileUser?.username || "U");
 
-  async function loadAll() {
+  const loadAll = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -138,45 +88,48 @@ export default function AccountCenterPage({ locale, route, onNavigate }: Account
     } finally {
       setLoading(false);
     }
-  }
+  }, [text.updateFailed]);
 
   useEffect(() => {
     void loadAll();
-  }, []);
+  }, [loadAll]);
 
-  function clearFeedback() {
+  const clearFeedback = useCallback(() => {
     setMessage("");
     setError("");
-  }
+  }, []);
 
-  function openProfileEditor() {
+  const openProfileEditor = useCallback(() => {
     clearFeedback();
     setProfileEditorOpen(true);
-  }
+  }, [clearFeedback]);
 
-  function closeProfileEditor() {
+  const closeProfileEditor = useCallback(() => {
     if (saving) {
       return;
     }
     setProfileEditorOpen(false);
-  }
+  }, [saving]);
 
-  async function saveProfile(values: AccountProfileDraft) {
-    clearFeedback();
-    setSaving(true);
-    try {
-      await postConsoleJSON("/api/v1/account/profile", sanitizeAccountProfileDraft(values));
-      setMessage(text.saveSuccess);
-      setProfileEditorOpen(false);
-      await loadAll();
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : text.updateFailed);
-    } finally {
-      setSaving(false);
-    }
-  }
+  const saveProfile = useCallback(
+    async (values: AccountProfileDraft) => {
+      clearFeedback();
+      setSaving(true);
+      try {
+        await postConsoleJSON("/api/v1/account/profile", sanitizeAccountProfileDraft(values));
+        setMessage(text.saveSuccess);
+        setProfileEditorOpen(false);
+        await loadAll();
+      } catch (saveError) {
+        setError(saveError instanceof Error ? saveError.message : text.updateFailed);
+      } finally {
+        setSaving(false);
+      }
+    },
+    [clearFeedback, loadAll, text.saveSuccess, text.updateFailed]
+  );
 
-  async function applyPassword() {
+  const applyPassword = useCallback(async () => {
     clearFeedback();
     if (!currentPassword.trim() || !newPassword.trim()) {
       setError(text.updateFailed);
@@ -199,26 +152,29 @@ export default function AccountCenterPage({ locale, route, onNavigate }: Account
     } finally {
       setSaving(false);
     }
-  }
+  }, [clearFeedback, currentPassword, loadAll, newPassword, revokeMode, text.passwordSuccess, text.updateFailed]);
 
-  async function revokeSession(sessionID: string) {
-    clearFeedback();
-    if (!sessionID.trim()) {
-      return;
-    }
-    setSaving(true);
-    try {
-      await postConsoleJSON(`/api/v1/account/sessions/${encodeURIComponent(sessionID)}/revoke`);
-      setMessage(text.revokedSuccess);
-      await loadAll();
-    } catch (revokeError) {
-      setError(revokeError instanceof Error ? revokeError.message : text.updateFailed);
-    } finally {
-      setSaving(false);
-    }
-  }
+  const revokeSession = useCallback(
+    async (sessionID: string) => {
+      clearFeedback();
+      if (!sessionID.trim()) {
+        return;
+      }
+      setSaving(true);
+      try {
+        await postConsoleJSON(`/api/v1/account/sessions/${encodeURIComponent(sessionID)}/revoke`);
+        setMessage(text.revokedSuccess);
+        await loadAll();
+      } catch (revokeError) {
+        setError(revokeError instanceof Error ? revokeError.message : text.updateFailed);
+      } finally {
+        setSaving(false);
+      }
+    },
+    [clearFeedback, loadAll, text.revokedSuccess, text.updateFailed]
+  );
 
-  async function revokeOtherSessions() {
+  const revokeOtherSessions = useCallback(async () => {
     clearFeedback();
     setSaving(true);
     try {
@@ -230,7 +186,14 @@ export default function AccountCenterPage({ locale, route, onNavigate }: Account
     } finally {
       setSaving(false);
     }
-  }
+  }, [clearFeedback, loadAll, text.revokedSuccess, text.updateFailed]);
+
+  const handleSectionChange = useCallback(
+    (section: AccountSection) => {
+      onNavigate(accountRouteBySection[section]);
+    },
+    [onNavigate]
+  );
 
   if (loading) {
     return (
@@ -251,298 +214,38 @@ export default function AccountCenterPage({ locale, route, onNavigate }: Account
   ];
 
   return (
-    <PrototypePageGrid>
-      <Card
-        variant="borderless"
-        style={{ borderRadius: 16, border: `1px solid ${palette.headerBorder}`, background: palette.headerBackground }}
-        styles={{ body: { padding: "14px 16px" } }}
-      >
-        <PrototypeHeaderLayout>
-          <div>
-            <Typography.Title
-              level={2}
-              style={{
-                margin: 0,
-                color: palette.headerTitle,
-                fontFamily: "\"Syne\", sans-serif",
-                fontSize: "clamp(1.1rem, 2.3vw, 1.5rem)",
-                lineHeight: 1.2
-              }}
-            >
-              {text.title}
-            </Typography.Title>
-            <Typography.Paragraph style={{ margin: "6px 0 0", color: palette.headerSubtitle, fontSize: "0.8rem" }}>
-              {text.subtitle}
-            </Typography.Paragraph>
-          </div>
-          <Space wrap>
-            <Button type="primary" onClick={openProfileEditor}>
-              {text.editProfile}
-            </Button>
-            <Button onClick={() => onNavigate("/")}>{text.openMarketplace}</Button>
-            <Button onClick={() => onNavigate("/admin/overview")}>{text.openAdmin}</Button>
-            <Button onClick={() => loadAll()} loading={saving}>
-              {text.refresh}
-            </Button>
-          </Space>
-        </PrototypeHeaderLayout>
-      </Card>
-
-      <Segmented
-        aria-label="account section tabs"
-        options={[
-          { label: text.profileTab, value: "profile" },
-          { label: text.securityTab, value: "security" },
-          { label: text.sessionsTab, value: "sessions" }
-        ]}
-        value={activeSection}
-        onChange={(value) => {
-          if (value === "profile") {
-            onNavigate("/account/profile");
-            return;
-          }
-          if (value === "security") {
-            onNavigate("/account/security");
-            return;
-          }
-          onNavigate("/account/sessions");
-        }}
-        block
+    <>
+      <AccountCenterSections
+        text={text}
+        locale={locale}
+        palette={palette}
+        activeSection={activeSection}
+        metricItems={metricItems}
+        profilePayload={profilePayload}
+        profileDraft={profileDraft}
+        profilePreviewItems={profilePreviewItems}
+        primaryProfileName={primaryProfileName}
+        avatarInitials={avatarInitials}
+        sessionsPayload={sessionsPayload}
+        sessionItems={sessionItems}
+        currentSessionID={currentSessionID}
+        currentPassword={currentPassword}
+        newPassword={newPassword}
+        revokeMode={revokeMode}
+        saving={saving}
+        error={error}
+        message={message}
+        onOpenProfileEditor={openProfileEditor}
+        onRefresh={loadAll}
+        onNavigate={onNavigate}
+        onSectionChange={handleSectionChange}
+        onCurrentPasswordChange={setCurrentPassword}
+        onNewPasswordChange={setNewPassword}
+        onRevokeModeChange={setRevokeMode}
+        onApplyPassword={applyPassword}
+        onRevokeOtherSessions={revokeOtherSessions}
+        onRevokeSession={revokeSession}
       />
-
-      {error ? <Alert type="error" showIcon message={error} /> : null}
-      {message ? <Alert type="success" showIcon message={message} /> : null}
-
-      <PrototypeMetricGrid>
-        {metricItems.map((item) => (
-          <Card
-            key={item.key}
-            variant="borderless"
-            hoverable
-            style={{ borderRadius: 12, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-            styles={{ body: { padding: 10, display: "grid", gap: 5 } }}
-          >
-            <Typography.Text
-              style={{ color: palette.metricLabel, fontSize: "0.68rem", letterSpacing: "0.03em", textTransform: "uppercase" }}
-            >
-              {item.label}
-            </Typography.Text>
-            <Typography.Text strong style={{ color: palette.metricValue, fontSize: "1.06rem" }}>
-              {item.value}
-            </Typography.Text>
-          </Card>
-        ))}
-      </PrototypeMetricGrid>
-
-      <PrototypeDeckColumns>
-        <PrototypeStack>
-          {(activeSection === "profile" || activeSection === "security") ? (
-            <Card
-              variant="borderless"
-              hoverable
-              style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-              styles={{ body: { padding: 12, display: "grid", gap: 10 } }}
-            >
-              <Space align="start" style={{ justifyContent: "space-between", width: "100%" }} wrap>
-                <div>
-                  <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-                    {text.profileWorkspace}
-                  </Typography.Title>
-                  <Typography.Paragraph style={{ margin: "4px 0 0", color: palette.cardText, fontSize: "0.78rem", lineHeight: 1.46 }}>
-                    {text.profileHint}
-                  </Typography.Paragraph>
-                </div>
-                <Button type="primary" onClick={openProfileEditor}>
-                  {text.editProfile}
-                </Button>
-              </Space>
-
-              <Space align="start" size={12}>
-                <Avatar size={56} src={profileDraft.avatarURL || undefined}>
-                  {avatarInitials}
-                </Avatar>
-                <div style={{ display: "grid", gap: 2 }}>
-                  <Typography.Text strong style={{ color: palette.cardTitle, fontSize: "0.86rem" }}>
-                    {primaryProfileName}
-                  </Typography.Text>
-                  <Typography.Text style={{ color: palette.cardText, fontSize: "0.76rem" }}>
-                    @{profileUser?.username || text.never}
-                  </Typography.Text>
-                  <Typography.Text style={{ color: palette.cardText, fontSize: "0.74rem" }}>
-                    {text.profilePreview}
-                  </Typography.Text>
-                </div>
-              </Space>
-
-              <PrototypeList>
-                {profilePreviewItems.map((item) => (
-                  <PrototypeListRow key={item.key}>
-                    <PrototypeListMain>
-                      <Typography.Text style={{ color: "#9fc2ec", fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.03em" }}>
-                        {item.label}
-                      </Typography.Text>
-                      <Typography.Text style={{ color: "#f0f8ff", fontSize: "0.78rem", lineHeight: 1.42 }}>
-                        {item.value}
-                      </Typography.Text>
-                    </PrototypeListMain>
-                  </PrototypeListRow>
-                ))}
-              </PrototypeList>
-            </Card>
-          ) : null}
-
-          {(activeSection === "security" || activeSection === "profile") ? (
-            <Card
-              variant="borderless"
-              hoverable
-              style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-              styles={{ body: { padding: 12, display: "grid", gap: 10 } }}
-            >
-              <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-                {text.securityWorkspace}
-              </Typography.Title>
-              <Typography.Paragraph style={{ margin: 0, color: palette.cardText, fontSize: "0.78rem", lineHeight: 1.46 }}>
-                {text.securityHint}
-              </Typography.Paragraph>
-              <label style={{ display: "grid", gap: 5 }}>
-                <span style={{ fontSize: "0.68rem", letterSpacing: "0.03em", textTransform: "uppercase", fontWeight: 700, color: "#9fc2ec" }}>
-                  {text.currentPassword}
-                </span>
-                <Input.Password value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} />
-              </label>
-              <label style={{ display: "grid", gap: 5 }}>
-                <span style={{ fontSize: "0.68rem", letterSpacing: "0.03em", textTransform: "uppercase", fontWeight: 700, color: "#9fc2ec" }}>
-                  {text.newPassword}
-                </span>
-                <Input.Password value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
-              </label>
-              <label style={{ display: "grid", gap: 5 }}>
-                <span style={{ fontSize: "0.68rem", letterSpacing: "0.03em", textTransform: "uppercase", fontWeight: 700, color: "#9fc2ec" }}>
-                  {text.revokeOthers}
-                </span>
-                <Select
-                  value={revokeMode}
-                  options={[
-                    { label: text.noRevoke, value: "keep" },
-                    { label: text.revokeOthers, value: "revoke" }
-                  ]}
-                  onChange={(value) => setRevokeMode(value)}
-                />
-              </label>
-              <Space wrap>
-                <Button type="primary" onClick={() => applyPassword()} loading={saving}>
-                  {text.applyPassword}
-                </Button>
-                <Button onClick={() => revokeOtherSessions()} loading={saving}>
-                  {text.revokeOthersNow}
-                </Button>
-              </Space>
-            </Card>
-          ) : null}
-
-          <Card
-            variant="borderless"
-            hoverable
-            style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-            styles={{ body: { padding: 12, display: "grid", gap: 10 } }}
-          >
-            <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-              {text.sessionsWorkspace}
-            </Typography.Title>
-            <Typography.Paragraph style={{ margin: 0, color: palette.cardText, fontSize: "0.78rem", lineHeight: 1.46 }}>
-              {text.sessionsHint}
-            </Typography.Paragraph>
-            <PrototypeList>
-              {sessionItems.map((item) => (
-                <PrototypeListRow key={item.session_id}>
-                  <PrototypeListMain>
-                    <Typography.Text strong style={{ color: "#f0f8ff", fontSize: "0.8rem" }}>
-                      {item.session_id}
-                    </Typography.Text>
-                    <Typography.Text style={{ color: "#bfd8fc", fontSize: "0.71rem", lineHeight: 1.42 }}>
-                      {text.userAgent}: {item.user_agent || text.never}
-                    </Typography.Text>
-                    <Typography.Text style={{ color: "#bfd8fc", fontSize: "0.71rem", lineHeight: 1.42 }}>
-                      {text.issuedIP}: {item.issued_ip || text.never}
-                    </Typography.Text>
-                    <Typography.Text style={{ color: "#bfd8fc", fontSize: "0.71rem", lineHeight: 1.42 }}>
-                      {text.createdAt}: {formatAccountDate(item.last_seen, locale, text.never)}
-                    </Typography.Text>
-                    <Typography.Text style={{ color: "#bfd8fc", fontSize: "0.71rem", lineHeight: 1.42 }}>
-                      {text.expiresAt}: {formatAccountDate(item.expires_at, locale, text.never)}
-                    </Typography.Text>
-                  </PrototypeListMain>
-                  <PrototypeListActions>
-                    {item.is_current || item.session_id === currentSessionID ? <Tag color="green">{text.current}</Tag> : null}
-                    {!item.is_current && item.session_id !== currentSessionID ? (
-                      <Button size="small" onClick={() => revokeSession(item.session_id)} loading={saving}>
-                        {text.revoke}
-                      </Button>
-                    ) : null}
-                  </PrototypeListActions>
-                </PrototypeListRow>
-              ))}
-              {sessionItems.length === 0 ? <PrototypeEmptyText>{text.never}</PrototypeEmptyText> : null}
-            </PrototypeList>
-          </Card>
-        </PrototypeStack>
-
-        <PrototypeStack>
-          <Card
-            variant="borderless"
-            hoverable
-            style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-            styles={{ body: { padding: 12, display: "grid", gap: 8 } }}
-          >
-            <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-              {text.accountSignals}
-            </Typography.Title>
-            <Typography.Text style={{ color: palette.cardText, fontSize: "0.78rem" }}>
-              {text.role}: {profileUser?.role || text.never}
-            </Typography.Text>
-            <Typography.Text style={{ color: palette.cardText, fontSize: "0.78rem" }}>
-              {text.status}: {profileUser?.status || text.never}
-            </Typography.Text>
-            <Typography.Text style={{ color: palette.cardText, fontSize: "0.78rem" }}>
-              {text.sessionTTL}: {formatAccountDate(sessionsPayload?.session_expires_at || null, locale, text.never)}
-            </Typography.Text>
-          </Card>
-
-          <Card
-            variant="borderless"
-            hoverable
-            style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-            styles={{ body: { padding: 12, display: "grid", gap: 8 } }}
-          >
-            <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-              {text.quickActions}
-            </Typography.Title>
-            <PrototypeSideLinks>
-              <Button type="primary" onClick={openProfileEditor}>{text.editProfile}</Button>
-              <Button onClick={() => onNavigate("/")}>{text.openMarketplace}</Button>
-              <Button onClick={() => onNavigate("/admin/overview")}>{text.openAdmin}</Button>
-              <Button onClick={() => onNavigate("/account/sessions")}>{text.sessionsTab}</Button>
-            </PrototypeSideLinks>
-          </Card>
-
-          <Card
-            variant="borderless"
-            hoverable
-            style={{ borderRadius: 13, border: `1px solid ${palette.sideHighlightBorder}`, background: palette.sideHighlightBackground }}
-            styles={{ body: { padding: 12, display: "grid", gap: 8 } }}
-          >
-            <Typography.Title level={4} style={{ margin: 0, color: "#f3fbff", fontSize: "0.95rem" }}>
-              {text.securityTab}
-            </Typography.Title>
-            <Typography.Text style={{ color: "#d8f5ff", fontSize: "0.78rem", lineHeight: 1.46 }}>
-              {text.signOutHint}
-            </Typography.Text>
-            <Typography.Text style={{ color: "#d8f5ff", fontSize: "0.78rem", lineHeight: 1.46 }}>
-              {text.revokeOthers}: {revokeMode === "revoke" ? text.revokeOthers : text.noRevoke}
-            </Typography.Text>
-          </Card>
-        </PrototypeStack>
-      </PrototypeDeckColumns>
 
       <AccountProfileEditorModal
         open={profileEditorOpen}
@@ -562,6 +265,6 @@ export default function AccountCenterPage({ locale, route, onNavigate }: Account
         onCancel={closeProfileEditor}
         onSubmit={saveProfile}
       />
-    </PrototypePageGrid>
+    </>
   );
 }

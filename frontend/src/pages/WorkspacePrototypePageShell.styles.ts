@@ -1,13 +1,87 @@
 import styled from "@emotion/styled";
 
-export const WorkspacePrototypePageGrid = styled.div`
+import { WorkspaceContentLayout } from "./WorkspaceCenterPage.styles";
+import { PrototypeUtilityShell } from "./prototypeCssInJs";
+
+export const WorkspacePrototypeStage = styled.div`
+  min-height: 100dvh;
+  overflow: hidden;
+
+  @media (max-width: 1120px) {
+    overflow: visible;
+  }
+`;
+
+export const WorkspacePrototypeRoot = styled.div`
+  min-height: 100dvh;
+  height: 100dvh;
+  padding-bottom: 0;
+  gap: 0;
+  overflow: hidden;
+
+  @media (max-width: 1120px) {
+    min-height: 100dvh;
+    height: auto;
+    overflow: visible;
+  }
+`;
+
+export const WorkspacePrototypeUtilityFrame = styled(PrototypeUtilityShell)`
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-bottom: 0;
+`;
+
+export const WorkspacePrototypeContentLayoutFrame = styled(WorkspaceContentLayout)`
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+`;
+
+export const WorkspacePrototypePageGrid = styled.div<{ $singleColumn?: boolean }>`
   display: grid;
-  grid-template-columns: minmax(268px, 304px) minmax(0, 1fr);
+  grid-template-columns: ${({ $singleColumn }) => ($singleColumn ? "minmax(0, 1fr)" : "auto minmax(0, 1fr)")};
   align-items: start;
-  gap: 14px;
+  gap: clamp(12px, 1.4vw, 18px);
+  min-height: 0;
+  height: 100%;
 
   @media (max-width: 1120px) {
     grid-template-columns: 1fr;
+  }
+`;
+
+export const WorkspacePrototypeContentScroll = styled.div`
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  scrollbar-gutter: stable both-edges;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--si-color-accent) 24%, transparent) transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--si-color-accent) 20%, transparent);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  @media (max-width: 1120px) {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
   }
 `;
 

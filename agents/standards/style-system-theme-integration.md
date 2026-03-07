@@ -62,6 +62,15 @@ When adding or changing UI styles:
 4. Apply page-local style only for route-specific composition, not for global semantics.
 5. Add or update tests that validate token usage and mode parity for changed behavior.
 
+## Layout Rhythm Contract
+
+Navigation and content spacing must remain consistent across workspace/admin pages.
+
+1. Shared layout shells own the default top offset below navigation; route-level modules must not add duplicate top gaps.
+2. Page-specific grids that run inside workspace shells must normalize inherited `.page-grid` top margins where needed.
+3. For organization/account workbench routes, `.page-grid.account-workbench` must keep `margin-top: 0` to avoid double offset.
+4. Add regression assertions in e2e for sidebar-to-content top alignment whenever shell spacing is changed.
+
 ## Extension Rules
 
 1. New token proposals must include name, semantic purpose, and consumer scope.

@@ -24,7 +24,7 @@ export interface QuickAction {
   inApp?: boolean;
 }
 
-interface PublicDocsPageCopyItem {
+export interface PublicDocsPageCopyItem {
   title: string;
   subtitle: string;
   openMarketplace: string;

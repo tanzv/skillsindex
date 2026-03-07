@@ -15,29 +15,28 @@ import PrototypeReplicaPage from "./PrototypeReplicaPage";
 import PublicComparePage from "./PublicComparePage";
 import PublicSkillDetailPage from "./PublicSkillDetailPage";
 import RecordsSyncCenterPage from "./RecordsSyncCenterPage";
-import RolloutWorkflowPage from "./RolloutWorkflowPage";
 import SystemStatePage from "./SystemStatePage";
 import WorkspaceCenterPage from "./WorkspaceCenterPage";
 import { renderPrototypeRouteContent } from "./PrototypeRouteRenderer";
 
 const baseProps = {
   locale: "en" as const,
-  currentPath: "/rollout",
+  currentPath: "/workspace",
   onNavigate: () => undefined,
   sessionUser: null,
   entry: {
-    key: "install_rollout",
-    name: "Install and Rollout Workflow",
-    path: "install_rollout",
-    primaryRoute: "/rollout",
-    previewURL: "/prototypes/previews/install_rollout.png"
+    key: "team_workspace",
+    name: "Team Workspace",
+    path: "team_workspace",
+    primaryRoute: "/workspace",
+    previewURL: "/prototypes/previews/team_workspace.png"
   }
 };
 
 describe("renderPrototypeRouteContent", () => {
   it("renders mapped route page component", () => {
     const element = renderPrototypeRouteContent(baseProps);
-    expect(element.type).toBe(RolloutWorkflowPage);
+    expect(element.type).toBe(WorkspaceCenterPage);
   });
 
   it("maps public routes to concrete pages", () => {
@@ -111,7 +110,7 @@ describe("renderPrototypeRouteContent", () => {
     const onThemeModeChange = () => undefined;
     const onLocaleChange = () => undefined;
     const onLogout = async () => undefined;
-    const rolloutElement = renderPrototypeRouteContent({
+    const workspaceAliasElement = renderPrototypeRouteContent({
       ...baseProps,
       currentPath: "/light/rollout",
       onThemeModeChange,
@@ -119,8 +118,8 @@ describe("renderPrototypeRouteContent", () => {
       onLogout,
       entry: {
         ...baseProps.entry,
-        key: "install_rollout_light",
-        primaryRoute: "/light/rollout"
+        key: "team_workspace_light",
+        primaryRoute: "/light/workspace"
       }
     });
     const governanceElement = renderPrototypeRouteContent({
@@ -160,10 +159,10 @@ describe("renderPrototypeRouteContent", () => {
       }
     });
 
-    expect(rolloutElement.type).toBe(RolloutWorkflowPage);
-    expect(rolloutElement.props.onThemeModeChange).toBe(onThemeModeChange);
-    expect(rolloutElement.props.onLocaleChange).toBe(onLocaleChange);
-    expect(rolloutElement.props.onLogout).toBe(onLogout);
+    expect(workspaceAliasElement.type).toBe(WorkspaceCenterPage);
+    expect(workspaceAliasElement.props.onThemeModeChange).toBe(onThemeModeChange);
+    expect(workspaceAliasElement.props.onLocaleChange).toBe(onLocaleChange);
+    expect(workspaceAliasElement.props.onLogout).toBe(onLogout);
 
     expect(governanceElement.type).toBe(GovernanceCenterPage);
     expect(governanceElement.props.onThemeModeChange).toBe(onThemeModeChange);

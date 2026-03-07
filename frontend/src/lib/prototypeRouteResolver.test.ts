@@ -14,8 +14,8 @@ describe("resolvePrototypeRoute", () => {
     expect(resolvePrototypeRoute("/mobile/login")?.key).toBe("public-login");
   });
 
-  it("resolves rollout/workspace/governance families", () => {
-    expect(resolvePrototypeRoute("/rollout")?.key).toBe("rollout");
+  it("resolves rollout alias to workspace family and keeps workspace/governance families", () => {
+    expect(resolvePrototypeRoute("/rollout")?.key).toBe("workspace");
     expect(resolvePrototypeRoute("/workspace")?.key).toBe("workspace");
     expect(resolvePrototypeRoute("/governance")?.key).toBe("governance");
   });

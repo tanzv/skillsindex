@@ -1,5 +1,6 @@
 import type { AppLocale } from "./i18n";
 import type { ThemeMode } from "./themeModePath";
+import { buildGlobalUserControlSections } from "./globalUserControlServiceSections";
 
 type VoidOrPromise = void | Promise<void>;
 
@@ -20,21 +21,6 @@ export interface GlobalAuthControlService {
   logout: () => VoidOrPromise;
 }
 
-export interface GlobalUserControlService {
-  theme: GlobalThemeControlService;
-  locale: GlobalLocaleControlService;
-  auth: GlobalAuthControlService;
-}
-
-export interface CreateGlobalUserControlServiceInput {
-  locale: AppLocale;
-  themeMode: ThemeMode;
-  onThemeModeChange?: (nextMode: ThemeMode) => void;
-  onLocaleChange?: (nextLocale: AppLocale) => void;
-  onLogout?: () => VoidOrPromise;
-  logoutDisabled?: boolean;
-}
-
 export type GlobalUserControlCommandKey =
   | "theme-dark"
   | "theme-light"
@@ -52,6 +38,99 @@ export interface GlobalUserControlCommand {
   execute: () => VoidOrPromise;
 }
 
+export type GlobalUserControlIconKey =
+  | "moon"
+  | "sun"
+  | "translation"
+  | "globe"
+  | "logout"
+  | "profile"
+  | "spark";
+
+export interface GlobalUserControlSectionRef {
+  id: string;
+  label: string;
+  order: number;
+}
+
+export interface GlobalUserControlSegmentedOption {
+  key: string;
+  label: string;
+  icon?: GlobalUserControlIconKey;
+  active: boolean;
+  disabled: boolean;
+  execute: () => VoidOrPromise;
+}
+
+export interface GlobalUserControlSegmentedGroup {
+  key: string;
+  label: string;
+  options: GlobalUserControlSegmentedOption[];
+}
+
+interface GlobalUserControlBaseItem {
+  key: string;
+  section: GlobalUserControlSectionRef;
+  order: number;
+}
+
+export interface GlobalUserControlActionItem extends GlobalUserControlBaseItem {
+  kind: "action";
+  label: string;
+  description?: string;
+  icon?: GlobalUserControlIconKey;
+  active?: boolean;
+  disabled: boolean;
+  tone?: "default" | "danger";
+  execute: () => VoidOrPromise;
+}
+
+export interface GlobalUserControlInlineRowItem extends GlobalUserControlBaseItem {
+  kind: "inline-row";
+  groups: GlobalUserControlSegmentedGroup[];
+}
+
+export type GlobalUserControlItem = GlobalUserControlActionItem | GlobalUserControlInlineRowItem;
+
+export interface GlobalUserControlSection {
+  id: string;
+  label: string;
+  items: GlobalUserControlItem[];
+}
+
+export interface GlobalUserControlRegistrationContext {
+  locale: AppLocale;
+  themeMode: ThemeMode;
+  theme: GlobalThemeControlService;
+  localeControl: GlobalLocaleControlService;
+  auth: GlobalAuthControlService;
+}
+
+export interface GlobalUserControlRegistration {
+  key: string;
+  order: number;
+  resolve: (context: GlobalUserControlRegistrationContext) => GlobalUserControlItem | GlobalUserControlItem[] | null;
+}
+
+export interface GlobalUserControlService {
+  localeCode: AppLocale;
+  themeMode: ThemeMode;
+  theme: GlobalThemeControlService;
+  locale: GlobalLocaleControlService;
+  auth: GlobalAuthControlService;
+  sections: GlobalUserControlSection[];
+}
+
+export interface CreateGlobalUserControlServiceInput {
+  locale: AppLocale;
+  themeMode: ThemeMode;
+  onThemeModeChange?: (nextMode: ThemeMode) => void;
+  onLocaleChange?: (nextLocale: AppLocale) => void;
+  onLogout?: () => VoidOrPromise;
+  logoutDisabled?: boolean;
+  registrations?: GlobalUserControlRegistration[];
+}
+
 function isThemeMode(input: string): input is ThemeMode {
   return input === "dark" || input === "light";
 }
@@ -60,18 +139,11 @@ function isLocale(input: string): input is AppLocale {
   return input === "en" || input === "zh";
 }
 
-export function createGlobalUserControlService({
-  locale,
-  themeMode,
-  onThemeModeChange,
-  onLocaleChange,
-  onLogout,
-  logoutDisabled = false
-}: CreateGlobalUserControlServiceInput): GlobalUserControlService {
-  const currentMode = themeMode;
-  const currentLocale = locale;
-
-  const theme: GlobalThemeControlService = {
+function buildBaseThemeControlService(
+  currentMode: ThemeMode,
+  onThemeModeChange?: (nextMode: ThemeMode) => void
+): GlobalThemeControlService {
+  return {
     currentMode,
     canSwitch: typeof onThemeModeChange === "function",
     switchMode: (nextMode) => {
@@ -82,8 +154,13 @@ export function createGlobalUserControlService({
       onThemeModeChange(normalizedMode);
     }
   };
+}
 
-  const localeService: GlobalLocaleControlService = {
+function buildBaseLocaleControlService(
+  currentLocale: AppLocale,
+  onLocaleChange?: (nextLocale: AppLocale) => void
+): GlobalLocaleControlService {
+  return {
     currentLocale,
     canSwitch: typeof onLocaleChange === "function",
     switchLocale: (nextLocale) => {
@@ -94,8 +171,13 @@ export function createGlobalUserControlService({
       onLocaleChange(normalizedLocale);
     }
   };
+}
 
-  const auth: GlobalAuthControlService = {
+function buildBaseAuthControlService(
+  onLogout?: () => VoidOrPromise,
+  logoutDisabled = false
+): GlobalAuthControlService {
+  return {
     canLogout: typeof onLogout === "function" && !logoutDisabled,
     logout: () => {
       if (!onLogout || logoutDisabled) {
@@ -104,11 +186,38 @@ export function createGlobalUserControlService({
       return onLogout();
     }
   };
+}
+
+export function createGlobalUserControlService({
+  locale,
+  themeMode,
+  onThemeModeChange,
+  onLocaleChange,
+  onLogout,
+  logoutDisabled = false,
+  registrations = []
+}: CreateGlobalUserControlServiceInput): GlobalUserControlService {
+  const theme = buildBaseThemeControlService(themeMode, onThemeModeChange);
+  const localeService = buildBaseLocaleControlService(locale, onLocaleChange);
+  const auth = buildBaseAuthControlService(onLogout, logoutDisabled);
+  const sections = buildGlobalUserControlSections(
+    {
+      locale,
+      themeMode,
+      theme,
+      localeControl: localeService,
+      auth
+    },
+    registrations
+  );
 
   return {
+    localeCode: locale,
+    themeMode,
     theme,
     locale: localeService,
-    auth
+    auth,
+    sections
   };
 }
 

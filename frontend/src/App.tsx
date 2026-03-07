@@ -7,7 +7,8 @@ import {
   isAdminRoute,
   isProtectedRoute,
   resolveLegacyPublicRouteRedirect,
-  resolvePublicLocaleSwitchMode
+  resolvePublicLocaleSwitchMode,
+  shouldShowPublicGlobalControls
 } from "./App.shared";
 import PublicGlobalControls from "./components/PublicGlobalControls";
 import BackendWorkbenchShell from "./components/BackendWorkbenchShell";
@@ -80,8 +81,6 @@ export default function App() {
       homeSubtitle: t("app.homeSubtitle"),
       signOut: t("app.signOut"),
       quickJump: t("app.quickJump"),
-      controlCenter: t("app.controlCenter"),
-      architecture: t("app.architecture"),
       bootstrapping: t("app.bootstrapping"),
       loginKicker: t("login.kicker"),
       loginTitle: t("login.title"),
@@ -114,10 +113,6 @@ export default function App() {
     [locale, locationKey]
   );
 
-  const currentNavItem = useMemo(
-    () => (isProtectedRoute(route) ? navItems.find((item) => item.path === route) : undefined),
-    [route]
-  );
   const navByPath = useMemo(() => new Map(navItems.map((item) => [item.path, item])), []);
 
   useEffect(() => {
@@ -298,14 +293,7 @@ export default function App() {
     route === "/skills/:id" ||
     route === "/prototype"
   ) {
-    const showPublicGlobalControls =
-      route !== "/" &&
-      route !== "/results" &&
-      route !== "/skills/:id" &&
-      route !== "/docs" &&
-      route !== "/categories" &&
-      route !== "/categories/:slug" &&
-      route !== "/rankings";
+    const showPublicGlobalControls = shouldShowPublicGlobalControls(route, window.location.pathname);
     return (
       <ConfigProvider theme={publicTheme}>
         {showPublicGlobalControls ? (
@@ -506,7 +494,6 @@ export default function App() {
         locale={locale}
         submitLoading={submitLoading}
         sessionUser={sessionUser}
-        currentNavItem={currentNavItem}
         navItems={navItems}
         navByPath={navByPath}
         quickRoutes={quickRoutes}
