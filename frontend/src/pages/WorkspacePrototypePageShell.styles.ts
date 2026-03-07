@@ -26,10 +26,18 @@ export const WorkspacePrototypeRoot = styled.div`
   }
 `;
 
-export const WorkspacePrototypeUtilityFrame = styled(PrototypeUtilityShell)`
+export const WorkspacePrototypeUtilityFrame = styled(PrototypeUtilityShell)<{ $layoutVariant?: "default" | "full-width" }>`
   flex: 1 1 auto;
   min-height: 0;
   padding-bottom: 0;
+
+  ${({ $layoutVariant }) =>
+    $layoutVariant === "full-width"
+      ? `
+    width: calc(100% - var(--prototype-utility-shell-horizontal-gap));
+    max-width: none;
+  `
+      : ""}
 `;
 
 export const WorkspacePrototypeContentLayoutFrame = styled(WorkspaceContentLayout)`

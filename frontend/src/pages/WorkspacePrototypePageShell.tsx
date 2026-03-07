@@ -31,7 +31,7 @@ import { PrototypeLoadingCenter } from "./prototypeCssInJs";
 import { isLightPrototypePath } from "./prototypePageTheme";
 import { createPublicPageNavigator } from "./publicPageNavigation";
 import WorkspaceSurfaceCard from "./WorkspaceSurfaceCard";
-import WorkspaceTopbar from "./WorkspaceTopbar";
+import AppGlobalTopbar from "../components/AppGlobalTopbar";
 import {
   WorkspacePrototypeContentLayoutFrame,
   WorkspacePrototypeContentScroll,
@@ -66,6 +66,7 @@ interface WorkspacePrototypePageShellProps {
   sidebarHint?: string;
   sidebarMeta?: WorkspaceSidebarMenuMetaItem[];
   sidebarMode?: "auto" | "default" | "secondary";
+  layoutVariant?: "default" | "full-width";
   eyebrow?: string;
   title: string;
   subtitle: string;
@@ -95,6 +96,7 @@ export default function WorkspacePrototypePageShell({
   sidebarHint: _sidebarHint,
   sidebarMeta = [],
   sidebarMode = "auto",
+  layoutVariant = "default",
   eyebrow,
   title,
   subtitle,
@@ -210,7 +212,7 @@ export default function WorkspacePrototypePageShell({
       <MarketplaceHomePageStyles />
 
       <WorkspacePrototypeRoot className={rootClassName}>
-        <WorkspaceTopbar
+        <AppGlobalTopbar
           locale={locale}
           isLightTheme={isLightTheme}
           brandTitle="SkillsIndex"
@@ -223,7 +225,7 @@ export default function WorkspacePrototypePageShell({
           rightRegistrations={[]}
         />
 
-        <WorkspacePrototypeUtilityFrame>
+        <WorkspacePrototypeUtilityFrame className="workspace-prototype-utility-frame" $layoutVariant={layoutVariant}>
           <WorkspacePrototypeContentLayoutFrame>
             <WorkspacePrototypePageGrid>
               {shouldRenderSecondarySidebar ? (

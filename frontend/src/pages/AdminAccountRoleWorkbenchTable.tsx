@@ -23,6 +23,8 @@ interface AdminAccountRoleWorkbenchTableProps {
   roleMode: boolean;
   rows: AccountWorkbenchTableRow[];
   onEditAccount: (accountID: number) => void;
+  onForceSignout?: (accountID: number) => void;
+  forceSignoutPendingID?: number | null;
 }
 
 function formatDateTime(value: string): string {
@@ -33,7 +35,13 @@ function formatDateTime(value: string): string {
   return parsed.toLocaleString();
 }
 
-export default function AdminAccountRoleWorkbenchTable({ roleMode, rows, onEditAccount }: AdminAccountRoleWorkbenchTableProps) {
+export default function AdminAccountRoleWorkbenchTable({
+  roleMode,
+  rows,
+  onEditAccount,
+  onForceSignout,
+  forceSignoutPendingID = null
+}: AdminAccountRoleWorkbenchTableProps) {
   return (
     <section className="panel">
       <h3 className="account-workbench-table-heading">{roleMode ? "Role Distribution" : "Account Snapshot"}</h3>
@@ -71,14 +79,25 @@ export default function AdminAccountRoleWorkbenchTable({ roleMode, rows, onEditA
                   {!roleMode ? (
                     <td>
                       {row.kind === "account" ? (
-                        <button
-                          type="button"
-                          onClick={() => onEditAccount(row.id)}
-                          className="account-workbench-action-button"
-                          aria-label={`Edit ${row.primary}`}
-                        >
-                          Edit
-                        </button>
+                        <div className="account-workbench-table-action-group">
+                          <button
+                            type="button"
+                            onClick={() => onEditAccount(row.id)}
+                            className="account-workbench-action-button"
+                            aria-label={`Edit ${row.primary}`}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onForceSignout?.(row.id)}
+                            className="account-workbench-action-button"
+                            disabled={!onForceSignout || forceSignoutPendingID === row.id}
+                            aria-label={`Force sign-out ${row.primary}`}
+                          >
+                            {forceSignoutPendingID === row.id ? "Signing out..." : "Force sign-out"}
+                          </button>
+                        </div>
                       ) : null}
                     </td>
                   ) : null}

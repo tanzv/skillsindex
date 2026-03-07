@@ -43,6 +43,10 @@ async function mockAuthAndOverview(page: Page, options?: { overviewStatus?: numb
     await fulfillJSON(route, 200, { user: AUTH_USER_FIXTURE });
   });
 
+  await page.route("**/api/v1/auth/csrf", async (route) => {
+    await fulfillJSON(route, 200, { csrf_token: "test-csrf-token" });
+  });
+
   await page.route("**/api/v1/admin/overview", async (route) => {
     const status = options?.overviewStatus ?? 200;
     const body = options?.overviewBody ?? OVERVIEW_FIXTURE;
@@ -55,6 +59,10 @@ async function mockAuthAndOverview(page: Page, options?: { overviewStatus?: numb
 }
 
 async function mockAccountManagementData(page: Page): Promise<void> {
+  let allowRegistration = true;
+  let enabledAuthProviders = ["github", "google"];
+  const availableAuthProviders = ["dingtalk", "github", "google", "wecom", "microsoft", "password", "oidc"];
+
   await page.route("**/api/v1/admin/accounts", async (route) => {
     await fulfillJSON(route, 200, {
       total: 3,
@@ -88,9 +96,52 @@ async function mockAccountManagementData(page: Page): Promise<void> {
   });
 
   await page.route("**/api/v1/admin/settings/registration", async (route) => {
+    if (route.request().method().toUpperCase() === "POST") {
+      const payload = route.request().postDataJSON() as { allow_registration?: unknown } | null;
+      allowRegistration = Boolean(payload?.allow_registration);
+      await fulfillJSON(route, 200, {
+        allow_registration: allowRegistration
+      });
+      return;
+    }
     await fulfillJSON(route, 200, {
-      allow_registration: true
+      allow_registration: allowRegistration
     });
+  });
+
+  await page.route("**/api/v1/admin/settings/auth-providers", async (route) => {
+    if (route.request().method().toUpperCase() === "POST") {
+      const payload = route.request().postDataJSON() as { auth_providers?: unknown } | null;
+      const rawProviders = Array.isArray(payload?.auth_providers)
+        ? payload?.auth_providers
+        : String(payload?.auth_providers || "")
+            .split(",")
+            .map((item) => item.trim())
+            .filter((item) => item.length > 0);
+      enabledAuthProviders = Array.from(new Set(rawProviders.map((item) => String(item).trim().toLowerCase()))).filter((provider) =>
+        availableAuthProviders.includes(provider)
+      );
+      await fulfillJSON(route, 200, {
+        ok: true,
+        auth_providers: enabledAuthProviders,
+        available_auth_providers: availableAuthProviders
+      });
+      return;
+    }
+
+    await fulfillJSON(route, 200, {
+      ok: true,
+      auth_providers: enabledAuthProviders,
+      available_auth_providers: availableAuthProviders
+    });
+  });
+
+  await page.route("**/api/v1/admin/users/*/role", async (route) => {
+    await fulfillJSON(route, 200, { ok: true });
+  });
+
+  await page.route("**/api/v1/admin/accounts/*/force-signout", async (route) => {
+    await fulfillJSON(route, 200, { ok: true });
   });
 }
 
@@ -209,5 +260,66 @@ test.describe("Admin overview interactions", () => {
     await page.getByRole("button", { name: "Disabled", exact: true }).click();
     await expect(page.getByRole("cell", { name: "readonly.demo", exact: true })).toBeVisible();
     await expect(page.getByRole("cell", { name: "security.audit", exact: true })).toHaveCount(0);
+  });
+
+  test("account configuration subpage updates registration and auth providers", async ({ page }) => {
+    await mockAuthAndOverview(page);
+    await mockAccountManagementData(page);
+
+    await page.goto("/admin/accounts/new");
+
+    await expect(page.getByRole("heading", { name: "Account Configuration Form", exact: true }).first()).toBeVisible();
+    await expect(page.getByTestId("account-config-form")).toBeVisible();
+
+    const registrationToggle = page.getByLabel("Allow self-registration");
+    await registrationToggle.uncheck();
+
+    const wecomToggle = page.getByTestId("account-provider-toggle-wecom");
+    await wecomToggle.check();
+
+    await page.getByTestId("account-config-save-button").click();
+    await expect(page.getByText("Access settings updated.", { exact: true })).toBeVisible();
+  });
+
+  test("role configuration subpage submits assignment form", async ({ page }) => {
+    await mockAuthAndOverview(page);
+    await mockAccountManagementData(page);
+
+    await page.goto("/admin/roles/new");
+
+    await expect(page.getByRole("heading", { name: "Role Configuration Form", exact: true }).first()).toBeVisible();
+    await page.getByPlaceholder("Enter user ID").fill("1003");
+    await page.locator(".account-workbench-select-input").selectOption("admin");
+    await page.getByTestId("role-assignment-submit-button").click();
+
+    await expect(page.getByText("Role assignment updated for user #1003.", { exact: true })).toBeVisible();
+  });
+
+  test("organization accounts shell uses full-width utility frame on wide viewports", async ({ page }) => {
+    await mockAuthAndOverview(page);
+    await mockAccountManagementData(page);
+    await page.setViewportSize({ width: 1800, height: 920 });
+
+    await page.goto("/admin/accounts");
+    await expect(page.locator(".workspace-prototype-utility-frame")).toBeVisible();
+
+    const layoutMetrics = await page.evaluate(() => {
+      const utilityFrame = document.querySelector(".workspace-prototype-utility-frame");
+      if (!utilityFrame) {
+        return null;
+      }
+      const utilityRect = utilityFrame.getBoundingClientRect();
+      const viewportWidth = document.documentElement.clientWidth;
+      return {
+        utilityWidth: utilityRect.width,
+        viewportWidth
+      };
+    });
+
+    expect(layoutMetrics).not.toBeNull();
+    if (!layoutMetrics) {
+      return;
+    }
+    expect(layoutMetrics.utilityWidth).toBeGreaterThan(layoutMetrics.viewportWidth - 60);
   });
 });

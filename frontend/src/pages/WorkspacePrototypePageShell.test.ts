@@ -163,4 +163,30 @@ describe("WorkspacePrototypePageShell", () => {
     expect(html).not.toContain("Account Management List");
     expect(html).not.toContain("Manage user records while keeping organization navigation anchored in the workspace shell.");
   });
+
+  it("supports a full-width utility frame variant for organization subpages", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(WorkspacePrototypePageShell, {
+        locale: "en",
+        currentPath: "/admin/accounts",
+        onNavigate: () => undefined,
+        sessionUser: {
+          id: 1,
+          username: "alice",
+          role: "admin",
+          display_name: "Alice",
+          status: "active"
+        },
+        activeMenuID: "org-personnel",
+        sidebarGroups: organizationSidebarOnly,
+        topbarMenuGroups: sidebarGroups,
+        title: "Account Management List",
+        subtitle: "Manage user records.",
+        layoutVariant: "full-width",
+        children: React.createElement("div", null, "Subpage content")
+      })
+    );
+
+    expect(html).toContain("workspace-prototype-utility-frame");
+  });
 });

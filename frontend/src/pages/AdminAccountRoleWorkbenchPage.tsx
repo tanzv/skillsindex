@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { fetchConsoleJSON, postConsoleJSON } from "../lib/api";
 import {
@@ -13,6 +13,7 @@ import {
 } from "./AdminAccountRoleWorkbenchPage.helpers";
 import AdminAccountEditorModal, { AdminAccountEditorValues } from "./AdminAccountEditorModal";
 import AdminAccountRoleWorkbenchTable, { AccountWorkbenchTableRow } from "./AdminAccountRoleWorkbenchTable";
+import { AccountConfigurationPanel, RoleAssignmentPanel } from "./AdminAccountRoleWorkbenchPanels";
 import AdminSubpageSummaryPanel from "./AdminSubpageSummaryPanel";
 import { buildAccountRoleWorkbenchFallback } from "./adminWorkbenchFallback";
 import { resolvePrototypeDataMode } from "./prototypeDataFallback";
@@ -47,6 +48,7 @@ interface RegistrationPayload {
 
 interface AuthProvidersPayload {
   auth_providers?: string[];
+  available_auth_providers?: string[];
 }
 
 interface AccountRoleWorkbenchData {
@@ -67,6 +69,31 @@ const accountStatusFilters: Array<{ value: AccountStatusFilter; label: string }>
   { value: "active", label: "Active" },
   { value: "disabled", label: "Disabled" }
 ];
+
+const defaultRoleOptions = ["super_admin", "admin", "auditor", "member", "viewer"];
+const fallbackAuthProviderOptions = ["password", "github", "google", "wecom", "dingtalk", "microsoft", "oidc"];
+
+function dedupeStringList(values: string[]): string[] {
+  const seen = new Set<string>();
+  const normalizedValues: string[] = [];
+  values.forEach((value) => {
+    const normalized = String(value || "").trim().toLowerCase();
+    if (!normalized || seen.has(normalized)) {
+      return;
+    }
+    seen.add(normalized);
+    normalizedValues.push(normalized);
+  });
+  return normalizedValues;
+}
+
+function resolveAuthProviderDraft(payload: AuthProvidersPayload | null): { enabled: string[]; available: string[] } {
+  const enabledProviders = dedupeStringList(payload?.auth_providers || []);
+  const availableProviders = dedupeStringList(payload?.available_auth_providers || []);
+  const available = availableProviders.length > 0 ? availableProviders : dedupeStringList([...enabledProviders, ...fallbackAuthProviderOptions]);
+  const enabled = enabledProviders.filter((provider) => available.includes(provider));
+  return { enabled, available };
+}
 
 function isRoleMode(mode: AdminAccountRoleWorkbenchMode): boolean {
   return mode === "role_management_list" || mode === "role_configuration_form";
@@ -102,10 +129,35 @@ export default function AdminAccountRoleWorkbenchPage({ mode }: AdminAccountRole
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorSubmitting, setEditorSubmitting] = useState(false);
   const [editorError, setEditorError] = useState("");
+  const [forceSignoutPendingID, setForceSignoutPendingID] = useState<number | null>(null);
+  const [tableActionError, setTableActionError] = useState("");
+  const [tableActionSuccess, setTableActionSuccess] = useState("");
+  const [allowRegistrationDraft, setAllowRegistrationDraft] = useState(false);
+  const [enabledAuthProvidersDraft, setEnabledAuthProvidersDraft] = useState<string[]>([]);
+  const [availableAuthProviders, setAvailableAuthProviders] = useState<string[]>([]);
+  const [settingsSubmitting, setSettingsSubmitting] = useState(false);
+  const [settingsError, setSettingsError] = useState("");
+  const [settingsSuccess, setSettingsSuccess] = useState("");
+  const [roleAssignmentUserID, setRoleAssignmentUserID] = useState("");
+  const [roleAssignmentRole, setRoleAssignmentRole] = useState("member");
+  const [roleAssignmentSubmitting, setRoleAssignmentSubmitting] = useState(false);
+  const [roleAssignmentError, setRoleAssignmentError] = useState("");
+  const [roleAssignmentSuccess, setRoleAssignmentSuccess] = useState("");
+  const roleMode = isRoleMode(mode);
+  const isAccountManagementMode = mode === "account_management_list";
+  const isAccountConfigurationMode = mode === "account_configuration_form";
+  const isRoleManagementMode = mode === "role_management_list";
+  const isRoleConfigurationMode = mode === "role_configuration_form";
 
   useEffect(() => {
     setSearchQuery("");
     setStatusFilter("all");
+    setTableActionError("");
+    setTableActionSuccess("");
+    setSettingsError("");
+    setSettingsSuccess("");
+    setRoleAssignmentError("");
+    setRoleAssignmentSuccess("");
   }, [mode]);
 
   useEffect(() => {
@@ -150,7 +202,6 @@ export default function AdminAccountRoleWorkbenchPage({ mode }: AdminAccountRole
     };
   }, [dataMode, mode, refreshKey]);
 
-  const roleMode = isRoleMode(mode);
   const accounts = data?.accounts.items || [];
   const total = data?.accounts.total ?? editableAccounts.length;
   const loadedAccounts = editableAccounts.length;
@@ -170,10 +221,33 @@ export default function AdminAccountRoleWorkbenchPage({ mode }: AdminAccountRole
     [editableAccounts]
   );
   const roleSummary = useMemo(() => buildRoleSummary(editableAccounts), [editableAccounts]);
+  const roleOptions = useMemo(
+    () => dedupeStringList([...defaultRoleOptions, ...roleSummary.map((summary) => summary.role)]),
+    [roleSummary]
+  );
 
   useEffect(() => {
     setEditableAccounts(accounts);
   }, [accounts]);
+
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+    setAllowRegistrationDraft(Boolean(data.registration.allow_registration));
+    const providers = resolveAuthProviderDraft(data.authProviders);
+    setAvailableAuthProviders(providers.available);
+    setEnabledAuthProvidersDraft(providers.enabled);
+  }, [data]);
+
+  useEffect(() => {
+    if (roleOptions.length === 0) {
+      return;
+    }
+    if (!roleOptions.includes(roleAssignmentRole)) {
+      setRoleAssignmentRole(roleOptions[0]);
+    }
+  }, [roleAssignmentRole, roleOptions]);
 
   const topRows = useMemo<AccountWorkbenchTableRow[]>(() => {
     if (roleMode) {
@@ -204,6 +278,13 @@ export default function AdminAccountRoleWorkbenchPage({ mode }: AdminAccountRole
     () => editableAccounts.find((account) => account.id === editingAccountID) || null,
     [editableAccounts, editingAccountID]
   );
+  const roleAssignmentPreview = useMemo(() => {
+    const userID = Number.parseInt(roleAssignmentUserID, 10);
+    if (!Number.isInteger(userID) || userID <= 0) {
+      return null;
+    }
+    return editableAccounts.find((account) => account.id === userID) || null;
+  }, [editableAccounts, roleAssignmentUserID]);
 
   function openEditor(accountID: number) {
     setEditorError("");
@@ -262,6 +343,106 @@ export default function AdminAccountRoleWorkbenchPage({ mode }: AdminAccountRole
     }
   }
 
+  function toggleAuthProvider(provider: string): void {
+    setEnabledAuthProvidersDraft((previousProviders) => {
+      if (previousProviders.includes(provider)) {
+        return previousProviders.filter((item) => item !== provider);
+      }
+      return dedupeStringList([...previousProviders, provider]);
+    });
+  }
+
+  function resetAccessPolicyDraft(): void {
+    if (!data) {
+      return;
+    }
+    setAllowRegistrationDraft(Boolean(data.registration.allow_registration));
+    const providers = resolveAuthProviderDraft(data.authProviders);
+    setAvailableAuthProviders(providers.available);
+    setEnabledAuthProvidersDraft(providers.enabled);
+    setSettingsError("");
+    setSettingsSuccess("");
+  }
+
+  async function submitAccessPolicySettings(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    setSettingsSubmitting(true);
+    setSettingsError("");
+    setSettingsSuccess("");
+    try {
+      const sanitizedProviders = enabledAuthProvidersDraft.filter((provider) => availableAuthProviders.includes(provider));
+      await Promise.all([
+        postConsoleJSON("/api/v1/admin/settings/registration", {
+          allow_registration: allowRegistrationDraft
+        }),
+        postConsoleJSON("/api/v1/admin/settings/auth-providers", {
+          auth_providers: sanitizedProviders
+        })
+      ]);
+      setSettingsSuccess("Access settings updated.");
+      setRefreshKey((current) => current + 1);
+    } catch (submissionError) {
+      setSettingsError(submissionError instanceof Error ? submissionError.message : "Failed to update access settings");
+    } finally {
+      setSettingsSubmitting(false);
+    }
+  }
+
+  async function handleForceSignout(accountID: number): Promise<void> {
+    setForceSignoutPendingID(accountID);
+    setTableActionError("");
+    setTableActionSuccess("");
+    try {
+      await postConsoleJSON(`/api/v1/admin/accounts/${accountID}/force-signout`);
+      setTableActionSuccess(`Forced sign-out completed for account #${accountID}.`);
+    } catch (actionError) {
+      setTableActionError(actionError instanceof Error ? actionError.message : "Failed to force account sign-out");
+    } finally {
+      setForceSignoutPendingID(null);
+    }
+  }
+
+  async function submitRoleAssignment(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    const userID = Number.parseInt(roleAssignmentUserID, 10);
+    const role = normalizeRoleName(roleAssignmentRole);
+    if (!Number.isInteger(userID) || userID <= 0) {
+      setRoleAssignmentError("A valid numeric user ID is required.");
+      setRoleAssignmentSuccess("");
+      return;
+    }
+    if (!role) {
+      setRoleAssignmentError("Role cannot be empty.");
+      setRoleAssignmentSuccess("");
+      return;
+    }
+    setRoleAssignmentSubmitting(true);
+    setRoleAssignmentError("");
+    setRoleAssignmentSuccess("");
+    try {
+      await postConsoleJSON(`/api/v1/admin/users/${userID}/role`, { role });
+      const updatedAtISO = new Date().toISOString();
+      setEditableAccounts((previousAccounts) =>
+        previousAccounts.map((account) =>
+          account.id === userID
+            ? {
+                ...account,
+                role,
+                updated_at: updatedAtISO
+              }
+            : account
+        )
+      );
+      setRoleAssignmentSuccess(`Role assignment updated for user #${userID}.`);
+      setRoleAssignmentUserID("");
+      setRefreshKey((current) => current + 1);
+    } catch (submissionError) {
+      setRoleAssignmentError(submissionError instanceof Error ? submissionError.message : "Failed to update user role");
+    } finally {
+      setRoleAssignmentSubmitting(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="page-grid account-workbench">
@@ -269,6 +450,22 @@ export default function AdminAccountRoleWorkbenchPage({ mode }: AdminAccountRole
       </div>
     );
   }
+
+  const roleAssignmentPanel = (
+    <RoleAssignmentPanel
+      heading={isRoleConfigurationMode ? "Role Configuration Form" : "Role Assignment"}
+      roleAssignmentUserID={roleAssignmentUserID}
+      roleAssignmentRole={roleAssignmentRole}
+      roleOptions={roleOptions}
+      roleAssignmentSubmitting={roleAssignmentSubmitting}
+      roleAssignmentError={roleAssignmentError}
+      roleAssignmentSuccess={roleAssignmentSuccess}
+      roleAssignmentPreview={roleAssignmentPreview}
+      onRoleAssignmentUserIDChange={setRoleAssignmentUserID}
+      onRoleAssignmentRoleChange={setRoleAssignmentRole}
+      onSubmit={submitRoleAssignment}
+    />
+  );
 
   return (
     <div className="page-grid account-workbench">
@@ -293,7 +490,7 @@ export default function AdminAccountRoleWorkbenchPage({ mode }: AdminAccountRole
           </button>
         }
         controls={
-          !roleMode ? (
+          isAccountManagementMode ? (
             <div className="account-workbench-filter-panel">
               <div className="account-workbench-filter-row">
                 <label className="account-workbench-field">
@@ -343,7 +540,39 @@ export default function AdminAccountRoleWorkbenchPage({ mode }: AdminAccountRole
         ]}
       />
 
-      <AdminAccountRoleWorkbenchTable roleMode={roleMode} rows={topRows} onEditAccount={openEditor} />
+      <div className="account-workbench-mode-layout">
+        <div className="account-workbench-mode-main">
+          {isAccountConfigurationMode ? (
+            <AccountConfigurationPanel
+              allowRegistrationDraft={allowRegistrationDraft}
+              availableAuthProviders={availableAuthProviders}
+              enabledAuthProvidersDraft={enabledAuthProvidersDraft}
+              settingsSubmitting={settingsSubmitting}
+              settingsError={settingsError}
+              settingsSuccess={settingsSuccess}
+              onAllowRegistrationChange={setAllowRegistrationDraft}
+              onToggleAuthProvider={toggleAuthProvider}
+              onSubmit={submitAccessPolicySettings}
+              onReset={resetAccessPolicyDraft}
+            />
+          ) : null}
+
+          {isRoleConfigurationMode ? roleAssignmentPanel : null}
+
+          <AdminAccountRoleWorkbenchTable
+            roleMode={roleMode}
+            rows={topRows}
+            onEditAccount={openEditor}
+            onForceSignout={roleMode ? undefined : handleForceSignout}
+            forceSignoutPendingID={forceSignoutPendingID}
+          />
+          {tableActionError ? <p className="account-workbench-inline-feedback is-error">{tableActionError}</p> : null}
+          {tableActionSuccess ? <p className="account-workbench-inline-feedback is-success">{tableActionSuccess}</p> : null}
+        </div>
+
+        {isRoleManagementMode ? <div className="account-workbench-mode-side">{roleAssignmentPanel}</div> : null}
+      </div>
+
       <AdminAccountEditorModal
         open={!roleMode && editorOpen}
         submitting={editorSubmitting}

@@ -7,7 +7,6 @@ const AUTH_USER_FIXTURE = {
   role: "admin",
   status: "active"
 } as const;
-
 const MARKETPLACE_FIXTURE = {
   filters: {
     q: "",
@@ -69,7 +68,6 @@ const MARKETPLACE_FIXTURE = {
   session_user: null,
   can_access_dashboard: true
 } as const;
-
 const INTEGRATIONS_FIXTURE = {
   items: [
     {
@@ -96,7 +94,6 @@ const INTEGRATIONS_FIXTURE = {
   ],
   webhook_total: 1
 } as const;
-
 const SSO_PROVIDERS_FIXTURE = {
   items: [
     {
@@ -110,7 +107,6 @@ const SSO_PROVIDERS_FIXTURE = {
   ],
   total: 1
 } as const;
-
 const SYNC_RUNS_FIXTURE = {
   items: [
     {
@@ -130,7 +126,6 @@ const SYNC_RUNS_FIXTURE = {
     }
   ]
 } as const;
-
 const SYNC_RUN_DETAIL_FIXTURE = {
   item: {
     id: 9001,
@@ -140,14 +135,12 @@ const SYNC_RUN_DETAIL_FIXTURE = {
     finished_at: "2025-02-01T10:00:22Z"
   }
 } as const;
-
 const SYNC_POLICY_FIXTURE = {
   enabled: true,
   interval: "30m",
   timeout: "10m",
   batch_size: 20
 } as const;
-
 const ACCOUNT_FIXTURE = {
   items: [
     {
@@ -161,11 +154,9 @@ const ACCOUNT_FIXTURE = {
   ],
   total: 1
 } as const;
-
 const REGISTRATION_FIXTURE = {
   allow_registration: true
 } as const;
-
 const AUTH_PROVIDERS_FIXTURE = {
   auth_providers: ["password", "sso"]
 } as const;
@@ -218,6 +209,17 @@ async function expectTopOffsetAtMost(reference: Locator, target: Locator, maxOff
   }
   const delta = Math.abs(targetBounds.y - referenceBounds.y);
   expect(delta).toBeLessThanOrEqual(maxOffset);
+}
+
+async function resolvePrimaryNavigationGroup(page: Page): Promise<Locator> {
+  const candidateLabels = ["Primary navigation", "App navigation", "App Navigation"];
+  for (const label of candidateLabels) {
+    const candidate = page.getByRole("group", { name: label, exact: true });
+    if ((await candidate.count()) > 0) {
+      return candidate.first();
+    }
+  }
+  return page.getByRole("banner").first();
 }
 
 interface PanelThemeVisual {
@@ -431,9 +433,9 @@ test.describe("Prototype route completion coverage", () => {
     await mockAccountRoleWorkbench(page);
     await mockAccessManagement(page);
     const sidebar = page.getByRole("complementary");
-    const primaryNavigation = page.getByRole("group", { name: "Primary navigation", exact: true });
 
     await page.goto("/admin/accounts/new");
+    const primaryNavigation = await resolvePrimaryNavigationGroup(page);
     await expect(page.getByRole("heading", { name: "Account Configuration Form", exact: true }).first()).toBeVisible();
     await expect(primaryNavigation.getByRole("button", { name: "Skill Management", exact: true })).toBeVisible();
     await expect(primaryNavigation.getByRole("button", { name: "User Management", exact: true })).toBeVisible();
@@ -574,7 +576,7 @@ test.describe("Workspace section route navigation", () => {
     await mockMarketplace(page);
 
     await page.goto("/workspace");
-    const primaryNavigation = page.getByRole("group", { name: "Primary navigation", exact: true });
+    const primaryNavigation = await resolvePrimaryNavigationGroup(page);
     await expect(page.getByRole("complementary")).toHaveCount(0);
     await expect(primaryNavigation.getByRole("button", { name: "Skill Management", exact: true })).toBeVisible();
     await expect(primaryNavigation.getByRole("button", { name: "User Management", exact: true })).toBeVisible();

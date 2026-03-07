@@ -74,6 +74,7 @@ export default function OrganizationManagementSubpageShell({
       sidebarTitle={workspaceText.sidebarOrganizationTitle}
       sidebarHint=""
       sidebarMode="secondary"
+      layoutVariant="full-width"
       hideSummaryHeader
       eyebrow={eyebrow}
       title={title}

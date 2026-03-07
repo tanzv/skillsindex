@@ -217,6 +217,167 @@ export const globalAccountWorkbenchStyles = `
   margin-top: 0;
 }
 
+.account-workbench-mode-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.account-workbench-mode-main {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.account-workbench-mode-side {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.account-workbench-settings-panel,
+.account-workbench-role-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.account-workbench-setting-form,
+.account-workbench-role-form {
+  display: grid;
+  gap: 12px;
+}
+
+.account-workbench-setting-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.account-workbench-toggle-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--account-workbench-text-primary);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.account-workbench-toggle-row input {
+  margin: 0;
+}
+
+.account-workbench-provider-fieldset {
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--account-workbench-border);
+  display: grid;
+  gap: 10px;
+}
+
+.account-workbench-provider-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.account-workbench-provider-option {
+  border: 1px solid var(--account-workbench-border);
+  border-radius: 10px;
+  padding: 8px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--account-workbench-control-text);
+  background: var(--account-workbench-control-bg);
+}
+
+.account-workbench-provider-option.is-active {
+  border-color: var(--account-workbench-control-border-active);
+  background: var(--account-workbench-control-bg-active);
+  color: var(--account-workbench-control-text-active);
+}
+
+.account-workbench-provider-option input {
+  margin: 0;
+}
+
+.account-workbench-provider-hint {
+  margin: 0;
+  color: var(--account-workbench-text-secondary);
+  font-size: 0.78rem;
+}
+
+.account-workbench-inline-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.account-workbench-inline-feedback {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.account-workbench-inline-feedback.is-error {
+  color: var(--si-color-danger-text, #b91c1c);
+}
+
+.account-workbench-inline-feedback.is-success {
+  color: var(--si-color-success-text, #065f46);
+}
+
+.account-workbench-select-input {
+  border: 1px solid var(--account-workbench-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-height: 42px;
+  background: var(--account-workbench-control-bg);
+  color: var(--account-workbench-text-primary);
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.account-workbench-select-input:hover {
+  border-color: color-mix(in srgb, var(--si-color-accent, #111111) 46%, transparent);
+}
+
+.account-workbench-select-input:focus-visible {
+  outline: 2px solid var(--account-workbench-focus-ring);
+  outline-offset: 2px;
+  border-color: var(--account-workbench-control-border-active);
+}
+
+.account-workbench-role-preview {
+  border: 1px solid var(--account-workbench-border);
+  border-radius: 12px;
+  background: var(--account-workbench-panel-subtle-bg);
+  padding: 10px 11px;
+  display: grid;
+  gap: 4px;
+}
+
+.account-workbench-role-preview strong {
+  color: var(--account-workbench-text-primary);
+  font-size: 0.84rem;
+  line-height: 1.3;
+}
+
+.account-workbench-role-preview span {
+  color: var(--account-workbench-text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.account-workbench-table-action-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .account-workbench-action-button {
   border-radius: 10px;
   border: 1px solid var(--account-workbench-border);
@@ -237,6 +398,11 @@ export const globalAccountWorkbenchStyles = `
 .account-workbench-action-button:focus-visible {
   outline: 2px solid var(--account-workbench-focus-ring);
   outline-offset: 2px;
+}
+
+.account-workbench-action-button:disabled {
+  opacity: 0.62;
+  cursor: default;
 }
 
 .account-workbench-editor-modal .ant-modal-content {
@@ -277,6 +443,10 @@ export const globalAccountWorkbenchStyles = `
 }
 
 @media (max-width: 960px) {
+  .account-workbench-mode-layout {
+    grid-template-columns: 1fr;
+  }
+
   .account-workbench-filter-row {
     align-items: stretch;
   }
