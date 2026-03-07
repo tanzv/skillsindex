@@ -74,11 +74,11 @@ test.describe("Login prototype alignment", () => {
     expect(layoutMetrics.transform).not.toBe("none");
   });
 
-  test("login form header theme switch updates route mode", async ({ page }) => {
+  test("login header theme switch updates route mode", async ({ page }) => {
     await mockAnonymousAuth(page);
     await page.goto("/login");
 
-    const header = page.locator(".login-form-header");
+    const header = page.locator(".auth-topbar");
     const darkToggle = header.getByRole("button", { name: "Use dark theme" });
     const lightToggle = header.getByRole("button", { name: "Use light theme" });
 
@@ -90,25 +90,26 @@ test.describe("Login prototype alignment", () => {
     });
 
     await expect(page).toHaveURL(/\/light\/login$/);
-    await expect(page.locator(".login-form-header").getByRole("button", { name: "Use light theme" })).toBeDisabled();
-    await expect(page.locator(".login-form-header").getByRole("button", { name: "Use dark theme" })).toBeEnabled();
+    await expect(page.locator(".auth-topbar").getByRole("button", { name: "Use light theme" })).toBeDisabled();
+    await expect(page.locator(".auth-topbar").getByRole("button", { name: "Use dark theme" })).toBeEnabled();
   });
 
   test("login page keeps theme and locale switches grouped in header without public navigation chrome", async ({ page }) => {
     await mockAnonymousAuth(page);
     await page.goto("/login");
 
-    const header = page.locator(".login-form-header");
-    const headerActions = page.locator(".login-form-header-actions");
+    const header = page.locator(".auth-header");
+    const topbar = page.locator(".auth-topbar");
+    const topbarActions = topbar.locator(".auth-topbar-locale");
     await expect(header).toBeVisible();
-    await expect(headerActions).toBeVisible();
-    await expect(headerActions.locator(".auth-topbar-theme-switch")).toHaveCount(1);
-    await expect(headerActions.locator(".auth-topbar-locale-switch")).toHaveCount(1);
+    await expect(topbar).toBeVisible();
+    await expect(topbarActions).toBeVisible();
+    await expect(topbarActions.locator(".auth-topbar-theme-switch")).toHaveCount(1);
+    await expect(topbarActions.locator(".auth-topbar-locale-switch")).toHaveCount(1);
     await expect(page.locator(".login-form-toolbar")).toHaveCount(0);
-    await expect(header.getByRole("button", { name: "Use English locale" })).toBeVisible();
-    await expect(header.getByRole("button", { name: "Use Chinese locale" })).toBeVisible();
-    await expect(page.locator(".auth-header")).toHaveCount(0);
-    await expect(page.locator(".auth-topbar")).toHaveCount(0);
+    await expect(topbar.getByRole("button", { name: "Use English locale" })).toBeVisible();
+    await expect(topbar.getByRole("button", { name: "Use Chinese locale" })).toBeVisible();
+    await expect(page.locator(".login-form-header-actions")).toHaveCount(0);
     await expect(page.locator(".auth-topbar-brand")).toHaveCount(0);
     await expect(page.locator(".login-form-brand")).toBeVisible();
     await expect(page.locator(".login-form-brand-logo")).toHaveAttribute("src", "/brand/skillsindex-logo.svg");
@@ -268,21 +269,23 @@ test.describe("Login desktop shell behavior", () => {
     await mockAnonymousAuth(page);
     await page.goto("/login");
     await expect(page.locator(".auth-shell.auth-shell-prototype")).toBeVisible();
-    await expect(page.locator(".auth-topbar")).toHaveCount(0);
+    await expect(page.locator(".auth-topbar")).toHaveCount(1);
     await expect(page.locator(".auth-layout")).toBeVisible();
 
     const layoutMetrics = await page.evaluate(() => {
       const stage = document.querySelector(".login-page-stage");
       const shell = document.querySelector(".auth-shell.auth-shell-prototype");
+      const topbar = document.querySelector(".auth-topbar");
       const layout = document.querySelector(".auth-layout");
       const formPanel = document.querySelector(".login-form-panel");
       const visualPanel = document.querySelector(".login-visual-panel");
-      if (!stage || !shell || !layout || !formPanel || !visualPanel) {
+      if (!stage || !shell || !topbar || !layout || !formPanel || !visualPanel) {
         return null;
       }
 
       window.scrollTo(0, document.documentElement.scrollHeight);
       const stageRect = stage.getBoundingClientRect();
+      const topbarRect = topbar.getBoundingClientRect();
       const layoutRect = layout.getBoundingClientRect();
       const shellStyles = window.getComputedStyle(shell);
       const formPanelStyles = window.getComputedStyle(formPanel);
@@ -294,6 +297,7 @@ test.describe("Login desktop shell behavior", () => {
         layoutRightGap: stageRect.right - layoutRect.right,
         layoutTopGap: layoutRect.top - stageRect.top,
         layoutBottomGap: stageRect.bottom - layoutRect.bottom,
+        topbarHeight: topbarRect.height,
         shellPaddingBottom: shellStyles.paddingBottom,
         formPanelRadius: formPanelStyles.borderTopLeftRadius,
         visualPanelRadius: visualPanelStyles.borderTopLeftRadius,
@@ -311,7 +315,8 @@ test.describe("Login desktop shell behavior", () => {
     expect(layoutMetrics.pageScrollable).toBe(false);
     expect(Math.abs(layoutMetrics.layoutLeftGap)).toBeLessThanOrEqual(1);
     expect(Math.abs(layoutMetrics.layoutRightGap)).toBeLessThanOrEqual(1);
-    expect(Math.abs(layoutMetrics.layoutTopGap)).toBeLessThanOrEqual(1);
+    expect(layoutMetrics.topbarHeight).toBeGreaterThan(0);
+    expect(Math.abs(layoutMetrics.layoutTopGap - layoutMetrics.topbarHeight)).toBeLessThanOrEqual(1);
     expect(Math.abs(layoutMetrics.layoutBottomGap)).toBeLessThanOrEqual(1);
   });
 });

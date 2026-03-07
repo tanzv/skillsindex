@@ -226,6 +226,54 @@ export default function LoginPage({
   return (
     <div className={`login-page-stage${isVisualBaselineViewport ? " is-visual-baseline" : ""}`} style={stageStyle}>
       <div className={`auth-shell auth-shell-prototype${isVisualBaselineViewport ? " is-visual-baseline" : ""}`} style={shellStyle}>
+        <header className="auth-header">
+          <div className="auth-topbar">
+            <div className="auth-topbar-locale">
+              <div className="auth-topbar-theme-switch" role="group" aria-label="Theme switch">
+                <button
+                  type="button"
+                  className={`is-theme-toggle${activeThemeMode === "dark" ? " is-active" : ""}`}
+                  onClick={() => handleThemeModeSwitch("dark")}
+                  disabled={activeThemeMode === "dark"}
+                  aria-label="Use dark theme"
+                  title="Dark theme"
+                >
+                  <MoonOutlined />
+                </button>
+                <button
+                  type="button"
+                  className={`is-theme-toggle${activeThemeMode === "light" ? " is-active" : ""}`}
+                  onClick={() => handleThemeModeSwitch("light")}
+                  disabled={activeThemeMode === "light"}
+                  aria-label="Use light theme"
+                  title="Light theme"
+                >
+                  <SunOutlined />
+                </button>
+              </div>
+              <div className="auth-topbar-locale-switch" role="group" aria-label="Locale switch">
+                <button
+                  type="button"
+                  className={locale === "en" ? "is-active" : ""}
+                  onClick={() => onLocaleChange("en")}
+                  aria-label="Use English locale"
+                  title="English"
+                >
+                  <GlobalOutlined />
+                </button>
+                <button
+                  type="button"
+                  className={locale === "zh" ? "is-active" : ""}
+                  onClick={() => onLocaleChange("zh")}
+                  aria-label="Use Chinese locale"
+                  title="Chinese"
+                >
+                  <TranslationOutlined />
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
         <section className="auth-layout">
           <LoginInfoPanel config={resolvedInfoPanelConfig} />
 
@@ -236,50 +284,6 @@ export default function LoginPage({
                   <img className="login-form-brand-logo" src={resolvedBrandConfig.logoSrc} alt="" />
                 </span>
                 <span className="login-form-brand-text">{resolvedBrandConfig.brandText}</span>
-              </div>
-              <div className="login-form-header-actions" aria-label="Header actions">
-                <div className="auth-topbar-theme-switch" role="group" aria-label="Theme switch">
-                  <button
-                    type="button"
-                    className={`is-theme-toggle${activeThemeMode === "dark" ? " is-active" : ""}`}
-                    onClick={() => handleThemeModeSwitch("dark")}
-                    disabled={activeThemeMode === "dark"}
-                    aria-label="Use dark theme"
-                    title="Dark theme"
-                  >
-                    <MoonOutlined />
-                  </button>
-                  <button
-                    type="button"
-                    className={`is-theme-toggle${activeThemeMode === "light" ? " is-active" : ""}`}
-                    onClick={() => handleThemeModeSwitch("light")}
-                    disabled={activeThemeMode === "light"}
-                    aria-label="Use light theme"
-                    title="Light theme"
-                  >
-                    <SunOutlined />
-                  </button>
-                </div>
-                <div className="auth-topbar-locale-switch" role="group" aria-label="Locale switch">
-                  <button
-                    type="button"
-                    className={locale === "en" ? "is-active" : ""}
-                    onClick={() => onLocaleChange("en")}
-                    aria-label="Use English locale"
-                    title="English"
-                  >
-                    <GlobalOutlined />
-                  </button>
-                  <button
-                    type="button"
-                    className={locale === "zh" ? "is-active" : ""}
-                    onClick={() => onLocaleChange("zh")}
-                    aria-label="Use Chinese locale"
-                    title="Chinese"
-                  >
-                    <TranslationOutlined />
-                  </button>
-                </div>
               </div>
             </header>
             <h2>{text.signIn}</h2>

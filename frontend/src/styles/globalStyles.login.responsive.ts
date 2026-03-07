@@ -39,7 +39,7 @@ export const globalLoginStylesResponsive = `
 
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-layout {
     width: 100%;
-    min-height: 100dvh;
+    min-height: calc(100dvh - var(--login-topbar-height));
     height: auto;
     padding: 0;
     grid-template-columns: 1fr;
@@ -81,7 +81,7 @@ export const globalLoginStylesResponsive = `
 
   .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-layout {
     width: 100%;
-    min-height: 100dvh;
+    min-height: calc(100dvh - var(--login-topbar-height));
     padding: 0;
     gap: 0;
   }

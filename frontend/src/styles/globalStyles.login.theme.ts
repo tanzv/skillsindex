@@ -189,6 +189,7 @@ export const globalLoginStylesTheme = `
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
 
 .auth-topbar-theme-switch,
@@ -271,8 +272,8 @@ export const globalLoginStylesTheme = `
 .auth-layout {
   position: relative;
   width: 100%;
-  min-height: 100dvh;
-  height: 100dvh;
+  min-height: calc(100dvh - var(--login-topbar-height));
+  height: calc(100dvh - var(--login-topbar-height));
   margin: 0;
   padding: 0;
   display: grid;
@@ -284,8 +285,8 @@ export const globalLoginStylesTheme = `
 
 .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .auth-layout {
   width: 100%;
-  min-height: 100dvh;
-  height: 100dvh;
+  min-height: calc(100dvh - var(--login-topbar-height));
+  height: calc(100dvh - var(--login-topbar-height));
   grid-template-columns: minmax(0, 1fr) minmax(460px, 520px);
   align-items: stretch;
   justify-content: stretch;
