@@ -6,6 +6,7 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
   .marketplace-home .workspace-topbar-interaction-scope {
     width: 100%;
     position: relative;
+    z-index: 12;
   }
 
   .marketplace-home .workspace-topbar-shell {
