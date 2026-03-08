@@ -34,6 +34,7 @@
 - `overview/scope-assumptions.md`：范围、边界、约束
 - `overview/requirement-traceability.md`：需求编号与追踪矩阵
 - `overview/functional-coverage-matrix.md`：用户端/管理端功能完整性矩阵
+- `overview/functional-module-completeness-summary.md`：功能设计大模块完整度总表
 - `overview/prototype-traceability-matrix.md`：FR/NFR 到原型页面节点与路由映射
 
 ### 3.2 用户端功能
