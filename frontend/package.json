@@ -5,19 +5,22 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node ./scripts/check-pages-structure.mjs && tsc -b && vite build",
     "preview": "vite preview",
     "test:e2e": "playwright test",
-    "test:visual": "node ./scripts/visual-regression/run.mjs && VISUAL_SCENARIO=workspace-activity node ./scripts/visual-regression/run.mjs",
-    "test:visual:workspace": "VISUAL_SCENARIO=workspace-activity node ./scripts/visual-regression/run.mjs",
-    "test:visual:login": "VISUAL_SCENARIO=login node ./scripts/visual-regression/run.mjs",
-    "test:visual:admin": "VISUAL_SCENARIO=admin-overview node ./scripts/visual-regression/run.mjs",
+    "test:visual": "npm run check:visual-baselines && node ./scripts/visual-regression/run.mjs && VISUAL_SCENARIO=workspace-activity node ./scripts/check-visual-baselines.mjs && VISUAL_SCENARIO=workspace-activity node ./scripts/visual-regression/run.mjs",
+    "test:visual:workspace": "VISUAL_SCENARIO=workspace-activity node ./scripts/check-visual-baselines.mjs && VISUAL_SCENARIO=workspace-activity node ./scripts/visual-regression/run.mjs",
+    "test:visual:login": "VISUAL_SCENARIO=login node ./scripts/check-visual-baselines.mjs && VISUAL_SCENARIO=login node ./scripts/visual-regression/run.mjs",
+    "test:visual:admin": "VISUAL_SCENARIO=admin-overview node ./scripts/check-visual-baselines.mjs && VISUAL_SCENARIO=admin-overview node ./scripts/visual-regression/run.mjs",
     "test:visual:update-baseline": "node ./scripts/visual-regression/update-baseline.mjs",
     "test:visual:update-baseline:admin": "VISUAL_SCENARIO=admin-overview node ./scripts/visual-regression/update-baseline.mjs",
     "test:visual:update-baseline:workspace": "VISUAL_SCENARIO=workspace-activity node ./scripts/visual-regression/update-baseline.mjs",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "test:visual:update-baseline:login": "VISUAL_SCENARIO=login node ./scripts/visual-regression/update-baseline.mjs"
+    "test:visual:update-baseline:login": "VISUAL_SCENARIO=login node ./scripts/visual-regression/update-baseline.mjs",
+    "check:pages-structure": "node ./scripts/check-pages-structure.mjs",
+    "check:visual-baselines": "node ./scripts/check-visual-baselines.mjs",
+    "check:frontend-contracts": "npm run check:pages-structure && npm run check:visual-baselines"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",

@@ -9,10 +9,12 @@ Detailed operational rules are split into `agents/` subfolders.
 2. `agents/policies/testing-and-delivery.md`
 3. `agents/standards/style-system-theme-integration.md`
 4. `agents/standards/tokens.md`
-5. `agents/standards/prototype-design-standards.md`
-6. `agents/standards/review-checklist.md`
-7. `agents/policies/frontend-prototype-alignment.md`
-8. `agents/policies/language-rules.md`
+5. `agents/standards/frontend-pages-and-visual-baselines.md`
+6. `agents/standards/prototype-design-standards.md`
+7. `agents/standards/review-checklist.md`
+8. `agents/policies/frontend-prototype-alignment.md`
+9. `agents/policies/language-rules.md`
+10. `frontend/AGENTS.md` (mandatory when changing files under `frontend/`)
 
 ## Mandatory Operating Rules
 

@@ -6,10 +6,16 @@ import { spawn } from "node:child_process";
 import { chromium } from "@playwright/test";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
+import {
+  resolveVisualBaselinePath,
+  resolveVisualScenario,
+  stabilizeVisualCapture
+} from "./scenarios.mjs";
 import { buildComparisonSummary } from "./utils.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const isDirectExecution = process.argv[1] ? path.resolve(process.argv[1]) === __filename : false;
 const frontendRoot = path.resolve(__dirname, "../..");
 
 const outputDirectory = path.resolve(frontendRoot, "test-results/visual");
@@ -17,167 +23,6 @@ const threshold = Number.parseFloat(process.env.VISUAL_MISMATCH_THRESHOLD ?? "0.
 const host = process.env.VISUAL_HOST ?? "127.0.0.1";
 const port = Number.parseInt(process.env.VISUAL_PORT ?? "4217", 10);
 const baseUrl = process.env.VISUAL_BASE_URL ?? `http://${host}:${port}`;
-const scenarioKey = (process.env.VISUAL_SCENARIO ?? "home").trim().toLowerCase();
-
-const scenarios = {
-  home: {
-    routePath: "/",
-    waitSelector: ".marketplace-home",
-    baselineRelativePath: "prototype-baselines/marketplace_home.png",
-    outputPrefix: "home",
-    setupRoutes: async (page) => {
-      await page.route("**/api/v1/auth/me", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: null
-          })
-        });
-      });
-
-      await page.route("**/api/v1/public/marketplace**", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            filters: {
-              q: "",
-              tags: "",
-              category: "",
-              subcategory: "",
-              sort: "recent",
-              mode: "keyword"
-            },
-            stats: {
-              total_skills: 0,
-              matching_skills: 0
-            },
-            pagination: {
-              page: 1,
-              page_size: 24,
-              total_items: 0,
-              total_pages: 1,
-              prev_page: 0,
-              next_page: 0
-            },
-            categories: [],
-            top_tags: [],
-            items: [],
-            session_user: null,
-            can_access_dashboard: false
-          })
-        });
-      });
-    }
-  },
-  login: {
-    routePath: "/login",
-    waitSelector: ".auth-shell.auth-shell-prototype",
-    baselineRelativePath: "public/prototypes/previews/login_page_prototype.png",
-    outputPrefix: "login",
-    setupRoutes: async (page) => {
-      await page.route("**/api/v1/auth/me", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: null
-          })
-        });
-      });
-    }
-  },
-  "skill-detail": {
-    routePath: "/skills/1049",
-    waitSelector: "[data-testid='skill-detail-page']",
-    baselineRelativePath: "public/prototypes/previews/skill_detail.png",
-    outputPrefix: "skill-detail",
-    setupRoutes: async (page) => {
-      await page.route("**/api/v1/auth/me", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: null
-          })
-        });
-      });
-    }
-  },
-  "admin-overview": {
-    routePath: "/admin/overview",
-    waitSelector: "[data-testid='admin-overview-stage']",
-    baselineRelativePath: "prototype-baselines/admin_dashboard.png",
-    outputPrefix: "admin-overview",
-    setupRoutes: async (page) => {
-      await page.route("**/api/v1/auth/me", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: {
-              id: 101,
-              username: "admin.user",
-              display_name: "Admin User",
-              role: "admin",
-              status: "active"
-            }
-          })
-        });
-      });
-
-      await page.route("**/api/v1/admin/overview", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: {
-              id: 101,
-              username: "admin.user",
-              role: "admin"
-            },
-            counts: {
-              total: 24,
-              public: 9,
-              private: 15,
-              syncable: 12,
-              org_count: 5,
-              account_count: 48
-            },
-            capabilities: {
-              can_manage_users: true,
-              can_view_all: true
-            }
-          })
-        });
-      });
-    }
-  },
-  "workspace-activity": {
-    routePath: "/workspace/activity",
-    waitSelector: "#workspace-activity",
-    baselineRelativePath: "prototype-baselines/workspace_activity.png",
-    outputPrefix: "workspace-activity",
-    setupRoutes: async (page) => {
-      await page.route("**/api/v1/auth/me", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: {
-              id: 102,
-              username: "workspace.user",
-              display_name: "Workspace User",
-              role: "operator",
-              status: "active"
-            }
-          })
-        });
-      });
-    }
-  }
-};
 
 function delay(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -226,21 +71,10 @@ function ensureValidThreshold(value) {
   }
 }
 
-function resolveScenario() {
-  const scenario = scenarios[scenarioKey];
-  if (!scenario) {
-    const supported = Object.keys(scenarios).join(", ");
-    throw new Error(`Unknown VISUAL_SCENARIO: ${scenarioKey}. Supported: ${supported}`);
-  }
-  return scenario;
-}
-
 async function main() {
   ensureValidThreshold(threshold);
-  const scenario = resolveScenario();
-  const baselineImagePath = process.env.VISUAL_BASELINE_PATH
-    ? path.resolve(frontendRoot, process.env.VISUAL_BASELINE_PATH)
-    : path.resolve(frontendRoot, scenario.baselineRelativePath);
+  const { scenarioKey, scenario } = resolveVisualScenario();
+  const baselineImagePath = resolveVisualBaselinePath(frontendRoot, scenario, process.env.VISUAL_BASELINE_PATH);
   const actualImagePath = path.resolve(outputDirectory, `${scenario.outputPrefix}-actual.png`);
   const diffImagePath = path.resolve(outputDirectory, `${scenario.outputPrefix}-diff.png`);
   const summaryPath = path.resolve(outputDirectory, `${scenario.outputPrefix}-result.json`);
@@ -288,7 +122,7 @@ async function main() {
 
       await page.goto(`${baseUrl}${scenario.routePath}`, { waitUntil: "networkidle" });
       await page.waitForSelector(scenario.waitSelector, { state: "visible", timeout: 30_000 });
-      await page.waitForTimeout(900);
+      await stabilizeVisualCapture(page);
       await page.screenshot({ path: actualImagePath, fullPage: false });
     } finally {
       await browser.close();
@@ -343,7 +177,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
+if (isDirectExecution) {
+  main().catch((error) => {
   console.error("[visual-regression] ERROR", error);
   process.exitCode = 1;
-});
+  });
+}

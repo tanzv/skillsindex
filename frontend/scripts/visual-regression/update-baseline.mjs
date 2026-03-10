@@ -4,151 +4,20 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import { chromium } from "@playwright/test";
+import {
+  resolveVisualBaselinePath,
+  resolveVisualScenario,
+  stabilizeVisualCapture
+} from "./scenarios.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const isDirectExecution = process.argv[1] ? path.resolve(process.argv[1]) === __filename : false;
 const frontendRoot = path.resolve(__dirname, "../..");
 
 const host = process.env.VISUAL_HOST ?? "127.0.0.1";
 const port = Number.parseInt(process.env.VISUAL_PORT ?? "4217", 10);
 const baseUrl = process.env.VISUAL_BASE_URL ?? `http://${host}:${port}`;
-const scenarioKey = (process.env.VISUAL_SCENARIO ?? "home").trim().toLowerCase();
-
-const scenarios = {
-  home: {
-    routePath: "/",
-    waitSelector: ".marketplace-home",
-    outputRelativePath: "prototype-baselines/marketplace_home.png",
-    viewport: { width: 512, height: 342 },
-    setupRoutes: async (page) => {
-      await page.route("**/api/v1/auth/me", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: null
-          })
-        });
-      });
-
-      await page.route("**/api/v1/public/marketplace**", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            items: []
-          })
-        });
-      });
-    }
-  },
-  login: {
-    routePath: "/login",
-    waitSelector: ".auth-shell.auth-shell-prototype",
-    outputRelativePath: "public/prototypes/previews/login_page_prototype.png",
-    viewport: { width: 512, height: 342 },
-    setupRoutes: async (page) => {
-      await page.route("**/api/v1/auth/me", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: null
-          })
-        });
-      });
-    }
-  },
-  "skill-detail": {
-    routePath: "/skills/1049",
-    waitSelector: "[data-testid='skill-detail-page']",
-    outputRelativePath: "prototype-baselines/skill_detail.png",
-    viewport: { width: 512, height: 342 },
-    setupRoutes: async (page) => {
-      await page.route("**/api/v1/auth/me", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: null
-          })
-        });
-      });
-    }
-  },
-  "admin-overview": {
-    routePath: "/admin/overview",
-    waitSelector: "[data-testid='admin-overview-stage']",
-    outputRelativePath: "prototype-baselines/admin_dashboard.png",
-    viewport: { width: 512, height: 342 },
-    setupRoutes: async (page) => {
-      await page.route("**/api/v1/auth/me", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: {
-              id: 101,
-              username: "admin.user",
-              display_name: "Admin User",
-              role: "admin",
-              status: "active"
-            }
-          })
-        });
-      });
-
-      await page.route("**/api/v1/admin/overview", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: {
-              id: 101,
-              username: "admin.user",
-              role: "admin"
-            },
-            counts: {
-              total: 24,
-              public: 9,
-              private: 15,
-              syncable: 12,
-              org_count: 5,
-              account_count: 48
-            },
-            capabilities: {
-              can_manage_users: true,
-              can_view_all: true
-            }
-          })
-        });
-      });
-    }
-  },
-  "workspace-activity": {
-    routePath: "/workspace/activity",
-    waitSelector: "#workspace-activity",
-    outputRelativePath: "prototype-baselines/workspace_activity.png",
-    viewport: { width: 512, height: 342 },
-    setupRoutes: async (page) => {
-      await page.route("**/api/v1/auth/me", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: {
-              id: 102,
-              username: "workspace.user",
-              display_name: "Workspace User",
-              role: "operator",
-              status: "active"
-            }
-          })
-        });
-      });
-    }
-  }
-};
 
 function delay(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -170,18 +39,9 @@ async function waitForServer(url, timeoutMs) {
   throw new Error(`Timed out waiting for server: ${url}`);
 }
 
-function resolveScenario() {
-  const scenario = scenarios[scenarioKey];
-  if (!scenario) {
-    const supported = Object.keys(scenarios).join(", ");
-    throw new Error(`Unknown VISUAL_SCENARIO: ${scenarioKey}. Supported: ${supported}`);
-  }
-  return scenario;
-}
-
 async function main() {
-  const scenario = resolveScenario();
-  const outputPath = path.resolve(frontendRoot, scenario.outputRelativePath);
+  const { scenario } = resolveVisualScenario();
+  const outputPath = resolveVisualBaselinePath(frontendRoot, scenario, process.env.VISUAL_BASELINE_PATH);
 
   await mkdir(path.dirname(outputPath), { recursive: true });
 
@@ -210,7 +70,7 @@ async function main() {
 
       await page.goto(`${baseUrl}${scenario.routePath}`, { waitUntil: "networkidle" });
       await page.waitForSelector(scenario.waitSelector, { state: "visible", timeout: 30_000 });
-      await page.waitForTimeout(900);
+      await stabilizeVisualCapture(page);
       const screenshotBuffer = await page.screenshot({ fullPage: false });
       await writeFile(outputPath, screenshotBuffer);
     } finally {
@@ -224,7 +84,9 @@ async function main() {
   console.log(`[visual-regression] baseline updated: ${outputPath}`);
 }
 
-main().catch((error) => {
+if (isDirectExecution) {
+  main().catch((error) => {
   console.error("[visual-regression] ERROR", error);
   process.exitCode = 1;
-});
+  });
+}
