@@ -1,5 +1,5 @@
 import { CSSProperties, useEffect, useMemo, useState } from "react";
-import { DetailFileEntry } from "../PublicSkillDetailPage.helpers";
+import { DetailFileEntry } from "./PublicSkillDetailPage.helpers";
 import {
   buildSkillFileDirectoryTree,
   flattenSkillFileDirectoryTree,
@@ -11,6 +11,7 @@ interface PublicSkillDetailDirectoryTreeProps {
   rootLabel: string;
   selectedFilePath: string;
   title: string;
+  hideHeader?: boolean;
   onSelectFile: (nextFileIndex: number) => void;
 }
 
@@ -19,6 +20,7 @@ export default function PublicSkillDetailDirectoryTree({
   rootLabel,
   selectedFilePath,
   title,
+  hideHeader = false,
   onSelectFile
 }: PublicSkillDetailDirectoryTreeProps) {
   const fileTreeNodes = useMemo(() => buildSkillFileDirectoryTree(fileEntries), [fileEntries]);
@@ -55,10 +57,17 @@ export default function PublicSkillDetailDirectoryTree({
 
   return (
     <div className="skill-detail-directory-shell">
-      <div className="skill-detail-directory-head">
-        <p className="skill-detail-directory-title">{title}</p>
-        <p className="skill-detail-directory-meta">{rootLabel}</p>
-      </div>
+      {hideHeader ? null : (
+        <div className="skill-detail-directory-head">
+          <div className="skill-detail-directory-head-main">
+            <p className="skill-detail-directory-title">{title}</p>
+            <p className="skill-detail-directory-meta">{rootLabel}</p>
+          </div>
+          <p className="skill-detail-directory-current" title={selectedFilePath || rootLabel}>
+            {selectedFilePath || rootLabel}
+          </p>
+        </div>
+      )}
       <div className="skill-detail-directory-tree" role="tree" aria-label={title}>
         {fileTreeRows.map((row) => {
           const isDirectory = row.type === "directory";
@@ -73,11 +82,13 @@ export default function PublicSkillDetailDirectoryTree({
               type="button"
               role="treeitem"
               data-testid={`skill-detail-directory-row-${row.path}`}
+              data-depth={row.depth}
               aria-level={row.depth}
               aria-expanded={isDirectory ? row.isExpanded : undefined}
               aria-selected={isSelected}
               className={`skill-detail-directory-row is-${row.type}${isSelected ? " is-selected" : ""}`}
               style={rowStyle}
+              title={row.path}
               onClick={() => {
                 if (isDirectory) {
                   handleDirectoryToggle(row.path);
@@ -88,11 +99,12 @@ export default function PublicSkillDetailDirectoryTree({
                 }
               }}
             >
+              <span className="skill-detail-directory-row-indent" aria-hidden="true" />
               <span className="skill-detail-directory-row-caret" aria-hidden="true">
                 {isDirectory ? (row.isExpanded ? "▾" : "▸") : "•"}
               </span>
               <span className={`skill-detail-directory-row-icon ${isDirectory ? "is-directory" : "is-file"}`} aria-hidden="true" />
-              <span className="skill-detail-directory-row-label">{row.name}</span>
+              <span className="skill-detail-directory-row-label" title={row.name}>{row.name}</span>
             </button>
           );
         })}

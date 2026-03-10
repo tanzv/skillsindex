@@ -391,21 +391,23 @@ test.describe("Prototype route completion coverage", () => {
     await mockAuth(page, true);
     await mockRecordsSync(page);
     await mockIntegrationWorkbench(page);
-
     await page.goto("/admin/records/exports");
     await expect(page.getByRole("heading", { name: /Records Governance and Remote Sync/ })).toBeVisible();
     await expect(page.getByText("Prototype Replica", { exact: true })).toHaveCount(0);
-
     await page.goto("/admin/integrations/list");
     await expect(page.getByRole("heading", { name: "Integration Connector List", exact: true })).toBeVisible();
     await expect(page.getByText("Prototype Replica", { exact: true })).toHaveCount(0);
   });
-
+  test("repository ingestion route renders repository sync data instead of a prototype placeholder", async ({ page }) => {
+    await forceEnglishLocale(page); await mockAuth(page, true); await mockRecordsSync(page); await page.goto("/admin/ingestion/repository");
+    await expect(page.getByRole("heading", { name: "Repository Ingestion Control", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Repository Run Ledger", exact: true })).toBeVisible(); await expect(page.getByText("owner.user", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(/2 failed items/)).toBeVisible(); await expect(page.getByText("Prototype Replica", { exact: true })).toHaveCount(0);
+  });
   test("incident aliases render incident operations page", async ({ page }) => {
     await forceEnglishLocale(page);
     await mockAuth(page, true);
     await mockIncidentWorkbench(page);
-
     await page.goto("/admin/incidents/list");
     await expect(page.getByRole("heading", { name: "Incident Management List", exact: true })).toBeVisible();
     await expect(page.getByText("Prototype Replica", { exact: true })).toHaveCount(0);

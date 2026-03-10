@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { DocsEntry } from "../PublicDocsPage.copy";
+import type { DocsEntry } from "./PublicDocsPage.copy";
 import { buildDocsByKey, buildEndpointMetadata, buildPublicDocsStats } from "./PublicDocsPage.helpers";
 
 const docsFixture: DocsEntry[] = [

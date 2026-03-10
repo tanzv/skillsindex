@@ -1,8 +1,8 @@
 import { Button, Card, Tag, Typography } from "antd";
 
-import { PrototypeSplitRow, PrototypeTwoColumnGrid, PrototypeUtilityHeaderActions, PrototypeUtilityPanel } from "../prototypeCssInJs";
-import type { DocsEntry, PublicDocsPageCopyItem } from "../PublicDocsPage.copy";
-import type { PrototypePagePalette } from "../prototypePageTheme";
+import { PrototypeSplitRow, PrototypeTwoColumnGrid, PrototypeUtilityHeaderActions, PrototypeUtilityPanel } from "../prototype/prototypeCssInJs";
+import type { DocsEntry, PublicDocsPageCopyItem } from "./PublicDocsPage.copy";
+import type { PrototypePagePalette } from "../prototype/prototypePageTheme";
 import type { EndpointMetadata, PublicDocsStats } from "./PublicDocsPage.types";
 
 interface PublicDocsHeroCardProps {

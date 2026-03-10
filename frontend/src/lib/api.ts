@@ -214,6 +214,12 @@ interface ErrorPayload {
   message?: string;
 }
 
+interface APIRequestError extends Error {
+  status?: number;
+}
+
+type AuthProvidersFetchMode = "auto" | "always" | "never";
+
 const localeStorageKey = "skillsindex.locale";
 const apiBaseURL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8080").replace(/\/$/, "");
 const serverOriginURL = (() => {
@@ -231,6 +237,43 @@ export function buildServerURL(pathname: string): string {
   return `${serverOriginURL}${normalized}`;
 }
 let csrfTokenCache = "";
+
+function createAPIRequestError(status: number, message: string): APIRequestError {
+  const error = new Error(message) as APIRequestError;
+  error.status = status;
+  return error;
+}
+function resolveAuthProvidersFetchMode(rawMode: string | undefined): AuthProvidersFetchMode {
+  switch (String(rawMode || "").trim().toLowerCase()) {
+    case "always":
+      return "always";
+    case "never":
+      return "never";
+    default:
+      return "auto";
+  }
+}
+
+function readRuntimeAuthProvidersFetchMode(): string | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+  return String(
+    (
+      window as Window & {
+        __SKILLSINDEX_LOGIN_AUTH_PROVIDERS_MODE__?: unknown;
+      }
+    ).__SKILLSINDEX_LOGIN_AUTH_PROVIDERS_MODE__ || ""
+  ).trim();
+}
+
+export function shouldFetchAuthProviders(currentOrigin?: string): boolean {
+  const runtimeMode = readRuntimeAuthProvidersFetchMode();
+  const mode = resolveAuthProvidersFetchMode(runtimeMode || import.meta.env.VITE_LOGIN_AUTH_PROVIDERS_MODE);
+  if (mode === "always") return true;
+  if (mode === "never") return false;
+  return String(currentOrigin || "").trim() === serverOriginURL;
+}
 
 export function resolveRequestAcceptLanguage(): string {
   if (typeof window === "undefined") {
@@ -312,7 +355,7 @@ async function requestJSON<T>(path: string, init?: RequestInit): Promise<T> {
         details = text;
       }
     }
-    throw new Error(details);
+    throw createAPIRequestError(response.status, details);
   }
 
   if (response.status === 204) {
@@ -348,9 +391,20 @@ export async function logout(): Promise<void> {
 }
 
 export async function fetchAuthProviders(): Promise<AuthProvidersResponse> {
-  return requestJSON<AuthProvidersResponse>("/api/v1/auth/providers", {
-    method: "GET"
-  });
+  try {
+    return await requestJSON<AuthProvidersResponse>("/api/v1/auth/providers", {
+      method: "GET"
+    });
+  } catch (error) {
+    if ((error as APIRequestError).status === 404) {
+      return {
+        ok: true,
+        auth_providers: [],
+        items: []
+      };
+    }
+    throw error;
+  }
 }
 
 export async function fetchAdminIntegrations(): Promise<AdminIntegrationsResponse> {

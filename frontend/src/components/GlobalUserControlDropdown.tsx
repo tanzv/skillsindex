@@ -4,12 +4,13 @@ import {
   LogoutOutlined,
   MoonOutlined,
   RightOutlined,
+  SafetyCertificateOutlined,
   SunOutlined,
   TranslationOutlined,
   UserOutlined
 } from "@ant-design/icons";
 import { Dropdown, type DropdownProps } from "antd";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import type {
   GlobalUserControlActionItem,
@@ -59,6 +60,9 @@ function resolveIcon(icon: GlobalUserControlIconKey | undefined): JSX.Element | 
   }
   if (icon === "profile") {
     return <UserOutlined />;
+  }
+  if (icon === "spark") {
+    return <SafetyCertificateOutlined />;
   }
   return null;
 }
@@ -170,10 +174,10 @@ export default function GlobalUserControlDropdown({
   const panelAriaLabel = useMemo(() => resolvePanelAriaLabel(service.localeCode), [service.localeCode]);
   const effectiveTriggerAriaLabel = triggerAriaLabel || panelAriaLabel;
 
-  const handleActionExecute = (execute: () => void | Promise<void>): void => {
+  const handleActionExecute = useCallback((execute: () => void | Promise<void>): void => {
     onOpenChange?.(false);
     void execute();
-  };
+  }, [onOpenChange]);
 
   const panelContent = useMemo(
     () => (
@@ -202,7 +206,7 @@ export default function GlobalUserControlDropdown({
       classNames={{ root: overlayClassName }}
       onOpenChange={onOpenChange}
       open={open}
-      destroyOnHidden
+      destroyOnHidden={false}
     >
       <button
         type="button"

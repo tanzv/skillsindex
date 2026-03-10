@@ -1,8 +1,8 @@
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 import { appCopy } from "../App.copy";
-import { loginPageCopy } from "../pages/LoginPage.copy";
-import { marketplaceHomeCopy } from "../pages/MarketplaceHomePage.copy";
+import { loginPageCopy } from "../pages/login/LoginPage.copy";
+import { marketplaceHomeCopy } from "../pages/marketplaceHome/MarketplaceHomePage.copy";
 
 export type AppLocale = "en" | "zh";
 

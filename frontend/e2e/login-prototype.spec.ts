@@ -34,6 +34,16 @@ async function mockAnonymousAuth(page: Page, authProviders: MockAuthProviderItem
   });
 }
 
+async function setAuthProvidersFetchMode(page: Page, mode: "always" | "never"): Promise<void> {
+  await page.addInitScript((nextMode) => {
+    (
+      window as Window & {
+        __SKILLSINDEX_LOGIN_AUTH_PROVIDERS_MODE__?: string;
+      }
+    ).__SKILLSINDEX_LOGIN_AUTH_PROVIDERS_MODE__ = nextMode;
+  }, mode);
+}
+
 test.describe("Login prototype alignment", () => {
   test.use({
     viewport: {
@@ -163,6 +173,7 @@ test.describe("Login prototype alignment", () => {
   });
 
   test("third-party provider buttons follow backend auth provider configuration", async ({ page }) => {
+    await setAuthProvidersFetchMode(page, "always");
     await mockAnonymousAuth(page, [
       { key: "github", start_path: "/auth/sso/start/github" },
       { key: "wecom", start_path: "/auth/sso/start/wecom" }
@@ -176,7 +187,41 @@ test.describe("Login prototype alignment", () => {
     await expect(page.locator(".oauth-provider-item[data-provider-key='dingtalk']")).toHaveCount(0);
   });
 
+  test("cross-origin login avoids optional provider requests and 404 console noise", async ({ page }) => {
+    const consoleErrors: string[] = [];
+    let providerRequestCount = 0;
+
+    page.on("console", (message) => {
+      if (message.type() === "error") {
+        consoleErrors.push(message.text());
+      }
+    });
+
+    await page.route("**/api/v1/auth/me", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ user: null })
+      });
+    });
+    await page.route("**/api/v1/auth/providers", async (route) => {
+      providerRequestCount += 1;
+      await route.fulfill({
+        status: 404,
+        contentType: "text/plain",
+        body: "Not Found"
+      });
+    });
+
+    await page.goto("/login");
+
+    expect(providerRequestCount).toBe(0);
+    expect(consoleErrors.filter((entry) => entry.includes("Failed to load resource"))).toEqual([]);
+    await expect(page.locator(".oauth-provider-item")).toHaveCount(0);
+  });
+
   test("interactive controls expose motion-friendly transition and animation styles", async ({ page }) => {
+    await setAuthProvidersFetchMode(page, "always");
     await mockAnonymousAuth(page);
     await page.goto("/login");
     await expect(page.locator(".oauth-provider-item").first()).toBeVisible();

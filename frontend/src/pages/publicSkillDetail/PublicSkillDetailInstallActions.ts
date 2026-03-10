@@ -21,6 +21,11 @@ export interface CopyFilePathOptions {
   clipboard?: ClipboardWriter | null;
 }
 
+export interface CopyTextOptions {
+  value: string;
+  clipboard?: ClipboardWriter | null;
+}
+
 export interface OpenSourceOptions {
   sourceURL?: string | null;
   openWindow?: WindowOpenLike | null;
@@ -43,9 +48,9 @@ export function buildSkillFilePath(repositorySlug: string, selectedFileName: str
   return `/${normalizedSlug}/${normalizedFileName}`;
 }
 
-export async function copyInstallCommand(options: CopyInstallCommandOptions): Promise<InstallActionStatus> {
-  const command = normalizeInstallCommand(options.skill);
-  if (!command) {
+export async function copyPlainText(options: CopyTextOptions): Promise<InstallActionStatus> {
+  const value = String(options.value || "").trim();
+  if (!value) {
     return "missing_command";
   }
   const clipboard = resolveClipboard(options.clipboard);
@@ -53,25 +58,25 @@ export async function copyInstallCommand(options: CopyInstallCommandOptions): Pr
     return "clipboard_unavailable";
   }
   try {
-    await clipboard.writeText(command);
+    await clipboard.writeText(value);
     return "success";
   } catch {
     return "failed";
   }
 }
 
+export async function copyInstallCommand(options: CopyInstallCommandOptions): Promise<InstallActionStatus> {
+  return copyPlainText({
+    value: normalizeInstallCommand(options.skill),
+    clipboard: options.clipboard
+  });
+}
+
 export async function copySkillFilePath(options: CopyFilePathOptions): Promise<InstallActionStatus> {
-  const clipboard = resolveClipboard(options.clipboard);
-  if (!clipboard) {
-    return "clipboard_unavailable";
-  }
-  const path = buildSkillFilePath(options.repositorySlug, options.selectedFileName);
-  try {
-    await clipboard.writeText(path);
-    return "success";
-  } catch {
-    return "failed";
-  }
+  return copyPlainText({
+    value: buildSkillFilePath(options.repositorySlug, options.selectedFileName),
+    clipboard: options.clipboard
+  });
 }
 
 export function openSkillSource(options: OpenSourceOptions): boolean {

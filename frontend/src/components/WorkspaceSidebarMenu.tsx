@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { WorkspaceSidebarGroup, WorkspaceSidebarItem, WorkspaceSidebarPrimaryGroupEntry } from "../pages/WorkspaceCenterPage.navigation";
+import type { WorkspaceSidebarGroup, WorkspaceSidebarItem, WorkspaceSidebarPrimaryGroupEntry } from "../pages/workspace/WorkspaceCenterPage.navigation";
 import {
   WorkspaceSidebarCard,
   WorkspaceSidebarCollapseButton,

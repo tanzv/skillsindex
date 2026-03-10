@@ -60,16 +60,57 @@ test.describe("Public skill detail file tree synchronization", () => {
 
     await expect(page.getByTestId("skill-detail-directory-row-SKILL.md")).toHaveAttribute("aria-selected", "true");
     await expect(page.locator(".skill-detail-doc-file-name")).toContainText("SKILL.md");
-
-    await page.getByRole("button", { name: "History", exact: true }).first().click();
-    await expect(page.getByTestId("skill-detail-directory-row-CHANGELOG.md")).toHaveAttribute("aria-selected", "true");
-    await expect(page.locator(".skill-detail-doc-file-name")).toContainText("CHANGELOG.md");
-
-    await page.getByTestId("skill-detail-directory-row-README.md").click();
-    await expect(page.getByTestId("skill-detail-directory-row-README.md")).toHaveAttribute("aria-selected", "true");
-    await expect(page.locator(".skill-detail-doc-file-name")).toContainText("README.md");
-
-    await page.locator(".skill-detail-directory-row.is-file", { hasText: /\.ya?ml$/i }).first().click();
-    await expect(page.locator(".skill-detail-doc-file-name")).toHaveText(/\.ya?ml$/i);
+    await expect(page.getByRole("button", { name: "History", exact: true })).toHaveCount(0);
+    await expect(page.locator(".skill-detail-directory-row.is-file")).toHaveCount(1);
+    await expect(page.getByTestId("skill-detail-directory-row-README.md")).toHaveCount(0);
+    await expect(page.getByTestId("skill-detail-directory-row-CHANGELOG.md")).toHaveCount(0);
   });
+
+  test("renders nested tree hierarchy clearly in prototype mode", async ({ page }) => {
+    await forceEnglishLocale(page);
+
+    await page.route("**/api/v1/auth/me", async (route) => {
+      await fulfillJSON(route, 200, { user: null });
+    });
+
+    await page.goto("/skills/901?skill_detail_mode=prototype");
+
+    const examplesDirectory = page.getByTestId("skill-detail-directory-row-examples");
+    await expect(examplesDirectory).toBeVisible();
+    await expect(examplesDirectory).toHaveAttribute("aria-expanded", "true");
+
+    const nestedFile = page.getByTestId("skill-detail-directory-row-examples/browser-automation-pro_flow.yaml");
+    await expect(nestedFile).toBeVisible();
+
+    await examplesDirectory.click();
+    await expect(examplesDirectory).toHaveAttribute("aria-expanded", "false");
+    await expect(nestedFile).toHaveCount(0);
+    await examplesDirectory.click();
+    await expect(examplesDirectory).toHaveAttribute("aria-expanded", "true");
+    await expect(page.getByTestId("skill-detail-directory-row-examples/browser-automation-pro_flow.yaml")).toBeVisible();
+
+    const selectedRow = page.getByTestId("skill-detail-directory-row-SKILL.md");
+    const defaultDirectoryStyles = await examplesDirectory.evaluate((element) => {
+      const styles = window.getComputedStyle(element as HTMLElement);
+      return {
+        borderColor: styles.borderColor,
+        backgroundColor: styles.backgroundColor
+      };
+    });
+    const selectedStyles = await selectedRow.evaluate((element) => {
+      const styles = window.getComputedStyle(element as HTMLElement);
+      return {
+        borderColor: styles.borderColor,
+        backgroundColor: styles.backgroundColor
+      };
+    });
+    const nestedIndentWidth = await nestedFile.locator('.skill-detail-directory-row-indent').evaluate((element) => {
+      return Math.round((element as HTMLElement).getBoundingClientRect().width);
+    });
+
+    expect(nestedIndentWidth).toBeGreaterThan(0);
+    expect(selectedStyles.backgroundColor).not.toBe(defaultDirectoryStyles.backgroundColor);
+    expect(selectedStyles.borderColor).not.toBe(defaultDirectoryStyles.borderColor);
+  });
+
 });

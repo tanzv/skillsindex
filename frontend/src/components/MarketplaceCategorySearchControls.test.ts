@@ -1,8 +1,8 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { MarketplaceFilterForm } from "../pages/MarketplaceHomePage.helpers";
-import type { MarketplaceText } from "../pages/marketplaceText";
+import type { MarketplaceFilterForm } from "../pages/marketplaceHome/MarketplaceHomePage.helpers";
+import type { MarketplaceText } from "../pages/marketplacePublic/marketplaceText";
 import MarketplaceCategorySearchControls from "./MarketplaceCategorySearchControls";
 
 const baseForm: MarketplaceFilterForm = {

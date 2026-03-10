@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 const HOME_PATH = "/";
 const RESULTS_PATH = "/results";
@@ -37,6 +38,27 @@ const selectors = {
   resultsModalCardTitle: ".marketplace-home.is-results-page .marketplace-results-list .marketplace-skill-name button",
   animatedSection: "[data-animated='true'].animated-fade-up"
 } as const;
+
+type MarketplaceHomePagingSurface = "pagination" | "load-more" | "finished" | "empty" | "results-list" | "none";
+
+async function resolveMarketplaceHomePagingSurface(page: Page): Promise<MarketplaceHomePagingSurface> {
+  if (await page.locator(selectors.pagination).isVisible()) {
+    return "pagination";
+  }
+  if (await page.locator(selectors.loadMoreButton).isVisible()) {
+    return "load-more";
+  }
+  if (await page.locator(selectors.paginationFinishedHint).isVisible()) {
+    return "finished";
+  }
+  if (await page.locator(selectors.resultsEmptyState).isVisible()) {
+    return "empty";
+  }
+  if (await page.locator(selectors.resultsList).isVisible()) {
+    return "results-list";
+  }
+  return "none";
+}
 
 test.describe("Marketplace home interactions", () => {
   test("homepage loads and shows core sections", async ({ page }) => {
@@ -318,22 +340,27 @@ test.describe("Marketplace home interactions", () => {
     await page.goto("/results?q=odoo&page=2");
     await page.keyboard.press("Escape");
     await expect(page).toHaveURL(/\/\?q=odoo&page=2$/);
-    const hasNumericPagination = (await page.locator(selectors.pagination).count()) > 0;
-    if (hasNumericPagination) {
-      await expect(page.locator(selectors.pagination)).toBeVisible();
+    await expect(page.locator(selectors.resultsList)).toBeVisible();
+    await expect.poll(async () => resolveMarketplaceHomePagingSurface(page)).not.toBe("none");
+
+    const pagingSurface = await resolveMarketplaceHomePagingSurface(page);
+    if (pagingSurface === "pagination") {
       await page.locator(selectors.paginationNext).click();
       await expect(page).toHaveURL(/\/\?q=odoo&page=3$/);
       return;
     }
 
-    const hasLoadMore = (await page.locator(selectors.loadMoreButton).count()) > 0;
-    if (hasLoadMore) {
+    if (pagingSurface === "load-more") {
       await expect(page.locator(selectors.loadMoreButton)).toBeVisible();
       return;
     }
 
-    const hasEmptyState = (await page.locator(selectors.resultsEmptyState).count()) > 0;
-    if (hasEmptyState) {
+    if (pagingSurface === "finished") {
+      await expect(page.locator(selectors.paginationFinishedHint)).toBeVisible();
+      return;
+    }
+
+    if (pagingSurface === "empty") {
       await expect(page.locator(selectors.resultsEmptyState)).toBeVisible();
       return;
     }
@@ -549,7 +576,9 @@ test.describe("Marketplace home interactions", () => {
     await page.goto(RESULTS_PATH);
     const chips = page.locator(".marketplace-top-recommend-chips button");
     await expect(chips).toHaveCount(3);
-    await chips.nth(1).click();
+    await chips.nth(1).evaluate((element) => {
+      (element as HTMLButtonElement).click();
+    });
     await expect(page).toHaveURL(/\/results\?tags=/);
   });
 

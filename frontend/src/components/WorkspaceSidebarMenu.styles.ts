@@ -55,7 +55,7 @@ export const WorkspaceSidebarCard = styled.aside<{ $layoutMode?: SidebarCardLayo
   align-self: start;
   width: ${({ $collapsed }) => resolveSidebarWidth($collapsed)};
   min-width: ${({ $collapsed }) => resolveSidebarWidth($collapsed)};
-  margin-left: ${({ $collapsed }) => ($collapsed ? "-4px" : "-12px")};
+  margin-inline-start: 0;
   border-radius: 12px;
   border: 1px solid var(--workspace-sidebar-border);
   background: var(--workspace-sidebar-surface);
@@ -77,7 +77,7 @@ export const WorkspaceSidebarCard = styled.aside<{ $layoutMode?: SidebarCardLayo
     position: static;
     width: auto;
     min-width: 0;
-    margin-left: 0;
+    margin-inline-start: 0;
     height: auto;
     min-height: 0;
     max-height: none;
@@ -151,26 +151,62 @@ export const WorkspaceSidebarHint = styled.p`
 export const WorkspaceSidebarMetaRow = styled.div`
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   flex-wrap: wrap;
   min-width: 0;
+  opacity: 0.9;
+`;
+
+export const WorkspaceSidebarMetaInlineRow = styled.div`
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--si-color-text-secondary) 84%, transparent);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.54rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0.78;
+`;
+
+export const WorkspaceSidebarMetaInlineItem = styled.span<{ $tone?: "neutral" | "accent" }>`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: ${({ $tone }) =>
+    $tone === "accent"
+      ? "color-mix(in srgb, var(--si-color-text-primary) 74%, var(--si-color-text-secondary) 26%)"
+      : "color-mix(in srgb, var(--si-color-text-secondary) 84%, transparent)"};
+`;
+
+export const WorkspaceSidebarMetaInlineSeparator = styled.span`
+  flex: 0 0 auto;
+  opacity: 0.5;
 `;
 
 export const WorkspaceSidebarMetaPill = styled.span<{ $tone?: "neutral" | "accent" }>`
   border-radius: 999px;
   border: 1px solid
-    ${({ $tone }) => ($tone === "accent" ? "var(--workspace-sidebar-item-border-active)" : "var(--workspace-sidebar-border-soft)")};
-  background: ${({ $tone }) =>
+    ${({ $tone }) =>
+      $tone === "accent"
+        ? "color-mix(in srgb, var(--workspace-sidebar-item-border-active) 68%, transparent)"
+        : "color-mix(in srgb, var(--workspace-sidebar-border-soft) 72%, transparent)"};
+  background: transparent;
+  color: ${({ $tone }) =>
     $tone === "accent"
-      ? "color-mix(in srgb, var(--si-color-accent) 12%, var(--workspace-sidebar-surface-alt))"
-      : "var(--workspace-sidebar-surface-alt)"};
-  color: ${({ $tone }) => ($tone === "accent" ? "var(--si-color-text-primary)" : "var(--si-color-text-secondary)")};
+      ? "color-mix(in srgb, var(--si-color-text-primary) 80%, var(--si-color-text-secondary) 20%)"
+      : "color-mix(in srgb, var(--si-color-text-secondary) 84%, transparent)"};
   font-family: "JetBrains Mono", monospace;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  line-height: 1.1;
-  padding: 3px 7px;
+  font-size: 0.56rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 2px 6px;
 `;
 
 export const WorkspaceSidebarGroup = styled.section<{ $variant?: SidebarGroupVariant }>`
@@ -188,10 +224,11 @@ export const WorkspaceSidebarGroupHeader = styled.button`
   border: none;
   background: transparent;
   padding: 0;
+  min-height: 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
   color: inherit;
 
@@ -204,20 +241,23 @@ export const WorkspaceSidebarGroupHeader = styled.button`
 
 export const WorkspaceSidebarGroupTitle = styled.h3`
   margin: 0;
-  font-size: 0.56rem;
-  font-weight: 650;
-  letter-spacing: 0.1em;
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--workspace-sidebar-group-title) 78%, transparent);
+  color: color-mix(in srgb, var(--workspace-sidebar-group-title) 62%, transparent);
+  opacity: 0.78;
   font-family: "JetBrains Mono", monospace;
+  line-height: 1;
 `;
 
 export const WorkspaceSidebarGroupToggleIcon = styled.span<{ $collapsed?: boolean }>`
-  color: var(--si-color-text-secondary);
-  font-size: 0.68rem;
+  color: color-mix(in srgb, var(--si-color-text-secondary) 68%, transparent);
+  font-size: 0.58rem;
   line-height: 1;
+  opacity: 0.72;
   transform: ${({ $collapsed }) => ($collapsed ? "rotate(-90deg)" : "rotate(0deg)")};
-  transition: transform 0.18s ease;
+  transition: transform 0.18s ease, color 0.18s ease;
 `;
 
 export const WorkspaceSidebarGroupBody = styled.div<{ $collapsed?: boolean }>`

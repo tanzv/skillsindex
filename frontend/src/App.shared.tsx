@@ -1,8 +1,8 @@
 import styled from "@emotion/styled";
 import type { ProtectedRoute } from "./appNavigationConfig";
 import type { AppRoute } from "./lib/appPathnameResolver";
-import type { AccountRoute } from "./pages/AccountWorkbenchPage";
-import type { AdminRoute } from "./pages/AdminWorkbenchPage";
+import type { AccountRoute } from "./pages/accountWorkbench/AccountWorkbenchPage";
+import type { AdminRoute } from "./pages/adminWorkbench/AdminWorkbenchPage";
 
 export type PublicLocaleSwitchMode = "hidden" | "overlay";
 

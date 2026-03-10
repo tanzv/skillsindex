@@ -96,16 +96,16 @@ test.describe("Public route prefix navigation", () => {
     await expect(page).toHaveURL(/\/light\/login$/);
   });
 
-  test("skill detail keeps light prefix when switching to changelog view", async ({ page }) => {
+  test("skill detail keeps light prefix with backend-aligned single file view", async ({ page }) => {
     await forceEnglishLocale(page);
     await mockAnonymousAuth(page);
     await mockSkillDetail(page);
 
-    await page.goto("/light/skills/901");
-    await page.getByRole("button", { name: "History", exact: true }).first().click();
-    await expect(page).toHaveURL(/\/light\/skills\/901$/);
-    await expect(page.getByTestId("skill-detail-directory-row-CHANGELOG.md")).toHaveAttribute("aria-selected", "true");
-    await expect(page.locator(".skill-detail-doc-file-name")).toContainText("CHANGELOG.md");
+    await page.goto("/light/skills/901?skill_detail_mode=live");
+    await expect(page).toHaveURL(/\/light\/skills\/901\?skill_detail_mode=live$/);
+    await expect(page.getByRole("button", { name: "History", exact: true })).toHaveCount(0);
+    await expect(page.getByTestId("skill-detail-directory-row-SKILL.md")).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator(".skill-detail-doc-file-name")).toContainText("SKILL.md");
   });
 
   test("docs route stays stable while legacy compare root redirects with preserved prefix", async ({ page }) => {

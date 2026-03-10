@@ -1,13 +1,13 @@
 import { Alert, Avatar, Button, Card, Input, Segmented, Select, Space, Tag, Typography } from "antd";
 
 import type { AppLocale } from "../../lib/i18n";
-import type { AccountCenterCopy } from "../AccountCenterPage.copy";
+import type { AccountCenterCopy } from "./AccountCenterPage.copy";
 import {
   formatAccountDate,
   type AccountProfileDraft,
   type AccountProfilePayload,
   type AccountProfilePreviewItem
-} from "../AccountCenterPage.helpers";
+} from "./AccountCenterPage.helpers";
 import {
   PrototypeDeckColumns,
   PrototypeEmptyText,
@@ -20,8 +20,8 @@ import {
   PrototypePageGrid,
   PrototypeSideLinks,
   PrototypeStack
-} from "../prototypeCssInJs";
-import type { PrototypePagePalette } from "../prototypePageTheme";
+} from "../prototype/prototypeCssInJs";
+import type { PrototypePagePalette } from "../prototype/prototypePageTheme";
 import {
   accountRouteBySection,
   type AccountMetricItem,

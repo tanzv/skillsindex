@@ -1,8 +1,8 @@
 import type { KeyboardEvent } from "react";
-import type { HomeChipFilter } from "../pages/MarketplaceHomePage.config";
-import type { MarketplaceFilterForm } from "../pages/MarketplaceHomePage.helpers";
-import MarketplaceHomeTopRecommendations from "../pages/MarketplaceHomeTopRecommendations";
-import type { MarketplaceText } from "../pages/marketplaceText";
+import type { HomeChipFilter } from "../pages/marketplaceHome/MarketplaceHomePage.config";
+import type { MarketplaceFilterForm } from "../pages/marketplaceHome/MarketplaceHomePage.helpers";
+import MarketplaceHomeTopRecommendations from "../pages/marketplaceHome/MarketplaceHomeTopRecommendations";
+import type { MarketplaceText } from "../pages/marketplacePublic/marketplaceText";
 import MarketplaceGlobalSearchBar from "./MarketplaceGlobalSearchBar";
 
 interface MarketplaceSearchStripBaseProps {

@@ -97,25 +97,6 @@ export const globalWorkbenchStyles = `
   cursor: pointer;
 }
 
-.backend-user-inline {
-  display: grid;
-  justify-items: end;
-  gap: 1px;
-  min-width: 96px;
-}
-
-.backend-user-inline strong {
-  font-size: 0.77rem;
-  line-height: 1.1;
-  color: #f3f8ff;
-}
-
-.backend-user-inline span {
-  font-size: 0.66rem;
-  color: rgba(219, 234, 254, 0.84);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
 
 .backend-shell-body {
   min-height: 0;

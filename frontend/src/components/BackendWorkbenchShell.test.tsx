@@ -6,7 +6,7 @@ import type { NavigationItem, ProtectedRoute } from "../appNavigationConfig";
 import BackendWorkbenchShell from "./BackendWorkbenchShell";
 
 describe("BackendWorkbenchShell", () => {
-  it("does not render a duplicated main header above backend subpage content", () => {
+  it("renders the shared user center dropdown instead of duplicated locale and logout controls", () => {
     const navItems: NavigationItem[] = [
       { path: "/admin/overview", title: "Overview", subtitle: "Counts and capability posture", section: "admin" },
       { path: "/admin/skills", title: "Skills", subtitle: "Governed skill inventory", section: "admin" },
@@ -18,6 +18,7 @@ describe("BackendWorkbenchShell", () => {
       React.createElement(BackendWorkbenchShell, {
         route: "/admin/skills",
         locale: "en",
+        themeMode: "dark",
         submitLoading: false,
         sessionUser: {
           username: "alice",
@@ -36,6 +37,7 @@ describe("BackendWorkbenchShell", () => {
         },
         onNavigate: () => undefined,
         onLocaleChange: () => undefined,
+        onThemeModeChange: () => undefined,
         onLogout: () => undefined,
         children: React.createElement("div", null, "Subpage content")
       })
@@ -43,6 +45,10 @@ describe("BackendWorkbenchShell", () => {
 
     expect(html).toContain("Quick Jump");
     expect(html).toContain("Subpage content");
+    expect(html).toContain('data-testid="backend-user-center-trigger"');
+    expect(html).not.toContain('data-testid="sidebar-locale-switch-en"');
+    expect(html).not.toContain('data-testid="sidebar-locale-switch-zh"');
     expect(html).not.toContain("class=\"main-header\"");
+    expect(html).not.toContain(">Sign Out<");
   });
 });

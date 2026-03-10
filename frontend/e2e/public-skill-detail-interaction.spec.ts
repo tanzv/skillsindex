@@ -156,11 +156,11 @@ test.describe("Public skill detail interaction flow", () => {
 
     await page.getByRole("button", { name: "Add Favorite", exact: true }).click();
     await expect(page.getByRole("button", { name: "Remove Favorite", exact: true })).toBeVisible();
-    await expect(page.locator(".skill-detail-interaction-summary")).toContainText("Favorites 1");
+    await expect(page.locator(".skill-detail-card.is-summary")).toContainText("1  ·");
 
     await page.getByRole("button", { name: "4", exact: true }).click();
     await page.getByRole("button", { name: "Submit Rating", exact: true }).click();
-    await expect(page.locator(".skill-detail-interaction-summary")).toContainText("Rating 4.0 (1)");
+    await expect(page.locator(".skill-detail-card.is-summary")).toContainText("4.0 / 5.0 (1)");
     await expect(page.locator(".skill-detail-feedback")).toContainText("Rating Submitted");
 
     await page.locator(".skill-detail-comment-input").fill("Works well for smoke tests.");
@@ -222,17 +222,18 @@ test.describe("Public skill detail interaction flow", () => {
     await page.goto("/skills/974?skill_detail_mode=live");
     await expect(page.getByRole("heading", { name: "sql-performance-lab", exact: true })).toBeVisible();
     await expect(page.locator(".skill-detail-card.is-summary")).toBeVisible();
-    await expect(page.locator(".skill-detail-card.is-quality")).toBeVisible();
-    await expect(page.locator(".skill-detail-card.is-metadata")).toBeVisible();
+    await expect(page.locator(".skill-detail-overview-panel")).toContainText("Quality Score");
+    await expect(page.getByRole("button", { name: "View Details", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Details", exact: true })).toBeVisible();
     await expect(page.locator(".skill-detail-code-panel")).toHaveClass(/is-sql/);
     await expect(page.locator(".skill-detail-meta-strip")).toContainText("language sql");
 
-    await page.getByTestId("skill-detail-directory-row-README.md").click();
-    await expect(page.getByTestId("skill-detail-directory-row-README.md")).toHaveAttribute("aria-selected", "true");
-    await expect(page.locator(".skill-detail-doc-file-name")).toContainText("README.md");
-    await expect(page.locator(".skill-detail-code-content")).toContainText("Overview");
-    await expect(page.locator(".skill-detail-code-head .skill-detail-file-state-hint")).toContainText("/sql-performance-lab/README.md");
-    await expect(page.locator(".skill-detail-code-head .skill-detail-file-state-meta")).toContainText("Markdown");
+    await expect(page.getByRole("button", { name: "History", exact: true })).toHaveCount(0);
+    await expect(page.getByTestId("skill-detail-directory-row-QUERY.sql")).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator(".skill-detail-doc-file-name")).toContainText("QUERY.sql");
+    await expect(page.locator(".skill-detail-code-content")).toContainText("SELECT customer_id");
+    await expect(page.locator(".skill-detail-code-head .skill-detail-file-state-hint")).toContainText("/sql-performance-lab/QUERY.sql");
+    await expect(page.locator(".skill-detail-code-head .skill-detail-file-state-meta")).toContainText("SQL");
   });
 
   test("breadcrumb marketplace item navigates back to home route", async ({ page }) => {
@@ -351,7 +352,7 @@ test.describe("Public skill detail interaction flow", () => {
     });
 
     await page.goto("/skills/974?skill_detail_mode=live");
-    await page.getByRole("button", { name: "Submit Feedback", exact: true }).click();
+    await page.getByRole("button", { name: "Sign In", exact: true }).click();
     await expect(page).toHaveURL("/login");
   });
 });

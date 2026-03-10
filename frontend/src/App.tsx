@@ -28,26 +28,27 @@ import {
   isAdminSecurityRoute,
   navItems,
 } from "./appNavigationConfig";
-import AccountCenterPage from "./pages/AccountCenterPage";
-import AdminIntegrationsPage from "./pages/AdminIntegrationsPage";
-import AdminCatalogPage from "./pages/AdminCatalogPage";
-import AdminOpsControlPage from "./pages/AdminOpsControlPage";
-import AdminOpsMetricsPage from "./pages/AdminOpsMetricsPage";
-import AdminOverviewPage from "./pages/AdminOverviewPage";
-import AdminSecurityPage from "./pages/AdminSecurityPage";
-import AdminWorkbenchPage from "./pages/AdminWorkbenchPage";
-import LoginPage from "./pages/LoginPage";
-import { resolveLoginBrandConfig } from "./pages/loginBrandConfig";
-import { resolveLoginInfoPanelConfigOverride } from "./pages/loginInfoPanelConfig";
-import MarketplaceHomePage from "./pages/MarketplaceHomePage";
-import MarketplaceCategoryDetailPage from "./pages/MarketplaceCategoryDetailPage";
-import OrganizationCenterPage from "./pages/OrganizationCenterPage";
-import PrototypeRouteRenderer from "./pages/PrototypeRouteRenderer";
-import PublicComparePage from "./pages/PublicComparePage";
-import PublicCategoriesPage from "./pages/PublicCategoriesPage";
-import PublicDocsPage from "./pages/PublicDocsPage";
-import PublicRankingPage from "./pages/PublicRankingPage";
-import PublicSkillDetailPage from "./pages/PublicSkillDetailPage";
+import AccountCenterPage from "./pages/accountCenter/AccountCenterPage";
+import AdminIntegrationsPage from "./pages/adminWorkbench/AdminIntegrationsPage";
+import AdminCatalogPage from "./pages/adminCatalog/AdminCatalogPage";
+import AdminRepositoryCatalogPage, { isAdminRepositoryCatalogRoute } from "./pages/adminCatalog/AdminRepositoryCatalogPage";
+import AdminOpsControlPage from "./pages/adminOps/AdminOpsControlPage";
+import AdminOpsMetricsPage from "./pages/adminOps/AdminOpsMetricsPage";
+import AdminOverviewPage from "./pages/adminOverview/AdminOverviewPage";
+import AdminSecurityPage from "./pages/adminSecurity/AdminSecurityPage";
+import AdminWorkbenchPage from "./pages/adminWorkbench/AdminWorkbenchPage";
+import LoginPage from "./pages/login/LoginPage";
+import { resolveLoginBrandConfig } from "./pages/login/loginBrandConfig";
+import { resolveLoginInfoPanelConfigOverride } from "./pages/login/loginInfoPanelConfig";
+import MarketplaceHomePage from "./pages/marketplaceHome/MarketplaceHomePage";
+import MarketplaceCategoryDetailPage from "./pages/marketplacePublic/MarketplaceCategoryDetailPage";
+import OrganizationCenterPage from "./pages/organizationCenter/OrganizationCenterPage";
+import PrototypeRouteRenderer from "./pages/prototype/PrototypeRouteRenderer";
+import PublicComparePage from "./pages/publicCompare/PublicComparePage";
+import PublicCategoriesPage from "./pages/publicCategories/PublicCategoriesPage";
+import PublicDocsPage from "./pages/publicDocs/PublicDocsPage";
+import PublicRankingPage from "./pages/publicRanking/PublicRankingPage";
+import PublicSkillDetailPage from "./pages/publicSkillDetail/PublicSkillDetailPage";
 import { buildPathWithThemeMode, resolveThemeMode, ThemeMode } from "./lib/themeModePath";
 import { applyThemeTokens } from "./theme/themeSystem";
 
@@ -467,7 +468,11 @@ export default function App() {
         onLogout={handleLogout}
       />
     ) : isAdminCatalogRoute(protectedRoute) ? (
-      <AdminCatalogPage route={protectedRoute} />
+      isAdminRepositoryCatalogRoute(protectedRoute) ? (
+        <AdminRepositoryCatalogPage locale={locale} route={protectedRoute} onNavigate={navigate} />
+      ) : (
+        <AdminCatalogPage route={protectedRoute} />
+      )
     ) : isAdminSecurityRoute(protectedRoute) ? (
       <AdminSecurityPage route={protectedRoute} />
     ) : isAdminOpsControlRoute(protectedRoute) ? (
@@ -492,6 +497,7 @@ export default function App() {
       <BackendWorkbenchShell
         route={protectedRoute}
         locale={locale}
+        themeMode={themeMode}
         submitLoading={submitLoading}
         sessionUser={sessionUser}
         navItems={navItems}
@@ -502,6 +508,7 @@ export default function App() {
         onLocaleChange={(nextLocale) => {
           void handleLocaleChange(nextLocale);
         }}
+        onThemeModeChange={handleThemeModeChange}
         onLogout={() => {
           void handleLogout();
         }}

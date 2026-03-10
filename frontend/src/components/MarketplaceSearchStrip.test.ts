@@ -1,9 +1,9 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { marketplaceHomeCopy } from "../pages/MarketplaceHomePage.copy";
-import type { MarketplaceFilterForm } from "../pages/MarketplaceHomePage.helpers";
-import type { MarketplaceText } from "../pages/marketplaceText";
+import { marketplaceHomeCopy } from "../pages/marketplaceHome/MarketplaceHomePage.copy";
+import type { MarketplaceFilterForm } from "../pages/marketplaceHome/MarketplaceHomePage.helpers";
+import type { MarketplaceText } from "../pages/marketplacePublic/marketplaceText";
 import MarketplaceSearchStrip from "./MarketplaceSearchStrip";
 
 const baseText = marketplaceHomeCopy.en as MarketplaceText;

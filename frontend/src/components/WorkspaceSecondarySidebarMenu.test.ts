@@ -2,7 +2,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-import type { WorkspaceSidebarGroup } from "../pages/WorkspaceCenterPage.navigation";
+import type { WorkspaceSidebarGroup } from "../pages/workspace/WorkspaceCenterPage.navigation";
 import WorkspaceSecondarySidebarMenu from "./WorkspaceSecondarySidebarMenu";
 
 const organizationGroup: WorkspaceSidebarGroup = {

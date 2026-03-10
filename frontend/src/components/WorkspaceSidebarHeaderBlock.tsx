@@ -1,10 +1,13 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 
 import {
   WorkspaceSidebarCollapseButtonSlot,
   WorkspaceSidebarHeader,
   WorkspaceSidebarHeaderTop,
   WorkspaceSidebarHint,
+  WorkspaceSidebarMetaInlineItem,
+  WorkspaceSidebarMetaInlineRow,
+  WorkspaceSidebarMetaInlineSeparator,
   WorkspaceSidebarMetaPill,
   WorkspaceSidebarMetaRow,
   WorkspaceSidebarTitle
@@ -35,13 +38,14 @@ export default function WorkspaceSidebarHeaderBlock({ title, hint, meta = [], ac
         <WorkspaceSidebarHeaderTop $hasTitle={hasTitle || shouldInlineMetaWithAction}>
           {hasTitle ? <WorkspaceSidebarTitle>{title}</WorkspaceSidebarTitle> : null}
           {shouldInlineMetaWithAction ? (
-            <WorkspaceSidebarMetaRow>
-              {meta.map((item) => (
-                <WorkspaceSidebarMetaPill key={item.id} $tone={item.tone}>
-                  {item.label}
-                </WorkspaceSidebarMetaPill>
+            <WorkspaceSidebarMetaInlineRow>
+              {meta.map((item, index) => (
+                <Fragment key={item.id}>
+                  {index > 0 ? <WorkspaceSidebarMetaInlineSeparator>·</WorkspaceSidebarMetaInlineSeparator> : null}
+                  <WorkspaceSidebarMetaInlineItem $tone={item.tone}>{item.label}</WorkspaceSidebarMetaInlineItem>
+                </Fragment>
               ))}
-            </WorkspaceSidebarMetaRow>
+            </WorkspaceSidebarMetaInlineRow>
           ) : null}
           {hasAction ? <WorkspaceSidebarCollapseButtonSlot>{action}</WorkspaceSidebarCollapseButtonSlot> : null}
         </WorkspaceSidebarHeaderTop>

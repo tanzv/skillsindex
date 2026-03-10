@@ -1,4 +1,4 @@
-import type { SkillDetailPresetKey } from "../PublicSkillDetailPage.helpers";
+import type { SkillDetailPresetKey } from "./PublicSkillDetailPage.helpers";
 
 export interface SkillDetailPresetTabOption {
   key: SkillDetailPresetKey;

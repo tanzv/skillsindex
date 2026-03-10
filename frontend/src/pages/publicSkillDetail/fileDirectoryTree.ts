@@ -1,4 +1,4 @@
-import { DetailFileEntry } from "../PublicSkillDetailPage.helpers";
+import { DetailFileEntry } from "./PublicSkillDetailPage.helpers";
 
 export type SkillFileTreeNodeType = "directory" | "file";
 

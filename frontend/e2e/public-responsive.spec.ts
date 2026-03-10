@@ -83,19 +83,19 @@ test.describe("Public pages responsive and functional", () => {
     await expect(page).toHaveURL(/\/skills\/\d+$/);
   });
 
-  test("skill detail change history action switches file preset on mobile viewport", async ({ page }) => {
+  test("skill detail live payload keeps a single backend-aligned file preview on mobile viewport", async ({ page }) => {
     await forceEnglishLocale(page);
     await mockAnonymousAuth(page);
     await mockSkillDetail(page);
 
-    await page.goto("/skills/901");
+    await page.goto("/skills/901?skill_detail_mode=live");
     await expect(page.locator(".skill-detail-title").first()).toHaveText("browser-automation-pro");
     await expect(page.getByRole("button", { name: "Categories", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Execution", exact: true })).toHaveCount(0);
-    await page.getByRole("button", { name: "History", exact: true }).first().click();
-    await expect(page).toHaveURL(/\/skills\/901$/);
-    await expect(page.getByTestId("skill-detail-directory-row-CHANGELOG.md")).toHaveAttribute("aria-selected", "true");
-    await expect(page.locator(".skill-detail-doc-file-name")).toContainText("CHANGELOG.md");
+    await expect(page.getByRole("button", { name: "History", exact: true })).toHaveCount(0);
+    await expect(page).toHaveURL(/\/skills\/901\?skill_detail_mode=live$/);
+    await expect(page.getByTestId("skill-detail-directory-row-SKILL.md")).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator(".skill-detail-doc-file-name")).toContainText("SKILL.md");
   });
 
   test("categories and rankings pages remain functional on mobile viewport", async ({ page }) => {
@@ -115,3 +115,51 @@ test.describe("Public pages responsive and functional", () => {
     await expect(page).toHaveURL(/\/rankings$/);
   });
 });
+
+test.describe("Public skill detail topbar responsive layout", () => {
+  test.use({
+    viewport: {
+      width: 1280,
+      height: 844
+    }
+  });
+
+  test("skill detail topbar keeps compact navigation width on narrow desktop viewport", async ({ page }) => {
+    await forceEnglishLocale(page);
+    await mockAnonymousAuth(page);
+    await mockSkillDetail(page);
+
+    await page.goto("/skills/901?skill_detail_mode=live");
+    await expect(page.locator(".skill-detail-title").first()).toHaveText("browser-automation-pro");
+    await expect(page.getByTestId("skill-detail-page")).toHaveClass(/marketplace-home/);
+
+    const nav = page.locator(".marketplace-topbar-light-nav");
+    const navButtons = nav.locator(".marketplace-topbar-nav-button");
+    await expect(nav).toBeVisible();
+    await expect(navButtons).toHaveCount(2);
+
+    const measurement = await page.evaluate(() => {
+      const nav = document.querySelector<HTMLElement>(".marketplace-topbar-light-nav");
+      const topbar = document.querySelector<HTMLElement>(".marketplace-topbar");
+      const shell = document.querySelector<HTMLElement>(".marketplace-topbar-shell");
+      const buttons = Array.from(document.querySelectorAll<HTMLElement>(".marketplace-topbar-light-nav .marketplace-topbar-nav-button"));
+      const navRect = nav?.getBoundingClientRect();
+      const firstRect = buttons[0]?.getBoundingClientRect();
+      const lastRect = buttons[buttons.length - 1]?.getBoundingClientRect();
+      const topbarStyle = topbar ? window.getComputedStyle(topbar) : null;
+      const shellStyle = shell ? window.getComputedStyle(shell) : null;
+      return {
+        navWidth: navRect?.width || 0,
+        buttonsSpan: firstRect && lastRect ? lastRect.right - firstRect.left : 0,
+        topbarDirection: topbarStyle?.flexDirection || "",
+        shellBorderBottomWidth: shellStyle?.borderBottomWidth || ""
+      };
+    });
+
+    expect(measurement.buttonsSpan).toBeGreaterThan(0);
+    expect(measurement.navWidth).toBeLessThanOrEqual(measurement.buttonsSpan + 40);
+    expect(measurement.topbarDirection).toBe("row");
+    expect(measurement.shellBorderBottomWidth).toBe("1px");
+  });
+});
+

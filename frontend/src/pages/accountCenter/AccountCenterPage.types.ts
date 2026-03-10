@@ -1,4 +1,4 @@
-import type { AccountRoute } from "../AccountWorkbenchPage";
+import type { AccountRoute } from "../accountWorkbench/AccountWorkbenchPage";
 
 export type AccountSection = "profile" | "security" | "sessions";
 

@@ -1,4 +1,4 @@
-import type { DocsEntry } from "../PublicDocsPage.copy";
+import type { DocsEntry } from "./PublicDocsPage.copy";
 import type { EndpointMetadata, PublicDocsStats } from "./PublicDocsPage.types";
 
 export function buildDocsByKey(docs: DocsEntry[]): Map<string, DocsEntry> {

@@ -1,0 +1,372 @@
+import type { SessionUser } from "../lib/api";
+import type { AppLocale } from "../lib/i18n";
+
+import type { TopbarActionItem } from "../pages/marketplaceHome/MarketplaceHomePage.lightTopbar";
+
+export interface WorkspaceTopbarUserProfile {
+  displayName: string;
+  subtitle: string;
+}
+
+export interface WorkspaceTopbarPrimaryGroup {
+  id: string;
+  label: string;
+  tagLabel: string;
+  className: string;
+  actions: TopbarActionItem[];
+}
+
+export interface WorkspaceTopbarOverflowGroup {
+  id: string;
+  title: string;
+  countLabel: string;
+  active: boolean;
+  actions: TopbarActionItem[];
+}
+
+export interface WorkspaceTopbarOverflowPresentation {
+  titleText: string;
+  hintText: string;
+  metrics: TopbarActionItem[];
+  groups: WorkspaceTopbarOverflowGroup[];
+}
+
+export interface WorkspacePrimaryActionPresentation {
+  visibleActions: TopbarActionItem[];
+  hiddenActions: TopbarActionItem[];
+}
+
+const PRIMARY_ACTION_COLLAPSED_VISIBLE_COUNT = 5;
+const PRIMARY_ACTION_MIN_VISIBLE_COUNT = 2;
+const PRIMARY_ACTION_RESPONSIVE_MIN_SHELL_WIDTH = 520;
+const PRIMARY_ACTION_RESPONSIVE_MAX_SHELL_WIDTH = 820;
+const PRIMARY_ACTION_RESPONSIVE_VIEWPORT_OFFSET = 520;
+const PRIMARY_ACTION_RESPONSIVE_TOGGLE_RESERVE_WIDTH = 184;
+const PRIMARY_ACTION_RESPONSIVE_SLOT_WIDTH = 128;
+const WORKSPACE_OVERFLOW_ACCESS_GROUP_ID = "workspace-overflow-group-access";
+const WORKSPACE_MARKETPLACE_ACTION_IDS = new Set(["category", "ranking", "top", "open-marketplace"]);
+
+interface WorkspaceTopbarLocaleText {
+  overflowDefaultGroupTitle: string;
+  overflowMarketplaceGroupTitle: string;
+  overflowAccessGroupTitle: string;
+  overflowSectionsGroupTitle: string;
+  overflowHubsGroupTitle: string;
+  overflowOrganizationGroupTitle: string;
+  workspaceNavigationLabel: string;
+  workspaceTagLabel: string;
+  accessNavigationLabel: string;
+  accessTagLabel: string;
+  quickNavigationLabel: string;
+  quickTagLabel: string;
+  guestUser: string;
+  workspaceVisitor: string;
+}
+
+function resolveWorkspaceTopbarLocaleText(locale: AppLocale): WorkspaceTopbarLocaleText {
+  if (locale === "zh") {
+    return {
+      overflowDefaultGroupTitle: "\u5e94\u7528\u83dc\u5355",
+      overflowMarketplaceGroupTitle: "\u5e02\u573a\u5165\u53e3",
+      overflowAccessGroupTitle: "\u7cfb\u7edf\u5165\u53e3",
+      overflowSectionsGroupTitle: "\u5e94\u7528\u5206\u533a",
+      overflowHubsGroupTitle: "\u5173\u8054\u4e2d\u5fc3",
+      overflowOrganizationGroupTitle: "\u7ec4\u7ec7\u7ba1\u7406",
+      workspaceNavigationLabel: "\u5e94\u7528\u5bfc\u822a",
+      workspaceTagLabel: "\u5e94\u7528",
+      accessNavigationLabel: "\u7cfb\u7edf\u5165\u53e3",
+      accessTagLabel: "\u5165\u53e3",
+      quickNavigationLabel: "\u5168\u5c40\u5165\u53e3",
+      quickTagLabel: "\u5168\u5c40",
+      guestUser: "\u8bbf\u5ba2\u7528\u6237",
+      workspaceVisitor: "\u5e94\u7528\u8bbf\u5ba2"
+    };
+  }
+
+  return {
+    overflowDefaultGroupTitle: "App Menu",
+    overflowMarketplaceGroupTitle: "Marketplace",
+    overflowAccessGroupTitle: "System Access",
+    overflowSectionsGroupTitle: "App Sections",
+    overflowHubsGroupTitle: "Related Hubs",
+    overflowOrganizationGroupTitle: "Organization Management",
+    workspaceNavigationLabel: "App Navigation",
+    workspaceTagLabel: "App",
+    accessNavigationLabel: "System Access",
+    accessTagLabel: "Access",
+    quickNavigationLabel: "Global Links",
+    quickTagLabel: "Global",
+    guestUser: "Guest User",
+    workspaceVisitor: "App Visitor"
+  };
+}
+
+function resolveActionClassTokens(action: TopbarActionItem): string[] {
+  return String(action.className || "")
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+}
+
+function hasActionClass(action: TopbarActionItem, className: string): boolean {
+  return resolveActionClassTokens(action).includes(className);
+}
+
+function resolveWorkspaceMenuGroupToken(action: TopbarActionItem): string {
+  for (const classToken of resolveActionClassTokens(action)) {
+    if (classToken.startsWith("is-menu-group-")) {
+      return classToken.slice("is-menu-group-".length);
+    }
+  }
+  return "";
+}
+
+function formatTokenAsTitle(rawToken: string): string {
+  return rawToken
+    .split("-")
+    .map((word) => (word ? `${word[0].toUpperCase()}${word.slice(1)}` : ""))
+    .join(" ")
+    .trim();
+}
+
+function resolveWorkspaceOverflowGroupTitleFromToken(menuGroupToken: string, text: WorkspaceTopbarLocaleText): string {
+  if (menuGroupToken === "sections") {
+    return text.overflowSectionsGroupTitle;
+  }
+  if (menuGroupToken === "hubs") {
+    return text.overflowHubsGroupTitle;
+  }
+  if (menuGroupToken === "organization-management") {
+    return text.overflowOrganizationGroupTitle;
+  }
+  const normalizedTitle = formatTokenAsTitle(menuGroupToken);
+  return normalizedTitle || text.overflowDefaultGroupTitle;
+}
+
+function createOverflowGroup(id: string, title: string): WorkspaceTopbarOverflowGroup {
+  return {
+    id,
+    title,
+    countLabel: "0",
+    active: false,
+    actions: []
+  };
+}
+
+function finalizeOverflowGroup(group: WorkspaceTopbarOverflowGroup): WorkspaceTopbarOverflowGroup {
+  return {
+    ...group,
+    countLabel: String(group.actions.length),
+    active: group.actions.some((action) => Boolean(action.active))
+  };
+}
+
+function isWorkspaceMarketplaceEntryAction(action: TopbarActionItem): boolean {
+  return hasActionClass(action, "is-marketplace-entry-action") || WORKSPACE_MARKETPLACE_ACTION_IDS.has(action.id);
+}
+
+function isWorkspaceNavigationPrimaryAction(action: TopbarActionItem): boolean {
+  return hasActionClass(action, "is-menu-entry");
+}
+
+function isWorkspaceAccessPrimaryAction(action: TopbarActionItem): boolean {
+  return action.id === "open-dashboard" || hasActionClass(action, "is-backend-entry-action");
+}
+
+function selectPrimaryActionsByPredicate(
+  actions: TopbarActionItem[],
+  selectedActionIndexes: Set<number>,
+  maxVisibleCount: number,
+  predicate: (action: TopbarActionItem) => boolean
+): void {
+  for (let index = 0; index < actions.length; index += 1) {
+    if (selectedActionIndexes.size >= maxVisibleCount) {
+      return;
+    }
+    if (selectedActionIndexes.has(index) || !predicate(actions[index])) {
+      continue;
+    }
+    selectedActionIndexes.add(index);
+  }
+}
+
+function clampWorkspacePrimaryVisibleCount(value: number): number {
+  return Math.max(PRIMARY_ACTION_MIN_VISIBLE_COUNT, Math.min(PRIMARY_ACTION_COLLAPSED_VISIBLE_COUNT, value));
+}
+
+export function resolveWorkspacePrimaryShellWidth(viewportWidth: number | null | undefined): number | null {
+  if (!Number.isFinite(viewportWidth)) {
+    return null;
+  }
+
+  return Math.min(
+    PRIMARY_ACTION_RESPONSIVE_MAX_SHELL_WIDTH,
+    Math.max(PRIMARY_ACTION_RESPONSIVE_MIN_SHELL_WIDTH, Number(viewportWidth) - PRIMARY_ACTION_RESPONSIVE_VIEWPORT_OFFSET)
+  );
+}
+
+export function resolveWorkspaceResponsivePrimaryVisibleCount(shellWidth: number | null | undefined): number {
+  if (!Number.isFinite(shellWidth)) {
+    return PRIMARY_ACTION_COLLAPSED_VISIBLE_COUNT;
+  }
+
+  const availableActionWidth = Math.max(0, Number(shellWidth) - PRIMARY_ACTION_RESPONSIVE_TOGGLE_RESERVE_WIDTH);
+  const estimatedVisibleCount = Math.floor(availableActionWidth / PRIMARY_ACTION_RESPONSIVE_SLOT_WIDTH);
+  return clampWorkspacePrimaryVisibleCount(estimatedVisibleCount);
+}
+
+
+export function resolveWorkspacePrimaryActionPresentation(
+  actions: TopbarActionItem[],
+  maxVisibleCount: number = PRIMARY_ACTION_COLLAPSED_VISIBLE_COUNT
+): WorkspacePrimaryActionPresentation {
+  const selectedActionIndexes = new Set<number>();
+
+  selectPrimaryActionsByPredicate(actions, selectedActionIndexes, maxVisibleCount, isWorkspaceNavigationPrimaryAction);
+  selectPrimaryActionsByPredicate(actions, selectedActionIndexes, maxVisibleCount, isWorkspaceAccessPrimaryAction);
+  selectPrimaryActionsByPredicate(actions, selectedActionIndexes, maxVisibleCount, () => true);
+
+  if (selectedActionIndexes.size === 0) {
+    for (let index = 0; index < actions.length; index += 1) {
+      if (selectedActionIndexes.size >= maxVisibleCount) {
+        break;
+      }
+      selectedActionIndexes.add(index);
+    }
+  }
+
+  const visibleActions: TopbarActionItem[] = [];
+  const hiddenActions: TopbarActionItem[] = [];
+
+  for (let index = 0; index < actions.length; index += 1) {
+    if (selectedActionIndexes.has(index)) {
+      visibleActions.push(actions[index]);
+      continue;
+    }
+    hiddenActions.push(actions[index]);
+  }
+
+  return {
+    visibleActions,
+    hiddenActions
+  };
+}
+
+export function resolveWorkspaceTopbarPrimaryGroups(actions: TopbarActionItem[], locale: AppLocale): WorkspaceTopbarPrimaryGroup[] {
+  const text = resolveWorkspaceTopbarLocaleText(locale);
+  const workspaceActions: TopbarActionItem[] = [];
+  const accessActions: TopbarActionItem[] = [];
+  const quickActions: TopbarActionItem[] = [];
+
+  for (const action of actions) {
+    if (action.id === "open-dashboard" || hasActionClass(action, "is-backend-entry-action")) {
+      accessActions.push(action);
+      continue;
+    }
+    if (hasActionClass(action, "is-menu-entry")) {
+      workspaceActions.push(action);
+      continue;
+    }
+    quickActions.push(action);
+  }
+
+  return [
+    {
+      id: "workspace-primary-workspace-group",
+      label: text.workspaceNavigationLabel,
+      tagLabel: text.workspaceTagLabel,
+      className: "is-workspace-group",
+      actions: workspaceActions
+    },
+    {
+      id: "workspace-primary-entry-group",
+      label: text.accessNavigationLabel,
+      tagLabel: text.accessTagLabel,
+      className: "is-entry-group",
+      actions: accessActions
+    },
+    {
+      id: "workspace-primary-quick-group",
+      label: text.quickNavigationLabel,
+      tagLabel: text.quickTagLabel,
+      className: "is-quick-group",
+      actions: quickActions
+    }
+  ].filter((group) => group.actions.length > 0);
+}
+
+export function resolveWorkspaceOverflowPresentation(actions: TopbarActionItem[], locale: AppLocale): WorkspaceTopbarOverflowPresentation {
+  const text = resolveWorkspaceTopbarLocaleText(locale);
+  const groups: WorkspaceTopbarOverflowGroup[] = [];
+  const dynamicGroups: WorkspaceTopbarOverflowGroup[] = [];
+  const dynamicGroupMap = new Map<string, WorkspaceTopbarOverflowGroup>();
+  const marketplaceActions = actions.filter((action) => isWorkspaceMarketplaceEntryAction(action));
+  const nonMarketplaceActions = actions.filter((action) => !isWorkspaceMarketplaceEntryAction(action));
+
+  function appendToGroup(groupID: string, groupTitle: string, action: TopbarActionItem): void {
+    let targetGroup = dynamicGroupMap.get(groupID);
+    if (!targetGroup) {
+      targetGroup = createOverflowGroup(groupID, groupTitle);
+      dynamicGroupMap.set(groupID, targetGroup);
+      dynamicGroups.push(targetGroup);
+    }
+    targetGroup.actions.push(action);
+  }
+
+  for (const action of nonMarketplaceActions) {
+    const menuGroupToken = resolveWorkspaceMenuGroupToken(action);
+    if (menuGroupToken) {
+      appendToGroup(
+        `workspace-overflow-group-${menuGroupToken}`,
+        resolveWorkspaceOverflowGroupTitleFromToken(menuGroupToken, text),
+        action
+      );
+      continue;
+    }
+
+    if (action.id === "open-dashboard" || hasActionClass(action, "is-backend-entry-action")) {
+      appendToGroup(WORKSPACE_OVERFLOW_ACCESS_GROUP_ID, text.overflowAccessGroupTitle, action);
+      continue;
+    }
+
+    appendToGroup("workspace-overflow-group-default", text.overflowDefaultGroupTitle, action);
+  }
+
+  if (marketplaceActions.length > 0) {
+    groups.push(
+      finalizeOverflowGroup({
+        ...createOverflowGroup("workspace-overflow-group-marketplace", text.overflowMarketplaceGroupTitle),
+        actions: marketplaceActions
+      })
+    );
+  }
+  groups.push(
+    ...dynamicGroups
+      .filter((group) => group.actions.length > 0)
+      .map((group) => finalizeOverflowGroup(group))
+      .sort((left, right) => {
+        if (left.active === right.active) {
+          return left.title.localeCompare(right.title);
+        }
+        return left.active ? -1 : 1;
+      })
+  );
+
+  return {
+    titleText: text.overflowDefaultGroupTitle,
+    hintText: "",
+    metrics: [],
+    groups
+  };
+}
+
+export function resolveWorkspaceTopbarUserProfile(sessionUser: SessionUser | null, locale: AppLocale): WorkspaceTopbarUserProfile {
+  const text = resolveWorkspaceTopbarLocaleText(locale);
+  const baseDisplayName = String(sessionUser?.display_name || sessionUser?.username || "").trim();
+  const displayName = baseDisplayName || text.guestUser;
+  const subtitle = String(sessionUser?.role || "").trim() || text.workspaceVisitor;
+  return {
+    displayName,
+    subtitle
+  };
+}

@@ -9,7 +9,7 @@ describe("MarketplacePublicPageShell", () => {
         isMobileLayout: true,
         isLightTheme: true
       })
-    ).toBe("prototype-shell marketplace-home-stage marketplace-results-page-stage is-mobile-stage is-light-stage");
+    ).toBe("si-layout-shell-stage si-layout-shell-surface si-layout-shell-surface-results si-layout-shell-stage-mobile si-layout-shell-stage-light");
   });
 
   it("builds stage class names for default pages", () => {
@@ -19,6 +19,6 @@ describe("MarketplacePublicPageShell", () => {
         isMobileLayout: false,
         isLightTheme: false
       })
-    ).toBe("prototype-shell marketplace-home-stage");
+    ).toBe("si-layout-shell-stage si-layout-shell-surface");
   });
 });

@@ -1,8 +1,8 @@
-import { AccountRoute } from "./pages/AccountWorkbenchPage";
-import { AdminCatalogRoute } from "./pages/AdminCatalogPage";
-import { AdminOpsControlRoute } from "./pages/AdminOpsControlPage";
-import { AdminSecurityRoute } from "./pages/AdminSecurityPage";
-import { AdminRoute } from "./pages/AdminWorkbenchPage";
+import { AccountRoute } from "./pages/accountWorkbench/AccountWorkbenchPage";
+import { AdminCatalogRoute } from "./pages/adminCatalog/AdminCatalogPage";
+import { AdminOpsControlRoute } from "./pages/adminOps/AdminOpsControlPage";
+import { AdminSecurityRoute } from "./pages/adminSecurity/AdminSecurityPage";
+import { AdminRoute } from "./pages/adminWorkbench/AdminWorkbenchPage";
 
 export type ProtectedRoute = AdminRoute | AccountRoute;
 

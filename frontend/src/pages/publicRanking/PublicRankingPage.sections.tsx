@@ -1,9 +1,9 @@
 import { Button, Card, Empty, Segmented, Space, Tag, Typography } from "antd";
 
 import type { AppLocale } from "../../lib/i18n";
-import type { RankingPageCopy } from "../PublicRankingPage.copy";
-import { formatRankingCompactNumber, formatRankingUpdatedAt, type RankingSections, type RankingSortKey, type RankingSummaryMetrics } from "../PublicRankingPage.helpers";
-import { PrototypeSplitRow, PrototypeUtilityHeaderActions } from "../prototypeCssInJs";
+import type { RankingPageCopy } from "./PublicRankingPage.copy";
+import { formatRankingCompactNumber, formatRankingUpdatedAt, type RankingSections, type RankingSortKey, type RankingSummaryMetrics } from "./PublicRankingPage.helpers";
+import { PrototypeSplitRow, PrototypeUtilityHeaderActions } from "../prototype/prototypeCssInJs";
 import {
   rankingDefaultRankTagStyle,
   rankingMetricTagStyle,

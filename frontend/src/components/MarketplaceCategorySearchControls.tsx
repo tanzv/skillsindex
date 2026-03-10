@@ -1,7 +1,7 @@
 import type { KeyboardEvent } from "react";
-import type { MarketplaceFilterForm } from "../pages/MarketplaceHomePage.helpers";
-import type { MarketplaceText } from "../pages/marketplaceText";
-import type { MarketplaceSubcategoryOption } from "../pages/MarketplaceHomePage.subcategory";
+import type { MarketplaceFilterForm } from "../pages/marketplaceHome/MarketplaceHomePage.helpers";
+import type { MarketplaceText } from "../pages/marketplacePublic/marketplaceText";
+import type { MarketplaceSubcategoryOption } from "../pages/marketplaceHome/MarketplaceHomePage.subcategory";
 import MarketplaceGlobalSearchBar from "./MarketplaceGlobalSearchBar";
 
 export interface MarketplaceCategoryFilterOption {

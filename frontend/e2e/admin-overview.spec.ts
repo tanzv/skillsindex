@@ -145,19 +145,6 @@ async function mockAccountManagementData(page: Page): Promise<void> {
   });
 }
 
-async function resolveLocaleSwitch(
-  roleLocator: ReturnType<Page["getByRole"]>,
-  testIDLocator: ReturnType<Page["getByTestId"]>
-) {
-  if ((await roleLocator.count()) > 0) {
-    const firstRoleLocator = roleLocator.first();
-    await expect(firstRoleLocator).toBeVisible();
-    return firstRoleLocator;
-  }
-  await expect(testIDLocator).toBeVisible();
-  return testIDLocator;
-}
-
 test.describe("Admin overview interactions", () => {
   test("keeps protected route and renders core overview sections", async ({ page }) => {
     await mockAuthAndOverview(page);
@@ -205,6 +192,36 @@ test.describe("Admin overview interactions", () => {
     await expect(page).toHaveURL(/\/admin\/accounts$/);
   });
 
+  test("renders the shared backend user center dropdown with account and preference controls", async ({ page }) => {
+    await mockAuthAndOverview(page);
+
+    await page.goto(ADMIN_OVERVIEW_PATH);
+
+    const userCenterTrigger = page.getByTestId("backend-user-center-trigger");
+    await expect(userCenterTrigger).toBeVisible();
+    await expect(page.getByTestId("sidebar-locale-switch-en")).toHaveCount(0);
+    await expect(page.getByTestId("sidebar-locale-switch-zh")).toHaveCount(0);
+
+    await userCenterTrigger.click();
+
+    const userCenterPanel = page.getByTestId("workspace-user-center-panel");
+    await expect(userCenterPanel).toBeVisible();
+    await expect(userCenterPanel.locator(".workspace-topbar-user-section")).toHaveCount(3);
+    await expect(userCenterPanel.locator(".workspace-topbar-user-inline-row .workspace-topbar-user-segmented-group")).toHaveCount(2);
+    const themeGroup = userCenterPanel.getByRole("group", { name: /Theme|主题/ });
+    await expect(themeGroup).toBeVisible();
+    await expect(themeGroup.getByRole("button", { name: /Dark|暗色/ })).toBeVisible();
+    await expect(themeGroup.getByRole("button", { name: /Light|亮色/ })).toBeVisible();
+    const languageGroup = userCenterPanel.getByRole("group", { name: /Language|语言/ });
+    await expect(languageGroup).toBeVisible();
+    await expect(languageGroup.getByRole("button", { name: /EN/ })).toBeVisible();
+    await expect(languageGroup.getByRole("button", { name: /ZH|中文/ })).toBeVisible();
+    await expect(userCenterPanel.getByRole("button", { name: /Account Center|账户中心/ })).toBeVisible();
+    await expect(userCenterPanel.getByRole("button", { name: /Security|安全设置/ })).toBeVisible();
+    await expect(userCenterPanel.getByRole("button", { name: /Sessions|会话管理/ })).toBeVisible();
+    await expect(userCenterPanel.getByRole("button", { name: /Sign Out|注销/ })).toBeVisible();
+  });
+
   test("shows request error state when overview request fails", async ({ page }) => {
     await mockAuthAndOverview(page, {
       overviewStatus: 500,
@@ -218,29 +235,43 @@ test.describe("Admin overview interactions", () => {
     await expect(page.getByText("overview backend unavailable", { exact: true })).toBeVisible();
   });
 
-  test("sidebar locale switch uses icon controls and toggles active locale", async ({ page }) => {
+  test("backend user center locale controls switch locale without restoring legacy sidebar buttons", async ({ page }) => {
     await mockAuthAndOverview(page);
     await page.goto(ADMIN_SIDEBAR_ROUTE);
 
-    const englishLocaleSwitch = await resolveLocaleSwitch(
-      page.getByRole("button", { name: "Switch to English locale", exact: true }),
-      page.getByTestId("sidebar-locale-switch-en")
-    );
-    const chineseLocaleSwitch = await resolveLocaleSwitch(
-      page.getByRole("button", { name: "Switch to Chinese locale", exact: true }),
-      page.getByTestId("sidebar-locale-switch-zh")
-    );
+    const userCenterTrigger = page.getByTestId("backend-user-center-trigger");
+    await expect(userCenterTrigger).toBeVisible();
+    await expect(page.getByTestId("sidebar-locale-switch-en")).toHaveCount(0);
+    await expect(page.getByTestId("sidebar-locale-switch-zh")).toHaveCount(0);
+    await userCenterTrigger.click();
+
+    const userCenterPanel = page.getByTestId("workspace-user-center-panel");
+    await expect(userCenterPanel).toBeVisible();
+
+    const languageGroup = userCenterPanel.getByRole("group", { name: /Language|语言/ });
+    await expect(languageGroup).toBeVisible();
+
+    const englishLocaleSwitch = languageGroup.getByRole("button", { name: /EN$/ });
+    const chineseLocaleSwitch = languageGroup.getByRole("button", { name: /(ZH|中文)$/ });
 
     if (await englishLocaleSwitch.isDisabled()) {
       await chineseLocaleSwitch.click();
-      await expect(chineseLocaleSwitch).toBeDisabled();
-      await expect(englishLocaleSwitch).toBeEnabled();
+      await expect(userCenterTrigger).toHaveAttribute("aria-label", "用户中心面板");
+      await userCenterTrigger.click();
+      const reopenedPanel = page.getByTestId("workspace-user-center-panel");
+      const reopenedLanguageGroup = reopenedPanel.getByRole("group", { name: /Language|语言/ });
+      await expect(reopenedLanguageGroup.getByRole("button", { name: /(ZH|中文)$/ })).toBeDisabled();
+      await expect(reopenedLanguageGroup.getByRole("button", { name: /EN$/ })).toBeEnabled();
       return;
     }
 
     await englishLocaleSwitch.click();
-    await expect(englishLocaleSwitch).toBeDisabled();
-    await expect(chineseLocaleSwitch).toBeEnabled();
+    await expect(userCenterTrigger).toHaveAttribute("aria-label", "User center panel");
+    await userCenterTrigger.click();
+    const reopenedPanel = page.getByTestId("workspace-user-center-panel");
+    const reopenedLanguageGroup = reopenedPanel.getByRole("group", { name: /Language|语言/ });
+    await expect(reopenedLanguageGroup.getByRole("button", { name: /EN$/ })).toBeDisabled();
+    await expect(reopenedLanguageGroup.getByRole("button", { name: /(ZH|中文)$/ })).toBeEnabled();
   });
 
   test("account management list supports search and status filtering", async ({ page }) => {

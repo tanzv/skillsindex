@@ -1,4 +1,4 @@
-import { buildMarketplacePath, parseQueryState } from "../pages/MarketplaceHomePage.helpers";
+import { buildMarketplacePath, parseQueryState } from "../pages/marketplaceHome/MarketplaceHomePage.helpers";
 
 const resultsPathSuffix = "/results";
 

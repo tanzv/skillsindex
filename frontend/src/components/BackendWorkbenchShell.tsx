@@ -1,11 +1,13 @@
 import { Button } from "antd";
-import { GlobalOutlined, TranslationOutlined } from "@ant-design/icons";
 import { ReactNode, useMemo } from "react";
 
-import { LocaleSwitchButton, QuickJumpActions, QuickJumpLabel, QuickJumpSection, SideLocaleSwitch } from "../App.shared";
+import { QuickJumpActions, QuickJumpLabel, QuickJumpSection } from "../App.shared";
 import type { NavigationItem, ProtectedRoute } from "../appNavigationConfig";
+import GlobalUserControlDropdown from "./GlobalUserControlDropdown";
 import { createGlobalUserControlService } from "../lib/globalUserControlService";
+import { createSystemUserControlRegistrations } from "../lib/systemUserControlRegistrations";
 import type { AppLocale } from "../lib/i18n";
+import type { ThemeMode } from "../lib/themeModePath";
 
 interface BackendWorkbenchText {
   brandName: string;
@@ -25,6 +27,7 @@ interface BackendWorkbenchPrimarySection {
 interface BackendWorkbenchShellProps {
   route: ProtectedRoute;
   locale: AppLocale;
+  themeMode: ThemeMode;
   submitLoading: boolean;
   sessionUser: {
     username: string;
@@ -36,6 +39,7 @@ interface BackendWorkbenchShellProps {
   text: BackendWorkbenchText;
   onNavigate: (path: string) => void;
   onLocaleChange: (locale: AppLocale) => void;
+  onThemeModeChange: (mode: ThemeMode) => void;
   onLogout: () => void;
   children: ReactNode;
 }
@@ -90,6 +94,7 @@ function resolveActivePrimarySection(route: ProtectedRoute, sections: BackendWor
 export default function BackendWorkbenchShell({
   route,
   locale,
+  themeMode,
   submitLoading,
   sessionUser,
   navItems,
@@ -98,25 +103,49 @@ export default function BackendWorkbenchShell({
   text,
   onNavigate,
   onLocaleChange,
+  onThemeModeChange,
   onLogout,
   children
 }: BackendWorkbenchShellProps) {
   const primarySections = useMemo(() => buildPrimarySections(), []);
+  const userControlRegistrations = useMemo(
+    () =>
+      createSystemUserControlRegistrations({
+        onNavigate,
+        currentPath: route
+      }),
+    [onNavigate, route]
+  );
   const globalUserControlService = useMemo(
     () =>
       createGlobalUserControlService({
         locale,
-        themeMode: "dark",
+        themeMode,
+        onThemeModeChange,
         onLocaleChange,
         onLogout,
-        logoutDisabled: submitLoading
+        logoutDisabled: submitLoading,
+        registrations: userControlRegistrations
       }),
-    [locale, onLocaleChange, onLogout, submitLoading]
+    [locale, onLocaleChange, onLogout, onThemeModeChange, submitLoading, themeMode, userControlRegistrations]
   );
   const activeSection = useMemo(() => resolveActivePrimarySection(route, primarySections), [route, primarySections]);
   const secondaryItems = useMemo(
     () => navItems.filter((item) => activeSection.routes.includes(item.path)),
     [activeSection.routes, navItems]
+  );
+  const userCenterTrigger = useMemo(
+    () => (
+      <GlobalUserControlDropdown
+        service={globalUserControlService}
+        displayName={sessionUser.username}
+        subtitle={sessionUser.role}
+        avatarFallback="BU"
+        triggerDataTestId="backend-user-center-trigger"
+        overlayClassName="workspace-topbar-user-dropdown backend-user-dropdown"
+      />
+    ),
+    [globalUserControlService, sessionUser.role, sessionUser.username]
   );
 
   return (
@@ -146,51 +175,7 @@ export default function BackendWorkbenchShell({
           <button type="button" className="backend-marketplace-link" onClick={() => onNavigate("/")}>
             {text.home}
           </button>
-
-          <SideLocaleSwitch role="group" aria-label="Backend locale switch">
-            <LocaleSwitchButton
-              type="button"
-              data-testid="sidebar-locale-switch-en"
-              onClick={() => {
-                globalUserControlService.locale.switchLocale("en");
-              }}
-              $active={locale === "en"}
-              disabled={locale === "en" || !globalUserControlService.locale.canSwitch}
-              aria-label="Switch to English locale"
-              title="English locale"
-            >
-              <GlobalOutlined />
-            </LocaleSwitchButton>
-            <LocaleSwitchButton
-              type="button"
-              data-testid="sidebar-locale-switch-zh"
-              onClick={() => {
-                globalUserControlService.locale.switchLocale("zh");
-              }}
-              $active={locale === "zh"}
-              disabled={locale === "zh" || !globalUserControlService.locale.canSwitch}
-              aria-label="Switch to Chinese locale"
-              title="Chinese locale"
-            >
-              <TranslationOutlined />
-            </LocaleSwitchButton>
-          </SideLocaleSwitch>
-
-          <div className="backend-user-inline">
-            <strong>{sessionUser.username}</strong>
-            <span>{sessionUser.role}</span>
-          </div>
-
-          <button
-            className="ghost"
-            onClick={() => {
-              void globalUserControlService.auth.logout();
-            }}
-            disabled={!globalUserControlService.auth.canLogout}
-            type="button"
-          >
-            {text.signOut}
-          </button>
+          {userCenterTrigger}
         </div>
       </header>
 

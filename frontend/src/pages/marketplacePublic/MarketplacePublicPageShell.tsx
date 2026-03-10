@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+
+import { buildShellStageClassName } from "../prototype/pageShellLayoutContract";
 import MarketplacePublicPageStyles from "./MarketplacePublicPageStyles";
 
 interface MarketplacePublicPageShellProps {
@@ -6,6 +8,7 @@ interface MarketplacePublicPageShellProps {
   isMobileLayout?: boolean;
   isLightTheme?: boolean;
   stageTestId?: string;
+  stageClassName?: string;
   rootClassName: string;
   rootTestId: string;
   children: ReactNode;
@@ -22,33 +25,35 @@ export function buildMarketplacePublicStageClassName({
   isMobileLayout,
   isLightTheme
 }: MarketplacePublicStageClassNameOptions): string {
-  return [
-    "prototype-shell",
-    "marketplace-home-stage",
-    isResultsStage ? "marketplace-results-page-stage" : "",
-    isMobileLayout ? "is-mobile-stage" : "",
-    isLightTheme ? "is-light-stage" : ""
-  ]
-    .filter(Boolean)
-    .join(" ");
+  return buildShellStageClassName({
+    isResultsStage,
+    isMobileLayout,
+    isLightTheme
+  });
 }
 
 export default function MarketplacePublicPageShell({
   isResultsStage = false,
   isMobileLayout = false,
   isLightTheme = false,
-  stageTestId = "marketplace-home-stage",
+  stageTestId = "shell-stage",
+  stageClassName = "",
   rootClassName,
   rootTestId,
   children
 }: MarketplacePublicPageShellProps) {
   return (
     <div
-      className={buildMarketplacePublicStageClassName({
-        isResultsStage,
-        isMobileLayout,
-        isLightTheme
-      })}
+      className={[
+        buildMarketplacePublicStageClassName({
+          isResultsStage,
+          isMobileLayout,
+          isLightTheme
+        }),
+        stageClassName
+      ]
+        .filter(Boolean)
+        .join(" ")}
       style={{ width: "100%", minHeight: "100dvh", height: "auto" }}
       data-testid={stageTestId}
     >
