@@ -44,6 +44,28 @@ function stripPublicPrefix(pathname: string): string {
 function resolvePromotedProtectedRoute(pathname: string): ProtectedRoute | null {
   const normalizedCorePath = normalizeTrailingSlash(stripPublicPrefix(pathname));
 
+  if (normalizedCorePath === "/admin/accounts/new" || normalizedCorePath.startsWith("/admin/accounts/new/")) {
+    return "/admin/accounts/new";
+  }
+  if (normalizedCorePath === "/admin/accounts" || normalizedCorePath.startsWith("/admin/accounts/")) {
+    return "/admin/accounts";
+  }
+  if (normalizedCorePath === "/admin/permissions/accounts/new" || normalizedCorePath.startsWith("/admin/permissions/accounts/new/")) {
+    return "/admin/accounts/new";
+  }
+  if (
+    normalizedCorePath === "/admin/permissions/accounts" ||
+    normalizedCorePath.startsWith("/admin/permissions/accounts/")
+  ) {
+    return "/admin/accounts";
+  }
+  if (normalizedCorePath === "/admin/roles/new" || normalizedCorePath.startsWith("/admin/roles/new/")) {
+    return "/admin/roles/new";
+  }
+  if (normalizedCorePath === "/admin/roles" || normalizedCorePath.startsWith("/admin/roles/")) {
+    return "/admin/roles";
+  }
+
   if (normalizedCorePath === "/admin/ingestion/manual" || normalizedCorePath.startsWith("/admin/ingestion/manual/")) {
     return "/admin/ingestion/manual";
   }

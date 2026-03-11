@@ -57,8 +57,6 @@ describe("normalizeAppRoute", () => {
     expect(normalizeAppRoute("/admin/integrations/list")).toBe("/prototype");
     expect(normalizeAppRoute("/admin/integrations/new")).toBe("/prototype");
     expect(normalizeAppRoute("/admin/access")).toBe("/prototype");
-    expect(normalizeAppRoute("/admin/permissions/accounts")).toBe("/prototype");
-    expect(normalizeAppRoute("/light/admin/permissions/accounts")).toBe("/prototype");
   });
 
   it("promotes skill operation routes to protected admin routes", () => {
@@ -66,5 +64,14 @@ describe("normalizeAppRoute", () => {
     expect(normalizeAppRoute("/light/admin/ingestion/repository")).toBe("/admin/ingestion/repository");
     expect(normalizeAppRoute("/admin/records/imports")).toBe("/admin/records/imports");
     expect(normalizeAppRoute("/light/admin/records/sync-jobs")).toBe("/admin/sync-jobs");
+  });
+
+  it("promotes organization management routes to protected admin routes", () => {
+    expect(normalizeAppRoute("/admin/accounts")).toBe("/admin/accounts");
+    expect(normalizeAppRoute("/light/admin/accounts/new")).toBe("/admin/accounts/new");
+    expect(normalizeAppRoute("/admin/permissions/accounts")).toBe("/admin/accounts");
+    expect(normalizeAppRoute("/light/admin/permissions/accounts/new")).toBe("/admin/accounts/new");
+    expect(normalizeAppRoute("/admin/roles")).toBe("/admin/roles");
+    expect(normalizeAppRoute("/mobile/light/admin/roles/new")).toBe("/admin/roles/new");
   });
 });

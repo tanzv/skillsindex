@@ -46,6 +46,8 @@ import { resolveLoginInfoPanelConfigOverride } from "./pages/login/loginInfoPane
 import MarketplaceHomePage from "./pages/marketplaceHome/MarketplaceHomePage";
 import MarketplaceCategoryDetailPage from "./pages/marketplacePublic/MarketplaceCategoryDetailPage";
 import OrganizationCenterPage from "./pages/organizationCenter/OrganizationCenterPage";
+import { isOrganizationManagementRoute } from "./pages/organizationCenter/OrganizationManagementRoutePage.helpers";
+import OrganizationManagementRoutePage from "./pages/organizationCenter/OrganizationManagementRoutePage";
 import PrototypeRouteRenderer from "./pages/prototype/PrototypeRouteRenderer";
 import PublicComparePage from "./pages/publicCompare/PublicComparePage";
 import PublicCategoriesPage from "./pages/publicCategories/PublicCategoriesPage";
@@ -474,7 +476,11 @@ export default function App() {
       : accountQuickRoutes
     : [];
   const protectedRoute = route as ProtectedRoute;
-  const shouldRenderProtectedContentDirectly = isAdminRoute(protectedRoute) && isSkillOperationsRoute(protectedRoute);
+  const shouldRenderProtectedContentDirectly =
+    isAdminRoute(protectedRoute) &&
+    (isSkillOperationsRoute(protectedRoute) ||
+      isOrganizationManagementRoute(protectedRoute) ||
+      protectedRoute === "/admin/organizations");
   const protectedContent = isAdminRoute(protectedRoute) ? (
     protectedRoute === "/admin/overview" ? (
       <AdminOverviewPage currentPath={window.location.pathname} onNavigate={navigate} />
@@ -482,6 +488,19 @@ export default function App() {
       <AdminIntegrationsPage />
     ) : protectedRoute === "/admin/ops/metrics" ? (
       <AdminOpsMetricsPage />
+    ) : isOrganizationManagementRoute(protectedRoute) ? (
+      <OrganizationManagementRoutePage
+        locale={locale}
+        route={protectedRoute}
+        currentPath={window.location.pathname}
+        onNavigate={navigate}
+        sessionUser={sessionUser}
+        onThemeModeChange={handleThemeModeChange}
+        onLocaleChange={(nextLocale) => {
+          void handleLocaleChange(nextLocale);
+        }}
+        onLogout={handleLogout}
+      />
     ) : protectedRoute === "/admin/organizations" ? (
       <OrganizationCenterPage
         locale={locale}

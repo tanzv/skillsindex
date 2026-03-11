@@ -4,7 +4,6 @@ import type { ThemeMode } from "../../lib/themeModePath";
 import { resolvePrototypeRoute } from "../../lib/prototypeRouteResolver";
 import type { PrototypeCatalogEntry } from "../../lib/prototypeCatalog";
 import { extractSkillID } from "../../lib/appPathnameResolver";
-import AdminAccountRoleWorkbenchPage, { AdminAccountRoleWorkbenchMode } from "../adminAccountRoleWorkbench/AdminAccountRoleWorkbenchPage";
 import AdminIncidentWorkbenchPage, { AdminIncidentWorkbenchMode } from "../adminWorkbench/AdminIncidentWorkbenchPage";
 import AdminIntegrationWorkbenchPage, { AdminIntegrationWorkbenchMode } from "../adminWorkbench/AdminIntegrationWorkbenchPage";
 import AdminOpsMetricsPage from "../adminOps/AdminOpsMetricsPage";
@@ -14,7 +13,6 @@ import AdminIntegrationsPage from "../adminWorkbench/AdminIntegrationsPage";
 import GovernanceCenterPage from "../governanceCenter/GovernanceCenterPage";
 import LoginPage from "../login/LoginPage";
 import MarketplaceHomePage from "../marketplaceHome/MarketplaceHomePage";
-import OrganizationCenterPage from "../organizationCenter/OrganizationCenterPage";
 import OrganizationManagementSubpageShell from "../organizationCenter/OrganizationManagementSubpageShell";
 import PrototypeReplicaPage from "./PrototypeReplicaPage";
 import PublicComparePage from "../publicCompare/PublicComparePage";
@@ -47,7 +45,6 @@ export type PrototypeImplementationTarget =
   | "admin-integrations"
   | "admin-access"
   | "admin-incidents"
-  | "organization"
   | "admin-overview"
   | "fallback";
 
@@ -94,23 +91,6 @@ function resolveAdminIncidentMode(pathname: string): { mode: AdminIncidentWorkbe
   return null;
 }
 
-function resolveAdminAccountRoleMode(pathname: string): AdminAccountRoleWorkbenchMode | null {
-  const corePath = toPrototypeCorePath(pathname);
-  if (corePath === "/admin/accounts" || corePath === "/admin/permissions/accounts") {
-    return "account_management_list";
-  }
-  if (corePath === "/admin/accounts/new" || corePath === "/admin/permissions/accounts/new") {
-    return "account_configuration_form";
-  }
-  if (corePath === "/admin/roles") {
-    return "role_management_list";
-  }
-  if (corePath === "/admin/roles/new") {
-    return "role_configuration_form";
-  }
-  return null;
-}
-
 function resolveAdminIntegrationMode(pathname: string): AdminIntegrationWorkbenchMode | null {
   const corePath = toPrototypeCorePath(pathname);
   if (corePath === "/admin/integrations") {
@@ -140,40 +120,6 @@ export function renderPrototypeRouteContent(props: PrototypeRouteRenderProps) {
   const incidentMode = resolveAdminIncidentMode(props.currentPath);
   if (incidentMode) {
     return <AdminIncidentWorkbenchPage mode={incidentMode.mode} incidentID={incidentMode.incidentID} />;
-  }
-
-  const accountRoleMode = resolveAdminAccountRoleMode(props.currentPath);
-  if (accountRoleMode) {
-    const titleByMode: Record<AdminAccountRoleWorkbenchMode, string> = {
-      account_management_list: "Account Management List",
-      account_configuration_form: "Account Configuration Form",
-      role_management_list: "Role Management List",
-      role_configuration_form: "Role Configuration Form"
-    };
-    const subtitleByMode: Record<AdminAccountRoleWorkbenchMode, string> = {
-      account_management_list: "Manage user records while keeping organization navigation anchored in the workspace shell.",
-      account_configuration_form: "Configure account onboarding and provisioning rules with organization navigation visible.",
-      role_management_list: "Review role assignments and usage with persistent organization side navigation.",
-      role_configuration_form: "Edit role definitions while keeping workspace-level navigation and context."
-    };
-
-    return (
-      <OrganizationManagementSubpageShell
-        locale={props.locale}
-        currentPath={props.currentPath}
-        onNavigate={props.onNavigate}
-        sessionUser={props.sessionUser}
-        onThemeModeChange={props.onThemeModeChange}
-        onLocaleChange={props.onLocaleChange}
-        onLogout={props.onLogout}
-        activeMenuID={resolveOrganizationManagementMenuItemID(props.currentPath)}
-        eyebrow="Organization Management"
-        title={titleByMode[accountRoleMode]}
-        subtitle={subtitleByMode[accountRoleMode]}
-      >
-        <AdminAccountRoleWorkbenchPage mode={accountRoleMode} />
-      </OrganizationManagementSubpageShell>
-    );
   }
 
   const integrationMode = resolveAdminIntegrationMode(props.currentPath);
@@ -293,20 +239,6 @@ export function renderPrototypeRouteContent(props: PrototypeRouteRenderProps) {
 
   if (target === "admin-incidents") {
     return <AdminOpsMetricsPage />;
-  }
-
-  if (target === "organization") {
-    return (
-      <OrganizationCenterPage
-        locale={props.locale}
-        currentPath={props.currentPath}
-        onNavigate={props.onNavigate}
-        sessionUser={props.sessionUser}
-        onThemeModeChange={props.onThemeModeChange}
-        onLocaleChange={props.onLocaleChange}
-        onLogout={props.onLogout}
-      />
-    );
   }
 
   if (target === "admin-overview") {

@@ -5,6 +5,10 @@ export type AdminRoute =
   | "/admin/ingestion/manual"
   | "/admin/ingestion/repository"
   | "/admin/records/imports"
+  | "/admin/accounts"
+  | "/admin/accounts/new"
+  | "/admin/roles"
+  | "/admin/roles/new"
   | "/admin/skills"
   | "/admin/integrations"
   | "/admin/ops/metrics"
@@ -26,6 +30,11 @@ export type AdminRoute =
 
 export type AdminOpsRoute = Extract<AdminRoute, `/admin/ops/${string}`>;
 
+export type AdminOrganizationManagementRoute = Extract<
+  AdminRoute,
+  "/admin/accounts" | "/admin/accounts/new" | "/admin/roles" | "/admin/roles/new"
+>;
+
 export type AdminCatalogRoute =
   | "/admin/overview"
   | "/admin/skills"
@@ -36,9 +45,17 @@ export type AdminCatalogRoute =
 
 export type AdminGovernanceRoute = Exclude<
   AdminRoute,
-  AdminOpsRoute | AdminCatalogRoute | "/admin/ingestion/manual" | "/admin/ingestion/repository" | "/admin/records/imports"
+  | AdminOpsRoute
+  | AdminCatalogRoute
+  | AdminOrganizationManagementRoute
+  | "/admin/ingestion/manual"
+  | "/admin/ingestion/repository"
+  | "/admin/records/imports"
 >;
 
-export type AdminWorkbenchRoute = Exclude<AdminRoute, "/admin/ingestion/manual" | "/admin/ingestion/repository" | "/admin/records/imports">;
+export type AdminWorkbenchRoute = Exclude<
+  AdminRoute,
+  AdminOrganizationManagementRoute | "/admin/ingestion/manual" | "/admin/ingestion/repository" | "/admin/records/imports"
+>;
 
 export type AdminWorkbenchDefinitionMap = Record<AdminWorkbenchRoute, WorkbenchDefinition>;

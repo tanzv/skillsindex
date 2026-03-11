@@ -10,7 +10,6 @@ export type PrototypeRouteFamily =
   | "admin-integrations"
   | "admin-access"
   | "admin-incidents"
-  | "organization"
   | "admin-overview";
 
 export type PrototypeRouteKey =
@@ -28,7 +27,6 @@ export type PrototypeRouteKey =
   | "admin-integrations"
   | "admin-access"
   | "admin-incidents"
-  | "organization"
   | "admin-overview";
 
 export interface PrototypeRouteResolution {
@@ -124,14 +122,6 @@ export function resolvePrototypeRoute(pathname: string): PrototypeRouteResolutio
 
   if (matchesPath(normalizedCorePath, "/admin/incidents")) {
     return { family: "admin-incidents", key: "admin-incidents" };
-  }
-
-  if (
-    matchesPath(normalizedCorePath, "/admin/accounts") ||
-    matchesPath(normalizedCorePath, "/admin/permissions/accounts") ||
-    matchesPath(normalizedCorePath, "/admin/roles")
-  ) {
-    return { family: "organization", key: "organization" };
   }
 
   if (normalizedCorePath === "/admin" || normalizedCorePath === "/admin/overview") {
