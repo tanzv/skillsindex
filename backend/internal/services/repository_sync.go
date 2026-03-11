@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -45,14 +44,21 @@ func (s *RepositorySyncService) CloneAndExtract(ctx context.Context, source Repo
 
 	targetPath := tmpDir
 	if p := strings.TrimSpace(source.Path); p != "" {
-		joined := filepath.Join(tmpDir, p)
-		cleanTarget := filepath.Clean(joined)
-		cleanBase := filepath.Clean(tmpDir)
-		prefix := cleanBase + string(os.PathSeparator)
-		if cleanTarget != cleanBase && !strings.HasPrefix(cleanTarget, prefix) {
+		resolvedPath, resolveErr := resolvePathWithinBase(tmpDir, p, "repository path")
+		if resolveErr != nil {
 			return ExtractedSkill{}, fmt.Errorf("invalid repository path")
 		}
-		targetPath = cleanTarget
+		info, statErr := os.Stat(resolvedPath)
+		if statErr != nil {
+			if os.IsNotExist(statErr) {
+				return ExtractedSkill{}, fmt.Errorf("repository path not found")
+			}
+			return ExtractedSkill{}, fmt.Errorf("failed to inspect repository path: %w", statErr)
+		}
+		if !info.IsDir() {
+			return ExtractedSkill{}, fmt.Errorf("repository path must be a directory")
+		}
+		targetPath = resolvedPath
 	}
 
 	return extractSkillFromDirectory(targetPath)

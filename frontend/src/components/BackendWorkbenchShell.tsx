@@ -54,7 +54,15 @@ function buildPrimarySections(): BackendWorkbenchPrimarySection[] {
     {
       id: "catalog",
       label: "Catalog",
-      routes: ["/admin/skills", "/admin/jobs", "/admin/sync-jobs", "/admin/sync-policy/repository"]
+      routes: [
+        "/admin/ingestion/manual",
+        "/admin/ingestion/repository",
+        "/admin/records/imports",
+        "/admin/skills",
+        "/admin/jobs",
+        "/admin/sync-jobs",
+        "/admin/sync-policy/repository"
+      ]
     },
     {
       id: "operations",

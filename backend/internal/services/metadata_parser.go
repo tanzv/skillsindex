@@ -43,18 +43,26 @@ func extractSkillFromDirectory(basePath string) (ExtractedSkill, error) {
 		contentFile = "README.md"
 	}
 
-	content, err := readFileIfExists(filepath.Join(basePath, contentFile))
+	contentPath, err := resolvePathWithinBase(basePath, contentFile, "content_file")
+	if err != nil {
+		return ExtractedSkill{}, err
+	}
+	content, err := readFileIfExists(contentPath)
 	if err != nil {
 		return ExtractedSkill{}, err
 	}
 	if content == "" && contentFile != "README.md" {
-		content, err = readFileIfExists(filepath.Join(basePath, "README.md"))
+		readmePath, readmeErr := resolvePathWithinBase(basePath, "README.md", "content_file")
+		if readmeErr != nil {
+			return ExtractedSkill{}, readmeErr
+		}
+		content, err = readFileIfExists(readmePath)
 		if err != nil {
 			return ExtractedSkill{}, err
 		}
 	}
 	if strings.TrimSpace(content) == "" {
-		return ExtractedSkill{}, fmt.Errorf("skill content is empty")
+		return ExtractedSkill{}, fmt.Errorf("skill content is empty; provide a non-empty README.md or configure skill.json content_file")
 	}
 
 	name := strings.TrimSpace(manifest.Name)

@@ -60,4 +60,11 @@ describe("normalizeAppRoute", () => {
     expect(normalizeAppRoute("/admin/permissions/accounts")).toBe("/prototype");
     expect(normalizeAppRoute("/light/admin/permissions/accounts")).toBe("/prototype");
   });
+
+  it("promotes skill operation routes to protected admin routes", () => {
+    expect(normalizeAppRoute("/admin/ingestion/manual")).toBe("/admin/ingestion/manual");
+    expect(normalizeAppRoute("/light/admin/ingestion/repository")).toBe("/admin/ingestion/repository");
+    expect(normalizeAppRoute("/admin/records/imports")).toBe("/admin/records/imports");
+    expect(normalizeAppRoute("/light/admin/records/sync-jobs")).toBe("/admin/sync-jobs");
+  });
 });

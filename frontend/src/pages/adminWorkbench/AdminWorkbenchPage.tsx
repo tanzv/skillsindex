@@ -2,12 +2,12 @@ import { ConsoleWorkbench } from "../accountWorkbench/ConsoleWorkbench";
 import { adminWorkbenchCatalogDefinitions } from "./AdminWorkbenchDefinitionsCatalog";
 import { adminWorkbenchGovernanceDefinitions } from "./AdminWorkbenchDefinitionsGovernance";
 import { adminWorkbenchOpsDefinitions } from "./AdminWorkbenchDefinitionsOps";
-import type { AdminRoute, AdminWorkbenchDefinitionMap } from "./AdminWorkbenchTypes";
+import type { AdminWorkbenchDefinitionMap, AdminWorkbenchRoute } from "./AdminWorkbenchTypes";
 
 export type { AdminRoute } from "./AdminWorkbenchTypes";
 
 interface AdminWorkbenchPageProps {
-  route: AdminRoute;
+  route: AdminWorkbenchRoute;
 }
 
 const adminWorkbenchDefinitions: AdminWorkbenchDefinitionMap = {

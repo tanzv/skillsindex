@@ -27,12 +27,17 @@ describe("resolvePrototypeRoute", () => {
     expect(resolvePrototypeRoute("/mobile/light/states/permission-denied")).toEqual({ family: "state", key: "state-permission-denied", stateKind: "permission" });
   });
 
-  it("resolves records sync family", () => {
+  it("keeps preview-only records sync routes in the prototype resolver", () => {
     expect(resolvePrototypeRoute("/admin/records/exports")?.key).toBe("records-sync");
-    expect(resolvePrototypeRoute("/admin/records/imports")?.key).toBe("records-sync");
-    expect(resolvePrototypeRoute("/admin/records/sync-jobs")?.key).toBe("records-sync");
-    expect(resolvePrototypeRoute("/admin/ingestion/repository")?.key).toBe("records-sync");
-    expect(resolvePrototypeRoute("/light/admin/ingestion/manual")?.key).toBe("records-sync");
+    expect(resolvePrototypeRoute("/admin/ingestion/upload")?.key).toBe("records-sync");
+    expect(resolvePrototypeRoute("/light/admin/ingestion/skillmp")?.key).toBe("records-sync");
+  });
+
+  it("stops owning promoted skill operation routes", () => {
+    expect(resolvePrototypeRoute("/admin/records/imports")).toBeNull();
+    expect(resolvePrototypeRoute("/admin/records/sync-jobs")).toBeNull();
+    expect(resolvePrototypeRoute("/admin/ingestion/repository")).toBeNull();
+    expect(resolvePrototypeRoute("/light/admin/ingestion/manual")).toBeNull();
   });
 
   it("resolves admin families for integrations/access/incidents/organization/overview", () => {
@@ -40,9 +45,8 @@ describe("resolvePrototypeRoute", () => {
     expect(resolvePrototypeRoute("/admin/integrations/webhooks/logs")?.key).toBe("admin-integrations");
     expect(resolvePrototypeRoute("/admin/access")?.key).toBe("admin-access");
     expect(resolvePrototypeRoute("/admin/incidents/12/response")?.key).toBe("admin-incidents");
-    expect(resolvePrototypeRoute("/admin/accounts/new")?.key).toBe("organization");
+    expect(resolvePrototypeRoute("/admin/accounts")?.key).toBe("organization");
     expect(resolvePrototypeRoute("/admin/permissions/accounts")?.key).toBe("organization");
-    expect(resolvePrototypeRoute("/light/admin/permissions/accounts/new")?.key).toBe("organization");
     expect(resolvePrototypeRoute("/admin/roles/new")?.key).toBe("organization");
     expect(resolvePrototypeRoute("/light/admin")?.key).toBe("admin-overview");
     expect(resolvePrototypeRoute("/light/admin/overview")?.key).toBe("admin-overview");

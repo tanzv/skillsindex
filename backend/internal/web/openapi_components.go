@@ -12,6 +12,7 @@ func openAPISchemas() map[string]any {
 	mergeOpenAPIPathMap(schemas, openAPISchemasCore())
 	mergeOpenAPIPathMap(schemas, openAPISchemasAccountAPIKey())
 	mergeOpenAPIPathMap(schemas, openAPISchemasAdminAPIKey())
+	mergeOpenAPIPathMap(schemas, openAPISchemasAdminIngestion())
 	mergeOpenAPIPathMap(schemas, openAPISchemasAdminSSO())
 	mergeOpenAPIPathMap(schemas, openAPISchemasAdminMetrics())
 	mergeOpenAPIPathMap(schemas, openAPISchemasSyncPolicies())

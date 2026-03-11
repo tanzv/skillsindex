@@ -28,6 +28,38 @@ function normalizeTrailingSlash(pathname: string): string {
   return pathname.replace(/\/+$/, "") || "/";
 }
 
+function stripPublicPrefix(pathname: string): string {
+  if (pathname === "/mobile/light" || pathname.startsWith("/mobile/light/")) {
+    return pathname.slice("/mobile/light".length) || "/";
+  }
+  if (pathname === "/mobile" || pathname.startsWith("/mobile/")) {
+    return pathname.slice("/mobile".length) || "/";
+  }
+  if (pathname === "/light" || pathname.startsWith("/light/")) {
+    return pathname.slice("/light".length) || "/";
+  }
+  return pathname;
+}
+
+function resolvePromotedProtectedRoute(pathname: string): ProtectedRoute | null {
+  const normalizedCorePath = normalizeTrailingSlash(stripPublicPrefix(pathname));
+
+  if (normalizedCorePath === "/admin/ingestion/manual" || normalizedCorePath.startsWith("/admin/ingestion/manual/")) {
+    return "/admin/ingestion/manual";
+  }
+  if (normalizedCorePath === "/admin/ingestion/repository" || normalizedCorePath.startsWith("/admin/ingestion/repository/")) {
+    return "/admin/ingestion/repository";
+  }
+  if (normalizedCorePath === "/admin/records/imports" || normalizedCorePath.startsWith("/admin/records/imports/")) {
+    return "/admin/records/imports";
+  }
+  if (normalizedCorePath === "/admin/records/sync-jobs" || normalizedCorePath.startsWith("/admin/records/sync-jobs/")) {
+    return "/admin/sync-jobs";
+  }
+
+  return null;
+}
+
 export function extractSkillID(pathname: string): number | null {
   const matched = pathname.match(/^\/(?:mobile\/(?:light\/)?|light\/)?skills\/(\d+)(?:\/)?$/);
   if (!matched) {
@@ -58,6 +90,10 @@ export function normalizeAppRoute(
   dependencies: AppPathnameResolverDependencies = defaultDependencies
 ): AppRoute {
   const trimmed = normalizeTrailingSlash(pathname);
+  const promotedProtectedRoute = resolvePromotedProtectedRoute(trimmed);
+  if (promotedProtectedRoute) {
+    return promotedProtectedRoute;
+  }
   if (trimmed === "/light" || trimmed === "/mobile" || trimmed === "/mobile/light") {
     return "/";
   }

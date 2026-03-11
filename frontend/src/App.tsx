@@ -49,6 +49,8 @@ import PublicCategoriesPage from "./pages/publicCategories/PublicCategoriesPage"
 import PublicDocsPage from "./pages/publicDocs/PublicDocsPage";
 import PublicRankingPage from "./pages/publicRanking/PublicRankingPage";
 import PublicSkillDetailPage from "./pages/publicSkillDetail/PublicSkillDetailPage";
+import SkillOperationsPage from "./pages/skillOperations/SkillOperationsPage";
+import { isSkillOperationsRoute } from "./pages/skillOperations/SkillOperationsPage.helpers";
 import { buildPathWithThemeMode, resolveThemeMode, ThemeMode } from "./lib/themeModePath";
 import { applyThemeTokens } from "./theme/themeSystem";
 
@@ -467,6 +469,19 @@ export default function App() {
         }}
         onLogout={handleLogout}
       />
+    ) : isSkillOperationsRoute(protectedRoute) ? (
+      <SkillOperationsPage
+        locale={locale}
+        route={protectedRoute}
+        currentPath={window.location.pathname}
+        onNavigate={navigate}
+        sessionUser={sessionUser}
+        onThemeModeChange={handleThemeModeChange}
+        onLocaleChange={(nextLocale) => {
+          void handleLocaleChange(nextLocale);
+        }}
+        onLogout={handleLogout}
+      />
     ) : isAdminCatalogRoute(protectedRoute) ? (
       isAdminRepositoryCatalogRoute(protectedRoute) ? (
         <AdminRepositoryCatalogPage locale={locale} route={protectedRoute} onNavigate={navigate} />
@@ -483,6 +498,7 @@ export default function App() {
   ) : isAccountRoute(protectedRoute) ? (
     <AccountCenterPage locale={locale} route={protectedRoute} onNavigate={navigate} />
   ) : null;
+  const shouldRenderProtectedContentDirectly = isAdminRoute(protectedRoute) && isSkillOperationsRoute(protectedRoute);
 
   return (
     <ConfigProvider
@@ -494,27 +510,31 @@ export default function App() {
         }
       }}
     >
-      <BackendWorkbenchShell
-        route={protectedRoute}
-        locale={locale}
-        themeMode={themeMode}
-        submitLoading={submitLoading}
-        sessionUser={sessionUser}
-        navItems={navItems}
-        navByPath={navByPath}
-        quickRoutes={quickRoutes}
-        text={text}
-        onNavigate={navigate}
-        onLocaleChange={(nextLocale) => {
-          void handleLocaleChange(nextLocale);
-        }}
-        onThemeModeChange={handleThemeModeChange}
-        onLogout={() => {
-          void handleLogout();
-        }}
-      >
-        {protectedContent}
-      </BackendWorkbenchShell>
+      {shouldRenderProtectedContentDirectly ? (
+        protectedContent
+      ) : (
+        <BackendWorkbenchShell
+          route={protectedRoute}
+          locale={locale}
+          themeMode={themeMode}
+          submitLoading={submitLoading}
+          sessionUser={sessionUser}
+          navItems={navItems}
+          navByPath={navByPath}
+          quickRoutes={quickRoutes}
+          text={text}
+          onNavigate={navigate}
+          onLocaleChange={(nextLocale) => {
+            void handleLocaleChange(nextLocale);
+          }}
+          onThemeModeChange={handleThemeModeChange}
+          onLogout={() => {
+            void handleLogout();
+          }}
+        >
+          {protectedContent}
+        </BackendWorkbenchShell>
+      )}
     </ConfigProvider>
   );
 }

@@ -108,9 +108,8 @@ export function resolvePrototypeRoute(pathname: string): PrototypeRouteResolutio
 
   if (
     matchesPath(normalizedCorePath, "/admin/records/exports") ||
-    matchesPath(normalizedCorePath, "/admin/ingestion") ||
-    matchesPath(normalizedCorePath, "/admin/records/imports") ||
-    matchesPath(normalizedCorePath, "/admin/records/sync-jobs")
+    matchesPath(normalizedCorePath, "/admin/ingestion/upload") ||
+    matchesPath(normalizedCorePath, "/admin/ingestion/skillmp")
   ) {
     return { family: "records-sync", key: "records-sync" };
   }

@@ -17,6 +17,9 @@ export interface NavigationItem {
 
 export const protectedRoutes: ProtectedRoute[] = [
   "/admin/overview",
+  "/admin/ingestion/manual",
+  "/admin/ingestion/repository",
+  "/admin/records/imports",
   "/admin/skills",
   "/admin/integrations",
   "/admin/ops/metrics",
@@ -43,10 +46,11 @@ export const protectedRoutes: ProtectedRoute[] = [
 
 export const adminQuickRoutes: AdminRoute[] = [
   "/admin/overview",
+  "/admin/ingestion/repository",
+  "/admin/records/imports",
   "/admin/skills",
+  "/admin/sync-jobs",
   "/admin/integrations",
-  "/admin/ops/metrics",
-  "/admin/jobs",
   "/admin/access"
 ];
 
@@ -94,6 +98,24 @@ export const navItems: NavigationItem[] = [
     path: "/admin/overview",
     title: "Overview",
     subtitle: "Counts and capability posture",
+    section: "admin"
+  },
+  {
+    path: "/admin/ingestion/manual",
+    title: "Manual Intake",
+    subtitle: "Direct authoring ingestion",
+    section: "admin"
+  },
+  {
+    path: "/admin/ingestion/repository",
+    title: "Repository Intake",
+    subtitle: "Git-backed onboarding",
+    section: "admin"
+  },
+  {
+    path: "/admin/records/imports",
+    title: "Imports",
+    subtitle: "Archive and SkillMP intake",
     section: "admin"
   },
   {

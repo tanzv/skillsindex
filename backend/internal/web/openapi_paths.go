@@ -4,6 +4,7 @@ func openAPIPaths() map[string]any {
 	paths := map[string]any{}
 	mergeOpenAPIPathMap(paths, openAPIPathsPublicAuth())
 	mergeOpenAPIPathMap(paths, openAPIPathsAccountAPIKey())
+	mergeOpenAPIPathMap(paths, openAPIPathsAdminIngestion())
 	mergeOpenAPIPathMap(paths, openAPIPathsAdminCore())
 	mergeOpenAPIPathMap(paths, openAPIPathsModerationInteraction())
 	mergeOpenAPIPathMap(paths, openAPIPathsWebRoutes())

@@ -57,6 +57,34 @@ func TestCloneAndExtractSkillMetadata(t *testing.T) {
 	}
 }
 
+func TestCloneAndExtractRejectsRepositoryPathTraversal(t *testing.T) {
+	tmp := t.TempDir()
+	repoPath := filepath.Join(tmp, "repo")
+	if err := os.MkdirAll(repoPath, 0o755); err != nil {
+		t.Fatalf("failed to create repo path: %v", err)
+	}
+	runGit(t, repoPath, "init")
+	runGit(t, repoPath, "config", "user.name", "test")
+	runGit(t, repoPath, "config", "user.email", "test@example.com")
+	if err := os.WriteFile(filepath.Join(repoPath, "README.md"), []byte("# Repo Skill\n\nContent"), 0o644); err != nil {
+		t.Fatalf("failed to write README.md: %v", err)
+	}
+	runGit(t, repoPath, "add", "README.md")
+	runGit(t, repoPath, "commit", "-m", "init")
+
+	svc := NewRepositorySyncService()
+	_, err := svc.CloneAndExtract(context.Background(), RepoSource{
+		URL:  repoPath,
+		Path: "../outside",
+	})
+	if err == nil {
+		t.Fatalf("expected traversal repository path to fail")
+	}
+	if !strings.Contains(err.Error(), "invalid repository path") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func runGit(t *testing.T, repoPath string, args ...string) {
 	t.Helper()
 	cmd := exec.Command("git", args...)

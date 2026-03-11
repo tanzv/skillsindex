@@ -150,7 +150,7 @@ func (a *App) handleAPIAdminJobs(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"items": items, "total": len(items)})
+	writeJSON(w, http.StatusOK, map[string]any{"items": resultToAPIAdminAsyncJobItems(items), "total": len(items)})
 }
 
 func (a *App) handleAPIAdminJobDetail(w http.ResponseWriter, r *http.Request) {
@@ -183,7 +183,7 @@ func (a *App) handleAPIAdminJobDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"item": item})
+	writeJSON(w, http.StatusOK, map[string]any{"item": resultToAPIAdminAsyncJobItem(item)})
 }
 
 func (a *App) handleAPIAdminJobRetry(w http.ResponseWriter, r *http.Request) {
@@ -238,7 +238,7 @@ func (a *App) handleAPIAdminJobRetry(w http.ResponseWriter, r *http.Request) {
 		}),
 	})
 
-	writeJSON(w, http.StatusOK, map[string]any{"item": updated})
+	writeJSON(w, http.StatusOK, map[string]any{"item": resultToAPIAdminAsyncJobItem(updated)})
 }
 
 func (a *App) handleAPIAdminJobCancel(w http.ResponseWriter, r *http.Request) {
@@ -292,7 +292,7 @@ func (a *App) handleAPIAdminJobCancel(w http.ResponseWriter, r *http.Request) {
 		}),
 	})
 
-	writeJSON(w, http.StatusOK, map[string]any{"item": updated})
+	writeJSON(w, http.StatusOK, map[string]any{"item": resultToAPIAdminAsyncJobItem(updated)})
 }
 
 func (a *App) handleAPIAdminSyncJobs(w http.ResponseWriter, r *http.Request) {

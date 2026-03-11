@@ -2,6 +2,9 @@ import type { WorkbenchDefinition } from "../accountWorkbench/ConsoleWorkbench";
 
 export type AdminRoute =
   | "/admin/overview"
+  | "/admin/ingestion/manual"
+  | "/admin/ingestion/repository"
+  | "/admin/records/imports"
   | "/admin/skills"
   | "/admin/integrations"
   | "/admin/ops/metrics"
@@ -31,6 +34,11 @@ export type AdminCatalogRoute =
   | "/admin/sync-jobs"
   | "/admin/sync-policy/repository";
 
-export type AdminGovernanceRoute = Exclude<AdminRoute, AdminOpsRoute | AdminCatalogRoute>;
+export type AdminGovernanceRoute = Exclude<
+  AdminRoute,
+  AdminOpsRoute | AdminCatalogRoute | "/admin/ingestion/manual" | "/admin/ingestion/repository" | "/admin/records/imports"
+>;
 
-export type AdminWorkbenchDefinitionMap = Record<AdminRoute, WorkbenchDefinition>;
+export type AdminWorkbenchRoute = Exclude<AdminRoute, "/admin/ingestion/manual" | "/admin/ingestion/repository" | "/admin/records/imports">;
+
+export type AdminWorkbenchDefinitionMap = Record<AdminWorkbenchRoute, WorkbenchDefinition>;
