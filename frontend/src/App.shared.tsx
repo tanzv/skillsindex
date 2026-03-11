@@ -29,6 +29,26 @@ export function isProtectedRoute(route: AppRoute): route is ProtectedRoute {
   );
 }
 
+export function isMarketplaceRoute(route: AppRoute): boolean {
+  return (
+    route === "/" ||
+    route === "/results" ||
+    route === "/compare" ||
+    route === "/docs" ||
+    route === "/categories" ||
+    route === "/categories/:slug" ||
+    route === "/rankings" ||
+    route === "/skills/:id"
+  );
+}
+
+export function shouldRequireSession(route: AppRoute, marketplacePublicAccess: boolean): boolean {
+  if (isProtectedRoute(route)) {
+    return true;
+  }
+  return !marketplacePublicAccess && isMarketplaceRoute(route);
+}
+
 export function isAdminRoute(route: ProtectedRoute): route is AdminRoute {
   return route.startsWith("/admin");
 }
@@ -78,6 +98,28 @@ function splitPublicPrefix(pathname: string): { prefix: string; corePath: string
 
 function withPublicPrefix(prefix: string, route: string): string {
   return prefix ? `${prefix}${route}` : route;
+}
+
+export function buildLoginRedirectPath(pathname: string, search = "", hash = ""): string {
+  const normalizedPath = normalizePath(pathname);
+  const normalizedSearch = normalizeSearch(search);
+  const normalizedHash = normalizeHash(hash);
+  const redirectTarget = `${normalizedPath}${normalizedSearch}${normalizedHash}`;
+  const params = new URLSearchParams();
+  params.set("redirect", redirectTarget);
+  const { prefix } = splitPublicPrefix(pathname);
+  return `${withPublicPrefix(prefix, "/login")}?${params.toString()}`;
+}
+
+export function resolvePostLoginRedirect(search: string, fallbackPath = "/"): string {
+  const params = new URLSearchParams(normalizeSearch(search));
+  const redirect = String(params.get("redirect") || "").trim();
+  const redirectPath = redirect.split(/[?#]/, 1)[0] || redirect;
+  const pointsToLogin = /^\/(?:mobile(?:\/light)?\/|light\/)?login(?:\/)?$/i.test(redirectPath);
+  if (redirect.startsWith("/") && !redirect.startsWith("//") && !pointsToLogin) {
+    return redirect;
+  }
+  return normalizePath(fallbackPath);
 }
 
 export function resolveLegacyPublicRouteRedirect(pathname: string, search = "", hash = ""): string | null {

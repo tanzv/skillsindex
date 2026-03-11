@@ -4,12 +4,14 @@ import { normalizeAccountStatus, normalizeRoleName } from "./AdminAccountRoleWor
 
 interface AccountConfigurationPanelProps {
   allowRegistrationDraft: boolean;
+  marketplacePublicAccessDraft: boolean;
   availableAuthProviders: string[];
   enabledAuthProvidersDraft: string[];
   settingsSubmitting: boolean;
   settingsError: string;
   settingsSuccess: string;
   onAllowRegistrationChange: (enabled: boolean) => void;
+  onMarketplacePublicAccessChange: (enabled: boolean) => void;
   onToggleAuthProvider: (provider: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onReset: () => void;
@@ -37,12 +39,14 @@ interface RoleAssignmentPanelProps {
 
 export function AccountConfigurationPanel({
   allowRegistrationDraft,
+  marketplacePublicAccessDraft,
   availableAuthProviders,
   enabledAuthProvidersDraft,
   settingsSubmitting,
   settingsError,
   settingsSuccess,
   onAllowRegistrationChange,
+  onMarketplacePublicAccessChange,
   onToggleAuthProvider,
   onSubmit,
   onReset
@@ -62,6 +66,15 @@ export function AccountConfigurationPanel({
               onChange={(event) => onAllowRegistrationChange(event.target.checked)}
             />
             <span>Allow self-registration</span>
+          </label>
+
+          <label className="account-workbench-toggle-row">
+            <input
+              type="checkbox"
+              checked={marketplacePublicAccessDraft}
+              onChange={(event) => onMarketplacePublicAccessChange(event.target.checked)}
+            />
+            <span>Allow anonymous marketplace access</span>
           </label>
 
           <fieldset className="account-workbench-provider-fieldset">

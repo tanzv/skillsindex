@@ -76,8 +76,20 @@ func (a *App) handleAdminAccessRegistrationUpdate(w http.ResponseWriter, r *http
 	}
 
 	allowRegistration := parseBoolFlag(r.FormValue("allow_registration"), false)
+	marketplacePublicAccess, err := a.settingsService.GetBool(r.Context(), services.SettingMarketplacePublicAccess, true)
+	if err != nil {
+		redirectAdminPath(w, r, "/admin/access", "", "Failed to load marketplace access policy")
+		return
+	}
+	if rawMarketplacePublicAccess := strings.TrimSpace(r.FormValue("marketplace_public_access")); rawMarketplacePublicAccess != "" {
+		marketplacePublicAccess = parseBoolFlag(rawMarketplacePublicAccess, marketplacePublicAccess)
+	}
 	if err := a.settingsService.SetBool(r.Context(), services.SettingAllowRegistration, allowRegistration); err != nil {
 		redirectAdminPath(w, r, "/admin/access", "", "Failed to update registration policy")
+		return
+	}
+	if err := a.settingsService.SetBool(r.Context(), services.SettingMarketplacePublicAccess, marketplacePublicAccess); err != nil {
+		redirectAdminPath(w, r, "/admin/access", "", "Failed to update marketplace access policy")
 		return
 	}
 	a.recordAudit(r.Context(), currentUser, services.RecordAuditInput{
@@ -86,7 +98,8 @@ func (a *App) handleAdminAccessRegistrationUpdate(w http.ResponseWriter, r *http
 		TargetID:   0,
 		Summary:    "Updated registration policy",
 		Details: auditDetailsJSON(map[string]string{
-			"allow_registration": strconv.FormatBool(allowRegistration),
+			"allow_registration":        strconv.FormatBool(allowRegistration),
+			"marketplace_public_access": strconv.FormatBool(marketplacePublicAccess),
 		}),
 	})
 

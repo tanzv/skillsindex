@@ -125,3 +125,51 @@ func TestHandleAPIPublicSkillDetailAnonymousViewerIsReadOnly(t *testing.T) {
 		t.Fatalf("anonymous viewer rated state should be false: %s", body)
 	}
 }
+
+func TestHandleAPIPublicSkillDetailRequiresAuthenticationWhenMarketplaceIsPrivate(t *testing.T) {
+	app, user, skill, _ := setupInteractionAPITestApp(t)
+	if err := app.settingsService.SetBool(context.Background(), services.SettingMarketplacePublicAccess, false); err != nil {
+		t.Fatalf("failed to seed marketplace access setting: %v", err)
+	}
+
+	publicSkill, err := app.skillService.CreateSkill(context.Background(), services.CreateSkillInput{
+		OwnerID:      user.ID,
+		Name:         "Marketplace Restricted Skill",
+		Description:  "Visible only when the marketplace is public or the viewer is authenticated.",
+		Content:      "restricted-content",
+		Visibility:   models.VisibilityPublic,
+		SourceType:   models.SourceTypeManual,
+		CategorySlug: "development",
+	})
+	if err != nil {
+		t.Fatalf("failed to create public skill: %v", err)
+	}
+
+	anonymousReq := httptest.NewRequest(http.MethodGet, "/api/v1/public/skills/"+strconv.FormatUint(uint64(publicSkill.ID), 10), nil)
+	anonymousReq = withURLParams(anonymousReq, map[string]string{
+		"skillID": strconv.FormatUint(uint64(publicSkill.ID), 10),
+	})
+	anonymousRecorder := httptest.NewRecorder()
+
+	app.handleAPIPublicSkillDetail(anonymousRecorder, anonymousReq)
+
+	if anonymousRecorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected anonymous status code: got=%d want=%d", anonymousRecorder.Code, http.StatusUnauthorized)
+	}
+	if !strings.Contains(anonymousRecorder.Body.String(), `"error":"unauthorized"`) {
+		t.Fatalf("missing unauthorized payload: %s", anonymousRecorder.Body.String())
+	}
+
+	authenticatedReq := httptest.NewRequest(http.MethodGet, "/api/v1/public/skills/"+strconv.FormatUint(uint64(skill.ID), 10), nil)
+	authenticatedReq = withCurrentUser(authenticatedReq, &user)
+	authenticatedReq = withURLParams(authenticatedReq, map[string]string{
+		"skillID": strconv.FormatUint(uint64(skill.ID), 10),
+	})
+	authenticatedRecorder := httptest.NewRecorder()
+
+	app.handleAPIPublicSkillDetail(authenticatedRecorder, authenticatedReq)
+
+	if authenticatedRecorder.Code != http.StatusOK {
+		t.Fatalf("unexpected authenticated status code: got=%d want=%d", authenticatedRecorder.Code, http.StatusOK)
+	}
+}

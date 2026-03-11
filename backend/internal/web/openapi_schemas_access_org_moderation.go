@@ -33,15 +33,17 @@ func openAPISchemasAccessOrgModeration() map[string]any {
 		"AdminRegistrationSettingResponse": map[string]any{
 			"type": "object",
 			"properties": map[string]any{
-				"ok":                 map[string]any{"type": "boolean"},
-				"allow_registration": map[string]any{"type": "boolean"},
+				"ok":                        map[string]any{"type": "boolean"},
+				"allow_registration":        map[string]any{"type": "boolean"},
+				"marketplace_public_access": map[string]any{"type": "boolean"},
 			},
 		},
 		"AdminRegistrationSettingUpdateRequest": map[string]any{
 			"type":     "object",
 			"required": []string{"allow_registration"},
 			"properties": map[string]any{
-				"allow_registration": map[string]any{"type": "boolean"},
+				"allow_registration":        map[string]any{"type": "boolean"},
+				"marketplace_public_access": map[string]any{"type": "boolean"},
 			},
 		},
 		"AdminAuthProvidersSettingResponse": map[string]any{

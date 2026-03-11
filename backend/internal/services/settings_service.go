@@ -15,6 +15,8 @@ import (
 const (
 	// SettingAllowRegistration controls whether self-registration is enabled.
 	SettingAllowRegistration = "allow_registration"
+	// SettingMarketplacePublicAccess controls whether marketplace routes can be accessed anonymously.
+	SettingMarketplacePublicAccess = "marketplace_public_access"
 	// SettingAuthEnabledProviders controls which third-party auth providers are visible on auth pages.
 	SettingAuthEnabledProviders = "auth_enabled_providers"
 	// SettingUserCenterPermissionOverrides stores per-user permissions for user center operations.

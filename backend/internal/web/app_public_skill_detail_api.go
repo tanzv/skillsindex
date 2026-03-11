@@ -84,6 +84,9 @@ func toAPIPublicSkillComment(comment models.SkillComment, viewer *models.User) a
 }
 
 func (a *App) handleAPIPublicSkillDetail(w http.ResponseWriter, r *http.Request) {
+	if !a.ensureMarketplaceAccess(w, r) {
+		return
+	}
 	if a.skillService == nil {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
 			"error":   "service_unavailable",

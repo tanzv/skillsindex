@@ -48,6 +48,7 @@ export interface AdminAccountsPayload {
 
 export interface RegistrationPayload {
   allow_registration?: boolean;
+  marketplace_public_access?: boolean;
 }
 
 export interface AuthProvidersPayload {
@@ -335,7 +336,8 @@ export function buildAccountRoleWorkbenchFallback(mode: AdminAccountRoleWorkbenc
   return {
     accounts,
     registration: {
-      allow_registration: true
+      allow_registration: true,
+      marketplace_public_access: true
     },
     authProviders:
       mode === "account_configuration_form"

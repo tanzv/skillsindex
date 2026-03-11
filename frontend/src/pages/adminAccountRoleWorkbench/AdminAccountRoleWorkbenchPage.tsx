@@ -56,6 +56,9 @@ export default function AdminAccountRoleWorkbenchPage({ mode }: AdminAccountRole
             <span className={controller.data?.registration.allow_registration ? "pill active" : "pill muted"}>
               Registration {controller.data?.registration.allow_registration ? "enabled" : "disabled"}
             </span>
+            <span className={controller.data?.registration.marketplace_public_access !== false ? "pill active" : "pill muted"}>
+              Marketplace {controller.data?.registration.marketplace_public_access !== false ? "public" : "private"}
+            </span>
             {controller.data?.authProviders?.auth_providers?.length ? (
               <span className="pill muted">Auth providers: {controller.data.authProviders.auth_providers.join(", ")}</span>
             ) : null}
@@ -122,12 +125,14 @@ export default function AdminAccountRoleWorkbenchPage({ mode }: AdminAccountRole
           {controller.isAccountConfigurationMode ? (
             <AccountConfigurationPanel
               allowRegistrationDraft={controller.allowRegistrationDraft}
+              marketplacePublicAccessDraft={controller.marketplacePublicAccessDraft}
               availableAuthProviders={controller.availableAuthProviders}
               enabledAuthProvidersDraft={controller.enabledAuthProvidersDraft}
               settingsSubmitting={controller.settingsSubmitting}
               settingsError={controller.settingsError}
               settingsSuccess={controller.settingsSuccess}
               onAllowRegistrationChange={controller.setAllowRegistrationDraft}
+              onMarketplacePublicAccessChange={controller.setMarketplacePublicAccessDraft}
               onToggleAuthProvider={controller.toggleAuthProvider}
               onSubmit={controller.submitAccessPolicySettings}
               onReset={controller.resetAccessPolicyDraft}

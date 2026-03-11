@@ -350,6 +350,9 @@ func (a *App) handleAbout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request) {
+	if !a.ensureMarketplaceAccess(w, r) {
+		return
+	}
 	if a.skillService == nil {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
 			"error":   "service_unavailable",

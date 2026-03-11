@@ -196,6 +196,9 @@ func TestHandleAPIAuthLoginInvalidCredentialsLocalizedMessage(t *testing.T) {
 
 func TestHandleAPIAuthMeReturnsCurrentUser(t *testing.T) {
 	app, _, _, user := setupAccountHandlersTestApp(t)
+	if err := app.settingsService.SetBool(context.Background(), services.SettingMarketplacePublicAccess, false); err != nil {
+		t.Fatalf("failed to seed marketplace access setting: %v", err)
+	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/me", nil)
 	req.Header.Set("Accept", "application/json")
@@ -210,10 +213,16 @@ func TestHandleAPIAuthMeReturnsCurrentUser(t *testing.T) {
 	if !strings.Contains(recorder.Body.String(), `"username":"account-user"`) {
 		t.Fatalf("missing current user in response body")
 	}
+	if !strings.Contains(recorder.Body.String(), `"marketplace_public_access":false`) {
+		t.Fatalf("missing marketplace_public_access flag in response body: %s", recorder.Body.String())
+	}
 }
 
 func TestHandleAPIAuthMeReturnsNilForAnonymousSession(t *testing.T) {
 	app, _, _, _ := setupAccountHandlersTestApp(t)
+	if err := app.settingsService.SetBool(context.Background(), services.SettingMarketplacePublicAccess, false); err != nil {
+		t.Fatalf("failed to seed marketplace access setting: %v", err)
+	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/me", nil)
 	req.Header.Set("Accept", "application/json")
@@ -226,6 +235,9 @@ func TestHandleAPIAuthMeReturnsNilForAnonymousSession(t *testing.T) {
 	}
 	if !strings.Contains(recorder.Body.String(), `"user":null`) {
 		t.Fatalf("expected nil user payload in response body: %s", recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), `"marketplace_public_access":false`) {
+		t.Fatalf("missing marketplace_public_access flag in response body: %s", recorder.Body.String())
 	}
 }
 

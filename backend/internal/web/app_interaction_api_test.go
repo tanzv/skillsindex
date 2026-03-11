@@ -33,6 +33,7 @@ func setupInteractionAPITestApp(t *testing.T) (*App, models.User, models.Skill, 
 		&models.SkillFavorite{},
 		&models.SkillRating{},
 		&models.SkillComment{},
+		&models.SystemSetting{},
 	); err != nil {
 		t.Fatalf("failed to migrate sqlite db: %v", err)
 	}
@@ -60,8 +61,9 @@ func setupInteractionAPITestApp(t *testing.T) (*App, models.User, models.Skill, 
 	}
 
 	app := &App{
-		skillService: skillSvc,
-		interaction:  interactionSvc,
+		skillService:    skillSvc,
+		interaction:     interactionSvc,
+		settingsService: services.NewSettingsService(db),
 	}
 	return app, user, skill, interactionSvc
 }

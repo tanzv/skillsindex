@@ -120,7 +120,10 @@ export const adminWorkbenchGovernanceDefinitions: Record<AdminGovernanceRoute, W
       {
         key: "updateRegistration",
         title: "Update Registration Policy",
-        fields: [{ key: "allow_registration", label: "Allow Registration", type: "switch", defaultValue: false }],
+        fields: [
+          { key: "allow_registration", label: "Allow Registration", type: "switch", defaultValue: false },
+          { key: "marketplace_public_access", label: "Marketplace Public Access", type: "switch", defaultValue: true }
+        ],
         submitText: "Apply",
         buildPath: () => "/api/v1/admin/settings/registration",
         refreshResources: ["registration"]

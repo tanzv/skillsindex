@@ -29,6 +29,7 @@ func setupPublicMarketplaceAPITestApp(t *testing.T) (*App, models.User) {
 		&models.Skill{},
 		&models.Tag{},
 		&models.SkillTag{},
+		&models.SystemSetting{},
 	); err != nil {
 		t.Fatalf("failed to migrate sqlite db: %v", err)
 	}
@@ -84,7 +85,10 @@ func setupPublicMarketplaceAPITestApp(t *testing.T) (*App, models.User) {
 		t.Fatalf("failed to replace tags for skill 2: %v", err)
 	}
 
-	return &App{skillService: skillService}, admin
+	return &App{
+		skillService:    skillService,
+		settingsService: services.NewSettingsService(database),
+	}, admin
 }
 
 func TestHandleAPIPublicMarketplaceReturnsExpectedPayload(t *testing.T) {
@@ -148,5 +152,36 @@ func TestHandleAPIPublicMarketplaceIncludesSessionUserContext(t *testing.T) {
 	}
 	if !strings.Contains(body, `"can_access_dashboard":true`) {
 		t.Fatalf("missing can_access_dashboard flag: %s", body)
+	}
+}
+
+func TestHandleAPIPublicMarketplaceRequiresAuthenticationWhenMarketplaceIsPrivate(t *testing.T) {
+	app, admin := setupPublicMarketplaceAPITestApp(t)
+	if err := app.settingsService.SetBool(context.Background(), services.SettingMarketplacePublicAccess, false); err != nil {
+		t.Fatalf("failed to seed marketplace access setting: %v", err)
+	}
+
+	anonymousReq := httptest.NewRequest(http.MethodGet, "/api/v1/public/marketplace", nil)
+	anonymousReq.Header.Set("Accept", "application/json")
+	anonymousRecorder := httptest.NewRecorder()
+
+	app.handleAPIPublicMarketplace(anonymousRecorder, anonymousReq)
+
+	if anonymousRecorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected anonymous status code: got=%d want=%d", anonymousRecorder.Code, http.StatusUnauthorized)
+	}
+	if !strings.Contains(anonymousRecorder.Body.String(), `"error":"unauthorized"`) {
+		t.Fatalf("missing unauthorized payload: %s", anonymousRecorder.Body.String())
+	}
+
+	authenticatedReq := httptest.NewRequest(http.MethodGet, "/api/v1/public/marketplace", nil)
+	authenticatedReq.Header.Set("Accept", "application/json")
+	authenticatedReq = withCurrentUser(authenticatedReq, &admin)
+	authenticatedRecorder := httptest.NewRecorder()
+
+	app.handleAPIPublicMarketplace(authenticatedRecorder, authenticatedReq)
+
+	if authenticatedRecorder.Code != http.StatusOK {
+		t.Fatalf("unexpected authenticated status code: got=%d want=%d", authenticatedRecorder.Code, http.StatusOK)
 	}
 }

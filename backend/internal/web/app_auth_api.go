@@ -128,10 +128,20 @@ func (a *App) handleAPIAuthLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleAPIAuthMe(w http.ResponseWriter, r *http.Request) {
+	marketplacePublicAccess, err := a.marketplacePublicAccessEnabled(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{
+			"error":   "settings_query_failed",
+			"message": a.apiMessage(r, "api.auth.settings_query_failed", "Failed to load access settings"),
+		})
+		return
+	}
+
 	current := currentUserFromContext(r.Context())
 	if current == nil {
 		writeJSON(w, http.StatusOK, map[string]any{
-			"user": nil,
+			"user":                     nil,
+			"marketplace_public_access": marketplacePublicAccess,
 		})
 		return
 	}
@@ -150,7 +160,8 @@ func (a *App) handleAPIAuthMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"user": buildAPIAuthUserResponse(user),
+		"user":                     buildAPIAuthUserResponse(user),
+		"marketplace_public_access": marketplacePublicAccess,
 	})
 }
 

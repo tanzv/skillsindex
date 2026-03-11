@@ -58,6 +58,10 @@ import { buildPathWithThemeMode, resolveThemeMode, ThemeMode } from "./lib/theme
 import { applyThemeTokens } from "./theme/themeSystem";
 
 function navigate(path: string): void {
+  const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (path === currentPath) {
+    return;
+  }
   window.history.pushState({}, "", path);
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
@@ -284,7 +288,13 @@ export default function App() {
     }
   }
 
-  if (authLoading || shouldRedirectToLogin) {
+  const blocksOnAuthBootstrap =
+    authLoading &&
+    (route === "/login" ||
+      shouldRequireSession(route, marketplacePublicAccess) ||
+      (route === "/prototype" && routeNeedsAuth(window.location.pathname)));
+
+  if (blocksOnAuthBootstrap || shouldRedirectToLogin) {
     return <div className="app-loading">{text.bootstrapping}</div>;
   }
 
@@ -464,6 +474,7 @@ export default function App() {
       : accountQuickRoutes
     : [];
   const protectedRoute = route as ProtectedRoute;
+  const shouldRenderProtectedContentDirectly = isAdminRoute(protectedRoute) && isSkillOperationsRoute(protectedRoute);
   const protectedContent = isAdminRoute(protectedRoute) ? (
     protectedRoute === "/admin/overview" ? (
       <AdminOverviewPage currentPath={window.location.pathname} onNavigate={navigate} />
@@ -512,7 +523,6 @@ export default function App() {
   ) : isAccountRoute(protectedRoute) ? (
     <AccountCenterPage locale={locale} route={protectedRoute} onNavigate={navigate} />
   ) : null;
-  const shouldRenderProtectedContentDirectly = isAdminRoute(protectedRoute) && isSkillOperationsRoute(protectedRoute);
 
   return (
     <ConfigProvider

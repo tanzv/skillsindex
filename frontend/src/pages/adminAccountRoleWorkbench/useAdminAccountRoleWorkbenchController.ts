@@ -47,6 +47,7 @@ export function useAdminAccountRoleWorkbenchController(mode: AdminAccountRoleWor
   const [tableActionError, setTableActionError] = useState("");
   const [tableActionSuccess, setTableActionSuccess] = useState("");
   const [allowRegistrationDraft, setAllowRegistrationDraft] = useState(false);
+  const [marketplacePublicAccessDraft, setMarketplacePublicAccessDraft] = useState(true);
   const [enabledAuthProvidersDraft, setEnabledAuthProvidersDraft] = useState<string[]>([]);
   const [availableAuthProviders, setAvailableAuthProviders] = useState<string[]>([]);
   const [settingsSubmitting, setSettingsSubmitting] = useState(false);
@@ -149,6 +150,7 @@ export function useAdminAccountRoleWorkbenchController(mode: AdminAccountRoleWor
       return;
     }
     setAllowRegistrationDraft(Boolean(data.registration.allow_registration));
+    setMarketplacePublicAccessDraft(data.registration.marketplace_public_access !== false);
     const providers = resolveAuthProviderDraft(data.authProviders);
     setAvailableAuthProviders(providers.available);
     setEnabledAuthProvidersDraft(providers.enabled);
@@ -271,6 +273,7 @@ export function useAdminAccountRoleWorkbenchController(mode: AdminAccountRoleWor
       return;
     }
     setAllowRegistrationDraft(Boolean(data.registration.allow_registration));
+    setMarketplacePublicAccessDraft(data.registration.marketplace_public_access !== false);
     const providers = resolveAuthProviderDraft(data.authProviders);
     setAvailableAuthProviders(providers.available);
     setEnabledAuthProvidersDraft(providers.enabled);
@@ -287,7 +290,8 @@ export function useAdminAccountRoleWorkbenchController(mode: AdminAccountRoleWor
       const sanitizedProviders = enabledAuthProvidersDraft.filter((provider) => availableAuthProviders.includes(provider));
       await Promise.all([
         postConsoleJSON("/api/v1/admin/settings/registration", {
-          allow_registration: allowRegistrationDraft
+          allow_registration: allowRegistrationDraft,
+          marketplace_public_access: marketplacePublicAccessDraft
         }),
         postConsoleJSON("/api/v1/admin/settings/auth-providers", {
           auth_providers: sanitizedProviders
@@ -362,10 +366,10 @@ export function useAdminAccountRoleWorkbenchController(mode: AdminAccountRoleWor
     isRoleManagementMode, isRoleConfigurationMode, searchQuery, statusFilter, filteredAccounts, loadedAccounts, total,
     activeAccounts, disabledAccounts, roleSummary, topRows, editingAccount, editorOpen, editorSubmitting, editorError,
     forceSignoutPendingID, tableActionError, tableActionSuccess, allowRegistrationDraft, availableAuthProviders,
-    enabledAuthProvidersDraft, settingsSubmitting, settingsError, settingsSuccess, roleAssignmentUserID, roleAssignmentRole,
-    roleOptions, roleAssignmentSubmitting, roleAssignmentError, roleAssignmentSuccess, roleAssignmentPreview, refresh,
-    openEditor, closeEditor, submitEditor, setSearchQuery, setStatusFilter, setAllowRegistrationDraft, toggleAuthProvider,
-    resetAccessPolicyDraft, submitAccessPolicySettings, handleForceSignout, setRoleAssignmentUserID, setRoleAssignmentRole,
-    submitRoleAssignment
+    marketplacePublicAccessDraft, enabledAuthProvidersDraft, settingsSubmitting, settingsError, settingsSuccess,
+    roleAssignmentUserID, roleAssignmentRole, roleOptions, roleAssignmentSubmitting, roleAssignmentError,
+    roleAssignmentSuccess, roleAssignmentPreview, refresh, openEditor, closeEditor, submitEditor, setSearchQuery,
+    setStatusFilter, setAllowRegistrationDraft, setMarketplacePublicAccessDraft, toggleAuthProvider, resetAccessPolicyDraft,
+    submitAccessPolicySettings, handleForceSignout, setRoleAssignmentUserID, setRoleAssignmentRole, submitRoleAssignment
   };
 }

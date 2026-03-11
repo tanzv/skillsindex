@@ -14,6 +14,22 @@ async function mockAnonymousAuth(page: Page): Promise<void> {
   });
 }
 
+async function mockAnonymousPrivateMarketplaceAuth(page: Page): Promise<void> {
+  await page.route("**/api/v1/auth/me", async (route) => {
+    await fulfillJSON(route, 200, {
+      user: null,
+      marketplace_public_access: false
+    });
+  });
+  await page.route("**/api/v1/auth/providers", async (route) => {
+    await fulfillJSON(route, 200, {
+      ok: true,
+      auth_providers: [],
+      items: []
+    });
+  });
+}
+
 async function mockSkillDetail(page: Page): Promise<void> {
   await page.route("**/api/v1/public/skills/**", async (route) => {
     await fulfillJSON(route, 200, {
@@ -55,6 +71,44 @@ async function forceEnglishLocale(page: Page): Promise<void> {
     window.localStorage.setItem("skillsindex.locale", "en");
   });
 }
+
+const privateMarketplaceRedirectCases = [
+  {
+    name: "home route",
+    path: "/light",
+    expectedLoginURL: "/light/login?redirect=%2Flight"
+  },
+  {
+    name: "results route",
+    path: "/light/results?q=repo",
+    expectedLoginURL: "/light/login?redirect=%2Flight%2Fresults%3Fq%3Drepo"
+  },
+  {
+    name: "docs route",
+    path: "/light/docs#api",
+    expectedLoginURL: "/light/login?redirect=%2Flight%2Fdocs%23api"
+  },
+  {
+    name: "categories route",
+    path: "/light/categories",
+    expectedLoginURL: "/light/login?redirect=%2Flight%2Fcategories"
+  },
+  {
+    name: "category detail route",
+    path: "/light/categories/tools",
+    expectedLoginURL: "/light/login?redirect=%2Flight%2Fcategories%2Ftools"
+  },
+  {
+    name: "rankings route",
+    path: "/light/rankings",
+    expectedLoginURL: "/light/login?redirect=%2Flight%2Frankings"
+  },
+  {
+    name: "skill detail route",
+    path: "/light/skills/11?skill_detail_mode=live",
+    expectedLoginURL: "/light/login?redirect=%2Flight%2Fskills%2F11%3Fskill_detail_mode%3Dlive"
+  }
+] as const;
 
 test.describe("Public route prefix navigation", () => {
   test("global theme switch keeps query params when toggling desktop mode", async ({ page }) => {
@@ -107,6 +161,19 @@ test.describe("Public route prefix navigation", () => {
     await expect(page.getByTestId("skill-detail-directory-row-SKILL.md")).toHaveAttribute("aria-selected", "true");
     await expect(page.locator(".skill-detail-doc-file-name")).toContainText("SKILL.md");
   });
+
+  for (const scenario of privateMarketplaceRedirectCases) {
+    test(`private marketplace redirects anonymous visits from ${scenario.name} to login with redirect target`, async ({
+      page
+    }) => {
+      await forceEnglishLocale(page);
+      await mockAnonymousPrivateMarketplaceAuth(page);
+
+      await page.goto(scenario.path);
+      await expect(page).toHaveURL(scenario.expectedLoginURL);
+      await expect(page.locator(".login-form-panel")).toBeVisible();
+    });
+  }
 
   test("docs route stays stable while legacy compare root redirects with preserved prefix", async ({ page }) => {
     await forceEnglishLocale(page);

@@ -6,6 +6,11 @@ export interface SessionUser {
   status: string;
 }
 
+export interface SessionContextResponse {
+  user: SessionUser | null;
+  marketplace_public_access: boolean;
+}
+
 export interface IntegrationConnector {
   id: number;
   name: string;
@@ -401,15 +406,26 @@ export async function login(username: string, password: string): Promise<Session
   return payload.user;
 }
 
-export async function getSessionUser(): Promise<SessionUser | null> {
+export async function getSessionContext(): Promise<SessionContextResponse> {
   try {
-    const payload = await requestJSON<{ user: SessionUser | null }>("/api/v1/auth/me", {
+    const payload = await requestJSON<Partial<SessionContextResponse>>("/api/v1/auth/me", {
       method: "GET"
     });
-    return payload.user || null;
+    return {
+      user: payload.user || null,
+      marketplace_public_access: payload.marketplace_public_access !== false
+    };
   } catch {
-    return null;
+    return {
+      user: null,
+      marketplace_public_access: true
+    };
   }
+}
+
+export async function getSessionUser(): Promise<SessionUser | null> {
+  const payload = await getSessionContext();
+  return payload.user;
 }
 
 export async function logout(): Promise<void> {

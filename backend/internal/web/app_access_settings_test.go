@@ -101,6 +101,9 @@ func TestAPIAdminRegistrationSettingSuccess(t *testing.T) {
 	if err := app.settingsService.SetBool(context.Background(), services.SettingAllowRegistration, false); err != nil {
 		t.Fatalf("failed to seed registration setting: %v", err)
 	}
+	if err := app.settingsService.SetBool(context.Background(), services.SettingMarketplacePublicAccess, false); err != nil {
+		t.Fatalf("failed to seed marketplace access setting: %v", err)
+	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/settings/registration", nil)
 	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleSuperAdmin})
@@ -119,6 +122,13 @@ func TestAPIAdminRegistrationSettingSuccess(t *testing.T) {
 	if allowRegistration {
 		t.Fatalf("expected allow_registration=false")
 	}
+	marketplacePublicAccess, ok := payload["marketplace_public_access"].(bool)
+	if !ok {
+		t.Fatalf("missing marketplace_public_access in response: %#v", payload)
+	}
+	if marketplacePublicAccess {
+		t.Fatalf("expected marketplace_public_access=false")
+	}
 }
 
 func TestAPIAdminRegistrationSettingUpdateSuccess(t *testing.T) {
@@ -126,7 +136,7 @@ func TestAPIAdminRegistrationSettingUpdateSuccess(t *testing.T) {
 	req := httptest.NewRequest(
 		http.MethodPost,
 		"/api/v1/admin/settings/registration",
-		strings.NewReader(`{"allow_registration":false}`),
+		strings.NewReader(`{"allow_registration":false,"marketplace_public_access":false}`),
 	)
 	req.Header.Set("Content-Type", "application/json")
 	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleSuperAdmin})
@@ -145,6 +155,13 @@ func TestAPIAdminRegistrationSettingUpdateSuccess(t *testing.T) {
 	if allowRegistration {
 		t.Fatalf("expected allow_registration=false")
 	}
+	marketplacePublicAccess, ok := payload["marketplace_public_access"].(bool)
+	if !ok {
+		t.Fatalf("missing marketplace_public_access in response: %#v", payload)
+	}
+	if marketplacePublicAccess {
+		t.Fatalf("expected marketplace_public_access=false")
+	}
 
 	persisted, err := app.settingsService.GetBool(context.Background(), services.SettingAllowRegistration, true)
 	if err != nil {
@@ -152,6 +169,14 @@ func TestAPIAdminRegistrationSettingUpdateSuccess(t *testing.T) {
 	}
 	if persisted {
 		t.Fatalf("expected persisted allow_registration=false")
+	}
+
+	persistedMarketplaceAccess, err := app.settingsService.GetBool(context.Background(), services.SettingMarketplacePublicAccess, true)
+	if err != nil {
+		t.Fatalf("failed to read persisted marketplace access setting: %v", err)
+	}
+	if persistedMarketplaceAccess {
+		t.Fatalf("expected persisted marketplace_public_access=false")
 	}
 }
 

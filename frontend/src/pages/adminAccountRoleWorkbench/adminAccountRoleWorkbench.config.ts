@@ -4,6 +4,7 @@ import type { AccountStatusFilter } from "./AdminAccountRoleWorkbenchPage.helper
 
 interface RegistrationPayload {
   allow_registration?: boolean;
+  marketplace_public_access?: boolean;
 }
 
 interface AuthProvidersPayload {
