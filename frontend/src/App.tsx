@@ -3,16 +3,19 @@ import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   PublicLocaleSwitchMode,
+  buildLoginRedirectPath,
   isAccountRoute,
   isAdminRoute,
   isProtectedRoute,
   resolveLegacyPublicRouteRedirect,
+  resolvePostLoginRedirect,
   resolvePublicLocaleSwitchMode,
+  shouldRequireSession,
   shouldShowPublicGlobalControls
 } from "./App.shared";
 import PublicGlobalControls from "./components/PublicGlobalControls";
 import BackendWorkbenchShell from "./components/BackendWorkbenchShell";
-import { SessionUser, getSessionUser, login, logout } from "./lib/api";
+import { SessionUser, getSessionContext, login, logout } from "./lib/api";
 import { extractCategorySlug, extractSkillID, normalizeAppRoute } from "./lib/appPathnameResolver";
 import { AppLocale, changeLocale, resolveActiveLocale } from "./lib/i18n";
 import {
@@ -63,6 +66,7 @@ export default function App() {
   const { t } = useTranslation();
   const [locationKey, setLocationKey] = useState(() => `${window.location.pathname}${window.location.search}`);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const [marketplacePublicAccess, setMarketplacePublicAccess] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [locale, setLocale] = useState<AppLocale>(() => resolveActiveLocale());
@@ -167,12 +171,13 @@ export default function App() {
     let active = true;
     setAuthLoading(true);
 
-    getSessionUser()
-      .then((user) => {
+    getSessionContext()
+      .then((payload) => {
         if (!active) {
           return;
         }
-        setSessionUser(user);
+        setSessionUser(payload.user || null);
+        setMarketplacePublicAccess(payload.marketplace_public_access !== false);
       })
       .finally(() => {
         if (active) {
@@ -185,22 +190,32 @@ export default function App() {
     };
   }, []);
 
+  const loginRedirectPath = useMemo(
+    () => buildLoginRedirectPath(window.location.pathname, window.location.search, window.location.hash),
+    [locationKey]
+  );
+  const postLoginRedirectPath = useMemo(
+    () => resolvePostLoginRedirect(window.location.search, "/"),
+    [locationKey]
+  );
+  const shouldRedirectToLogin =
+    !authLoading &&
+    !sessionUser &&
+    (shouldRequireSession(route, marketplacePublicAccess) ||
+      (route === "/prototype" && routeNeedsAuth(window.location.pathname)));
+
   useEffect(() => {
     if (authLoading) {
       return;
     }
-    if (!sessionUser && isProtectedRoute(route)) {
-      navigate("/login");
-      return;
-    }
-    if (!sessionUser && route === "/prototype" && routeNeedsAuth(window.location.pathname)) {
-      navigate("/login");
+    if (shouldRedirectToLogin) {
+      navigate(loginRedirectPath);
       return;
     }
     if (sessionUser && route === "/login" && !submitLoading) {
-      navigate("/");
+      navigate(postLoginRedirectPath);
     }
-  }, [authLoading, route, sessionUser, submitLoading]);
+  }, [authLoading, loginRedirectPath, postLoginRedirectPath, route, sessionUser, shouldRedirectToLogin, submitLoading]);
 
   useEffect(() => {
     const classes = [
@@ -253,7 +268,6 @@ export default function App() {
     try {
       const user = await login(username, password);
       setSessionUser(user);
-      navigate("/");
     } finally {
       setSubmitLoading(false);
     }
@@ -270,7 +284,7 @@ export default function App() {
     }
   }
 
-  if (authLoading) {
+  if (authLoading || shouldRedirectToLogin) {
     return <div className="app-loading">{text.bootstrapping}</div>;
   }
 

@@ -58,6 +58,13 @@ export const globalLoginStylesTheme = `
   --login-info-surface-bg: rgba(255, 255, 255, 0.06);
   --login-info-surface-bg-strong: rgba(255, 255, 255, 0.02);
   --login-info-surface-border: var(--si-color-border-soft, #3a3a3a);
+  --login-info-panel-bg: color-mix(in srgb, var(--login-root-bg-accent) 76%, transparent);
+  --login-info-panel-border: rgba(255, 255, 255, 0.08);
+  --login-info-panel-shadow: 0 28px 60px rgba(0, 0, 0, 0.28);
+  --login-info-eyebrow-bg: rgba(255, 255, 255, 0.05);
+  --login-info-eyebrow-border: rgba(255, 255, 255, 0.1);
+  --login-info-eyebrow-text: var(--si-color-text-secondary, #b8b8b8);
+  --login-info-point-index: rgba(255, 255, 255, 0.34);
   --login-info-headline: var(--si-color-text-primary, #e5e5e5);
   --login-info-description: var(--si-color-text-secondary, #a3a3a3);
   --login-info-card-bg: rgba(255, 255, 255, 0.04);
@@ -348,6 +355,7 @@ export const globalLoginStylesTheme = `
 .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .login-visual-panel {
   background:
     radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.08), transparent 28%),
+    radial-gradient(circle at 82% 78%, color-mix(in srgb, var(--login-btn-bg) 12%, transparent), transparent 30%),
     linear-gradient(
       150deg,
       color-mix(in srgb, var(--login-root-bg-accent) 82%, var(--login-root-bg) 18%) 0%,
@@ -363,16 +371,35 @@ export const globalLoginStylesTheme = `
 }
 
 .login-visual-panel {
+  position: relative;
   padding: clamp(20px, 2vw, 28px);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: stretch;
   gap: 14px;
+  overflow: hidden;
 }
 
 .login-visual-panel::after {
-  content: none;
+  content: "";
+  position: absolute;
+  top: clamp(24px, 3vw, 48px);
+  right: clamp(24px, 4vw, 64px);
+  width: clamp(120px, 16vw, 220px);
+  height: clamp(120px, 16vw, 220px);
+  border-radius: 28px;
+  border: 1px solid color-mix(in srgb, var(--login-info-surface-border) 72%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--login-info-surface-bg) 76%, transparent) 0%,
+      transparent 100%
+    );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  opacity: 0.42;
+  transform: rotate(12deg);
+  pointer-events: none;
 }
 
 .auth-compact-hint {

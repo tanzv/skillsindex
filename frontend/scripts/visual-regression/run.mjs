@@ -74,6 +74,7 @@ function ensureValidThreshold(value) {
 async function main() {
   ensureValidThreshold(threshold);
   const { scenarioKey, scenario } = resolveVisualScenario();
+  const navigationWaitUntil = scenario.navigationWaitUntil ?? "domcontentloaded";
   const baselineImagePath = resolveVisualBaselinePath(frontendRoot, scenario, process.env.VISUAL_BASELINE_PATH);
   const actualImagePath = path.resolve(outputDirectory, `${scenario.outputPrefix}-actual.png`);
   const diffImagePath = path.resolve(outputDirectory, `${scenario.outputPrefix}-diff.png`);
@@ -120,7 +121,7 @@ async function main() {
         await scenario.setupRoutes(page);
       }
 
-      await page.goto(`${baseUrl}${scenario.routePath}`, { waitUntil: "networkidle" });
+      await page.goto(`${baseUrl}${scenario.routePath}`, { waitUntil: navigationWaitUntil });
       await page.waitForSelector(scenario.waitSelector, { state: "visible", timeout: 30_000 });
       await stabilizeVisualCapture(page);
       await page.screenshot({ path: actualImagePath, fullPage: false });

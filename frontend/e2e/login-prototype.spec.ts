@@ -136,12 +136,19 @@ test.describe("Login prototype alignment", () => {
 
   test("login info panel copy supports query-based runtime override", async ({ page }) => {
     await mockAnonymousAuth(page);
-    await page.goto("/login?loginKicker=Configured+Kicker&loginTitle=Configured+Title&loginLead=Configured+Lead");
+    await page.goto(
+      "/login?loginKicker=Configured+Kicker&loginTitle=Configured+Title&loginLead=Configured+Lead&loginKeyPoint1=Configured+Point+One&loginKeyPoint2=Configured+Point+Two&loginKeyPoint3=Configured+Point+Three"
+    );
 
     await expect(page.locator("[data-testid='login-info-hint']")).toHaveText("Configured Title");
     await expect(page.locator("[data-testid='login-info-card']")).toBeVisible();
     await expect(page.locator(".login-info-description")).toHaveText("Configured Lead");
-    await expect(page.locator("[data-testid='login-info-points']")).toHaveCount(0);
+    await expect(page.locator("[data-testid='login-info-eyebrow']")).toHaveText("Configured Kicker");
+    await expect(page.locator("[data-testid='login-info-points']")).toHaveCount(1);
+    await expect(page.locator(".login-info-points li")).toHaveCount(3);
+    await expect(page.locator(".login-info-points li").nth(0)).toContainText("Configured Point One");
+    await expect(page.locator(".login-info-points li").nth(1)).toContainText("Configured Point Two");
+    await expect(page.locator(".login-info-points li").nth(2)).toContainText("Configured Point Three");
   });
 
   test("password field supports explicit show and hide toggle", async ({ page }) => {
@@ -287,7 +294,7 @@ test.describe("Login prototype alignment", () => {
     expect(dragMeta.buttonAppRegion).toBe("no-drag");
   });
 
-  test("login info panel removes non-essential decorative sections", async ({ page }) => {
+  test("login info panel stays focused without legacy decorative sections", async ({ page }) => {
     await mockAnonymousAuth(page);
     await page.goto("/login");
 
@@ -298,7 +305,8 @@ test.describe("Login prototype alignment", () => {
     await expect(page.locator(".login-trust-row")).toHaveCount(0);
     await expect(page.locator("[data-testid='login-info-card']")).toBeVisible();
     await expect(page.locator(".login-info-hero")).toHaveCount(0);
-    await expect(page.locator("[data-testid='login-info-points']")).toHaveCount(0);
+    await expect(page.locator("[data-testid='login-info-eyebrow']")).toHaveCount(0);
+    await expect(page.locator(".login-info-points li")).toHaveCount(3);
   });
 });
 

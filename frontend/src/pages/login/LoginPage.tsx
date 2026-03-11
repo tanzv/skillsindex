@@ -53,6 +53,9 @@ export default function LoginPage({
       kicker: t("login.kicker"),
       title: t("login.title"),
       lead: t("login.lead"),
+      panelPointOne: t("login.panelPointOne"),
+      panelPointTwo: t("login.panelPointTwo"),
+      panelPointThree: t("login.panelPointThree"),
       signIn: t("login.signIn"),
       note: t("login.note"),
       divider: t("login.divider"),
@@ -144,11 +147,15 @@ export default function LoginPage({
       buildLoginInfoPanelConfig({
         kicker: text.kicker,
         title: text.title,
-        lead: text.lead
+        lead: text.lead,
+        keyPoints: [text.panelPointOne, text.panelPointTwo, text.panelPointThree]
       }),
     [
       infoPanelConfig,
       text.kicker,
+      text.panelPointOne,
+      text.panelPointThree,
+      text.panelPointTwo,
       text.lead,
       text.title
     ]

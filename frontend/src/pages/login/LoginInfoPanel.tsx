@@ -11,16 +11,26 @@ export default function LoginInfoPanel({ config }: LoginInfoPanelProps) {
   return (
     <article className="auth-visual-panel login-visual-panel">
       <section className="login-info-glass-card" data-testid="login-info-card">
-        {panelViewModel.headline ? (
-          <h2 className="login-info-headline" data-testid="login-info-hint">
-            {panelViewModel.headline}
-          </h2>
-        ) : null}
-        {panelViewModel.description ? <p className="login-info-description">{panelViewModel.description}</p> : null}
+        <div className="login-info-copy-group">
+          {panelViewModel.eyebrow ? (
+            <p className="login-info-eyebrow" data-testid="login-info-eyebrow">
+              {panelViewModel.eyebrow}
+            </p>
+          ) : null}
+          {panelViewModel.headline ? (
+            <h2 className="login-info-headline" data-testid="login-info-hint">
+              {panelViewModel.headline}
+            </h2>
+          ) : null}
+          {panelViewModel.description ? <p className="login-info-description">{panelViewModel.description}</p> : null}
+        </div>
         {panelViewModel.points.length > 0 ? (
           <ul className="login-info-points" data-testid="login-info-points">
-            {panelViewModel.points.map((point) => (
+            {panelViewModel.points.map((point, index) => (
               <li key={point.id}>
+                <span className="login-info-point-index" aria-hidden="true">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
                 <span className="login-info-point-body">{point.body}</span>
               </li>
             ))}

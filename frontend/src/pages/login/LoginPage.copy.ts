@@ -2,6 +2,9 @@ interface LoginPageCopyEntry {
   kicker: string;
   title: string;
   lead: string;
+  panelPointOne: string;
+  panelPointTwo: string;
+  panelPointThree: string;
   signIn: string;
   note: string;
   divider: string;
@@ -25,9 +28,12 @@ interface LoginPageCopyEntry {
 
 export const loginPageCopy: { en: LoginPageCopyEntry; zh: LoginPageCopyEntry } = {
   en: {
-    kicker: "Enterprise Intranet - SkillOps",
-    title: "Unified Identity Access",
-    lead: "Secure entry to enterprise workspace services.",
+    kicker: "",
+    title: "Workspace Access",
+    lead: "Choose the sign-in method enabled for your organization or workspace account.",
+    panelPointOne: "Use enterprise SSO when it is enabled for your organization.",
+    panelPointTwo: "Use workspace credentials for locally managed accounts.",
+    panelPointThree: "If a method is missing, contact your workspace administrator.",
     signIn: "Sign In",
     note: "Choose enterprise identity sign-in, or use workspace credentials.",
     divider: "Or sign in with workspace credentials",
@@ -49,9 +55,12 @@ export const loginPageCopy: { en: LoginPageCopyEntry; zh: LoginPageCopyEntry } =
     createHint: "No account? Create one"
   },
   zh: {
-    kicker: "\u4f01\u4e1a\u5185\u7f51 \u00b7 SkillOps",
-    title: "\u7edf\u4e00\u8eab\u4efd\u767b\u5f55",
-    lead: "\u901a\u8fc7\u4f01\u4e1a\u8d26\u53f7\u5b89\u5168\u8bbf\u95ee\u5de5\u4f5c\u533a\u670d\u52a1\u3002",
+    kicker: "",
+    title: "\u8bbf\u95ee\u5de5\u4f5c\u533a",
+    lead: "\u8bf7\u9009\u62e9\u7ec4\u7ec7\u6216\u5de5\u4f5c\u533a\u4e3a\u4f60\u542f\u7528\u7684\u767b\u5f55\u65b9\u5f0f\u3002",
+    panelPointOne: "\u7ec4\u7ec7\u542f\u7528\u540e\u53ef\u4f7f\u7528\u4f01\u4e1a SSO \u767b\u5f55\u3002",
+    panelPointTwo: "\u672c\u5730\u7ba1\u7406\u8d26\u53f7\u53ef\u4f7f\u7528\u5de5\u4f5c\u533a\u51ed\u8bc1\u3002",
+    panelPointThree: "\u5982\u7f3a\u5c11\u767b\u5f55\u65b9\u5f0f\uff0c\u8bf7\u8054\u7cfb\u5de5\u4f5c\u533a\u7ba1\u7406\u5458\u3002",
     signIn: "\u767b\u5f55",
     note: "\u9009\u62e9\u4f01\u4e1a\u8eab\u4efd\u63d0\u4f9b\u65b9\u767b\u5f55\uff0c\u6216\u4f7f\u7528\u5de5\u4f5c\u533a\u8d26\u53f7\u51ed\u8bc1\u3002",
     divider: "\u6216\u4f7f\u7528\u5de5\u4f5c\u533a\u8d26\u53f7",

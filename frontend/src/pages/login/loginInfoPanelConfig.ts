@@ -10,6 +10,7 @@ export interface LoginInfoPanelCopy {
   kicker: string;
   title: string;
   lead: string;
+  keyPoints?: string[];
 }
 
 export type LoginInfoPanelLocale = "en" | "zh";
@@ -29,6 +30,7 @@ interface LoginInfoPanelRuntimeConfigShape {
   kicker?: unknown;
   title?: unknown;
   lead?: unknown;
+  keyPoints?: unknown;
   heroImageSrc?: unknown;
   default?: unknown;
   en?: unknown;
@@ -39,6 +41,9 @@ const queryParamKeys = {
   kicker: "loginKicker",
   title: "loginTitle",
   lead: "loginLead",
+  keyPoint1: "loginKeyPoint1",
+  keyPoint2: "loginKeyPoint2",
+  keyPoint3: "loginKeyPoint3",
   heroImageSrc: "loginHeroImageSrc"
 } as const;
 
@@ -52,7 +57,7 @@ export function buildLoginInfoPanelConfig(copy: LoginInfoPanelCopy): LoginInfoPa
     kicker: copy.kicker,
     title: copy.title,
     lead: copy.lead,
-    keyPoints: []
+    keyPoints: normalizeKeyPoints(copy.keyPoints) ?? []
   };
 }
 
@@ -91,6 +96,24 @@ function normalizeImageSrc(value: unknown): string | undefined {
   return undefined;
 }
 
+function normalizeKeyPoints(value: unknown): string[] | undefined {
+  if (typeof value === "string") {
+    const normalized = normalizeTextValue(value);
+    return normalized ? [normalized] : undefined;
+  }
+
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const keyPoints = value
+    .map((item) => normalizeTextValue(item))
+    .filter((item): item is string => Boolean(item))
+    .slice(0, 3);
+
+  return keyPoints.length > 0 ? keyPoints : undefined;
+}
+
 function normalizeOverride(source: unknown): LoginInfoPanelOverride {
   if (!isRecord(source)) {
     return {};
@@ -99,12 +122,14 @@ function normalizeOverride(source: unknown): LoginInfoPanelOverride {
   const kicker = normalizeTextValue(source.kicker);
   const title = normalizeTextValue(source.title);
   const lead = normalizeTextValue(source.lead);
+  const keyPoints = normalizeKeyPoints(source.keyPoints);
   const heroImageSrc = normalizeImageSrc(source.heroImageSrc);
 
   return {
     ...(kicker ? { kicker } : {}),
     ...(title ? { title } : {}),
     ...(lead ? { lead } : {}),
+    ...(keyPoints ? { keyPoints } : {}),
     ...(heroImageSrc ? { heroImageSrc } : {})
   };
 }
@@ -137,18 +162,28 @@ function resolveQueryOverride(locale: LoginInfoPanelLocale, search?: string): Lo
   const kicker = searchParams.get(`${queryParamKeys.kicker}${suffix}`) ?? searchParams.get(queryParamKeys.kicker);
   const title = searchParams.get(`${queryParamKeys.title}${suffix}`) ?? searchParams.get(queryParamKeys.title);
   const lead = searchParams.get(`${queryParamKeys.lead}${suffix}`) ?? searchParams.get(queryParamKeys.lead);
+  const keyPoint1 = searchParams.get(`${queryParamKeys.keyPoint1}${suffix}`) ?? searchParams.get(queryParamKeys.keyPoint1);
+  const keyPoint2 = searchParams.get(`${queryParamKeys.keyPoint2}${suffix}`) ?? searchParams.get(queryParamKeys.keyPoint2);
+  const keyPoint3 = searchParams.get(`${queryParamKeys.keyPoint3}${suffix}`) ?? searchParams.get(queryParamKeys.keyPoint3);
   const heroImageSrc = searchParams.get(`${queryParamKeys.heroImageSrc}${suffix}`) ?? searchParams.get(queryParamKeys.heroImageSrc);
 
   return normalizeOverride({
     kicker,
     title,
     lead,
+    keyPoints: [keyPoint1, keyPoint2, keyPoint3],
     heroImageSrc
   });
 }
 
 function hasAnyOverride(override: LoginInfoPanelOverride): boolean {
-  return Boolean(override.kicker || override.title || override.lead || override.heroImageSrc);
+  return Boolean(
+    override.kicker ||
+      override.title ||
+      override.lead ||
+      override.heroImageSrc ||
+      (override.keyPoints && override.keyPoints.length > 0)
+  );
 }
 
 export function resolveLoginInfoPanelConfigOverride({
@@ -172,7 +207,7 @@ export function resolveLoginInfoPanelConfigOverride({
     kicker: mergedOverride.kicker ?? fallback.kicker,
     title: mergedOverride.title ?? fallback.title,
     lead: mergedOverride.lead ?? fallback.lead,
-    keyPoints: [],
+    keyPoints: mergedOverride.keyPoints ?? normalizeKeyPoints(fallback.keyPoints) ?? [],
     ...(mergedOverride.heroImageSrc ? { heroImageSrc: mergedOverride.heroImageSrc } : {})
   };
 }
