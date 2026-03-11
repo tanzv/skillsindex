@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   fetchAuthProviders,
   fetchConsoleJSON,
+  getSessionContext,
   login,
   postConsoleForm,
   postConsoleMultipartJSON,
@@ -132,6 +133,55 @@ describe("fetchAuthProviders", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(fetchAuthProviders()).rejects.toThrow("Server exploded");
+  });
+});
+
+describe("getSessionContext", () => {
+  it("returns the auth session and marketplace access flag", async () => {
+    setMockWindow("en", "en-US");
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      createJSONResponse({
+        user: {
+          id: 7,
+          username: "account-user",
+          display_name: "Account User",
+          role: "viewer",
+          status: "active"
+        },
+        marketplace_public_access: false
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getSessionContext()).resolves.toEqual({
+      user: {
+        id: 7,
+        username: "account-user",
+        display_name: "Account User",
+        role: "viewer",
+        status: "active"
+      },
+      marketplace_public_access: false
+    });
+
+    const requestInit = (fetchMock.mock.calls[0]?.[1] ?? {}) as RequestInit;
+    expect(new Headers(requestInit.headers).get("Accept-Language")).toBe("en");
+  });
+
+  it("falls back to anonymous public access when the session probe fails", async () => {
+    setMockWindow("en", "en-US");
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      new Response("session probe failed", {
+        status: 500,
+        headers: { "Content-Type": "text/plain" }
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getSessionContext()).resolves.toEqual({
+      user: null,
+      marketplace_public_access: true
+    });
   });
 });
 
