@@ -41,7 +41,7 @@ func (a *App) handleAPIAdminAPIKeyScopesUpdate(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	inputScopes, err := readAPIAdminAPIKeyScopesInput(r)
+	inputScopes, err := readAPIKeyScopesInput(r)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
 		return

@@ -2,6 +2,8 @@ import { Alert, Avatar, Button, Card, Input, Segmented, Select, Space, Tag, Typo
 
 import type { AppLocale } from "../../lib/i18n";
 import type { AccountCenterCopy } from "./AccountCenterPage.copy";
+import AccountCenterCredentialsSection from "./AccountCenterCredentialsSection";
+import AccountCenterSidePanel from "./AccountCenterSidePanel";
 import {
   formatAccountDate,
   type AccountProfileDraft,
@@ -18,12 +20,13 @@ import {
   PrototypeListRow,
   PrototypeMetricGrid,
   PrototypePageGrid,
-  PrototypeSideLinks,
   PrototypeStack
 } from "../prototype/prototypeCssInJs";
 import type { PrototypePagePalette } from "../prototype/prototypePageTheme";
 import {
-  accountRouteBySection,
+  type AccountAPIKeyCreateDraft,
+  type AccountAPIKeySecretState,
+  type AccountAPIKeysPayload,
   type AccountMetricItem,
   type AccountRevokeMode,
   type AccountSection,
@@ -53,6 +56,10 @@ interface AccountCenterSectionsProps {
   sessionsPayload: AccountSessionsPayload | null;
   sessionItems: AccountSessionItem[];
   currentSessionID: string;
+  credentialsPayload: AccountAPIKeysPayload | null;
+  credentialDraft: AccountAPIKeyCreateDraft;
+  credentialScopeDrafts: Record<number, string[]>;
+  latestCredentialSecret: AccountAPIKeySecretState | null;
   currentPassword: string;
   newPassword: string;
   revokeMode: AccountRevokeMode;
@@ -69,6 +76,12 @@ interface AccountCenterSectionsProps {
   onApplyPassword: () => void;
   onRevokeOtherSessions: () => void;
   onRevokeSession: (sessionID: string) => void;
+  onCredentialDraftChange: (patch: Partial<AccountAPIKeyCreateDraft>) => void;
+  onCredentialScopeDraftChange: (keyID: number, scopes: string[]) => void;
+  onCreateCredential: () => void;
+  onRotateCredential: (keyID: number) => void;
+  onRevokeCredential: (keyID: number) => void;
+  onApplyCredentialScopes: (keyID: number) => void;
 }
 
 export function AccountCenterSections({
@@ -85,6 +98,10 @@ export function AccountCenterSections({
   sessionsPayload,
   sessionItems,
   currentSessionID,
+  credentialsPayload,
+  credentialDraft,
+  credentialScopeDrafts,
+  latestCredentialSecret,
   currentPassword,
   newPassword,
   revokeMode,
@@ -100,7 +117,13 @@ export function AccountCenterSections({
   onRevokeModeChange,
   onApplyPassword,
   onRevokeOtherSessions,
-  onRevokeSession
+  onRevokeSession,
+  onCredentialDraftChange,
+  onCredentialScopeDraftChange,
+  onCreateCredential,
+  onRotateCredential,
+  onRevokeCredential,
+  onApplyCredentialScopes
 }: AccountCenterSectionsProps) {
   const profileUser = profilePayload?.user;
 
@@ -147,12 +170,18 @@ export function AccountCenterSections({
         options={[
           { label: text.profileTab, value: "profile" },
           { label: text.securityTab, value: "security" },
-          { label: text.sessionsTab, value: "sessions" }
+          { label: text.sessionsTab, value: "sessions" },
+          { label: text.credentialsTab, value: "credentials" }
         ]}
         value={activeSection}
         onChange={(value) => {
           const nextSection = String(value);
-          if (nextSection === "profile" || nextSection === "security" || nextSection === "sessions") {
+          if (
+            nextSection === "profile" ||
+            nextSection === "security" ||
+            nextSection === "sessions" ||
+            nextSection === "credentials"
+          ) {
             onSectionChange(nextSection);
           }
         }}
@@ -287,6 +316,25 @@ export function AccountCenterSections({
             </Card>
           ) : null}
 
+          {activeSection === "credentials" ? (
+            <AccountCenterCredentialsSection
+              text={text}
+              locale={locale}
+              palette={palette}
+              credentialsPayload={credentialsPayload}
+              credentialDraft={credentialDraft}
+              credentialScopeDrafts={credentialScopeDrafts}
+              latestCredentialSecret={latestCredentialSecret}
+              saving={saving}
+              onCredentialDraftChange={onCredentialDraftChange}
+              onCredentialScopeDraftChange={onCredentialScopeDraftChange}
+              onCreateCredential={onCreateCredential}
+              onRotateCredential={onRotateCredential}
+              onRevokeCredential={onRevokeCredential}
+              onApplyCredentialScopes={onApplyCredentialScopes}
+            />
+          ) : null}
+
           <Card
             variant="borderless"
             hoverable
@@ -334,61 +382,16 @@ export function AccountCenterSections({
           </Card>
         </PrototypeStack>
 
-        <PrototypeStack>
-          <Card
-            variant="borderless"
-            hoverable
-            style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-            styles={{ body: { padding: 12, display: "grid", gap: 8 } }}
-          >
-            <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-              {text.accountSignals}
-            </Typography.Title>
-            <Typography.Text style={{ color: palette.cardText, fontSize: "0.78rem" }}>
-              {text.role}: {profileUser?.role || text.never}
-            </Typography.Text>
-            <Typography.Text style={{ color: palette.cardText, fontSize: "0.78rem" }}>
-              {text.status}: {profileUser?.status || text.never}
-            </Typography.Text>
-            <Typography.Text style={{ color: palette.cardText, fontSize: "0.78rem" }}>
-              {text.sessionTTL}: {formatAccountDate(sessionsPayload?.session_expires_at || null, locale, text.never)}
-            </Typography.Text>
-          </Card>
-
-          <Card
-            variant="borderless"
-            hoverable
-            style={{ borderRadius: 13, border: `1px solid ${palette.cardBorder}`, background: palette.cardBackground }}
-            styles={{ body: { padding: 12, display: "grid", gap: 8 } }}
-          >
-            <Typography.Title level={4} style={{ margin: 0, color: palette.cardTitle, fontSize: "0.95rem" }}>
-              {text.quickActions}
-            </Typography.Title>
-            <PrototypeSideLinks>
-              <Button type="primary" onClick={onOpenProfileEditor}>{text.editProfile}</Button>
-              <Button onClick={() => onNavigate("/")}>{text.openMarketplace}</Button>
-              <Button onClick={() => onNavigate("/admin/overview")}>{text.openAdmin}</Button>
-              <Button onClick={() => onNavigate(accountRouteBySection.sessions)}>{text.sessionsTab}</Button>
-            </PrototypeSideLinks>
-          </Card>
-
-          <Card
-            variant="borderless"
-            hoverable
-            style={{ borderRadius: 13, border: `1px solid ${palette.sideHighlightBorder}`, background: palette.sideHighlightBackground }}
-            styles={{ body: { padding: 12, display: "grid", gap: 8 } }}
-          >
-            <Typography.Title level={4} style={{ margin: 0, color: "#f3fbff", fontSize: "0.95rem" }}>
-              {text.securityTab}
-            </Typography.Title>
-            <Typography.Text style={{ color: "#d8f5ff", fontSize: "0.78rem", lineHeight: 1.46 }}>
-              {text.signOutHint}
-            </Typography.Text>
-            <Typography.Text style={{ color: "#d8f5ff", fontSize: "0.78rem", lineHeight: 1.46 }}>
-              {text.revokeOthers}: {revokeMode === "revoke" ? text.revokeOthers : text.noRevoke}
-            </Typography.Text>
-          </Card>
-        </PrototypeStack>
+        <AccountCenterSidePanel
+          text={text}
+          locale={locale}
+          palette={palette}
+          profileUser={profileUser}
+          sessionsPayload={sessionsPayload}
+          revokeMode={revokeMode}
+          onOpenProfileEditor={onOpenProfileEditor}
+          onNavigate={onNavigate}
+        />
       </PrototypeDeckColumns>
     </PrototypePageGrid>
   );

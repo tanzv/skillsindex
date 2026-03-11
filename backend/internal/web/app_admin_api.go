@@ -92,7 +92,7 @@ type apiAdminAPIKeyItem struct {
 	UpdatedAt     time.Time  `json:"updated_at"`
 }
 
-type apiAdminAPIKeyCreateInput struct {
+type apiAPIKeyCreateInput struct {
 	Name          string
 	Purpose       string
 	ExpiresInDays int
@@ -173,7 +173,7 @@ func resultToAPIAdminAPIKeyItem(item models.APIKey) apiAdminAPIKeyItem {
 		Purpose:       item.Purpose,
 		Prefix:        item.Prefix,
 		Scopes:        services.APIKeyScopes(item),
-		Status:        apiAdminAPIKeyStatus(item),
+		Status:        apiAPIKeyStatus(item),
 		RevokedAt:     item.RevokedAt,
 		ExpiresAt:     item.ExpiresAt,
 		LastRotatedAt: item.LastRotatedAt,
@@ -183,7 +183,7 @@ func resultToAPIAdminAPIKeyItem(item models.APIKey) apiAdminAPIKeyItem {
 	}
 }
 
-func apiAdminAPIKeyStatus(item models.APIKey) string {
+func apiAPIKeyStatus(item models.APIKey) string {
 	now := time.Now().UTC()
 	if item.RevokedAt != nil {
 		return "revoked"
@@ -214,15 +214,15 @@ func filterAPIAdminAPIKeysByStatus(items []models.APIKey, status string) []model
 	}
 	filtered := make([]models.APIKey, 0, len(items))
 	for _, item := range items {
-		if apiAdminAPIKeyStatus(item) == normalized {
+		if apiAPIKeyStatus(item) == normalized {
 			filtered = append(filtered, item)
 		}
 	}
 	return filtered
 }
 
-func readAPIAdminAPIKeyCreateInput(r *http.Request) (apiAdminAPIKeyCreateInput, error) {
-	input := apiAdminAPIKeyCreateInput{}
+func readAPIKeyCreateInput(r *http.Request) (apiAPIKeyCreateInput, error) {
+	input := apiAPIKeyCreateInput{}
 	contentType := strings.ToLower(strings.TrimSpace(r.Header.Get("Content-Type")))
 	if strings.Contains(contentType, "application/json") {
 		var payload struct {
@@ -252,7 +252,7 @@ func readAPIAdminAPIKeyCreateInput(r *http.Request) (apiAdminAPIKeyCreateInput, 
 			ownerUserID := *payload.OwnerUserID
 			input.OwnerUserID = &ownerUserID
 		}
-		scopes, err := decodeAPIAdminScopes(payload.Scopes)
+		scopes, err := decodeAPIKeyScopes(payload.Scopes)
 		if err != nil {
 			return input, err
 		}
@@ -286,7 +286,7 @@ func readAPIAdminAPIKeyCreateInput(r *http.Request) (apiAdminAPIKeyCreateInput, 
 	return input, nil
 }
 
-func readAPIAdminAPIKeyScopesInput(r *http.Request) ([]string, error) {
+func readAPIKeyScopesInput(r *http.Request) ([]string, error) {
 	contentType := strings.ToLower(strings.TrimSpace(r.Header.Get("Content-Type")))
 	if strings.Contains(contentType, "application/json") {
 		var payload struct {
@@ -297,7 +297,7 @@ func readAPIAdminAPIKeyScopesInput(r *http.Request) ([]string, error) {
 		if err := decoder.Decode(&payload); err != nil {
 			return nil, fmt.Errorf("invalid json payload: %w", err)
 		}
-		scopes, err := decodeAPIAdminScopes(payload.Scopes)
+		scopes, err := decodeAPIKeyScopes(payload.Scopes)
 		if err != nil {
 			return nil, err
 		}
@@ -316,7 +316,7 @@ func readAPIAdminAPIKeyScopesInput(r *http.Request) ([]string, error) {
 	return []string{}, nil
 }
 
-func decodeAPIAdminScopes(raw json.RawMessage) ([]string, error) {
+func decodeAPIKeyScopes(raw json.RawMessage) ([]string, error) {
 	clean := strings.TrimSpace(string(raw))
 	if clean == "" || clean == "null" {
 		return []string{}, nil

@@ -24,12 +24,13 @@ func setupAccountHandlersTestApp(t *testing.T) (*App, *services.AuthService, *se
 	if err != nil {
 		t.Fatalf("failed to open sqlite db: %v", err)
 	}
-	if err := db.AutoMigrate(&models.User{}, &models.UserSession{}, &models.PasswordResetToken{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.UserSession{}, &models.PasswordResetToken{}, &models.SystemSetting{}); err != nil {
 		t.Fatalf("failed to migrate user models: %v", err)
 	}
 
 	authSvc := services.NewAuthService(db)
 	userSessionSvc := services.NewUserSessionService(db)
+	settingsSvc := services.NewSettingsService(db)
 	user, err := authSvc.Register(context.Background(), "account-user", "Account123!")
 	if err != nil {
 		t.Fatalf("failed to create account user: %v", err)
@@ -39,6 +40,7 @@ func setupAccountHandlersTestApp(t *testing.T) (*App, *services.AuthService, *se
 		authService:    authSvc,
 		sessionService: services.NewSessionService("test-secret", false),
 		userSessionSvc: userSessionSvc,
+		settingsService: settingsSvc,
 		cookieSecure:   false,
 	}
 	return app, authSvc, userSessionSvc, user

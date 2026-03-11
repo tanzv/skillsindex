@@ -10,6 +10,7 @@ func openAPIComponents() map[string]any {
 func openAPISchemas() map[string]any {
 	schemas := map[string]any{}
 	mergeOpenAPIPathMap(schemas, openAPISchemasCore())
+	mergeOpenAPIPathMap(schemas, openAPISchemasAccountAPIKey())
 	mergeOpenAPIPathMap(schemas, openAPISchemasAdminAPIKey())
 	mergeOpenAPIPathMap(schemas, openAPISchemasAdminSSO())
 	mergeOpenAPIPathMap(schemas, openAPISchemasAdminMetrics())

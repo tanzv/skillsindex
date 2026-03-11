@@ -18,7 +18,8 @@ describe("systemUserControlRegistrations", () => {
     expect(service.sections[1]?.items.map((item) => item.key)).toEqual([
       "account-center",
       "account-security",
-      "account-sessions"
+      "account-sessions",
+      "account-api-credentials"
     ]);
   });
 
@@ -41,7 +42,8 @@ describe("systemUserControlRegistrations", () => {
     expect(actionStates).toEqual([
       { key: "account-center", active: false },
       { key: "account-security", active: true },
-      { key: "account-sessions", active: false }
+      { key: "account-sessions", active: false },
+      { key: "account-api-credentials", active: false }
     ]);
   });
 
@@ -66,5 +68,6 @@ describe("systemUserControlRegistrations", () => {
     expect(onNavigate).toHaveBeenNthCalledWith(1, "/account/profile");
     expect(onNavigate).toHaveBeenNthCalledWith(2, "/account/security");
     expect(onNavigate).toHaveBeenNthCalledWith(3, "/account/sessions");
+    expect(onNavigate).toHaveBeenNthCalledWith(4, "/account/api-credentials");
   });
 });

@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildAccountAPIKeyCreateDraft,
+  buildAccountAPIKeyScopeDrafts,
   buildAccountProfileDraft,
   formatAccountDate,
   profileCompletenessScore,
   resolveAvatarInitials,
+  sanitizeAccountAPIKeyCreateDraft,
   sanitizeAccountProfileDraft
 } from "./AccountCenterPage.helpers";
 
@@ -75,5 +78,51 @@ describe("AccountCenterPage.helpers", () => {
     expect(resolveAvatarInitials("alex", "user")).toBe("AL");
     expect(resolveAvatarInitials(" ", "user")).toBe("US");
     expect(resolveAvatarInitials(" ", "")).toBe("U");
+  });
+
+  it("builds api key drafts from response metadata", () => {
+    const payload = {
+      items: [
+        {
+          id: 7,
+          name: "CLI",
+          purpose: "Local usage",
+          prefix: "sk_live_demo",
+          scopes: ["skills.search.read"],
+          status: "active" as const,
+          created_at: "2026-03-10T10:00:00Z",
+          updated_at: "2026-03-10T10:00:00Z"
+        }
+      ],
+      total: 1,
+      supported_scopes: ["skills.search.read", "skills.ai_search.read"],
+      default_scopes: ["skills.search.read"]
+    };
+
+    expect(buildAccountAPIKeyCreateDraft(payload)).toEqual({
+      name: "",
+      purpose: "",
+      expiresInDays: 90,
+      scopes: ["skills.search.read"]
+    });
+    expect(buildAccountAPIKeyScopeDrafts(payload)).toEqual({
+      7: ["skills.search.read"]
+    });
+  });
+
+  it("sanitizes api key creation payloads before submit", () => {
+    expect(
+      sanitizeAccountAPIKeyCreateDraft({
+        name: "  CI Token  ",
+        purpose: "  Build agent  ",
+        expiresInDays: 30.8,
+        scopes: ["skills.search.read", " skills.search.read ", "skills.ai_search.read"]
+      })
+    ).toEqual({
+      name: "CI Token",
+      purpose: "Build agent",
+      expires_in_days: 30,
+      scopes: ["skills.search.read", "skills.ai_search.read"]
+    });
   });
 });

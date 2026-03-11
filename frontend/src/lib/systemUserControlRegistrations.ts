@@ -14,6 +14,8 @@ interface SystemUserControlCopy {
   securityDescription: string;
   sessionsLabel: string;
   sessionsDescription: string;
+  credentialsLabel: string;
+  credentialsDescription: string;
 }
 
 export interface CreateSystemUserControlRegistrationsInput {
@@ -22,6 +24,7 @@ export interface CreateSystemUserControlRegistrationsInput {
   profilePath?: string;
   securityPath?: string;
   sessionsPath?: string;
+  credentialsPath?: string;
 }
 
 interface UserControlRouteItem {
@@ -37,6 +40,7 @@ const ACCOUNT_SECTION_ORDER = 15;
 const DEFAULT_PROFILE_PATH = "/account/profile";
 const DEFAULT_SECURITY_PATH = "/account/security";
 const DEFAULT_SESSIONS_PATH = "/account/sessions";
+const DEFAULT_CREDENTIALS_PATH = "/account/api-credentials";
 
 function resolveSystemUserControlCopy(locale: AppLocale): SystemUserControlCopy {
   if (locale === "zh") {
@@ -47,7 +51,9 @@ function resolveSystemUserControlCopy(locale: AppLocale): SystemUserControlCopy 
       securityLabel: "\u5b89\u5168\u8bbe\u7f6e",
       securityDescription: "\u68c0\u67e5\u5bc6\u7801\u7b56\u7565\u4e0e\u9a8c\u8bc1\u8bbe\u7f6e",
       sessionsLabel: "\u4f1a\u8bdd\u7ba1\u7406",
-      sessionsDescription: "\u67e5\u770b\u6d3b\u8dc3\u8bbe\u5907\u5e76\u64a4\u9500\u5386\u53f2\u4f1a\u8bdd"
+      sessionsDescription: "\u67e5\u770b\u6d3b\u8dc3\u8bbe\u5907\u5e76\u64a4\u9500\u5386\u53f2\u4f1a\u8bdd",
+      credentialsLabel: "API \u51ed\u8bc1",
+      credentialsDescription: "\u521b\u5efa\u548c\u7ef4\u62a4\u7528\u4e8e OpenAPI \u7684\u4e2a\u4eba\u51ed\u8bc1"
     };
   }
 
@@ -58,7 +64,9 @@ function resolveSystemUserControlCopy(locale: AppLocale): SystemUserControlCopy 
     securityLabel: "Security",
     securityDescription: "Review password controls and authentication settings",
     sessionsLabel: "Sessions",
-    sessionsDescription: "Inspect active devices and revoke existing sessions"
+    sessionsDescription: "Inspect active devices and revoke existing sessions",
+    credentialsLabel: "API Credentials",
+    credentialsDescription: "Create and manage personal OpenAPI credentials"
   };
 }
 
@@ -114,7 +122,8 @@ export function createSystemUserControlRegistrations({
   currentPath,
   profilePath = DEFAULT_PROFILE_PATH,
   securityPath = DEFAULT_SECURITY_PATH,
-  sessionsPath = DEFAULT_SESSIONS_PATH
+  sessionsPath = DEFAULT_SESSIONS_PATH,
+  credentialsPath = DEFAULT_CREDENTIALS_PATH
 }: CreateSystemUserControlRegistrationsInput): GlobalUserControlRegistration[] {
   const activeRoute = resolveActiveRoute(currentPath);
 
@@ -148,6 +157,14 @@ export function createSystemUserControlRegistrations({
             label: copy.sessionsLabel,
             description: copy.sessionsDescription,
             targetPath: sessionsPath
+          },
+          {
+            key: "account-api-credentials",
+            order: 40,
+            label: copy.credentialsLabel,
+            description: copy.credentialsDescription,
+            icon: "spark",
+            targetPath: credentialsPath
           }
         ];
 

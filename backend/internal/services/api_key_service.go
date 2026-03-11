@@ -38,6 +38,13 @@ var (
 		APIKeyScopeSkillsSearchRead,
 		APIKeyScopeSkillsAISearchRead,
 	}
+	supportedAPIKeyScopeOrder = []string{
+		APIKeyScopeSkillsSearchRead,
+		APIKeyScopeSkillsAISearchRead,
+		APIKeyScopeSkillsRead,
+		"skills:*",
+		APIKeyScopeAll,
+	}
 	supportedAPIKeyScopes = map[string]struct{}{
 		APIKeyScopeAll:                {},
 		APIKeyScopeSkillsRead:         {},
@@ -46,6 +53,16 @@ var (
 		"skills:*":                    {},
 	}
 )
+
+// DefaultAPIKeyScopes returns the default scopes applied to new keys.
+func DefaultAPIKeyScopes() []string {
+	return append([]string{}, defaultAPIKeyScopes...)
+}
+
+// SupportedAPIKeyScopes returns the ordered list of allowed scope values.
+func SupportedAPIKeyScopes() []string {
+	return append([]string{}, supportedAPIKeyScopeOrder...)
+}
 
 // CreateAPIKeyInput defines creation options for one account-scoped API key.
 type CreateAPIKeyInput struct {

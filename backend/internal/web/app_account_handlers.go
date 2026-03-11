@@ -29,6 +29,10 @@ func (a *App) handleAccountSecurity(w http.ResponseWriter, r *http.Request) {
 	a.renderAccountPage(w, r, "security", "Account Security")
 }
 
+func (a *App) handleAccountAPICredentials(w http.ResponseWriter, r *http.Request) {
+	a.renderAccountPage(w, r, "credentials", "API Credentials")
+}
+
 func (a *App) handleAccountSessions(w http.ResponseWriter, r *http.Request) {
 	a.renderAccountPage(w, r, "sessions", "Session Management")
 }

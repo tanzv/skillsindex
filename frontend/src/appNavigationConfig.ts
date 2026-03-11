@@ -37,7 +37,8 @@ export const protectedRoutes: ProtectedRoute[] = [
   "/admin/moderation",
   "/account/profile",
   "/account/security",
-  "/account/sessions"
+  "/account/sessions",
+  "/account/api-credentials"
 ];
 
 export const adminQuickRoutes: AdminRoute[] = [
@@ -49,7 +50,12 @@ export const adminQuickRoutes: AdminRoute[] = [
   "/admin/access"
 ];
 
-export const accountQuickRoutes: AccountRoute[] = ["/account/profile", "/account/security", "/account/sessions"];
+export const accountQuickRoutes: AccountRoute[] = [
+  "/account/profile",
+  "/account/security",
+  "/account/sessions",
+  "/account/api-credentials"
+];
 
 export const adminCatalogRoutes: AdminRoute[] = [
   "/admin/skills",
@@ -214,6 +220,12 @@ export const navItems: NavigationItem[] = [
     path: "/account/sessions",
     title: "Sessions",
     subtitle: "Active device sessions",
+    section: "account"
+  },
+  {
+    path: "/account/api-credentials",
+    title: "API Credentials",
+    subtitle: "Personal OpenAPI credentials",
     section: "account"
   }
 ];

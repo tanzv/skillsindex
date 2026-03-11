@@ -1,6 +1,6 @@
 import { ConsoleWorkbench, WorkbenchDefinition } from "./ConsoleWorkbench";
 
-export type AccountRoute = "/account/profile" | "/account/security" | "/account/sessions";
+export type AccountRoute = "/account/profile" | "/account/security" | "/account/sessions" | "/account/api-credentials";
 
 interface AccountWorkbenchPageProps {
   route: AccountRoute;
@@ -108,6 +108,84 @@ const accountWorkbenchDefinitions: Record<AccountRoute, WorkbenchDefinition> = {
       return [
         { label: "Total Sessions", value: Number(payload.total || 0) },
         { label: "Current Session", value: String(payload.current_session_id || "n/a") }
+      ];
+    }
+  },
+  "/account/api-credentials": {
+    title: "API Credentials",
+    subtitle: "Issue, rotate, revoke, and scope personal OpenAPI credentials.",
+    resources: [
+      {
+        key: "credentials",
+        title: "Personal Credentials",
+        description: "Current account API credential inventory and scope catalog.",
+        buildPath: () => "/api/v1/account/apikeys"
+      }
+    ],
+    actions: [
+      {
+        key: "createCredential",
+        title: "Create Credential",
+        submitText: "Create Credential",
+        fields: [
+          { key: "name", label: "Name", type: "text", placeholder: "CLI credential" },
+          { key: "purpose", label: "Purpose", type: "textarea", placeholder: "Usage purpose" },
+          { key: "expires_in_days", label: "Expires In Days", type: "number", placeholder: "90" },
+          { key: "scopes", label: "Scopes", type: "textarea", placeholder: "skills.search.read,skills.ai_search.read" }
+        ],
+        buildPath: () => "/api/v1/account/apikeys",
+        refreshResources: ["credentials"]
+      },
+      {
+        key: "rotateCredential",
+        title: "Rotate Credential",
+        fields: [{ key: "key_id", label: "Credential ID", type: "text", required: true }],
+        buildPath: (values) => {
+          const keyID = requiredSessionID(values.key_id);
+          if (!keyID) {
+            return null;
+          }
+          return `/api/v1/account/apikeys/${encodeURIComponent(keyID)}/rotate`;
+        },
+        refreshResources: ["credentials"]
+      },
+      {
+        key: "revokeCredential",
+        title: "Revoke Credential",
+        fields: [{ key: "key_id", label: "Credential ID", type: "text", required: true }],
+        buildPath: (values) => {
+          const keyID = requiredSessionID(values.key_id);
+          if (!keyID) {
+            return null;
+          }
+          return `/api/v1/account/apikeys/${encodeURIComponent(keyID)}/revoke`;
+        },
+        refreshResources: ["credentials"]
+      },
+      {
+        key: "updateCredentialScopes",
+        title: "Update Credential Scopes",
+        submitText: "Apply Scopes",
+        fields: [
+          { key: "key_id", label: "Credential ID", type: "text", required: true },
+          { key: "scopes", label: "Scopes", type: "textarea", required: true, placeholder: "skills.search.read" }
+        ],
+        buildPath: (values) => {
+          const keyID = requiredSessionID(values.key_id);
+          if (!keyID) {
+            return null;
+          }
+          return `/api/v1/account/apikeys/${encodeURIComponent(keyID)}/scopes`;
+        },
+        refreshResources: ["credentials"]
+      }
+    ],
+    summary: (resources) => {
+      const payload = asObject(resources.credentials);
+      const defaultScopes = Array.isArray(payload.default_scopes) ? payload.default_scopes.join(", ") : "n/a";
+      return [
+        { label: "Total Credentials", value: Number(payload.total || 0) },
+        { label: "Default Scopes", value: defaultScopes || "n/a" }
       ];
     }
   }

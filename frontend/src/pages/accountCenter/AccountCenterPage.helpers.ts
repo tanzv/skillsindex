@@ -1,5 +1,6 @@
 import type { SessionUser } from "../../lib/api";
 import type { AppLocale } from "../../lib/i18n";
+import type { AccountAPIKeyCreateDraft, AccountAPIKeysPayload } from "./AccountCenterPage.types";
 
 export interface AccountProfilePayload {
   user: SessionUser;
@@ -123,4 +124,36 @@ export function resolveAvatarInitials(displayName: string, fallback: string): st
   }
 
   return `${segments[0][0] || ""}${segments[segments.length - 1][0] || ""}`.toUpperCase();
+}
+
+export function buildAccountAPIKeyCreateDraft(payload: AccountAPIKeysPayload | null): AccountAPIKeyCreateDraft {
+  return {
+    name: "",
+    purpose: "",
+    expiresInDays: 90,
+    scopes: [...(payload?.default_scopes || [])]
+  };
+}
+
+export function buildAccountAPIKeyScopeDrafts(payload: AccountAPIKeysPayload | null): Record<number, string[]> {
+  const result: Record<number, string[]> = {};
+  for (const item of payload?.items || []) {
+    result[item.id] = [...item.scopes];
+  }
+  return result;
+}
+
+export function sanitizeAccountAPIKeyCreateDraft(draft: AccountAPIKeyCreateDraft): Record<string, unknown> {
+  return {
+    name: String(draft.name || "").trim(),
+    purpose: String(draft.purpose || "").trim(),
+    expires_in_days: Number.isFinite(draft.expiresInDays) ? Math.max(0, Math.trunc(draft.expiresInDays)) : 0,
+    scopes: Array.from(
+      new Set(
+        (draft.scopes || [])
+          .map((item) => String(item || "").trim())
+          .filter(Boolean)
+      )
+    )
+  };
 }

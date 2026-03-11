@@ -512,7 +512,7 @@ func (a *App) handleAPIAdminAPIKeysCreate(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	input, err := readAPIAdminAPIKeyCreateInput(r)
+	input, err := readAPIKeyCreateInput(r)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
 		return

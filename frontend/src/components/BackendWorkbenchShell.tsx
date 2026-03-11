@@ -81,7 +81,7 @@ function buildPrimarySections(): BackendWorkbenchPrimarySection[] {
     {
       id: "account",
       label: "Account",
-      routes: ["/account/profile", "/account/security", "/account/sessions"]
+      routes: ["/account/profile", "/account/security", "/account/sessions", "/account/api-credentials"]
     }
   ];
 }
