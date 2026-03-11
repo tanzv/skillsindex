@@ -67,6 +67,23 @@ test("repository ingestion submits and refreshes repository inventory", async ({
   await mockWorkspaceShell(page);
 
   let repositoryImported = false;
+  const syncRuns = [
+    {
+      id: 9001,
+      trigger: "manual",
+      scope: "repository",
+      status: "partial",
+      candidates: 3,
+      synced: 2,
+      failed: 1,
+      duration_ms: 1200,
+      started_at: "2026-03-11T10:00:00Z",
+      finished_at: "2026-03-11T10:00:01Z",
+      error_summary: "one repository failed",
+      owner_user: { username: "admin.user" },
+      actor_user: { username: "admin.user" }
+    }
+  ];
 
   await page.route("**/api/v1/admin/skills", async (route) => {
     await fulfillJSON(route, 200, {
@@ -86,25 +103,25 @@ test("repository ingestion submits and refreshes repository inventory", async ({
     });
   });
 
-  await page.route("**/api/v1/admin/sync-jobs**", async (route) => {
+  await page.route("**/api/v1/admin/sync-jobs?limit=20", async (route) => {
     await fulfillJSON(route, 200, {
-      items: [
-        {
-          id: 9001,
-          trigger: "manual",
-          scope: "repository",
-          status: "partial",
-          candidates: 3,
-          synced: 2,
-          failed: 1,
-          duration_ms: 1200,
-          started_at: "2026-03-11T10:00:00Z",
-          finished_at: "2026-03-11T10:00:01Z",
-          error_summary: "one repository failed",
-          owner_user: { username: "admin.user" },
-          actor_user: { username: "admin.user" }
-        }
-      ]
+      items: syncRuns
+    });
+  });
+
+  await page.route("**/api/v1/admin/sync-jobs/9001", async (route) => {
+    await fulfillJSON(route, 200, {
+      item: {
+        ...syncRuns[0],
+        items: [
+          {
+            id: 88,
+            name: "Repo Skill",
+            status: "synced",
+            message: "Repository skill refreshed"
+          }
+        ]
+      }
     });
   });
 
