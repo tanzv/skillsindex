@@ -14,13 +14,10 @@ export default defineConfig({
     trace: "on-first-retry"
   },
   webServer: {
-    command: `npm run dev -- --host 127.0.0.1 --port ${e2ePort}`,
+    command: `npm run preview -- --host 127.0.0.1 --port ${e2ePort}`,
     port: e2ePort,
     reuseExistingServer: false,
-    timeout: 120_000,
-    env: {
-      VITE_MARKETPLACE_HOME_MODE: "prototype"
-    }
+    timeout: 120_000
   },
   projects: [
     {

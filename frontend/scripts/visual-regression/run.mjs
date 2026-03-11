@@ -17,6 +17,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const isDirectExecution = process.argv[1] ? path.resolve(process.argv[1]) === __filename : false;
 const frontendRoot = path.resolve(__dirname, "../..");
+const previewIndexPath = path.resolve(frontendRoot, "dist/index.html");
 
 const outputDirectory = path.resolve(frontendRoot, "test-results/visual");
 const threshold = Number.parseFloat(process.env.VISUAL_MISMATCH_THRESHOLD ?? "0.01");
@@ -65,6 +66,14 @@ async function readPNG(filePath) {
   return PNG.sync.read(fileBuffer);
 }
 
+async function ensurePreviewBundle() {
+  try {
+    await access(previewIndexPath, constants.F_OK);
+  } catch {
+    throw new Error("Visual regression preview bundle is missing. Run `npm run build` before executing the capture script.");
+  }
+}
+
 function ensureValidThreshold(value) {
   if (!Number.isFinite(value) || value < 0 || value > 1) {
     throw new Error(`VISUAL_MISMATCH_THRESHOLD must be between 0 and 1. Received: ${String(value)}`);
@@ -90,8 +99,9 @@ async function main() {
 
   await mkdir(outputDirectory, { recursive: true });
   const baselineImage = await readPNG(baselineImagePath);
+  await ensurePreviewBundle();
 
-  const devServer = spawn("npm", ["run", "dev", "--", "--host", host, "--port", String(port)], {
+  const devServer = spawn("npm", ["run", "preview", "--", "--host", host, "--port", String(port)], {
     cwd: frontendRoot,
     stdio: "inherit",
     shell: process.platform === "win32",

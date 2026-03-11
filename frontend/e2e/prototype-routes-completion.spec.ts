@@ -141,6 +141,19 @@ const SYNC_POLICY_FIXTURE = {
   timeout: "10m",
   batch_size: 20
 } as const;
+const SKILL_INVENTORY_FIXTURE = {
+  items: [
+    {
+      id: 88,
+      name: "Repo Skill",
+      description: "Imported from repository",
+      source_type: "repository",
+      visibility: "private",
+      owner_username: "admin.user",
+      updated_at: "2025-02-01T10:00:00Z"
+    }
+  ]
+} as const;
 const ACCOUNT_FIXTURE = {
   items: [
     {
@@ -271,6 +284,9 @@ async function mockIntegrationWorkbench(page: Page): Promise<void> {
 }
 
 async function mockRecordsSync(page: Page): Promise<void> {
+  await page.route("**/api/v1/admin/skills", async (route) => {
+    await fulfillJSON(route, 200, SKILL_INVENTORY_FIXTURE);
+  });
   await page.route("**/api/v1/admin/sync-jobs?**", async (route) => {
     await fulfillJSON(route, 200, SYNC_RUNS_FIXTURE);
   });
@@ -400,9 +416,12 @@ test.describe("Prototype route completion coverage", () => {
   });
   test("repository ingestion route renders repository sync data instead of a prototype placeholder", async ({ page }) => {
     await forceEnglishLocale(page); await mockAuth(page, true); await mockRecordsSync(page); await page.goto("/admin/ingestion/repository");
-    await expect(page.getByRole("heading", { name: "Repository Ingestion Control", exact: true })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Repository Run Ledger", exact: true })).toBeVisible(); await expect(page.getByText("owner.user", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText(/2 failed items/)).toBeVisible(); await expect(page.getByText("Prototype Replica", { exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Repository Ingestion", exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Latest Sync Runs", exact: true })).toBeVisible();
+    await expect(page.getByText("Repo Skill", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Run Repository Sync", exact: true })).toBeVisible();
+    await expect(page.getByText("Failed to fetch", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Prototype Replica", { exact: true })).toHaveCount(0);
   });
   test("incident aliases render incident operations page", async ({ page }) => {
     await forceEnglishLocale(page);
