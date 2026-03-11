@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 // ExtractedSkill is parsed metadata and content imported from upload/repository sources.
@@ -24,50 +26,34 @@ type skillManifest struct {
 	ContentFile string   `json:"content_file"`
 }
 
+type skillFrontmatter struct {
+	Name        string   `yaml:"name"`
+	Description string   `yaml:"description"`
+	Tags        []string `yaml:"tags"`
+}
+
+type extractedSkillContent struct {
+	Body        string
+	Frontmatter skillFrontmatter
+}
+
 func extractSkillFromDirectory(basePath string) (ExtractedSkill, error) {
-	manifestPath := filepath.Join(basePath, "skill.json")
-	manifest := skillManifest{}
-	manifestFound := false
-
-	if data, err := os.ReadFile(manifestPath); err == nil {
-		if err := json.Unmarshal(data, &manifest); err != nil {
-			return ExtractedSkill{}, fmt.Errorf("failed to parse skill.json: %w", err)
-		}
-		manifestFound = true
-	} else if !errors.Is(err, os.ErrNotExist) {
-		return ExtractedSkill{}, fmt.Errorf("failed to read skill.json: %w", err)
-	}
-
-	contentFile := strings.TrimSpace(manifest.ContentFile)
-	if contentFile == "" {
-		contentFile = "README.md"
-	}
-
-	contentPath, err := resolvePathWithinBase(basePath, contentFile, "content_file")
+	manifest, _, err := readSkillManifest(basePath)
 	if err != nil {
 		return ExtractedSkill{}, err
 	}
-	content, err := readFileIfExists(contentPath)
+
+	content, err := extractSkillContent(basePath, manifest.ContentFile)
 	if err != nil {
 		return ExtractedSkill{}, err
-	}
-	if content == "" && contentFile != "README.md" {
-		readmePath, readmeErr := resolvePathWithinBase(basePath, "README.md", "content_file")
-		if readmeErr != nil {
-			return ExtractedSkill{}, readmeErr
-		}
-		content, err = readFileIfExists(readmePath)
-		if err != nil {
-			return ExtractedSkill{}, err
-		}
-	}
-	if strings.TrimSpace(content) == "" {
-		return ExtractedSkill{}, fmt.Errorf("skill content is empty; provide a non-empty README.md or configure skill.json content_file")
 	}
 
 	name := strings.TrimSpace(manifest.Name)
 	if name == "" {
-		name = extractTitleFromMarkdown(content)
+		name = strings.TrimSpace(content.Frontmatter.Name)
+	}
+	if name == "" {
+		name = extractTitleFromMarkdown(content.Body)
 	}
 	if name == "" {
 		name = filepath.Base(basePath)
@@ -75,20 +61,125 @@ func extractSkillFromDirectory(basePath string) (ExtractedSkill, error) {
 
 	description := strings.TrimSpace(manifest.Description)
 	if description == "" {
-		description = extractDescriptionFromMarkdown(content)
+		description = strings.TrimSpace(content.Frontmatter.Description)
+	}
+	if description == "" {
+		description = extractDescriptionFromMarkdown(content.Body)
 	}
 
 	tags := normalizeTagSlice(manifest.Tags)
-	if !manifestFound {
-		tags = []string{}
+	if len(tags) == 0 {
+		tags = normalizeTagSlice(content.Frontmatter.Tags)
 	}
 
 	return ExtractedSkill{
 		Name:        name,
 		Description: description,
-		Content:     content,
+		Content:     content.Body,
 		Tags:        tags,
 	}, nil
+}
+
+func readSkillManifest(basePath string) (skillManifest, bool, error) {
+	manifestPath := filepath.Join(basePath, "skill.json")
+	manifest := skillManifest{}
+
+	data, err := os.ReadFile(manifestPath)
+	if err == nil {
+		if err := json.Unmarshal(data, &manifest); err != nil {
+			return skillManifest{}, false, fmt.Errorf("failed to parse skill.json: %w", err)
+		}
+		return manifest, true, nil
+	}
+	if errors.Is(err, os.ErrNotExist) {
+		return manifest, false, nil
+	}
+	return skillManifest{}, false, fmt.Errorf("failed to read skill.json: %w", err)
+}
+
+func extractSkillContent(basePath string, contentFile string) (extractedSkillContent, error) {
+	for _, candidate := range buildSkillContentCandidates(contentFile) {
+		resolvedPath, err := resolvePathWithinBase(basePath, candidate, "content_file")
+		if err != nil {
+			return extractedSkillContent{}, err
+		}
+
+		content, err := readFileIfExists(resolvedPath)
+		if err != nil {
+			return extractedSkillContent{}, err
+		}
+		if strings.TrimSpace(content) == "" {
+			continue
+		}
+
+		if strings.EqualFold(filepath.Base(candidate), "SKILL.md") {
+			body, frontmatter, err := splitSkillMarkdownContent(content)
+			if err != nil {
+				return extractedSkillContent{}, err
+			}
+			if strings.TrimSpace(body) == "" {
+				continue
+			}
+			return extractedSkillContent{
+				Body:        body,
+				Frontmatter: frontmatter,
+			}, nil
+		}
+
+		return extractedSkillContent{Body: content}, nil
+	}
+
+	return extractedSkillContent{}, fmt.Errorf(
+		"skill content is empty; provide a non-empty README.md, SKILL.md, or configure skill.json content_file",
+	)
+}
+
+func buildSkillContentCandidates(contentFile string) []string {
+	candidates := make([]string, 0, 3)
+	seen := make(map[string]struct{}, 3)
+	appendCandidate := func(value string) {
+		trimmed := strings.TrimSpace(value)
+		if trimmed == "" {
+			return
+		}
+		key := strings.ToLower(trimmed)
+		if _, exists := seen[key]; exists {
+			return
+		}
+		seen[key] = struct{}{}
+		candidates = append(candidates, trimmed)
+	}
+
+	appendCandidate(contentFile)
+	appendCandidate("README.md")
+	appendCandidate("SKILL.md")
+	return candidates
+}
+
+func splitSkillMarkdownContent(content string) (string, skillFrontmatter, error) {
+	lines := strings.Split(content, "\n")
+	if len(lines) < 3 || strings.TrimSpace(lines[0]) != "---" {
+		return content, skillFrontmatter{}, nil
+	}
+
+	frontmatterEnd := -1
+	for index := 1; index < len(lines); index++ {
+		if strings.TrimSpace(lines[index]) == "---" {
+			frontmatterEnd = index
+			break
+		}
+	}
+	if frontmatterEnd == -1 {
+		return "", skillFrontmatter{}, fmt.Errorf("failed to parse SKILL.md frontmatter: missing closing delimiter")
+	}
+
+	frontmatter := skillFrontmatter{}
+	if err := yaml.Unmarshal([]byte(strings.Join(lines[1:frontmatterEnd], "\n")), &frontmatter); err != nil {
+		return "", skillFrontmatter{}, fmt.Errorf("failed to parse SKILL.md frontmatter: %w", err)
+	}
+
+	body := strings.Join(lines[frontmatterEnd+1:], "\n")
+	return strings.TrimLeft(body, "\n"), frontmatter, nil
 }
 
 func readFileIfExists(path string) (string, error) {

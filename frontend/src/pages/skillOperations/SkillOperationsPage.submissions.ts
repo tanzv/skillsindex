@@ -8,7 +8,9 @@ function appendSearchParam(params: URLSearchParams, key: string, value: string):
 }
 
 export type SkillOperationsMutationResponse = {
+  ok?: boolean;
   message?: string;
+  error?: string;
 };
 
 export function buildManualPayload(draft: ManualSkillDraft): URLSearchParams {

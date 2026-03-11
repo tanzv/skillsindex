@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -23,11 +24,16 @@ func TestRealRepositoryIngestionFlowsIntoMarketplaceDisplayAndSearch(t *testing.
 	}
 
 	app, owner := setupAdminIngestionAPITestApp(t)
+	requestBody := fmt.Sprintf(
+		`{"repo_url":%q,"repo_path":%q,"visibility":"public","tags":"real-repo,playwright"}`,
+		repoURL,
+		repoPath,
+	)
 
 	importRequest := httptest.NewRequest(
 		http.MethodPost,
 		"/api/v1/admin/ingestion/repository",
-		strings.NewReader(`{"repo_url":"`+repoURL+`","repo_path":"`+repoPath+`","visibility":"public","tags":"real-repo,playwright"}`),
+		strings.NewReader(requestBody),
 	)
 	importRequest.Header.Set("Content-Type", "application/json")
 	importRequest = withCurrentUser(importRequest, &owner)

@@ -1,7 +1,22 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchAuthProviders, login, resolveRequestAcceptLanguage, shouldFetchAuthProviders } from "./api";
+import {
+  fetchAuthProviders,
+  fetchConsoleJSON,
+  login,
+  postConsoleForm,
+  postConsoleMultipartJSON,
+  resolveRequestAcceptLanguage,
+  shouldFetchAuthProviders
+} from "./api";
 
 const originalWindow = globalThis.window;
+
+function createJSONResponse(payload: unknown, status = 200): Response {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { "Content-Type": "application/json" }
+  });
+}
 
 function setMockWindow(storedLocale: string | null, browserLanguage: string, throwsOnRead: boolean = false): void {
   const localStorage = {
@@ -63,16 +78,10 @@ describe("resolveRequestAcceptLanguage", () => {
   it("applies Accept-Language header to csrf and login requests", async () => {
     setMockWindow("zh", "en-US");
     const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({ csrf_token: "csrf-token-for-test" })
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(createJSONResponse({ csrf_token: "csrf-token-for-test" }))
+      .mockResolvedValueOnce(
+        createJSONResponse({
           user: {
             id: 1,
             username: "account-user",
@@ -81,7 +90,7 @@ describe("resolveRequestAcceptLanguage", () => {
             status: "active"
           }
         })
-      });
+      );
     vi.stubGlobal("fetch", fetchMock);
 
     await login("account-user", "Account123!");
@@ -138,5 +147,92 @@ describe("shouldFetchAuthProviders", () => {
   it("supports forcing provider loading through an explicit mode override", () => {
     vi.stubEnv("VITE_LOGIN_AUTH_PROVIDERS_MODE", "always");
     expect(shouldFetchAuthProviders("http://localhost:5173")).toBe(true);
+  });
+});
+
+describe("postConsoleMultipartJSON", () => {
+  it("submits multipart payload without forcing json content type", async () => {
+    const fetchMock = vi.fn<typeof fetch>((input) => {
+      const requestURL = String(input);
+      if (requestURL.includes("/api/v1/auth/csrf")) {
+        return Promise.resolve(createJSONResponse({ csrf_token: "csrf-token" }));
+      }
+      return Promise.resolve(createJSONResponse({ message: "Archive skill imported" }, 201));
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const payload = new FormData();
+    payload.set("archive", new Blob(["archive-content"], { type: "application/zip" }), "skill.zip");
+    payload.set("visibility", "private");
+
+    const response = await postConsoleMultipartJSON<{ message?: string }>("/api/v1/admin/ingestion/upload", payload);
+
+    expect(response.message).toBe("Archive skill imported");
+    expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(1);
+
+    const uploadRequestIndex = fetchMock.mock.calls.findIndex(([input]) =>
+      !String(input).includes("/api/v1/auth/csrf")
+    );
+    expect(uploadRequestIndex).toBeGreaterThanOrEqual(0);
+
+    const requestInit = fetchMock.mock.calls[uploadRequestIndex]?.[1];
+    const headers = new Headers(requestInit?.headers);
+    expect(headers.has("Content-Type")).toBe(false);
+    expect(requestInit?.body).toBe(payload);
+  });
+});
+
+describe("fetchConsoleJSON", () => {
+  it("surfaces plain-text error bodies without re-reading the response stream", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      new Response("missing repository inventory route", {
+        status: 404,
+        headers: { "Content-Type": "text/plain" }
+      })
+    );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchConsoleJSON("/api/v1/admin/skills")).rejects.toMatchObject({
+      status: 404,
+      message: "missing repository inventory route"
+    });
+  });
+});
+
+describe("postConsoleForm", () => {
+  it("submits form payloads and extracts redirect feedback", async () => {
+    const csrfResponse = createJSONResponse({ csrf_token: "csrf-token" });
+    Object.defineProperty(csrfResponse, "url", {
+      value: "http://localhost:8080/dashboard?msg=Repository+sync+finished",
+      configurable: true
+    });
+
+    const redirectResponse = {
+      ok: true,
+      status: 200,
+      url: "http://localhost:8080/dashboard?msg=Repository+sync+finished",
+      text: vi.fn().mockResolvedValue("")
+    } as unknown as Response;
+
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(csrfResponse)
+      .mockResolvedValueOnce(redirectResponse);
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const payload = new URLSearchParams({ limit: "50" });
+    const response = await postConsoleForm("/admin/sync/repositories", payload);
+
+    expect(response.ok).toBe(true);
+    expect(response.message).toBe("Repository sync finished");
+    expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(1);
+
+    const requestInit = fetchMock.mock.calls.at(-1)?.[1];
+    const headers = new Headers(requestInit?.headers);
+    expect(headers.get("Content-Type")).toBe("application/x-www-form-urlencoded;charset=UTF-8");
+    expect(requestInit?.body).toBe(payload);
   });
 });
