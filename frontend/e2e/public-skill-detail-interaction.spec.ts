@@ -352,7 +352,7 @@ test.describe("Public skill detail interaction flow", () => {
     });
 
     await page.goto("/skills/974?skill_detail_mode=live");
-    await page.getByRole("button", { name: "Sign In", exact: true }).click();
+    await page.locator(".skill-detail-auth-cta").getByRole("button", { name: "Sign In", exact: true }).click();
     await expect(page).toHaveURL("/login");
   });
 });

@@ -34,8 +34,30 @@ async function fulfillJSON(route: Route, status: number, body: unknown): Promise
   await route.fulfill({
     status,
     contentType: "application/json",
+    headers: {
+      "Cache-Control": "no-store"
+    },
     body: JSON.stringify(body)
   });
+}
+
+interface AccountManagementMockState {
+  currentAllowRegistration: boolean;
+  currentAuthProviders: string[];
+  lastRegistrationPayload: {
+    method: string;
+    allowRegistration: boolean;
+    marketplacePublicAccess: boolean;
+  } | null;
+  lastAuthProvidersPayload: {
+    method: string;
+    authProviders: string[];
+  } | null;
+  lastRoleAssignmentRequest: {
+    method: string;
+    userID: string;
+    role: string;
+  } | null;
 }
 
 async function mockAuthAndOverview(page: Page, options?: { overviewStatus?: number; overviewBody?: unknown }): Promise<void> {
@@ -58,54 +80,73 @@ async function mockAuthAndOverview(page: Page, options?: { overviewStatus?: numb
   });
 }
 
-async function mockAccountManagementData(page: Page): Promise<void> {
+async function mockAccountManagementData(page: Page): Promise<AccountManagementMockState> {
   let allowRegistration = true;
   let enabledAuthProviders = ["github", "google"];
+  const state: AccountManagementMockState = {
+    currentAllowRegistration: allowRegistration,
+    currentAuthProviders: [...enabledAuthProviders],
+    lastRegistrationPayload: null,
+    lastAuthProvidersPayload: null,
+    lastRoleAssignmentRequest: null
+  };
   const availableAuthProviders = ["dingtalk", "github", "google", "wecom", "microsoft", "password", "oidc"];
+  const accounts = [
+    {
+      id: 1001,
+      username: "ops.lead",
+      role: "admin",
+      status: "active",
+      created_at: "2026-03-01T00:00:00Z",
+      updated_at: "2026-03-02T09:00:00Z"
+    },
+    {
+      id: 1002,
+      username: "security.audit",
+      role: "auditor",
+      status: "active",
+      created_at: "2026-03-01T00:00:00Z",
+      updated_at: "2026-03-03T09:00:00Z"
+    },
+    {
+      id: 1003,
+      username: "readonly.demo",
+      role: "viewer",
+      status: "disabled",
+      created_at: "2026-03-01T00:00:00Z",
+      updated_at: "2026-03-01T09:00:00Z"
+    }
+  ];
 
   await page.route("**/api/v1/admin/accounts", async (route) => {
     await fulfillJSON(route, 200, {
-      total: 3,
-      items: [
-        {
-          id: 1001,
-          username: "ops.lead",
-          role: "admin",
-          status: "active",
-          created_at: "2026-03-01T00:00:00Z",
-          updated_at: "2026-03-02T09:00:00Z"
-        },
-        {
-          id: 1002,
-          username: "security.audit",
-          role: "auditor",
-          status: "active",
-          created_at: "2026-03-01T00:00:00Z",
-          updated_at: "2026-03-03T09:00:00Z"
-        },
-        {
-          id: 1003,
-          username: "readonly.demo",
-          role: "viewer",
-          status: "disabled",
-          created_at: "2026-03-01T00:00:00Z",
-          updated_at: "2026-03-01T09:00:00Z"
-        }
-      ]
+      total: accounts.length,
+      items: accounts
     });
   });
 
   await page.route("**/api/v1/admin/settings/registration", async (route) => {
     if (route.request().method().toUpperCase() === "POST") {
-      const payload = route.request().postDataJSON() as { allow_registration?: unknown } | null;
+      const payload = route.request().postDataJSON() as {
+        allow_registration?: unknown;
+        marketplace_public_access?: unknown;
+      } | null;
       allowRegistration = Boolean(payload?.allow_registration);
+      state.currentAllowRegistration = allowRegistration;
+      state.lastRegistrationPayload = {
+        method: route.request().method().toUpperCase(),
+        allowRegistration,
+        marketplacePublicAccess: payload?.marketplace_public_access !== false
+      };
       await fulfillJSON(route, 200, {
-        allow_registration: allowRegistration
+        allow_registration: allowRegistration,
+        marketplace_public_access: state.lastRegistrationPayload.marketplacePublicAccess
       });
       return;
     }
     await fulfillJSON(route, 200, {
-      allow_registration: allowRegistration
+      allow_registration: allowRegistration,
+      marketplace_public_access: true
     });
   });
 
@@ -121,6 +162,11 @@ async function mockAccountManagementData(page: Page): Promise<void> {
       enabledAuthProviders = Array.from(new Set(rawProviders.map((item) => String(item).trim().toLowerCase()))).filter((provider) =>
         availableAuthProviders.includes(provider)
       );
+      state.currentAuthProviders = [...enabledAuthProviders];
+      state.lastAuthProvidersPayload = {
+        method: route.request().method().toUpperCase(),
+        authProviders: [...enabledAuthProviders]
+      };
       await fulfillJSON(route, 200, {
         ok: true,
         auth_providers: enabledAuthProviders,
@@ -137,12 +183,27 @@ async function mockAccountManagementData(page: Page): Promise<void> {
   });
 
   await page.route("**/api/v1/admin/users/*/role", async (route) => {
+    const payload = route.request().postDataJSON() as { role?: unknown } | null;
+    const userID = route.request().url().split("/").slice(-2)[0] || "";
+    const role = String(payload?.role || "");
+    state.lastRoleAssignmentRequest = {
+      method: route.request().method().toUpperCase(),
+      userID,
+      role
+    };
+    const targetAccount = accounts.find((account) => String(account.id) === userID);
+    if (targetAccount && role) {
+      targetAccount.role = role;
+      targetAccount.updated_at = "2026-03-12T08:00:00Z";
+    }
     await fulfillJSON(route, 200, { ok: true });
   });
 
   await page.route("**/api/v1/admin/accounts/*/force-signout", async (route) => {
     await fulfillJSON(route, 200, { ok: true });
   });
+
+  return state;
 }
 
 test.describe("Admin overview interactions", () => {
@@ -295,7 +356,7 @@ test.describe("Admin overview interactions", () => {
 
   test("account configuration subpage updates registration and auth providers", async ({ page }) => {
     await mockAuthAndOverview(page);
-    await mockAccountManagementData(page);
+    const state = await mockAccountManagementData(page);
 
     await page.goto("/admin/accounts/new");
 
@@ -309,21 +370,39 @@ test.describe("Admin overview interactions", () => {
     await wecomToggle.check();
 
     await page.getByTestId("account-config-save-button").click();
+    await expect.poll(() => state.lastRegistrationPayload).toMatchObject({
+      method: "POST",
+      allowRegistration: false,
+      marketplacePublicAccess: true
+    });
+    await expect.poll(() => state.lastAuthProvidersPayload).toMatchObject({
+      method: "POST"
+    });
     await expect(page.getByText("Access settings updated.", { exact: true })).toBeVisible();
+    expect(state.lastAuthProvidersPayload?.authProviders).toContain("wecom");
+    expect(state.currentAllowRegistration).toBe(false);
+    expect(state.currentAuthProviders).toContain("wecom");
   });
 
   test("role configuration subpage submits assignment form", async ({ page }) => {
     await mockAuthAndOverview(page);
-    await mockAccountManagementData(page);
+    const state = await mockAccountManagementData(page);
 
     await page.goto("/admin/roles/new");
 
     await expect(page.getByRole("heading", { name: "Role Configuration Form", exact: true }).first()).toBeVisible();
-    await page.getByPlaceholder("Enter user ID").fill("1003");
+    const userIDInput = page.getByPlaceholder("Enter user ID");
+    await userIDInput.fill("1003");
     await page.locator(".account-workbench-select-input").selectOption("admin");
     await page.getByTestId("role-assignment-submit-button").click();
 
+    await expect.poll(() => state.lastRoleAssignmentRequest).toMatchObject({
+      method: "POST",
+      userID: "1003",
+      role: "admin"
+    });
     await expect(page.getByText("Role assignment updated for user #1003.", { exact: true })).toBeVisible();
+    await expect(userIDInput).toHaveValue("");
   });
 
   test("organization accounts shell uses full-width utility frame on wide viewports", async ({ page }) => {

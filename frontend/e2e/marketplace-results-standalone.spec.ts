@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const HOME_PATH = "/";
 const RESULTS_PATH = "/results";
@@ -12,6 +12,10 @@ const selectors = {
   topbarCta: ".marketplace-topbar-cta",
   resultsKeywordInput: ".marketplace-home.is-results-page .marketplace-search-input.is-query input"
 } as const;
+
+async function readHistoryLength(page: Page): Promise<number> {
+  return page.evaluate(() => window.history.length);
+}
 
 test.describe("Marketplace results standalone page interactions", () => {
   test("results route renders dedicated results page without floating layers", async ({ page }) => {
@@ -59,19 +63,10 @@ test.describe("Marketplace results standalone page interactions", () => {
 
   test("repeated search submit with identical query does not push duplicate history", async ({ page }) => {
     await page.goto("/results?q=repo");
-    await page.evaluate(() => {
-      (window as Window & { __beforeHistoryLength?: number }).__beforeHistoryLength = window.history.length;
-    });
+    const beforeHistoryLength = await readHistoryLength(page);
     await page.locator(selectors.resultsKeywordInput).press("Enter");
-    await page.waitForTimeout(150);
-    const historySnapshot = await page.evaluate(() => {
-      const value = (window as Window & { __beforeHistoryLength?: number }).__beforeHistoryLength;
-      return {
-        before: Number(value || 0),
-        after: window.history.length
-      };
-    });
-    expect(historySnapshot.after).toBe(historySnapshot.before);
+    await expect(page).toHaveURL("/results?q=repo");
+    await expect.poll(() => readHistoryLength(page)).toBe(beforeHistoryLength);
   });
 
   test("light results page follows light theme tokens", async ({ page }) => {

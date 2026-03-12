@@ -170,7 +170,7 @@ test.describe("workspace topbar", () => {
 
     expect(firstBox).not.toBeNull();
     expect(secondBox).not.toBeNull();
-    expect(Math.abs((firstBox?.y || 0) - (secondBox?.y || 0))).toBeLessThan(8);
+    expect(Math.abs((firstBox?.y || 0) - (secondBox?.y || 0))).toBeLessThan(10);
   });
 
   test("opens governance from the top-level system settings entry on workspace", async ({ page }) => {

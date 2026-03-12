@@ -72,6 +72,26 @@ async function forceEnglishLocale(page: Page): Promise<void> {
   });
 }
 
+async function expectPathWithQuery(
+  page: Page,
+  pathname: string,
+  expectedQuery: Record<string, string>,
+  options?: { hash?: string }
+): Promise<void> {
+  await expect.poll(() => {
+    const currentURL = new URL(page.url(), "http://localhost");
+    return {
+      pathname: currentURL.pathname,
+      hash: currentURL.hash,
+      query: Object.fromEntries(currentURL.searchParams.entries())
+    };
+  }).toEqual({
+    pathname,
+    hash: options?.hash || "",
+    query: expectedQuery
+  });
+}
+
 const privateMarketplaceRedirectCases = [
   {
     name: "home route",
@@ -117,10 +137,10 @@ test.describe("Public route prefix navigation", () => {
 
     await page.goto("/rankings?left=901&right=902&q=repo&page=2");
     await page.getByRole("button", { name: "Switch to light theme", exact: true }).click();
-    await expect(page).toHaveURL(/\/light\/rankings\?left=901&right=902&q=repo&page=2$/);
+    await expectPathWithQuery(page, "/light/rankings", { left: "901", right: "902", q: "repo", page: "2" });
 
     await page.getByRole("button", { name: "Switch to dark theme", exact: true }).click();
-    await expect(page).toHaveURL(/\/rankings\?left=901&right=902&q=repo&page=2$/);
+    await expectPathWithQuery(page, "/rankings", { left: "901", right: "902", q: "repo", page: "2" });
   });
 
   test("global theme switch keeps mobile prefix family when toggling mode", async ({ page }) => {
@@ -129,10 +149,10 @@ test.describe("Public route prefix navigation", () => {
 
     await page.goto("/mobile/light/rankings?left=901&right=902");
     await page.getByRole("button", { name: "Switch to dark theme", exact: true }).click();
-    await expect(page).toHaveURL(/\/mobile\/rankings\?left=901&right=902$/);
+    await expectPathWithQuery(page, "/mobile/rankings", { left: "901", right: "902" });
 
     await page.getByRole("button", { name: "Switch to light theme", exact: true }).click();
-    await expect(page).toHaveURL(/\/mobile\/light\/rankings\?left=901&right=902$/);
+    await expectPathWithQuery(page, "/mobile/light/rankings", { left: "901", right: "902" });
   });
 
   test("legacy compare route with query redirects to rankings and keeps light prefix navigation", async ({ page }) => {
@@ -140,12 +160,12 @@ test.describe("Public route prefix navigation", () => {
     await mockAnonymousAuth(page);
 
     await page.goto("/light/compare?left=901&right=902");
-    await expect(page).toHaveURL(/\/light\/rankings\?left=901&right=902$/);
+    await expectPathWithQuery(page, "/light/rankings", { left: "901", right: "902" });
     await page.getByRole("button", { name: "View Categories", exact: true }).click();
     await expect(page).toHaveURL("/light/categories");
 
     await page.goto("/light/compare?left=901&right=902");
-    await expect(page).toHaveURL(/\/light\/rankings\?left=901&right=902$/);
+    await expectPathWithQuery(page, "/light/rankings", { left: "901", right: "902" });
     await page.getByRole("button", { name: "Profile", exact: true }).click();
     await expect(page).toHaveURL(/\/light\/login$/);
   });
@@ -180,12 +200,12 @@ test.describe("Public route prefix navigation", () => {
     await mockAnonymousAuth(page);
 
     await page.goto("/mobile/light/docs#api");
-    await expect(page).toHaveURL("/mobile/light/docs#api");
+    await expectPathWithQuery(page, "/mobile/light/docs", {}, { hash: "#api" });
     await expect(page.getByRole("heading", { name: "Documentation Hub" })).toBeVisible();
     await expect(page.getByTestId("docs-page-breadcrumb-current")).toHaveText("Documentation Hub");
 
     await page.goto("/light/compare?left=901&right=902");
-    await expect(page).toHaveURL("/light/rankings?left=901&right=902");
+    await expectPathWithQuery(page, "/light/rankings", { left: "901", right: "902" });
   });
 
   test("rankings and categories keep light/mobile prefixes during navigation", async ({ page }) => {

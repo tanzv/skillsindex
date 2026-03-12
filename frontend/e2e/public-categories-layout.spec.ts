@@ -172,7 +172,7 @@ test.describe("Public categories layout", () => {
     await expect(categoryDetailBreadcrumbCategories).toHaveText("Categories");
     await expect(categoryDetailBreadcrumbCurrent).toContainText("Testing Automation");
     await expect(resultsToolbarTitle).toContainText("Testing Automation");
-    await expect(resultsToolbarTitle).not.toHaveText("Category Results");
+    await expect(resultsToolbarTitle).not.toContainText("Category Results");
     await expect(resultsToolbarTitle).toContainText(/Matched \d+/);
     await expect(resultsToolbarChips).toHaveCount(0);
 

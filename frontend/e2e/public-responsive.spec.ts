@@ -50,6 +50,83 @@ async function mockSkillDetail(page: Page): Promise<void> {
   });
 }
 
+async function mockMarketplacePayload(page: Page): Promise<void> {
+  await page.route("**/api/v1/public/marketplace**", async (route) => {
+    await fulfillJSON(route, 200, {
+      filters: {
+        q: "",
+        tags: "",
+        category: "",
+        subcategory: "",
+        sort: "recent",
+        mode: ""
+      },
+      stats: {
+        total_skills: 2,
+        matching_skills: 2
+      },
+      pagination: {
+        page: 1,
+        page_size: 24,
+        total_items: 2,
+        total_pages: 1,
+        prev_page: 0,
+        next_page: 0
+      },
+      categories: [
+        {
+          slug: "development",
+          name: "Development",
+          description: "Developer workflow automation",
+          count: 2,
+          subcategories: [
+            {
+              slug: "qa",
+              name: "QA",
+              count: 1
+            }
+          ]
+        }
+      ],
+      top_tags: [],
+      items: [
+        {
+          id: 901,
+          name: "browser-automation-pro",
+          description: "Prototype payload",
+          content: "name: browser-automation-pro\nversion: 2.4.1",
+          category: "development",
+          subcategory: "qa",
+          tags: ["browser"],
+          source_type: "official",
+          source_url: "https://github.com/skillsindex/browser-automation-pro",
+          star_count: 812,
+          quality_score: 97.8,
+          install_command: "npx skillsindex install browser-automation-pro",
+          updated_at: "2026-02-20T14:32:00Z"
+        },
+        {
+          id: 902,
+          name: "workspace-governance-kit",
+          description: "Governance workflow bundle",
+          content: "name: workspace-governance-kit\nversion: 1.0.0",
+          category: "development",
+          subcategory: "qa",
+          tags: ["governance"],
+          source_type: "official",
+          source_url: "https://github.com/skillsindex/workspace-governance-kit",
+          star_count: 420,
+          quality_score: 94.2,
+          install_command: "npx skillsindex install workspace-governance-kit",
+          updated_at: "2026-02-18T14:32:00Z"
+        }
+      ],
+      session_user: null,
+      can_access_dashboard: false
+    });
+  });
+}
+
 async function forceEnglishLocale(page: Page): Promise<void> {
   await page.addInitScript(() => {
     window.localStorage.setItem("skillsindex.locale", "en");
@@ -67,6 +144,7 @@ test.describe("Public pages responsive and functional", () => {
   test("home page keeps core interactions available on mobile viewport", async ({ page }) => {
     await forceEnglishLocale(page);
     await mockAnonymousAuth(page);
+    await mockMarketplacePayload(page);
 
     await page.goto("/");
     await expect(page.locator(".marketplace-home")).toHaveClass(/is-mobile/);
@@ -101,6 +179,7 @@ test.describe("Public pages responsive and functional", () => {
   test("categories and rankings pages remain functional on mobile viewport", async ({ page }) => {
     await forceEnglishLocale(page);
     await mockAnonymousAuth(page);
+    await mockMarketplacePayload(page);
 
     await page.goto("/rankings");
     await expect(page.getByRole("heading", { name: "Top Skills Ranking", exact: true })).toBeVisible();
@@ -162,4 +241,3 @@ test.describe("Public skill detail topbar responsive layout", () => {
     expect(measurement.shellBorderBottomWidth).toBe("1px");
   });
 });
-

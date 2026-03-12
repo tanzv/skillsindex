@@ -57,7 +57,7 @@ async function mockAdminAccountsTopbarData(page: Page): Promise<void> {
     });
   });
 
-  await page.route("**/api/v1/admin/accounts**", async (route) => {
+  await page.route("**/api/v1/admin/accounts", async (route) => {
     await fulfillJSON(route, 200, {
       total: 3,
       items: [
@@ -119,20 +119,28 @@ test("admin accounts overflow panel stays above the sidebar overlap zone", async
       return null;
     }
 
-    const sampleX = Math.round(overlapLeft + Math.max(12, overlapWidth * 0.35));
-    const sampleY = Math.round(panelRect.top + Math.min(134, panelRect.height * 0.5));
-    const topElement = document.elementFromPoint(sampleX, sampleY);
+    const sampleXs = [0.2, 0.5, 0.8].map((ratio) => Math.round(overlapLeft + overlapWidth * ratio));
+    const sampleYs = [0.25, 0.5, 0.75].map((ratio) => Math.round(panelRect.top + panelRect.height * ratio));
+    const samples = sampleXs.flatMap((sampleX) =>
+      sampleYs.map((sampleY) => {
+        const topElement = document.elementFromPoint(sampleX, sampleY);
+        return {
+          sampleX,
+          sampleY,
+          inOverflowWrapper: Boolean(topElement?.closest(".workspace-topbar-overflow-wrapper"))
+        };
+      })
+    );
 
     return {
       overlapWidth,
-      sampleX,
-      sampleY,
-      topClassName: topElement instanceof HTMLElement ? String(topElement.className || "") : "",
-      inOverflowWrapper: Boolean(topElement?.closest(".workspace-topbar-overflow-wrapper"))
+      samples
     };
   });
 
   expect(overlapHitTest).not.toBeNull();
   expect(overlapHitTest?.overlapWidth ?? 0).toBeGreaterThan(0);
-  expect(overlapHitTest?.inOverflowWrapper).toBe(true);
+  for (const sample of overlapHitTest?.samples ?? []) {
+    expect(sample.inOverflowWrapper).toBe(true);
+  }
 });

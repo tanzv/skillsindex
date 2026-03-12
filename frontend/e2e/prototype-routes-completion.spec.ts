@@ -1,5 +1,4 @@
 import { expect, test, type Locator, type Page, type Route } from "@playwright/test";
-
 const AUTH_USER_FIXTURE = {
   id: 101,
   username: "admin.user",
@@ -173,7 +172,6 @@ const REGISTRATION_FIXTURE = {
 const AUTH_PROVIDERS_FIXTURE = {
   auth_providers: ["password", "sso"]
 } as const;
-
 async function fulfillJSON(route: Route, status: number, body: unknown): Promise<void> {
   await route.fulfill({
     status,
@@ -181,19 +179,16 @@ async function fulfillJSON(route: Route, status: number, body: unknown): Promise
     body: JSON.stringify(body)
   });
 }
-
 async function mockAuth(page: Page, authenticated: boolean): Promise<void> {
   await page.route("**/api/v1/auth/me", async (route) => {
     await fulfillJSON(route, 200, { user: authenticated ? AUTH_USER_FIXTURE : null });
   });
 }
-
 async function forceEnglishLocale(page: Page): Promise<void> {
   await page.addInitScript(() => {
     window.localStorage.setItem("skillsindex.locale", "en");
   });
 }
-
 async function expectSidebarButtonHeightAtMost(locator: Locator, maxHeight: number): Promise<void> {
   const bounds = await locator.boundingBox();
   expect(bounds).not.toBeNull();
@@ -202,7 +197,6 @@ async function expectSidebarButtonHeightAtMost(locator: Locator, maxHeight: numb
   }
   expect(bounds.height).toBeLessThanOrEqual(maxHeight);
 }
-
 async function expectSidebarHeightRatioAtMost(page: Page, locator: Locator, maxRatio: number): Promise<void> {
   const [bounds, viewport] = await Promise.all([locator.boundingBox(), page.viewportSize()]);
   expect(bounds).not.toBeNull();
@@ -212,7 +206,6 @@ async function expectSidebarHeightRatioAtMost(page: Page, locator: Locator, maxR
   }
   expect(bounds.height).toBeLessThanOrEqual(viewport.height * maxRatio);
 }
-
 async function expectTopOffsetAtMost(reference: Locator, target: Locator, maxOffset: number): Promise<void> {
   const [referenceBounds, targetBounds] = await Promise.all([reference.boundingBox(), target.boundingBox()]);
   expect(referenceBounds).not.toBeNull();
@@ -223,7 +216,6 @@ async function expectTopOffsetAtMost(reference: Locator, target: Locator, maxOff
   const delta = Math.abs(targetBounds.y - referenceBounds.y);
   expect(delta).toBeLessThanOrEqual(maxOffset);
 }
-
 async function resolvePrimaryNavigationGroup(page: Page): Promise<Locator> {
   const candidateLabels = ["Primary navigation", "App navigation", "App Navigation"];
   for (const label of candidateLabels) {
@@ -234,14 +226,12 @@ async function resolvePrimaryNavigationGroup(page: Page): Promise<Locator> {
   }
   return page.getByRole("banner").first();
 }
-
 interface PanelThemeVisual {
   mode: string | null;
   panelToken: string;
   backgroundColor: string;
   foundPanel: boolean;
 }
-
 async function readPanelThemeVisual(page: Page, panelSelector: string): Promise<PanelThemeVisual> {
   return page.evaluate((selector) => {
     const panel = document.querySelector(selector);
@@ -258,7 +248,6 @@ async function readPanelThemeVisual(page: Page, panelSelector: string): Promise<
       probe.remove();
       return normalized;
     })();
-
     return {
       mode: document.documentElement.getAttribute("data-theme-mode"),
       panelToken: window.getComputedStyle(document.documentElement).getPropertyValue("--si-color-panel").trim(),
@@ -267,13 +256,11 @@ async function readPanelThemeVisual(page: Page, panelSelector: string): Promise<
     };
   }, panelSelector);
 }
-
 async function mockMarketplace(page: Page): Promise<void> {
   await page.route("**/api/v1/public/marketplace**", async (route) => {
     await fulfillJSON(route, 200, MARKETPLACE_FIXTURE);
   });
 }
-
 async function mockIntegrationWorkbench(page: Page): Promise<void> {
   await page.route("**/api/v1/admin/integrations?limit=40", async (route) => {
     await fulfillJSON(route, 200, INTEGRATIONS_FIXTURE);
@@ -282,7 +269,6 @@ async function mockIntegrationWorkbench(page: Page): Promise<void> {
     await fulfillJSON(route, 200, SSO_PROVIDERS_FIXTURE);
   });
 }
-
 async function mockRecordsSync(page: Page): Promise<void> {
   await page.route("**/api/v1/admin/skills", async (route) => {
     await fulfillJSON(route, 200, SKILL_INVENTORY_FIXTURE);
@@ -297,7 +283,6 @@ async function mockRecordsSync(page: Page): Promise<void> {
     await fulfillJSON(route, 200, SYNC_POLICY_FIXTURE);
   });
 }
-
 async function mockOpsMetrics(page: Page): Promise<void> {
   await page.route("**/api/v1/admin/ops/metrics", async (route) => {
     await fulfillJSON(route, 200, {
@@ -312,7 +297,6 @@ async function mockOpsMetrics(page: Page): Promise<void> {
     });
   });
 }
-
 async function mockIncidentWorkbench(page: Page): Promise<void> {
   await mockOpsMetrics(page);
   await page.route("**/api/v1/admin/ops/alerts", async (route) => {
@@ -334,7 +318,6 @@ async function mockIncidentWorkbench(page: Page): Promise<void> {
     });
   });
 }
-
 async function mockAccountRoleWorkbench(page: Page): Promise<void> {
   await page.route("**/api/v1/auth/csrf", async (route) => {
     await fulfillJSON(route, 200, { csrf_token: "test-csrf-token" });
@@ -355,7 +338,6 @@ async function mockAccountRoleWorkbench(page: Page): Promise<void> {
     await fulfillJSON(route, 200, AUTH_PROVIDERS_FIXTURE);
   });
 }
-
 async function mockAccessManagement(page: Page): Promise<void> {
   await page.route("**/api/v1/admin/accounts", async (route) => {
     await fulfillJSON(route, 200, ACCOUNT_FIXTURE);
@@ -367,7 +349,6 @@ async function mockAccessManagement(page: Page): Promise<void> {
     await fulfillJSON(route, 200, AUTH_PROVIDERS_FIXTURE);
   });
 }
-
 test.describe("Prototype route completion coverage", () => {
   test("public route /rollout falls back to workspace dashboard and /light/workspace renders concrete content", async ({ page }) => {
     await forceEnglishLocale(page);
@@ -459,7 +440,7 @@ test.describe("Prototype route completion coverage", () => {
     const primaryNavigation = await resolvePrimaryNavigationGroup(page);
     await expect(page.getByRole("heading", { name: "Account Configuration Form", exact: true }).first()).toBeVisible();
     await expect(primaryNavigation.getByRole("button", { name: "Skill Management", exact: true })).toBeVisible();
-    await expect(primaryNavigation.getByRole("button", { name: "User Management", exact: true })).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "User Management", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(primaryNavigation.getByRole("button", { name: "System Settings", exact: true })).toBeVisible();
     await expect(primaryNavigation.getByRole("button", { name: "Workspace Panel", exact: true })).toBeVisible();
     const personnelManagementButton = sidebar.getByRole("button", { name: "Personnel Management", exact: true });
@@ -500,7 +481,7 @@ test.describe("Prototype route completion coverage", () => {
     await expect(page).toHaveURL(/\/admin\/access$/);
     await expect(page.getByRole("heading", { name: "Access Governance", exact: true })).toBeVisible();
     await expect(primaryNavigation.getByRole("button", { name: "Skill Management", exact: true })).toBeVisible();
-    await expect(primaryNavigation.getByRole("button", { name: "User Management", exact: true })).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "User Management", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(primaryNavigation.getByRole("button", { name: "System Settings", exact: true })).toBeVisible();
     await expect(primaryNavigation.getByRole("button", { name: "Workspace Panel", exact: true })).toBeVisible();
     await expect(sidebar.getByRole("button", { name: "Permission Management", exact: true })).toHaveAttribute("aria-current", "page");
@@ -526,6 +507,7 @@ test.describe("Prototype route completion coverage", () => {
     await sidebar.getByRole("button", { name: "Role Management", exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/roles$/);
     await expect(page.getByRole("heading", { name: "Role Management List", exact: true }).first()).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "User Management", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(sidebar.getByRole("button", { name: "Role Management", exact: true })).toHaveAttribute("aria-current", "page");
     await expectSidebarHeightRatioAtMost(page, sidebar, 0.9);
     await expectTopOffsetAtMost(sidebar, page.locator(".page-grid.account-workbench").first(), 10);
@@ -547,6 +529,7 @@ test.describe("Prototype route completion coverage", () => {
     await sidebar.getByRole("button", { name: "Personnel Management", exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/accounts$/);
     await expect(page.getByRole("heading", { name: "Account Management List", exact: true }).first()).toBeVisible();
+    await expect(primaryNavigation.getByRole("button", { name: "User Management", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(sidebar.getByRole("button", { name: "Personnel Management", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page.getByText("Prototype Replica", { exact: true })).toHaveCount(0);
   });

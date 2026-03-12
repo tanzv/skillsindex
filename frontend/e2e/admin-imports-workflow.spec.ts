@@ -16,6 +16,12 @@ async function fulfillJSON(route: Route, status: number, body: unknown): Promise
   });
 }
 
+interface ArchiveUploadSnapshot {
+  method: string;
+  contentType: string;
+  bodySize: number;
+}
+
 async function forceEnglishLocale(page: Page): Promise<void> {
   await page.addInitScript(() => {
     window.localStorage.setItem("skillsindex.locale", "en");
@@ -67,6 +73,9 @@ test("imports workbench uploads archives and updates import job actions", async 
   await mockWorkspaceShell(page);
 
   let archiveImported = false;
+  let uploadRequest: ArchiveUploadSnapshot | null = null;
+  let retryRequestMethod = "";
+  let cancelRequestMethod = "";
   const importJobs = [
     {
       id: 11,
@@ -115,6 +124,11 @@ test("imports workbench uploads archives and updates import job actions", async 
   });
 
   await page.route("**/api/v1/admin/ingestion/upload", async (route) => {
+    uploadRequest = {
+      method: route.request().method().toUpperCase(),
+      contentType: route.request().headers()["content-type"] || "",
+      bodySize: route.request().postDataBuffer()?.byteLength || 0
+    };
     archiveImported = true;
     await fulfillJSON(route, 201, {
       ok: true,
@@ -130,6 +144,7 @@ test("imports workbench uploads archives and updates import job actions", async 
   });
 
   await page.route("**/api/v1/admin/jobs/11/retry", async (route) => {
+    retryRequestMethod = route.request().method().toUpperCase();
     importJobs[0] = {
       ...importJobs[0],
       status: "pending",
@@ -139,6 +154,7 @@ test("imports workbench uploads archives and updates import job actions", async 
   });
 
   await page.route("**/api/v1/admin/jobs/12/cancel", async (route) => {
+    cancelRequestMethod = route.request().method().toUpperCase();
     importJobs[1] = {
       ...importJobs[1],
       status: "canceled"
@@ -158,6 +174,11 @@ test("imports workbench uploads archives and updates import job actions", async 
   });
   await page.getByRole("button", { name: "Import Archive" }).first().click();
 
+  await expect.poll(() => uploadRequest).toMatchObject({
+    method: "POST"
+  });
+  expect(uploadRequest?.contentType).toContain("multipart/form-data");
+  expect(uploadRequest?.bodySize || 0).toBeGreaterThan(0);
   await expect(page.getByText("Archive skill imported")).toBeVisible();
   await expect(page.getByRole("cell", { name: "Archive Skill" })).toBeVisible();
 
@@ -167,6 +188,7 @@ test("imports workbench uploads archives and updates import job actions", async 
   await expect(failedRow.getByRole("button", { name: "Retry" })).toBeVisible();
   await failedRow.getByRole("button", { name: "Retry" }).click();
 
+  await expect.poll(() => retryRequestMethod).toBe("POST");
   await expect(page.getByText("Operation completed")).toBeVisible();
   await expect(failedRow.getByRole("button", { name: "Retry" })).toHaveCount(0);
   await expect(failedRow.getByRole("button", { name: "Cancel" })).toBeVisible();
@@ -177,6 +199,7 @@ test("imports workbench uploads archives and updates import job actions", async 
   await expect(runningRow.getByRole("button", { name: "Cancel" })).toBeVisible();
   await runningRow.getByRole("button", { name: "Cancel" }).click();
 
+  await expect.poll(() => cancelRequestMethod).toBe("POST");
   await expect(runningRow.getByRole("button", { name: "Retry" })).toBeVisible();
   await expect(runningRow.getByRole("button", { name: "Cancel" })).toHaveCount(0);
 });

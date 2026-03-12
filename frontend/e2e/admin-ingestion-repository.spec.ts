@@ -16,6 +16,11 @@ async function fulfillJSON(route: Route, status: number, body: unknown): Promise
   });
 }
 
+interface RepositorySubmissionSnapshot {
+  method: string;
+  repoURL: string;
+}
+
 async function forceEnglishLocale(page: Page): Promise<void> {
   await page.addInitScript(() => {
     window.localStorage.setItem("skillsindex.locale", "en");
@@ -67,6 +72,7 @@ test("repository ingestion submits and refreshes repository inventory", async ({
   await mockWorkspaceShell(page);
 
   let repositoryImported = false;
+  let repositorySubmission: RepositorySubmissionSnapshot | null = null;
   const syncRuns = [
     {
       id: 9001,
@@ -137,6 +143,11 @@ test("repository ingestion submits and refreshes repository inventory", async ({
   });
 
   await page.route("**/api/v1/admin/ingestion/repository", async (route) => {
+    const payload = route.request().postDataJSON() as { repo_url?: unknown } | null;
+    repositorySubmission = {
+      method: route.request().method().toUpperCase(),
+      repoURL: String(payload?.repo_url || "")
+    };
     repositoryImported = true;
     await fulfillJSON(route, 201, {
       ok: true,
@@ -159,6 +170,10 @@ test("repository ingestion submits and refreshes repository inventory", async ({
   await page.getByLabel("Repository URL").fill("https://example.com/repo.git");
   await page.getByRole("button", { name: "Sync Repository Skill" }).click();
 
+  await expect.poll(() => repositorySubmission).toMatchObject({
+    method: "POST",
+    repoURL: "https://example.com/repo.git"
+  });
   await expect(page.getByText("Repository skill synced")).toBeVisible();
   await expect(page.getByText("Repo Skill")).toBeVisible();
 });
