@@ -117,6 +117,11 @@ export const globalLoginStylesTheme = `
   transform-origin: top left;
 }
 
+.auth-shell.auth-shell-prototype.is-visual-baseline .login-visual-panel {
+  padding: 18px 18px 16px;
+  gap: 14px;
+}
+
 .auth-header {
   width: 100%;
 }
@@ -353,9 +358,10 @@ export const globalLoginStylesTheme = `
 }
 
 .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .login-visual-panel {
+  padding: clamp(56px, 7vw, 108px) clamp(40px, 4.8vw, 72px) 40px;
   background:
-    radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.08), transparent 28%),
-    radial-gradient(circle at 82% 78%, color-mix(in srgb, var(--login-btn-bg) 12%, transparent), transparent 30%),
+    radial-gradient(circle at 12% 16%, rgba(255, 255, 255, 0.08), transparent 24%),
+    radial-gradient(circle at 48% 74%, rgba(255, 255, 255, 0.04), transparent 32%),
     linear-gradient(
       150deg,
       color-mix(in srgb, var(--login-root-bg-accent) 82%, var(--login-root-bg) 18%) 0%,
@@ -372,34 +378,17 @@ export const globalLoginStylesTheme = `
 
 .login-visual-panel {
   position: relative;
-  padding: clamp(20px, 2vw, 28px);
+  padding: clamp(28px, 2.6vw, 38px) clamp(24px, 3vw, 44px);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: stretch;
-  gap: 14px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 20px;
   overflow: hidden;
 }
 
 .login-visual-panel::after {
-  content: "";
-  position: absolute;
-  top: clamp(24px, 3vw, 48px);
-  right: clamp(24px, 4vw, 64px);
-  width: clamp(120px, 16vw, 220px);
-  height: clamp(120px, 16vw, 220px);
-  border-radius: 28px;
-  border: 1px solid color-mix(in srgb, var(--login-info-surface-border) 72%, transparent);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--login-info-surface-bg) 76%, transparent) 0%,
-      transparent 100%
-    );
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  opacity: 0.42;
-  transform: rotate(12deg);
-  pointer-events: none;
+  content: none;
 }
 
 .auth-compact-hint {

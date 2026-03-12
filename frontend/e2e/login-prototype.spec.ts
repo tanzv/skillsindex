@@ -95,9 +95,7 @@ test.describe("Login prototype alignment", () => {
     await expect(header).toBeVisible();
     await expect(darkToggle).toBeDisabled();
     await expect(lightToggle).toBeEnabled();
-    await lightToggle.evaluate((button) => {
-      (button as HTMLButtonElement).click();
-    });
+    await lightToggle.click();
 
     await expect(page).toHaveURL(/\/light\/login$/);
     await expect(page.locator(".auth-topbar").getByRole("button", { name: "Use light theme" })).toBeDisabled();

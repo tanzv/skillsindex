@@ -13,4 +13,9 @@ describe("globalLoginStylesTheme", () => {
     expect(globalLoginStylesTheme).toContain(".auth-topbar-theme-switch");
     expect(globalLoginStylesTheme).toContain(".is-theme-toggle");
   });
+
+  it("keeps the visual panel free from decorative pseudo overlays", () => {
+    expect(globalLoginStylesTheme).toContain(".login-visual-panel::after {");
+    expect(globalLoginStylesTheme).toContain(".login-visual-panel::after {\n  content: none;");
+  });
 });
