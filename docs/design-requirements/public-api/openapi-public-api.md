@@ -7,8 +7,8 @@
 当前结论：
 
 1. `FR-API` 主体已进入 `已覆盖`
-2. 但 API Key 的最小权限边界仍与 `FR-KEY` 共享一部分未闭环问题
-3. 因此本文同时区分“当前实现”与“当前已知差距”
+2. Window A 已收口 API Key 最小权限边界与公开 marketplace private 模式的核心契约
+3. 当前剩余差距主要在 scope 覆盖范围与统一错误字典演进，不再是 P0 绕过问题
 
 ## 2. 文档与入口
 
@@ -74,14 +74,16 @@
    - `session_user`
    - `can_access_dashboard`
 6. 即使是匿名接口，当存在有效 session cookie 时，仍会附带当前会话用户上下文
+7. 当 `marketplace_public_access=false` 时，匿名请求当前返回 `401 unauthorized`
 
 当前错误语义：
 
-1. `503 service_unavailable`
-2. `500 summary_query_failed`
-3. `500 category_query_failed`
-4. `500 search_failed`
-5. `500 ai_search_failed`
+1. `401 unauthorized`（仅在 `marketplace_public_access=false` 且匿名访问时触发）
+2. `503 service_unavailable`
+3. `500 summary_query_failed`
+4. `500 category_query_failed`
+5. `500 search_failed`
+6. `500 ai_search_failed`
 
 #### 3.2 `/api/v1/public/skills/{skillID}`
 
@@ -97,12 +99,14 @@
 3. `comments_limit` 当前固定为 80
 4. 若存在有效 session，`viewer_state` 会补充当前用户互动状态
 5. `viewer_state.can_interact` 取决于当前用户是否具备后台访问能力
+6. 当 `marketplace_public_access=false` 时，匿名请求当前返回 `401 unauthorized`
 
 当前错误语义：
 
-1. 参数非法或技能不存在时返回 `404 skill_not_found`
-2. 详情查询内部失败时返回 `500 detail_query_failed`
-3. 服务不可用时返回 `503 service_unavailable`
+1. `401 unauthorized`（仅在 `marketplace_public_access=false` 且匿名访问时触发）
+2. 参数非法或技能不存在时返回 `404 skill_not_found`
+3. 详情查询内部失败时返回 `500 detail_query_failed`
+4. 服务不可用时返回 `503 service_unavailable`
 
 ### FR-API-004 API Key 保护的公开检索 API
 
@@ -196,17 +200,20 @@
 
 1. 先从 query 读取 `api_key`
 2. 若不存在，则尝试读取 `Authorization: Bearer`
-3. 若命中静态配置 key 集合 `a.apiKeys`，当前直接放行
-4. 否则走数据库 key 校验：必须未撤销且未过期
-5. 若路径存在 required scope，则继续校验 scope
-6. scope 不满足时返回 `403 api_key_scope_denied`
-7. 其余失败返回 `401 api_key_invalid`
+3. 先解析当前路径是否存在 required scope
+4. 若命中静态配置 key 集合 `a.apiKeys`：
+   - 无 required scope 时放行
+   - 有 required scope 时返回 `403 api_key_scope_denied`
+5. 否则走数据库 key 校验：必须未撤销且未过期
+6. 若路径存在 required scope，则继续校验 scope
+7. 空 scope、非法 scope 或 scope 不满足时返回 `403 api_key_scope_denied`
+8. 其余失败返回 `401 api_key_invalid`
 
 ### FR-API-007 当前已知边界与兼容行为
 
-当前已知兼容行为：
+当前已知边界：
 
-1. 静态配置 key 当前不走数据库 scope 模型，是兼容路径，不是最终目标态
+1. 静态配置 key 仍保留为兼容入口，但不能再访问受保护公开检索接口
 2. API Key 作用范围目前只绑定两条检索接口，不覆盖会话型 API
 3. 匿名公开只读 API 与 API Key 公开检索 API 已分离，不应混写成一个安全模型
 
@@ -215,7 +222,7 @@
 当前规则：
 
 1. 公开检索与公开详情默认只暴露公共可见技能
-2. 匿名只读 API 可附带 session 上下文，但不会因为缺少 session 而拒绝请求
+2. 匿名只读 API 可附带 session 上下文；但当 `marketplace_public_access=false` 时，公开只读 API 会拒绝匿名请求
 3. 会话型 API 则必须通过 `currentUser` 解析与会话有效性校验
 
 ## 5. 当前兼容与错误码口径
@@ -225,13 +232,13 @@
 1. 当前公开检索 API 仍以“向后兼容新增字段”为默认策略
 2. OpenAPI 文档中已显式区分 `401` 与 `403`
 3. 匿名公开 API 与 API Key 保护 API 已在路径级区分
+4. `POST /api/v1/auth/login` 当前包含失败登录限流，OpenAPI 需保留 `429`
 
 ### FR-API-010 当前剩余差距
 
 以下问题仍属于共享契约差距，而非本文已闭环能力：
 
-1. 静态配置 key 绕过 scope 校验
-2. 搜索接口尚未定义 `429` 或统一非法参数错误模型
-3. AI 搜索尚未提供分页契约
-4. 更细粒度公开 API scope 仍未展开到详情、互动或审计读取能力
-5. 企业 SSO、后台 API 与公开 API 的统一错误码字典仍需进一步收束
+1. 搜索接口尚未定义统一非法参数错误模型
+2. AI 搜索尚未提供分页契约
+3. 更细粒度公开 API scope 仍未展开到详情、互动或审计读取能力
+4. 企业 SSO、后台 API 与公开 API 的统一错误码字典仍需进一步收束

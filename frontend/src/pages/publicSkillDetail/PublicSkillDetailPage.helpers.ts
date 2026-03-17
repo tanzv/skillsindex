@@ -1,5 +1,5 @@
 import { MarketplaceSkill, SkillInteractionStats } from "../../lib/api";
-import { prototypeFiles } from "./PublicSkillDetailPage.prototypeData";
+import { buildPrototypeSkillDetailSkill, prototypeFiles } from "./PublicSkillDetailPage.prototypeData";
 import { AppLocale } from "../../lib/i18n";
 import { SkillDetailCopy } from "./PublicSkillDetailPage.copy";
 
@@ -342,6 +342,54 @@ export function resolveSkillDetailDataMode(rawMode: string | undefined, override
   return normalized === "prototype" ? "prototype" : "live";
 }
 
+export function resolveSkillDetailViewSkill(
+  skill: MarketplaceSkill | null,
+  targetSkillID: number,
+  dataMode: SkillDetailDataMode
+): MarketplaceSkill | null {
+  if (skill) {
+    return skill;
+  }
+  if (dataMode === "prototype") {
+    return buildPrototypeSkillDetailSkill(targetSkillID);
+  }
+  return null;
+}
+
+export function buildEmptySkillDetailViewModel(text: SkillDetailCopy): SkillDetailViewModel {
+  return {
+    titleName: text.title,
+    breadcrumb: text.breadcrumbRoot,
+    summaryDescription: "",
+    summaryMetrics: [],
+    summaryChips: [],
+    qualityMetrics: [],
+    fileEntries: [],
+    fileInfo: "",
+    fileCodePreview: "",
+    presetPreviewContent: {
+      skill: "",
+      readme: "",
+      changelog: ""
+    },
+    previewLanguage: "",
+    codePanelTone: "default",
+    installSteps: [],
+    metadataHeading: "",
+    metadataSubheading: "",
+    metadataLines: [],
+    governanceState: "",
+    showMetadataAvatar: false,
+    repositoryHostPath: "",
+    repositorySlug: "",
+    runtimeValue: "",
+    frameworkValue: "",
+    bizVersionValue: "",
+    supportsHistory: false,
+    hasCompatibilityData: false
+  };
+}
+
 export function buildSkillDetailViewModel(
   skill: MarketplaceSkill,
   locale: AppLocale,
@@ -492,4 +540,3 @@ export function buildSkillDetailViewModel(
     hasCompatibilityData: true
   };
 }
-

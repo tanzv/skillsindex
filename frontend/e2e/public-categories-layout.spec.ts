@@ -77,9 +77,13 @@ test.describe("Public categories layout", () => {
     await mockAnonymousAuth(page);
     await mockMarketplacePayload(page);
 
+    const authBootstrapRequest = page.waitForResponse((response) => response.url().includes("/api/v1/auth/me"));
     await page.goto("/categories");
+    await authBootstrapRequest;
 
     const shell = page.locator(".marketplace-home");
+    await expect(page.locator(".app-loading")).toHaveCount(0);
+    await expect(shell).toBeVisible({ timeout: 10000 });
     const topbar = page.locator(".marketplace-home .marketplace-topbar");
     const brand = page.locator(".marketplace-home .marketplace-topbar-brand");
     const categoryNavButton = page.locator(".marketplace-home .marketplace-topbar-nav-button.is-category-action").first();
@@ -97,7 +101,6 @@ test.describe("Public categories layout", () => {
     const firstCategoryCardCountChip = page.locator(".marketplace-home .marketplace-card-cover-chip").first();
     const firstCategorySummaryChips = page.locator(".marketplace-home .marketplace-skill-chip-row span").first();
 
-    await expect(shell).toBeVisible();
     await expect(topbar).toBeVisible();
     await expect(brand).toBeVisible();
     await expect(categoryNavButton).toBeVisible();

@@ -48,6 +48,7 @@ export type AdminGovernanceRoute = Exclude<
   | AdminOpsRoute
   | AdminCatalogRoute
   | AdminOrganizationManagementRoute
+  | "/admin/access"
   | "/admin/ingestion/manual"
   | "/admin/ingestion/repository"
   | "/admin/records/imports"
@@ -55,7 +56,11 @@ export type AdminGovernanceRoute = Exclude<
 
 export type AdminWorkbenchRoute = Exclude<
   AdminRoute,
-  AdminOrganizationManagementRoute | "/admin/ingestion/manual" | "/admin/ingestion/repository" | "/admin/records/imports"
+  | AdminOrganizationManagementRoute
+  | "/admin/access"
+  | "/admin/ingestion/manual"
+  | "/admin/ingestion/repository"
+  | "/admin/records/imports"
 >;
 
 export type AdminWorkbenchDefinitionMap = Record<AdminWorkbenchRoute, WorkbenchDefinition>;

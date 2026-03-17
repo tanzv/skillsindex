@@ -14,6 +14,7 @@ import (
 	"skillsindex/internal/services"
 
 	"github.com/go-chi/chi/v5"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {
@@ -169,6 +170,50 @@ func redirectSkillDetail(w http.ResponseWriter, r *http.Request, skillID uint, m
 	http.Redirect(w, r, target, http.StatusSeeOther)
 }
 
+func requestRedirectTargetFromRequest(r *http.Request) string {
+	if r == nil || r.URL == nil {
+		return "/"
+	}
+	target := strings.TrimSpace(r.URL.Path)
+	if target == "" {
+		target = "/"
+	}
+	if !strings.HasPrefix(target, "/") {
+		target = "/" + target
+	}
+	if encoded := r.URL.Query().Encode(); encoded != "" {
+		target += "?" + encoded
+	}
+	return target
+}
+
+func buildLoginRedirectPathFromRequest(r *http.Request) string {
+	loginTarget := "/login"
+	if r != nil && r.URL != nil {
+		loginTarget = loginPath(resolveLoginPageFromPath(r.URL.Path))
+	}
+	params := make(url.Values)
+	params.Set("redirect", requestRedirectTargetFromRequest(r))
+	return loginTarget + "?" + params.Encode()
+}
+
+func normalizeLocalRedirectTarget(raw string) string {
+	target := strings.TrimSpace(raw)
+	if target == "" || !strings.HasPrefix(target, "/") || strings.HasPrefix(target, "//") {
+		return ""
+	}
+	pathOnly := target
+	if index := strings.IndexAny(pathOnly, "?#"); index >= 0 {
+		pathOnly = pathOnly[:index]
+	}
+	switch strings.TrimSuffix(strings.TrimSpace(pathOnly), "/") {
+	case "", "/login", "/light/login", "/mobile/login", "/mobile/light/login":
+		return ""
+	default:
+		return target
+	}
+}
+
 func auditDetailsJSON(pairs map[string]string) string {
 	if len(pairs) == 0 {
 		return ""
@@ -197,6 +242,32 @@ func (a *App) recordAudit(ctx context.Context, actor *models.User, input service
 	}
 	input.ActorUserID = actor.ID
 	_ = a.auditService.Record(ctx, input)
+}
+
+func (a *App) recordRequestAudit(r *http.Request, actor *models.User, input services.RecordAuditInput) {
+	if a.auditService == nil || r == nil {
+		return
+	}
+	if actor != nil && actor.ID != 0 {
+		input.ActorUserID = actor.ID
+	}
+	if strings.TrimSpace(input.RequestID) == "" {
+		input.RequestID = requestIDFromRequest(r)
+	}
+	if strings.TrimSpace(input.SourceIP) == "" {
+		input.SourceIP = clientIPFromRequest(r)
+	}
+	_ = a.auditService.Record(r.Context(), input)
+}
+
+func requestIDFromRequest(r *http.Request) string {
+	if r == nil {
+		return ""
+	}
+	if requestID := strings.TrimSpace(r.Header.Get("X-Request-ID")); requestID != "" {
+		return requestID
+	}
+	return strings.TrimSpace(chimiddleware.GetReqID(r.Context()))
 }
 
 func (a *App) firstAPIKey() string {

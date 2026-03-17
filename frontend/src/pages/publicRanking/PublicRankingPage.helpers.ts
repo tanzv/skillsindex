@@ -45,8 +45,8 @@ export function resolveRankingSourceItems(
   payload: PublicMarketplaceResponse | null,
   fallbackPayload: PublicMarketplaceResponse
 ): MarketplaceSkill[] {
-  if (payload?.items && payload.items.length > 0) {
-    return payload.items;
+  if (payload) {
+    return Array.isArray(payload.items) ? payload.items : [];
   }
   return fallbackPayload.items;
 }

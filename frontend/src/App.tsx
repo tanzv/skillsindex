@@ -4,17 +4,12 @@ import { useTranslation } from "react-i18next";
 import {
   PublicLocaleSwitchMode,
   buildLoginRedirectPath,
-  isAccountRoute,
-  isAdminRoute,
   isProtectedRoute,
   resolveLegacyPublicRouteRedirect,
   resolvePostLoginRedirect,
   resolvePublicLocaleSwitchMode,
-  shouldRequireSession,
-  shouldShowPublicGlobalControls
+  shouldRequireSession
 } from "./App.shared";
-import PublicGlobalControls from "./components/PublicGlobalControls";
-import BackendWorkbenchShell from "./components/BackendWorkbenchShell";
 import { SessionUser, getSessionContext, login, logout } from "./lib/api";
 import { extractCategorySlug, extractSkillID, normalizeAppRoute } from "./lib/appPathnameResolver";
 import { AppLocale, changeLocale, resolveActiveLocale } from "./lib/i18n";
@@ -22,42 +17,14 @@ import {
   matchPrototypeCatalog,
   routeNeedsAuth
 } from "./lib/prototypeCatalog";
-import {
-  ProtectedRoute,
-  accountQuickRoutes,
-  adminQuickRoutes,
-  isAdminCatalogRoute,
-  isAdminOpsControlRoute,
-  isAdminSecurityRoute,
-  navItems,
-} from "./appNavigationConfig";
-import AccountCenterPage from "./pages/accountCenter/AccountCenterPage";
-import AdminIntegrationsPage from "./pages/adminWorkbench/AdminIntegrationsPage";
-import AdminCatalogPage from "./pages/adminCatalog/AdminCatalogPage";
-import AdminRepositoryCatalogPage, { isAdminRepositoryCatalogRoute } from "./pages/adminCatalog/AdminRepositoryCatalogPage";
-import AdminOpsControlPage from "./pages/adminOps/AdminOpsControlPage";
-import AdminOpsMetricsPage from "./pages/adminOps/AdminOpsMetricsPage";
-import AdminOverviewPage from "./pages/adminOverview/AdminOverviewPage";
-import AdminSecurityPage from "./pages/adminSecurity/AdminSecurityPage";
-import AdminWorkbenchPage from "./pages/adminWorkbench/AdminWorkbenchPage";
 import LoginPage from "./pages/login/LoginPage";
 import { resolveLoginBrandConfig } from "./pages/login/loginBrandConfig";
 import { resolveLoginInfoPanelConfigOverride } from "./pages/login/loginInfoPanelConfig";
-import MarketplaceHomePage from "./pages/marketplaceHome/MarketplaceHomePage";
-import MarketplaceCategoryDetailPage from "./pages/marketplacePublic/MarketplaceCategoryDetailPage";
-import OrganizationCenterPage from "./pages/organizationCenter/OrganizationCenterPage";
-import { isOrganizationManagementRoute } from "./pages/organizationCenter/OrganizationManagementRoutePage.helpers";
-import OrganizationManagementRoutePage from "./pages/organizationCenter/OrganizationManagementRoutePage";
-import PrototypeRouteRenderer from "./pages/prototype/PrototypeRouteRenderer";
-import PublicComparePage from "./pages/publicCompare/PublicComparePage";
-import PublicCategoriesPage from "./pages/publicCategories/PublicCategoriesPage";
-import PublicDocsPage from "./pages/publicDocs/PublicDocsPage";
-import PublicRankingPage from "./pages/publicRanking/PublicRankingPage";
-import PublicSkillDetailPage from "./pages/publicSkillDetail/PublicSkillDetailPage";
-import SkillOperationsPage from "./pages/skillOperations/SkillOperationsPage";
-import { isSkillOperationsRoute } from "./pages/skillOperations/SkillOperationsPage.helpers";
 import { buildPathWithThemeMode, resolveThemeMode, ThemeMode } from "./lib/themeModePath";
 import { applyThemeTokens } from "./theme/themeSystem";
+import AppProtectedRouteRenderer from "./app/AppProtectedRouteRenderer";
+import AppPublicRouteRenderer from "./app/AppPublicRouteRenderer";
+import { type AppTextDictionary, isPublicExperienceRoute, resolveAppBodyClassName } from "./app/AppRoot.shared";
 
 function navigate(path: string): void {
   const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -86,13 +53,12 @@ export default function App() {
   const skillID = useMemo(() => extractSkillID(window.location.pathname), [locationKey]);
   const categorySlug = useMemo(() => extractCategorySlug(window.location.pathname), [locationKey]);
   const prototypeMatch = useMemo(() => matchPrototypeCatalog(window.location.pathname), [locationKey]);
-  const text = useMemo(
+  const text = useMemo<AppTextDictionary>(
     () => ({
       brandName: t("app.brandName"),
       brandTitle: t("app.brandTitle"),
       home: t("app.home"),
       homeSubtitle: t("app.homeSubtitle"),
-      signOut: t("app.signOut"),
       quickJump: t("app.quickJump"),
       bootstrapping: t("app.bootstrapping"),
       loginKicker: t("login.kicker"),
@@ -125,8 +91,6 @@ export default function App() {
       }),
     [locale, locationKey]
   );
-
-  const navByPath = useMemo(() => new Map(navItems.map((item) => [item.path, item])), []);
 
   useEffect(() => {
     function handleRouteChange() {
@@ -224,39 +188,9 @@ export default function App() {
   }, [authLoading, loginRedirectPath, postLoginRedirectPath, route, sessionUser, shouldRedirectToLogin, submitLoading]);
 
   useEffect(() => {
-    const classes = [
-      "page-home-react",
-      "page-home-react-light",
-      "page-login-react",
-      "page-login-react-light",
-      "page-admin-react",
-      "page-account-react"
-    ];
+    const classes = ["page-home-react", "page-home-react-light", "page-login-react", "page-login-react-light", "page-admin-react", "page-account-react"];
     document.body.classList.remove(...classes);
-    const lightPrototype = /^\/(light|mobile\/light)(\/|$)/.test(window.location.pathname);
-    if (route === "/login") {
-      document.body.classList.add(lightPrototype ? "page-login-react-light" : "page-login-react");
-      return;
-    }
-    if (
-      route === "/" ||
-      route === "/results" ||
-      route === "/compare" ||
-      route === "/docs" ||
-      route === "/categories" ||
-      route === "/categories/:slug" ||
-      route === "/rankings" ||
-      route === "/skills/:id" ||
-      route === "/prototype"
-    ) {
-      document.body.classList.add(lightPrototype ? "page-home-react-light" : "page-home-react");
-      return;
-    }
-    if (route.startsWith("/account")) {
-      document.body.classList.add("page-account-react");
-      return;
-    }
-    document.body.classList.add("page-admin-react");
+    document.body.classList.add(resolveAppBodyClassName(route, window.location.pathname));
   }, [route]);
 
   useEffect(() => {
@@ -300,144 +234,25 @@ export default function App() {
     return <div className="app-loading">{text.bootstrapping}</div>;
   }
 
-  const publicTheme = {
-    algorithm: /^\/(light|mobile\/light)(\/|$)/.test(window.location.pathname)
-      ? theme.defaultAlgorithm
-      : theme.darkAlgorithm,
-    token: {
-      colorPrimary: "#0e8aa0",
-      borderRadius: 10,
-      fontFamily: '"Noto Sans SC", "Manrope", sans-serif'
-    }
-  };
-
-  if (
-    route === "/" ||
-    route === "/results" ||
-    route === "/compare" ||
-    route === "/docs" ||
-    route === "/categories" ||
-    route === "/categories/:slug" ||
-    route === "/rankings" ||
-    route === "/skills/:id" ||
-    route === "/prototype"
-  ) {
-    const showPublicGlobalControls = shouldShowPublicGlobalControls(route, window.location.pathname);
+  if (isPublicExperienceRoute(route)) {
     return (
-      <ConfigProvider theme={publicTheme}>
-        {showPublicGlobalControls ? (
-          <PublicGlobalControls
-            locale={locale}
-            showLocaleSwitch={publicLocaleSwitchMode === "overlay"}
-            themeMode={themeMode}
-            onLocaleChange={(nextLocale) => {
-              void handleLocaleChange(nextLocale);
-            }}
-            onThemeModeChange={handleThemeModeChange}
-          />
-        ) : null}
-        {route === "/" || route === "/results" ? (
-          <MarketplaceHomePage
-            locale={locale}
-            sessionUser={sessionUser}
-            onNavigate={navigate}
-            onLogout={handleLogout}
-            onThemeModeChange={handleThemeModeChange}
-            onLocaleChange={(nextLocale) => {
-              void handleLocaleChange(nextLocale);
-            }}
-            locationKey={locationKey}
-            isResultsPage={route === "/results"}
-          />
-        ) : null}
-        {route === "/categories/:slug" ? (
-          <MarketplaceCategoryDetailPage
-            locale={locale}
-            sessionUser={sessionUser}
-            onNavigate={navigate}
-            onLogout={handleLogout}
-            onThemeModeChange={handleThemeModeChange}
-            onLocaleChange={(nextLocale) => {
-              void handleLocaleChange(nextLocale);
-            }}
-            locationKey={locationKey}
-            categorySlug={categorySlug}
-          />
-        ) : null}
-        {route === "/compare" ? (
-          <PublicComparePage
-            locale={locale}
-            locationKey={locationKey}
-            onNavigate={navigate}
-            sessionUser={sessionUser}
-          />
-        ) : null}
-        {route === "/docs" ? (
-          <PublicDocsPage
-            locale={locale}
-            onNavigate={navigate}
-            onLogout={handleLogout}
-            onThemeModeChange={handleThemeModeChange}
-            onLocaleChange={(nextLocale) => {
-              void handleLocaleChange(nextLocale);
-            }}
-            sessionUser={sessionUser}
-          />
-        ) : null}
-        {route === "/categories" ? (
-          <PublicCategoriesPage
-            locale={locale}
-            onNavigate={navigate}
-            onLogout={handleLogout}
-            onThemeModeChange={handleThemeModeChange}
-            onLocaleChange={(nextLocale) => {
-              void handleLocaleChange(nextLocale);
-            }}
-            sessionUser={sessionUser}
-          />
-        ) : null}
-        {route === "/rankings" ? (
-          <PublicRankingPage
-            locale={locale}
-            onNavigate={navigate}
-            onLogout={handleLogout}
-            onThemeModeChange={handleThemeModeChange}
-            onLocaleChange={(nextLocale) => {
-              void handleLocaleChange(nextLocale);
-            }}
-            sessionUser={sessionUser}
-          />
-        ) : null}
-        {route === "/skills/:id" ? (
-          <PublicSkillDetailPage
-            locale={locale}
-            skillID={skillID || 0}
-            onNavigate={navigate}
-            sessionUser={sessionUser}
-            onLogout={handleLogout}
-            onThemeModeChange={handleThemeModeChange}
-            onLocaleChange={(nextLocale) => {
-              void handleLocaleChange(nextLocale);
-            }}
-          />
-        ) : null}
-        {route === "/prototype" && prototypeMatch ? (
-          <PrototypeRouteRenderer
-            locale={locale}
-            currentPath={window.location.pathname}
-            entry={prototypeMatch}
-            onNavigate={navigate}
-            sessionUser={sessionUser}
-            onThemeModeChange={handleThemeModeChange}
-            onLocaleChange={(nextLocale) => {
-              void handleLocaleChange(nextLocale);
-            }}
-            onLogout={() => {
-              void handleLogout();
-            }}
-          />
-        ) : null}
-      </ConfigProvider>
+      <AppPublicRouteRenderer
+        route={route}
+        locale={locale}
+        locationKey={locationKey}
+        themeMode={themeMode}
+        publicLocaleSwitchMode={publicLocaleSwitchMode}
+        categorySlug={categorySlug}
+        skillID={skillID}
+        prototypeMatch={prototypeMatch}
+        sessionUser={sessionUser}
+        onNavigate={navigate}
+        onLocaleChange={handleLocaleChange}
+        onThemeModeChange={handleThemeModeChange}
+        onLogout={() => {
+          void handleLogout();
+        }}
+      />
     );
   }
 
@@ -470,114 +285,24 @@ export default function App() {
     );
   }
 
-  const quickRoutes: ProtectedRoute[] = isProtectedRoute(route)
-    ? isAdminRoute(route)
-      ? adminQuickRoutes
-      : accountQuickRoutes
-    : [];
-  const protectedRoute = route as ProtectedRoute;
-  const shouldRenderProtectedContentDirectly =
-    isAdminRoute(protectedRoute) &&
-    (isSkillOperationsRoute(protectedRoute) ||
-      isOrganizationManagementRoute(protectedRoute) ||
-      protectedRoute === "/admin/organizations");
-  const protectedContent = isAdminRoute(protectedRoute) ? (
-    protectedRoute === "/admin/overview" ? (
-      <AdminOverviewPage currentPath={window.location.pathname} onNavigate={navigate} />
-    ) : protectedRoute === "/admin/integrations" ? (
-      <AdminIntegrationsPage />
-    ) : protectedRoute === "/admin/ops/metrics" ? (
-      <AdminOpsMetricsPage />
-    ) : isOrganizationManagementRoute(protectedRoute) ? (
-      <OrganizationManagementRoutePage
-        locale={locale}
-        route={protectedRoute}
-        currentPath={window.location.pathname}
-        onNavigate={navigate}
-        sessionUser={sessionUser}
-        onThemeModeChange={handleThemeModeChange}
-        onLocaleChange={(nextLocale) => {
-          void handleLocaleChange(nextLocale);
-        }}
-        onLogout={handleLogout}
-      />
-    ) : protectedRoute === "/admin/organizations" ? (
-      <OrganizationCenterPage
-        locale={locale}
-        currentPath={window.location.pathname}
-        onNavigate={navigate}
-        sessionUser={sessionUser}
-        onThemeModeChange={handleThemeModeChange}
-        onLocaleChange={(nextLocale) => {
-          void handleLocaleChange(nextLocale);
-        }}
-        onLogout={handleLogout}
-      />
-    ) : isSkillOperationsRoute(protectedRoute) ? (
-      <SkillOperationsPage
-        locale={locale}
-        route={protectedRoute}
-        currentPath={window.location.pathname}
-        onNavigate={navigate}
-        sessionUser={sessionUser}
-        onThemeModeChange={handleThemeModeChange}
-        onLocaleChange={(nextLocale) => {
-          void handleLocaleChange(nextLocale);
-        }}
-        onLogout={handleLogout}
-      />
-    ) : isAdminCatalogRoute(protectedRoute) ? (
-      isAdminRepositoryCatalogRoute(protectedRoute) ? (
-        <AdminRepositoryCatalogPage locale={locale} route={protectedRoute} onNavigate={navigate} />
-      ) : (
-        <AdminCatalogPage route={protectedRoute} />
-      )
-    ) : isAdminSecurityRoute(protectedRoute) ? (
-      <AdminSecurityPage route={protectedRoute} />
-    ) : isAdminOpsControlRoute(protectedRoute) ? (
-      <AdminOpsControlPage route={protectedRoute} />
-    ) : (
-      <AdminWorkbenchPage route={protectedRoute} />
-    )
-  ) : isAccountRoute(protectedRoute) ? (
-    <AccountCenterPage locale={locale} route={protectedRoute} onNavigate={navigate} />
-  ) : null;
+  if (!isProtectedRoute(route)) {
+    return <div className="app-loading">{text.bootstrapping}</div>;
+  }
 
   return (
-    <ConfigProvider
-      theme={{
-        token: {
-          colorPrimary: "#0e8aa0",
-          borderRadius: 12,
-          fontFamily: '"Noto Sans SC", "Manrope", sans-serif'
-        }
+    <AppProtectedRouteRenderer
+      route={route}
+      locale={locale}
+      themeMode={themeMode}
+      submitLoading={submitLoading}
+      sessionUser={sessionUser}
+      text={text}
+      onNavigate={navigate}
+      onLocaleChange={handleLocaleChange}
+      onThemeModeChange={handleThemeModeChange}
+      onLogout={() => {
+        void handleLogout();
       }}
-    >
-      {shouldRenderProtectedContentDirectly ? (
-        protectedContent
-      ) : (
-        <BackendWorkbenchShell
-          route={protectedRoute}
-          locale={locale}
-          themeMode={themeMode}
-          submitLoading={submitLoading}
-          sessionUser={sessionUser}
-          navItems={navItems}
-          navByPath={navByPath}
-          quickRoutes={quickRoutes}
-          text={text}
-          onNavigate={navigate}
-          onLocaleChange={(nextLocale) => {
-            void handleLocaleChange(nextLocale);
-          }}
-          onThemeModeChange={handleThemeModeChange}
-          onLogout={() => {
-            void handleLogout();
-          }}
-        >
-          {protectedContent}
-        </BackendWorkbenchShell>
-      )}
-    </ConfigProvider>
+    />
   );
 }

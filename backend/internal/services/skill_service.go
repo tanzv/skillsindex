@@ -43,6 +43,7 @@ type CreateSkillInput struct {
 	SubcategorySlug string
 	Visibility      models.SkillVisibility
 	SourceType      models.SkillSourceType
+	RecordOrigin    models.SkillRecordOrigin
 	SourceURL       string
 	SourceBranch    string
 	SourcePath      string
@@ -140,6 +141,7 @@ func (s *SkillService) CreateSkill(ctx context.Context, input CreateSkillInput) 
 		SubcategorySlug: strings.TrimSpace(input.SubcategorySlug),
 		Visibility:      normalizeVisibility(input.Visibility),
 		SourceType:      normalizeSourceType(input.SourceType),
+		RecordOrigin:    normalizeRecordOrigin(input.RecordOrigin),
 		SourceURL:       strings.TrimSpace(input.SourceURL),
 		SourceBranch:    strings.TrimSpace(input.SourceBranch),
 		SourcePath:      strings.TrimSpace(input.SourcePath),
@@ -321,6 +323,31 @@ func (s *SkillService) GetVisibleSkillByID(ctx context.Context, skillID uint, vi
 	}
 	if err != nil {
 		return models.Skill{}, fmt.Errorf("failed to load visible skill: %w", err)
+	}
+	return skill, nil
+}
+
+// GetMarketplaceVisibleSkillByID returns a marketplace-visible skill while excluding local seed records.
+func (s *SkillService) GetMarketplaceVisibleSkillByID(ctx context.Context, skillID uint, viewerUserID uint) (models.Skill, error) {
+	query := s.db.WithContext(ctx).
+		Preload("Owner").
+		Preload("Tags").
+		Where("skills.id = ?", skillID).
+		Where("skills.record_origin = ?", models.RecordOriginImported)
+
+	if viewerUserID == 0 {
+		query = query.Where("skills.visibility = ?", models.VisibilityPublic)
+	} else {
+		query = query.Where("(skills.visibility = ? OR skills.owner_id = ?)", models.VisibilityPublic, viewerUserID)
+	}
+
+	var skill models.Skill
+	err := query.First(&skill).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return models.Skill{}, ErrSkillNotFound
+	}
+	if err != nil {
+		return models.Skill{}, fmt.Errorf("failed to load marketplace-visible skill: %w", err)
 	}
 	return skill, nil
 }
@@ -521,6 +548,7 @@ func (s *SkillService) UpdateSyncedSkill(ctx context.Context, input SyncUpdateIn
 		"description":    strings.TrimSpace(input.Meta.Description),
 		"content":        strings.TrimSpace(input.Meta.Content),
 		"source_type":    normalizeSourceType(input.SourceType),
+		"record_origin":  models.RecordOriginImported,
 		"source_url":     strings.TrimSpace(input.SourceURL),
 		"source_branch":  strings.TrimSpace(input.SourceBranch),
 		"source_path":    strings.TrimSpace(input.SourcePath),

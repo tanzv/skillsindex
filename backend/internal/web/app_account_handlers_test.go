@@ -37,11 +37,12 @@ func setupAccountHandlersTestApp(t *testing.T) (*App, *services.AuthService, *se
 	}
 
 	app := &App{
-		authService:    authSvc,
-		sessionService: services.NewSessionService("test-secret", false),
-		userSessionSvc: userSessionSvc,
+		authService:     authSvc,
+		sessionService:  services.NewSessionService("test-secret", false),
+		userSessionSvc:  userSessionSvc,
+		auditService:    services.NewAuditService(db),
 		settingsService: settingsSvc,
-		cookieSecure:   false,
+		cookieSecure:    false,
 	}
 	return app, authSvc, userSessionSvc, user
 }

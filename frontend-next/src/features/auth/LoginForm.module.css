@@ -1,0 +1,295 @@
+.stage {
+  --login-font-sans: "Noto Sans SC", "Noto Sans", sans-serif;
+  --login-font-mono: "JetBrains Mono", monospace;
+  --login-root-bg: #101010;
+  --login-root-bg-accent: #171717;
+  --login-topbar-bg: #171717;
+  --login-topbar-border: #2b2b2b;
+  --login-panel-border: #2b2b2b;
+  --login-panel-form-bg: rgba(17, 17, 17, 0.84);
+  --login-panel-shadow: 0 24px 40px rgba(0, 0, 0, 0.34);
+  --login-glass-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+  --login-glass-highlight: rgba(255, 255, 255, 0.1);
+  --login-surface-soft: rgba(255, 255, 255, 0.06);
+  --login-surface-softer: rgba(255, 255, 255, 0.02);
+  --login-surface-border: #3a3a3a;
+  --login-control-bg: #242424;
+  --login-control-border: #3a3a3a;
+  --login-control-text: #b8b8b8;
+  --login-control-active-bg: #d6d6d6;
+  --login-control-active-text: #111111;
+  --login-text-primary: #e5e5e5;
+  --login-text-secondary: #a3a3a3;
+  --login-text-muted: #8f8f8f;
+  --login-point-index: rgba(255, 255, 255, 0.34);
+  --login-input-bg: #171717;
+  --login-input-border: #2b2b2b;
+  --login-input-placeholder: #8f8f8f;
+  --login-button-bg: #d6d6d6;
+  --login-button-text: #111111;
+  --login-error: #ef4444;
+  --login-focus-ring: rgba(148, 163, 184, 0.24);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(255, 255, 255, 0.05), transparent 24%),
+    radial-gradient(circle at 48% 72%, rgba(255, 255, 255, 0.04), transparent 32%),
+    linear-gradient(135deg, var(--login-root-bg) 0%, var(--login-root-bg-accent) 100%);
+  color: var(--login-text-secondary);
+}
+
+.stage[data-theme="light"] {
+  --login-root-bg: #f4f7fb;
+  --login-root-bg-accent: #e9eef6;
+  --login-topbar-bg: rgba(255, 255, 255, 0.9);
+  --login-topbar-border: rgba(148, 163, 184, 0.34);
+  --login-panel-border: rgba(148, 163, 184, 0.24);
+  --login-panel-form-bg: rgba(255, 255, 255, 0.78);
+  --login-panel-shadow: 0 24px 40px rgba(15, 23, 42, 0.12);
+  --login-glass-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
+  --login-glass-highlight: rgba(255, 255, 255, 0.8);
+  --login-surface-soft: rgba(255, 255, 255, 0.72);
+  --login-surface-softer: rgba(255, 255, 255, 0.46);
+  --login-surface-border: rgba(148, 163, 184, 0.24);
+  --login-control-bg: rgba(255, 255, 255, 0.74);
+  --login-control-border: rgba(148, 163, 184, 0.26);
+  --login-control-text: #475569;
+  --login-control-active-bg: #0f172a;
+  --login-control-active-text: #ffffff;
+  --login-text-primary: #0f172a;
+  --login-text-secondary: #475569;
+  --login-text-muted: #64748b;
+  --login-point-index: rgba(15, 23, 42, 0.4);
+  --login-input-bg: rgba(255, 255, 255, 0.88);
+  --login-input-border: rgba(148, 163, 184, 0.28);
+  --login-input-placeholder: #94a3b8;
+  --login-button-bg: #0f172a;
+  --login-button-text: #ffffff;
+  background:
+    radial-gradient(circle at 10% 16%, rgba(15, 23, 42, 0.08), transparent 24%),
+    radial-gradient(circle at 54% 72%, rgba(59, 130, 246, 0.06), transparent 30%),
+    linear-gradient(135deg, #f8fafc 0%, #eaf0f8 100%);
+}
+
+.viewport {
+  width: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+.isVisualBaselineViewport {
+  height: 100dvh;
+}
+
+.shell {
+  width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: inherit;
+  font-family: var(--login-font-sans);
+}
+
+.isVisualBaselineShell {
+  width: 1440px;
+  min-height: 1160px;
+  transform-origin: top left;
+}
+
+.topbar {
+  height: 82px;
+  min-height: 82px;
+  padding: 0 clamp(16px, 2.4vw, 32px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--login-topbar-border);
+  background: var(--login-topbar-bg);
+  backdrop-filter: blur(10px);
+}
+
+.topbarBrand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbarBrandMark {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--login-button-bg) 0%, rgba(214, 214, 214, 0.54) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.stage[data-theme="light"] .topbarBrandMark {
+  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+}
+
+.topbarBrandText {
+  color: var(--login-text-primary);
+  font-family: var(--login-font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.topbarControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.controlGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  padding: 4px;
+  border: 1px solid var(--login-control-border);
+  border-radius: 9px;
+  background: var(--login-control-bg);
+}
+
+.controlButton {
+  width: 28px;
+  height: 22px;
+  border: 0;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--login-control-text);
+  cursor: pointer;
+  transition: color 150ms ease, background-color 150ms ease, transform 130ms ease;
+}
+
+.controlButton:hover {
+  transform: translateY(-1px);
+}
+
+.controlButton:focus-visible {
+  outline: 2px solid var(--login-button-bg);
+  outline-offset: 2px;
+}
+
+.controlButton:active {
+  transform: translateY(0);
+}
+
+.controlButton.isActive {
+  background: var(--login-control-active-bg);
+  color: var(--login-control-active-text);
+}
+
+.layout {
+  flex: 1 1 auto;
+  min-height: calc(100dvh - 82px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(460px, 520px);
+  background: inherit;
+}
+
+.infoPanel {
+  min-height: 100%;
+  padding: clamp(72px, 8vw, 132px) clamp(56px, 6vw, 96px) 48px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.08), transparent 24%),
+    radial-gradient(circle at 42% 74%, rgba(255, 255, 255, 0.04), transparent 30%),
+    linear-gradient(150deg, rgba(23, 23, 23, 0.54) 0%, rgba(16, 16, 16, 0.12) 100%);
+}
+
+.stage[data-theme="light"] .infoPanel {
+  background:
+    radial-gradient(circle at 14% 18%, rgba(59, 130, 246, 0.08), transparent 24%),
+    radial-gradient(circle at 42% 74%, rgba(15, 23, 42, 0.04), transparent 30%),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.36) 0%, rgba(255, 255, 255, 0.1) 100%);
+}
+
+.formCard {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(28px, 2.6vw, 40px);
+  border-left: 1px solid color-mix(in srgb, var(--login-panel-border) 72%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--login-panel-form-bg) 90%, var(--login-root-bg) 10%) 0%,
+      color-mix(in srgb, var(--login-root-bg-accent) 74%, var(--login-root-bg) 26%) 100%
+    );
+}
+
+.isVisualBaselineShell .topbar {
+  padding: 0 22px;
+}
+
+.isVisualBaselineShell .infoPanel {
+  padding: 18px 18px 16px;
+}
+
+.isVisualBaselineShell .formCard {
+  padding: 20px 22px 22px;
+}
+
+@media (max-width: 1400px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) minmax(420px, 480px);
+  }
+}
+
+@media (max-width: 1024px) {
+  .topbar {
+    height: 72px;
+    min-height: 72px;
+  }
+
+  .layout {
+    min-height: calc(100dvh - 72px);
+    grid-template-columns: 1fr;
+  }
+
+  .infoPanel {
+    min-height: 0;
+    padding: 28px 24px 18px;
+  }
+
+  .formCard {
+    min-height: 0;
+    padding: 24px 22px 28px;
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--login-panel-border) 72%, transparent);
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar {
+    padding: 0 12px;
+  }
+
+  .topbarBrandText {
+    font-size: 14px;
+  }
+
+  .topbarControls {
+    gap: 6px;
+  }
+
+  .infoPanel {
+    padding: 22px 16px 14px;
+  }
+
+  .formCard {
+    padding: 18px 16px 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .controlButton {
+    transition: none;
+  }
+}

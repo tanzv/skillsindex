@@ -9,9 +9,10 @@ import type { TopbarActionItem } from "../pages/marketplaceHome/MarketplaceHomeP
 import AppShellTopbar from "./AppShellTopbar";
 import type { MarketplaceTopbarRightRegistration } from "../pages/marketplacePublic/MarketplaceTopbar.rightRegistry";
 import {
-  renderMarketplaceTopbarActionButton,
-  resolveMarketplaceTopbarRightRegistrations
-} from "../pages/marketplacePublic/MarketplaceTopbar.shared";
+  renderAppTopbarActionButton,
+  resolveAppTopbarRightRegistrations
+} from "./appTopbar.shared";
+import { workspaceShellTopbarClassNames } from "./appTopbarClassNames";
 import {
   resolveWorkspaceOverflowPresentation,
   resolveWorkspacePrimaryActionPresentation,
@@ -210,9 +211,10 @@ export default function AppGlobalTopbar({
 
   const resolvedRightRegistrations = useMemo(
     () =>
-      resolveMarketplaceTopbarRightRegistrations({
+      resolveAppTopbarRightRegistrations({
         isLightTheme,
         utilityActions,
+        classNames: workspaceShellTopbarClassNames,
         rightRegistrations: [
           ...rightRegistrations,
           {
@@ -273,7 +275,9 @@ export default function AppGlobalTopbar({
                 <span className="workspace-topbar-primary-group-label" aria-hidden="true">
                   {group.tagLabel}
                 </span>
-                {group.actions.map((action) => renderMarketplaceTopbarActionButton(action, "primary"))}
+                {group.actions.map((action) =>
+                  renderAppTopbarActionButton(action, "primary", workspaceShellTopbarClassNames)
+                )}
               </div>
             ))}
           </div>
@@ -330,7 +334,7 @@ export default function AppGlobalTopbar({
         className={`workspace-topbar-overflow-wrapper ${isPrimaryExpanded ? "is-expanded" : "is-collapsed"}`}
         aria-hidden={!isPrimaryExpanded}
       >
-        <div className="marketplace-topbar-overflow-panel" role="region" aria-label={topbarCopy.expandedPanelAria}>
+        <div className={workspaceShellTopbarClassNames.overflowPanel} role="region" aria-label={topbarCopy.expandedPanelAria}>
           <div className="workspace-topbar-overflow-header">
             <h3 className="workspace-topbar-overflow-title">{overflowPresentation.titleText}</h3>
             {overflowPresentation.hintText ? (
@@ -339,7 +343,7 @@ export default function AppGlobalTopbar({
             {overflowPresentation.metrics.length > 0 ? (
               <div className="workspace-topbar-overflow-metrics">
                 {overflowPresentation.metrics.map((metricAction) =>
-                  renderMarketplaceTopbarActionButton(metricAction, "primary")
+                  renderAppTopbarActionButton(metricAction, "primary", workspaceShellTopbarClassNames)
                 )}
               </div>
             ) : null}
@@ -355,7 +359,9 @@ export default function AppGlobalTopbar({
                   </span>
                 </div>
                 <div className="workspace-topbar-overflow-group-actions">
-                  {group.actions.map((action) => renderMarketplaceTopbarActionButton(action, "primary"))}
+                  {group.actions.map((action) =>
+                    renderAppTopbarActionButton(action, "primary", workspaceShellTopbarClassNames)
+                  )}
                 </div>
               </section>
             ))}
@@ -368,6 +374,7 @@ export default function AppGlobalTopbar({
   return (
     <div ref={interactionScopeRef} className="workspace-topbar-interaction-scope">
       <AppShellTopbar
+        variant="workspace-shell"
         shellClassName="animated-fade-down workspace-topbar-shell"
         dataAnimated
         brandTitle={brandTitle}

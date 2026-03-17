@@ -212,6 +212,10 @@ func exportAuditJSON(logs []models.AuditLog) []byte {
 			"action":        log.Action,
 			"target_type":   log.TargetType,
 			"target_id":     log.TargetID,
+			"request_id":    log.RequestID,
+			"result":        log.Result,
+			"reason":        log.Reason,
+			"source_ip":     log.SourceIP,
 			"summary":       log.Summary,
 			"details":       log.Details,
 		})
@@ -226,19 +230,43 @@ func exportAuditJSON(logs []models.AuditLog) []byte {
 func exportAuditCSV(logs []models.AuditLog) []byte {
 	var b strings.Builder
 	writer := csv.NewWriter(&b)
-	_ = writer.Write([]string{"id", "created_at", "actor_user_id", "action", "target_type", "target_id", "summary", "details"})
+	_ = writer.Write([]string{
+		"id",
+		"created_at",
+		"actor_user_id",
+		"action",
+		"target_type",
+		"target_id",
+		"request_id",
+		"result",
+		"reason",
+		"source_ip",
+		"summary",
+		"details",
+	})
 	for _, log := range logs {
 		_ = writer.Write([]string{
 			fmt.Sprintf("%d", log.ID),
 			log.CreatedAt.UTC().Format(time.RFC3339),
-			fmt.Sprintf("%d", log.ActorUserID),
+			formatOptionalAuditActor(log.ActorUserID),
 			log.Action,
 			log.TargetType,
 			fmt.Sprintf("%d", log.TargetID),
+			log.RequestID,
+			log.Result,
+			log.Reason,
+			log.SourceIP,
 			log.Summary,
 			log.Details,
 		})
 	}
 	writer.Flush()
 	return []byte(b.String())
+}
+
+func formatOptionalAuditActor(actorUserID *uint) string {
+	if actorUserID == nil {
+		return ""
+	}
+	return fmt.Sprintf("%d", *actorUserID)
 }

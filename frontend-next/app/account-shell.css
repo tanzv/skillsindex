@@ -1,0 +1,237 @@
+.account-shell-root {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 28%),
+    radial-gradient(circle at 78% 0%, rgba(59, 130, 246, 0.14), transparent 24%),
+    linear-gradient(180deg, #0d1830 0%, var(--account-shell-bg-alt) 26%, var(--account-shell-bg) 100%);
+  color: var(--account-shell-text);
+}
+
+.account-shell-frame {
+  width: min(calc(100% - 36px), 1412px);
+  margin: 0 auto;
+}
+
+.account-shell-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid rgba(149, 178, 226, 0.12);
+  background: var(--account-shell-header);
+  backdrop-filter: blur(18px);
+}
+
+.account-shell-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0 16px;
+}
+
+.account-shell-brand {
+  display: grid;
+  gap: 4px;
+}
+
+.account-shell-brand-link {
+  color: var(--account-shell-cta);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.account-shell-brand-title {
+  font-size: 24px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.account-shell-brand-subtitle {
+  color: var(--account-shell-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.account-shell-header-right,
+.account-shell-topnav,
+.account-shell-topnav-link,
+.account-shell-user-meta,
+.account-shell-chip,
+.account-shell-side-link {
+  display: flex;
+  align-items: center;
+}
+
+.account-shell-header-right,
+.account-shell-topnav,
+.account-shell-user-meta {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.account-shell-topnav-link,
+.account-shell-chip,
+.account-shell-side-link {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  justify-content: center;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    color 120ms ease;
+}
+
+.account-shell-topnav-link,
+.account-shell-side-link {
+  color: var(--account-shell-text-secondary);
+  background: rgba(10, 18, 34, 0.68);
+}
+
+.account-shell-topnav-link:hover,
+.account-shell-side-link:hover {
+  border-color: rgba(148, 181, 236, 0.34);
+  background: rgba(20, 34, 61, 0.88);
+  color: var(--account-shell-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.account-shell-topnav-link.is-active,
+.account-shell-side-link.is-active {
+  border-color: rgba(125, 211, 252, 0.28);
+  background: rgba(31, 57, 92, 0.92);
+  color: var(--account-shell-text);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 10px 22px rgba(1, 8, 20, 0.18);
+}
+
+.account-shell-topnav-link {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-shell-user-meta {
+  justify-content: flex-end;
+}
+
+.account-shell-chip {
+  border-color: var(--account-shell-border);
+  background: rgba(16, 29, 53, 0.72);
+  color: var(--account-shell-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.account-shell-chip.is-primary {
+  border-color: rgba(125, 211, 252, 0.24);
+  background: rgba(125, 211, 252, 0.14);
+  color: var(--account-shell-text);
+}
+
+.account-shell-chip.is-mono {
+  font-family: "JetBrains Mono", monospace;
+}
+
+.account-shell-body {
+  padding: 28px 0 40px;
+}
+
+.account-shell-grid {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.account-shell-sidebar,
+.account-shell-panel,
+.account-shell-panel-list,
+.account-shell-side-list {
+  display: grid;
+  gap: 14px;
+}
+
+.account-shell-sidebar {
+  position: sticky;
+  top: 132px;
+}
+
+.account-shell-panel {
+  padding: 18px;
+  border: 1px solid var(--account-shell-border);
+  border-radius: 22px;
+  background: var(--account-shell-panel-surface);
+  box-shadow: var(--workspace-shell-shadow);
+}
+
+.account-shell-panel-title {
+  color: var(--account-shell-text-muted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.account-shell-panel-copy {
+  color: var(--account-shell-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.account-shell-side-link {
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  border-color: var(--account-shell-border);
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.account-shell-side-link-note {
+  color: var(--account-shell-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 1180px) {
+  .account-shell-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .account-shell-sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 780px) {
+  .account-shell-frame {
+    width: min(calc(100% - 20px), 1412px);
+  }
+
+  .account-shell-header-row {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .account-shell-header-right,
+  .account-shell-user-meta {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .account-shell-topnav {
+    width: 100%;
+  }
+
+  .account-shell-topnav-link,
+  .account-shell-side-link {
+    width: 100%;
+  }
+}

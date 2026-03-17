@@ -1,6 +1,15 @@
 import { css } from "@emotion/react";
 
 import { marketplaceHomeTopbarPrimaryPopoverStyles } from "./MarketplaceHomePage.styles.theme.topbarPrimaryPopover";
+import {
+  buildMarketplaceHomeTopbarDescendantSelector,
+  buildMarketplaceHomeTopbarSelector
+} from "./marketplaceHomeTopbarSelectors";
+
+const workspaceTopbarShellScope = ".marketplace-home .workspace-topbar-shell";
+const workspaceTopbarPrimaryGroupsScope = `${workspaceTopbarShellScope} .workspace-topbar-primary-groups`;
+const workspaceTopbarOverflowGroupActionsScope = `${workspaceTopbarShellScope} .workspace-topbar-overflow-group-actions`;
+const workspaceTopbarOverflowMetricsScope = `${workspaceTopbarShellScope} .workspace-topbar-overflow-metrics`;
 
 export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
   .marketplace-home .workspace-topbar-interaction-scope {
@@ -108,7 +117,7 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
 
   ${marketplaceHomeTopbarPrimaryPopoverStyles}
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton")} {
     position: relative;
     border: 1px solid color-mix(in srgb, var(--marketplace-nav-button-border) 90%, #ffffff 10%);
     background: color-mix(in srgb, var(--marketplace-topbar-background-alt) 88%, #101a2b 12%);
@@ -124,7 +133,7 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
       color 170ms ease;
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button,
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarPrimaryGroupsScope, "navButton")},
   .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-inline-toggle .workspace-topbar-toggle-icon-button {
     min-height: 34px;
     border-radius: 10px;
@@ -186,7 +195,7 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
     box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 10%, transparent);
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button .marketplace-topbar-action-badge {
+  ${buildMarketplaceHomeTopbarDescendantSelector(workspaceTopbarPrimaryGroupsScope, "navButton", "actionBadge")} {
     min-width: 20px;
     height: 18px;
     border-radius: 999px;
@@ -194,12 +203,12 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
     color: color-mix(in srgb, var(--marketplace-nav-button-text) 88%, #ffffff 12%);
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button .marketplace-topbar-action-label {
+  ${buildMarketplaceHomeTopbarDescendantSelector(workspaceTopbarPrimaryGroupsScope, "navButton", "actionLabel")} {
     letter-spacing: 0.01em;
     position: relative;
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button::after {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarPrimaryGroupsScope, "navButton", "::after")} {
     content: "";
     position: absolute;
     left: 12px;
@@ -212,7 +221,7 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
     transition: background-color 170ms ease, opacity 170ms ease;
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-overflow-group-actions .marketplace-topbar-nav-button {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarOverflowGroupActionsScope, "navButton")} {
     width: 100%;
     justify-content: flex-start;
     min-height: 40px;
@@ -221,7 +230,7 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
     background: color-mix(in srgb, var(--marketplace-topbar-background-alt) 94%, #08111f 6%);
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-overflow-group-actions .marketplace-topbar-nav-button::after {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarOverflowGroupActionsScope, "navButton", "::after")} {
     content: "";
     position: absolute;
     right: 14px;
@@ -234,7 +243,7 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
     opacity: 0.55;
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-overflow-metrics .marketplace-topbar-nav-button {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarOverflowMetricsScope, "navButton")} {
     min-height: 28px;
     padding-inline: 10px;
     border-radius: 999px;
@@ -243,14 +252,14 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
     background: color-mix(in srgb, var(--marketplace-topbar-background-alt) 92%, #101826 8%);
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button:not(.is-active):not(:disabled):hover {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ":not(.is-active):not(:disabled):hover")} {
     transform: none;
     background: color-mix(in srgb, var(--marketplace-nav-button-hover-background) 88%, #122037 12%);
     border-color: color-mix(in srgb, var(--marketplace-nav-category-hover-border) 82%, #ffffff 18%);
     box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 10%, transparent);
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-active {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-active")} {
     background: color-mix(in srgb, var(--marketplace-nav-button-active-background) 16%, #0f1726 84%);
     border-color: color-mix(in srgb, var(--marketplace-nav-button-active-border) 68%, #ffffff 32%);
     color: color-mix(in srgb, var(--marketplace-nav-button-text) 96%, #ffffff 4%);
@@ -258,88 +267,124 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
     box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 10%, transparent);
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button:not(.is-active):not(:disabled):hover {
+  ${buildMarketplaceHomeTopbarSelector(
+    workspaceTopbarPrimaryGroupsScope,
+    "navButton",
+    ":not(.is-active):not(:disabled):hover"
+  )} {
     background: color-mix(in srgb, var(--marketplace-nav-shell-border) 28%, transparent);
     border-color: color-mix(in srgb, var(--marketplace-nav-shell-border) 18%, transparent);
     box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 6%, transparent);
     color: color-mix(in srgb, var(--marketplace-nav-button-text) 88%, #ffffff 12%);
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button:not(.is-active):not(:disabled):hover::after {
+  ${buildMarketplaceHomeTopbarSelector(
+    workspaceTopbarPrimaryGroupsScope,
+    "navButton",
+    ":not(.is-active):not(:disabled):hover::after"
+  )} {
     background: color-mix(in srgb, var(--marketplace-nav-category-hover-border) 56%, transparent);
     opacity: 0.6;
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-active {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarPrimaryGroupsScope, "navButton", ".is-active")} {
     background: color-mix(in srgb, var(--si-color-accent) 12%, transparent);
     border-color: color-mix(in srgb, var(--si-color-accent) 18%, transparent);
     box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
     color: color-mix(in srgb, var(--marketplace-nav-button-text) 98%, #ffffff 2%);
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-active::after {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarPrimaryGroupsScope, "navButton", ".is-active::after")} {
     background: color-mix(in srgb, var(--marketplace-nav-button-active-border) 74%, #ffffff 26%);
     opacity: 1;
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-highlight,
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-open-dashboard-action {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-highlight")},
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-open-dashboard-action")} {
     border-color: transparent;
     background: color-mix(in srgb, var(--si-color-accent) 10%, transparent);
     color: color-mix(in srgb, var(--marketplace-nav-button-text) 92%, #ffffff 8%);
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-highlight:not(.is-active):not(:disabled):hover,
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-open-dashboard-action:not(.is-active):not(:disabled):hover {
+  ${buildMarketplaceHomeTopbarSelector(
+    workspaceTopbarShellScope,
+    "navButton",
+    ".is-highlight:not(.is-active):not(:disabled):hover"
+  )},
+  ${buildMarketplaceHomeTopbarSelector(
+    workspaceTopbarShellScope,
+    "navButton",
+    ".is-open-dashboard-action:not(.is-active):not(:disabled):hover"
+  )} {
     background: color-mix(in srgb, var(--si-color-accent) 16%, transparent);
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-marketplace-entry-action,
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-open-dashboard-action,
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-highlight {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarPrimaryGroupsScope, "navButton", ".is-marketplace-entry-action")},
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarPrimaryGroupsScope, "navButton", ".is-open-dashboard-action")},
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarPrimaryGroupsScope, "navButton", ".is-highlight")} {
     background: transparent;
     border-color: transparent;
     color: color-mix(in srgb, var(--marketplace-nav-button-text) 76%, #ffffff 24%);
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-marketplace-entry-action:not(.is-active):not(:disabled):hover,
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-open-dashboard-action:not(.is-active):not(:disabled):hover,
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-highlight:not(.is-active):not(:disabled):hover {
+  ${buildMarketplaceHomeTopbarSelector(
+    workspaceTopbarPrimaryGroupsScope,
+    "navButton",
+    ".is-marketplace-entry-action:not(.is-active):not(:disabled):hover"
+  )},
+  ${buildMarketplaceHomeTopbarSelector(
+    workspaceTopbarPrimaryGroupsScope,
+    "navButton",
+    ".is-open-dashboard-action:not(.is-active):not(:disabled):hover"
+  )},
+  ${buildMarketplaceHomeTopbarSelector(
+    workspaceTopbarPrimaryGroupsScope,
+    "navButton",
+    ".is-highlight:not(.is-active):not(:disabled):hover"
+  )} {
     background: color-mix(in srgb, var(--marketplace-nav-shell-border) 28%, transparent);
     border-color: color-mix(in srgb, var(--marketplace-nav-shell-border) 18%, transparent);
     color: color-mix(in srgb, var(--marketplace-nav-button-text) 88%, #ffffff 12%);
   }
 
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-marketplace-entry-action.is-active,
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-open-dashboard-action.is-active,
-  .marketplace-home .workspace-topbar-shell .workspace-topbar-primary-groups .marketplace-topbar-nav-button.is-highlight.is-active {
+  ${buildMarketplaceHomeTopbarSelector(
+    workspaceTopbarPrimaryGroupsScope,
+    "navButton",
+    ".is-marketplace-entry-action.is-active"
+  )},
+  ${buildMarketplaceHomeTopbarSelector(
+    workspaceTopbarPrimaryGroupsScope,
+    "navButton",
+    ".is-open-dashboard-action.is-active"
+  )},
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarPrimaryGroupsScope, "navButton", ".is-highlight.is-active")} {
     background: color-mix(in srgb, var(--si-color-accent) 12%, transparent);
     border-color: color-mix(in srgb, var(--si-color-accent) 18%, transparent);
     color: color-mix(in srgb, var(--marketplace-nav-button-text) 98%, #ffffff 2%);
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-top-action {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-top-action")} {
     letter-spacing: 0.02em;
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-primary-nav-toggle,
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-menu-label {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-primary-nav-toggle")},
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-menu-label")} {
     color: var(--marketplace-nav-button-subtle-text);
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-menu-title,
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-menu-group-label,
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-menu-metric {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-menu-title")},
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-menu-group-label")},
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-menu-metric")} {
     font-family: "JetBrains Mono", monospace;
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-menu-title {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-menu-title")} {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-size: 11px;
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-menu-hint {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-menu-hint")} {
     max-width: 440px;
     text-wrap: pretty;
     overflow: hidden;
@@ -348,17 +393,17 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
     line-height: 1.3;
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-menu-group-label {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-menu-group-label")} {
     text-transform: uppercase;
     letter-spacing: 0.04em;
     font-size: 11px;
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-menu-metric {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-menu-metric")} {
     font-size: 11px;
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button.is-alert-metric {
+  ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton", ".is-alert-metric")} {
     background: color-mix(in srgb, var(--si-color-accent) 16%, var(--marketplace-topbar-background-alt));
   }
 
@@ -367,7 +412,7 @@ export const marketplaceHomeTopbarPrimaryOverflowStyles = css`
     .marketplace-home .workspace-topbar-shell .workspace-topbar-overflow-wrapper.is-expanded,
     .marketplace-home .workspace-topbar-shell .workspace-topbar-toggle-icon-button,
     .marketplace-home .workspace-topbar-shell .workspace-topbar-toggle-icon,
-    .marketplace-home .workspace-topbar-shell .marketplace-topbar-nav-button {
+    ${buildMarketplaceHomeTopbarSelector(workspaceTopbarShellScope, "navButton")} {
       transition: none;
     }
 

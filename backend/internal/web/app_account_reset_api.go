@@ -3,6 +3,7 @@ package web
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"skillsindex/internal/services"
@@ -35,10 +36,47 @@ func (a *App) handleAPIAccountPasswordResetRequest(w http.ResponseWriter, r *htt
 		return
 	}
 
-	_, err := a.authService.RequestPasswordReset(r.Context(), strings.TrimSpace(input.Username), clientIPFromRequest(r))
+	username := strings.TrimSpace(input.Username)
+	token, err := a.authService.RequestPasswordReset(r.Context(), username, clientIPFromRequest(r))
+	targetID := uint(0)
+	if user, lookupErr := a.authService.GetUserByUsername(r.Context(), username); lookupErr == nil {
+		targetID = user.ID
+	}
 	switch {
 	case err == nil:
+		reason := "request accepted without matching account"
+		details := auditDetailsJSON(map[string]string{
+			"username":     username,
+			"token_issued": "false",
+		})
+		if token != "" {
+			reason = "password reset token issued"
+			details = auditDetailsJSON(map[string]string{
+				"username":     username,
+				"token_issued": "true",
+			})
+		}
+		a.recordRequestAudit(r, nil, services.RecordAuditInput{
+			Action:     "password_reset_request",
+			TargetType: "password_reset",
+			TargetID:   targetID,
+			Result:     "accepted",
+			Reason:     reason,
+			Summary:    "Accepted password reset request",
+			Details:    details,
+		})
 	case errors.Is(err, services.ErrPasswordResetRateLimited):
+		a.recordRequestAudit(r, nil, services.RecordAuditInput{
+			Action:     "password_reset_request",
+			TargetType: "password_reset",
+			TargetID:   targetID,
+			Result:     "rate_limited",
+			Reason:     "password reset request rate limited",
+			Summary:    "Rejected password reset request",
+			Details: auditDetailsJSON(map[string]string{
+				"username": username,
+			}),
+		})
 		writeJSON(w, http.StatusTooManyRequests, map[string]any{
 			"error": "too_many_requests",
 			"message": a.apiMessage(
@@ -49,6 +87,17 @@ func (a *App) handleAPIAccountPasswordResetRequest(w http.ResponseWriter, r *htt
 		})
 		return
 	default:
+		a.recordRequestAudit(r, nil, services.RecordAuditInput{
+			Action:     "password_reset_request",
+			TargetType: "password_reset",
+			TargetID:   targetID,
+			Result:     "error",
+			Reason:     "password reset request failed",
+			Summary:    "Failed password reset request",
+			Details: auditDetailsJSON(map[string]string{
+				"username": username,
+			}),
+		})
 		writeJSON(w, http.StatusInternalServerError, map[string]any{
 			"error": "password_reset_request_failed",
 			"message": a.apiMessage(
@@ -101,32 +150,53 @@ func (a *App) handleAPIAccountPasswordResetConfirm(w http.ResponseWriter, r *htt
 		strings.TrimSpace(input.NewPassword),
 	)
 	if err != nil {
+		errorCode := "password_reset_confirm_failed"
+		errorMessage := a.apiMessage(r, "api.account.password_reset.confirm_failed", "Failed to confirm password reset")
+		reason := "password reset confirmation failed"
 		switch {
 		case errors.Is(err, services.ErrPasswordResetTokenInvalid):
-			writeJSON(w, http.StatusBadRequest, map[string]any{
-				"error":   "invalid_reset_token",
-				"message": a.apiMessage(r, "api.account.password_reset.invalid_token", "Password reset token is invalid"),
-			})
+			errorCode = "invalid_reset_token"
+			errorMessage = a.apiMessage(r, "api.account.password_reset.invalid_token", "Password reset token is invalid")
+			reason = "password reset token is invalid"
 		case errors.Is(err, services.ErrPasswordResetTokenExpired):
-			writeJSON(w, http.StatusBadRequest, map[string]any{
-				"error":   "expired_reset_token",
-				"message": a.apiMessage(r, "api.account.password_reset.expired_token", "Password reset token is expired"),
-			})
+			errorCode = "expired_reset_token"
+			errorMessage = a.apiMessage(r, "api.account.password_reset.expired_token", "Password reset token is expired")
+			reason = "password reset token is expired"
 		case errors.Is(err, services.ErrPasswordResetTokenUsed):
-			writeJSON(w, http.StatusBadRequest, map[string]any{
-				"error":   "used_reset_token",
-				"message": a.apiMessage(r, "api.account.password_reset.used_token", "Password reset token was already used"),
-			})
-		default:
-			writeJSON(w, http.StatusBadRequest, map[string]any{
-				"error":   "password_reset_confirm_failed",
-				"message": a.apiMessage(r, "api.account.password_reset.confirm_failed", "Failed to confirm password reset"),
-			})
+			errorCode = "used_reset_token"
+			errorMessage = a.apiMessage(r, "api.account.password_reset.used_token", "Password reset token was already used")
+			reason = "password reset token was already used"
 		}
+		a.recordRequestAudit(r, nil, services.RecordAuditInput{
+			Action:     "password_reset_confirm",
+			TargetType: "password_reset",
+			Result:     "rejected",
+			Reason:     reason,
+			Summary:    "Rejected password reset confirmation",
+			Details: auditDetailsJSON(map[string]string{
+				"token_present": strconv.FormatBool(strings.TrimSpace(input.Token) != ""),
+			}),
+		})
+		writeJSON(w, http.StatusBadRequest, map[string]any{
+			"error":   errorCode,
+			"message": errorMessage,
+		})
 		return
 	}
 
 	if err := a.startUserSession(w, r, user.ID); err != nil {
+		a.recordRequestAudit(r, &user, services.RecordAuditInput{
+			Action:     "password_reset_confirm",
+			TargetType: "user",
+			TargetID:   user.ID,
+			Result:     "error",
+			Reason:     "password reset completed but session start failed",
+			Summary:    "Failed password reset confirmation",
+			Details: auditDetailsJSON(map[string]string{
+				"username":        user.Username,
+				"session_started": "false",
+			}),
+		})
 		writeJSON(w, http.StatusInternalServerError, map[string]any{
 			"error": "session_start_failed",
 			"message": a.apiMessage(
@@ -137,6 +207,19 @@ func (a *App) handleAPIAccountPasswordResetConfirm(w http.ResponseWriter, r *htt
 		})
 		return
 	}
+
+	a.recordRequestAudit(r, &user, services.RecordAuditInput{
+		Action:     "password_reset_confirm",
+		TargetType: "user",
+		TargetID:   user.ID,
+		Result:     "success",
+		Reason:     "password reset completed",
+		Summary:    "Completed password reset confirmation",
+		Details: auditDetailsJSON(map[string]string{
+			"username":        user.Username,
+			"session_started": "true",
+		}),
+	})
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"ok":      true,

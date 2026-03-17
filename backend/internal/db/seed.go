@@ -10,43 +10,55 @@ import (
 	"gorm.io/gorm"
 )
 
-// EnsureSeedData inserts demo marketplace data when database is empty.
+type bootstrapSkill struct {
+	Name            string
+	Description     string
+	Content         string
+	CategorySlug    string
+	SubcategorySlug string
+	SourceType      models.SkillSourceType
+	SourceURL       string
+	RepoURL         string
+	InstallCommand  string
+	StarCount       int
+	QualityScore    float64
+	Tags            []string
+	DaysAgo         int
+}
+
+// EnsureSeedData inserts hidden seed records and public showcase records for bootstrap environments.
 func EnsureSeedData(database *gorm.DB) error {
 	var total int64
 	if err := database.Model(&models.Skill{}).Count(&total).Error; err != nil {
 		return fmt.Errorf("failed to count skills: %w", err)
 	}
-	if total > 0 {
-		return nil
+	if total == 0 {
+		if err := ensureHiddenSeedSkills(database); err != nil {
+			return err
+		}
 	}
 
-	owner := models.User{
-		Username:     "marketbot",
-		PasswordHash: "disabled-login",
-		Role:         models.RoleViewer,
+	var importedTotal int64
+	if err := database.Model(&models.Skill{}).Where("record_origin = ?", models.RecordOriginImported).Count(&importedTotal).Error; err != nil {
+		return fmt.Errorf("failed to count imported skills: %w", err)
 	}
-	if err := database.Where("username = ?", owner.Username).FirstOrCreate(&owner).Error; err != nil {
-		return fmt.Errorf("failed to create seed owner: %w", err)
+	if importedTotal == 0 {
+		if err := ensurePublicShowcaseSkills(database); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func ensureHiddenSeedSkills(database *gorm.DB) error {
+	owner, err := ensureBootstrapOwner(database, "marketbot")
+	if err != nil {
+		return err
 	}
 
 	now := time.Now().UTC()
-	type seedSkill struct {
-		Name            string
-		Description     string
-		Content         string
-		CategorySlug    string
-		SubcategorySlug string
-		SourceType      models.SkillSourceType
-		SourceURL       string
-		RepoURL         string
-		InstallCommand  string
-		StarCount       int
-		QualityScore    float64
-		Tags            []string
-		DaysAgo         int
-	}
-
-	seedSkills := []seedSkill{
+	seedSkills := []bootstrapSkill{
 		{
 			Name:            "Go Service Blueprint",
 			Description:     "Opinionated structure for production Go services.",
@@ -229,7 +241,91 @@ func EnsureSeedData(database *gorm.DB) error {
 		},
 	}
 
-	for _, item := range seedSkills {
+	if err := insertBootstrapSkills(database, owner, models.RecordOriginSeed, now, seedSkills); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ensurePublicShowcaseSkills(database *gorm.DB) error {
+	owner, err := ensureBootstrapOwner(database, "marketplace-showcase")
+	if err != nil {
+		return err
+	}
+
+	now := time.Now().UTC()
+	showcaseSkills := []bootstrapSkill{
+		{
+			Name:            "Release Readiness Checklist",
+			Description:     "Validate release gates, rollout notes, and operator sign-off before deployment.",
+			Content:         "Release readiness checklist content.",
+			CategorySlug:    "operations",
+			SubcategorySlug: "release",
+			SourceType:      models.SourceTypeManual,
+			SourceURL:       "",
+			RepoURL:         "",
+			InstallCommand:  "npx skillsindex install release-readiness",
+			StarCount:       184,
+			QualityScore:    9.3,
+			Tags:            []string{"release"},
+			DaysAgo:         6,
+		},
+		{
+			Name:            "Repository Sync Auditor",
+			Description:     "Review repository sync drift, queue health, and owner mappings for catalog intake.",
+			Content:         "Repository sync auditor content.",
+			CategorySlug:    "engineering",
+			SubcategorySlug: "repository",
+			SourceType:      models.SourceTypeRepository,
+			SourceURL:       "https://github.com/skillsindex/repository-sync-auditor",
+			RepoURL:         "https://github.com/skillsindex/repository-sync-auditor",
+			InstallCommand:  "uvx skillsindex sync-auditor",
+			StarCount:       163,
+			QualityScore:    9.1,
+			Tags:            []string{"sync"},
+			DaysAgo:         8,
+		},
+		{
+			Name:            "Recovery Drill Planner",
+			Description:     "Coordinate RPO and RTO rehearsal steps with evidence capture and rollback prompts.",
+			Content:         "Recovery drill planner content.",
+			CategorySlug:    "operations",
+			SubcategorySlug: "recovery",
+			SourceType:      models.SourceTypeManual,
+			SourceURL:       "",
+			RepoURL:         "",
+			InstallCommand:  "npx skillsindex install recovery-drill-planner",
+			StarCount:       141,
+			QualityScore:    8.9,
+			Tags:            []string{"recovery"},
+			DaysAgo:         10,
+		},
+	}
+
+	return insertBootstrapSkills(database, owner, models.RecordOriginImported, now, showcaseSkills)
+}
+
+func ensureBootstrapOwner(database *gorm.DB, username string) (models.User, error) {
+	owner := models.User{
+		Username:     username,
+		PasswordHash: "disabled-login",
+		Role:         models.RoleViewer,
+	}
+	if err := database.Where("username = ?", owner.Username).FirstOrCreate(&owner).Error; err != nil {
+		return models.User{}, fmt.Errorf("failed to create bootstrap owner %s: %w", username, err)
+	}
+	return owner, nil
+}
+
+func insertBootstrapSkills(
+	database *gorm.DB,
+	owner models.User,
+	recordOrigin models.SkillRecordOrigin,
+	now time.Time,
+	skills []bootstrapSkill,
+) error {
+	for _, item := range skills {
 		createdAt := now.AddDate(0, 0, -item.DaysAgo)
 		skill := models.Skill{
 			OwnerID:         owner.ID,
@@ -240,6 +336,7 @@ func EnsureSeedData(database *gorm.DB) error {
 			SubcategorySlug: item.SubcategorySlug,
 			Visibility:      models.VisibilityPublic,
 			SourceType:      item.SourceType,
+			RecordOrigin:    recordOrigin,
 			SourceURL:       item.SourceURL,
 			RepoURL:         item.RepoURL,
 			InstallCommand:  item.InstallCommand,
@@ -253,7 +350,7 @@ func EnsureSeedData(database *gorm.DB) error {
 			skill.LastSyncedAt = &t
 		}
 		if err := database.Create(&skill).Error; err != nil {
-			return fmt.Errorf("failed to create seed skill %s: %w", item.Name, err)
+			return fmt.Errorf("failed to create bootstrap skill %s: %w", item.Name, err)
 		}
 		for _, rawTag := range item.Tags {
 			tagName := strings.TrimSpace(strings.ToLower(rawTag))
@@ -262,13 +359,12 @@ func EnsureSeedData(database *gorm.DB) error {
 			}
 			tag := models.Tag{Name: tagName}
 			if err := database.Where("name = ?", tagName).FirstOrCreate(&tag).Error; err != nil {
-				return fmt.Errorf("failed to create seed tag %s: %w", tagName, err)
+				return fmt.Errorf("failed to create bootstrap tag %s: %w", tagName, err)
 			}
 			if err := database.Model(&skill).Association("Tags").Append(&tag); err != nil {
-				return fmt.Errorf("failed to append seed tag %s: %w", tagName, err)
+				return fmt.Errorf("failed to append bootstrap tag %s: %w", tagName, err)
 			}
 		}
 	}
-
 	return nil
 }

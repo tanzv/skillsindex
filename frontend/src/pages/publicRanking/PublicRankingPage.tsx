@@ -18,7 +18,7 @@ import {
   PrototypeUtilityPanel,
   PrototypeUtilityShell
 } from "../prototype/prototypeCssInJs";
-import { loadMarketplaceWithFallback, resolvePrototypeDataMode } from "../prototype/prototypeDataFallback";
+import { buildEmptyMarketplacePayload, loadMarketplaceWithFallback, resolvePrototypeDataMode } from "../prototype/prototypeDataFallback";
 import { isLightPrototypePath } from "../prototype/prototypePageTheme";
 import { buildShellStageClassName } from "../prototype/pageShellLayoutContract";
 import { createPublicPageNavigator } from "../publicShared/publicPageNavigation";
@@ -73,6 +73,10 @@ export default function PublicRankingPage({
     () => buildMarketplaceFallback({ sort: "stars", page: 1 }, locale, sessionUser),
     [locale, sessionUser]
   );
+  const emptyLivePayload = useMemo(
+    () => buildEmptyMarketplacePayload({ sort: "stars", page: 1 }, sessionUser),
+    [sessionUser]
+  );
 
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -114,7 +118,7 @@ export default function PublicRankingPage({
         if (!active) {
           return;
         }
-        setPayload(fallbackPayload);
+        setPayload(dataMode === "live" ? emptyLivePayload : fallbackPayload);
         setErrorMessage(error instanceof Error ? error.message : text.loadError);
       })
       .finally(() => {
@@ -126,7 +130,7 @@ export default function PublicRankingPage({
     return () => {
       active = false;
     };
-  }, [dataMode, fallbackPayload, locale, sessionUser, text.loadError]);
+  }, [dataMode, emptyLivePayload, fallbackPayload, locale, sessionUser, text.loadError]);
 
   const sourceItems = useMemo(() => resolveRankingSourceItems(payload, fallbackPayload), [fallbackPayload, payload]);
   const rankedItems = useMemo(() => sortRankingItems(sourceItems, sortKey).slice(0, 10), [sourceItems, sortKey]);

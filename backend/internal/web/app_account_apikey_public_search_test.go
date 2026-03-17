@@ -162,3 +162,23 @@ func TestAccountAPIKeyDefaultScopesCanCallPublicAISearch(t *testing.T) {
 		t.Fatalf("missing expected ai search total payload: %s", body)
 	}
 }
+
+func TestStaticAPIKeyCannotBypassProtectedPublicSearch(t *testing.T) {
+	app, _ := setupAccountAPIKeyPublicSearchTestApp(t)
+	app.apiKeys = map[string]struct{}{
+		"static-search-token": {},
+	}
+
+	searchReq := httptest.NewRequest(http.MethodGet, "/api/v1/skills/search?q=react&api_key=static-search-token", nil)
+	searchRecorder := httptest.NewRecorder()
+	searchHandler := app.requireAPIKey(http.HandlerFunc(app.handleAPISearch))
+
+	searchHandler.ServeHTTP(searchRecorder, searchReq)
+	if searchRecorder.Code != http.StatusForbidden {
+		t.Fatalf("unexpected search status code: got=%d want=%d body=%s", searchRecorder.Code, http.StatusForbidden, searchRecorder.Body.String())
+	}
+	body := searchRecorder.Body.String()
+	if !strings.Contains(body, `"api_key_scope_denied"`) {
+		t.Fatalf("missing expected scope denied payload: %s", body)
+	}
+}

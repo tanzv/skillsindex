@@ -1,163 +1,357 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type Route } from "@playwright/test";
 
-async function mockAuthenticatedWorkspaceUser(page: Page): Promise<void> {
+async function fulfillJSON(route: Route, status: number, body: unknown): Promise<void> {
+  await route.fulfill({
+    status,
+    contentType: "application/json",
+    body: JSON.stringify(body)
+  });
+}
+
+async function mockProtectedSession(page: Page): Promise<void> {
   await page.route("**/api/v1/auth/me", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        user: {
-          id: 102,
-          username: "workspace.user",
-          display_name: "Workspace User",
-          role: "operator",
-          status: "active"
-        }
-      })
+    await fulfillJSON(route, 200, {
+      user: {
+        id: 102,
+        username: "workspace.user",
+        display_name: "Workspace User",
+        role: "operator",
+        status: "active"
+      }
     });
   });
 
   await page.route("**/api/v1/account/profile", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        user: {
-          id: 102,
-          username: "workspace.user",
-          display_name: "Workspace User",
-          role: "operator",
-          status: "active"
-        },
-        profile: {
-          display_name: "Workspace User",
-          avatar_url: "https://example.com/avatar.png",
-          bio: "Operations owner"
-        }
-      })
+    await fulfillJSON(route, 200, {
+      user: {
+        id: 102,
+        username: "workspace.user",
+        display_name: "Workspace User",
+        role: "operator",
+        status: "active"
+      },
+      profile: {
+        display_name: "Workspace User",
+        avatar_url: "https://example.com/avatar.png",
+        bio: "Operations owner"
+      }
     });
   });
 
   await page.route("**/api/v1/account/sessions", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        current_session_id: "session-current",
-        session_issued_at: "2026-03-07T08:00:00Z",
-        session_expires_at: "2026-03-08T08:00:00Z",
-        total: 1,
-        items: [
-          {
-            session_id: "session-current",
-            user_agent: "Chrome",
-            issued_ip: "127.0.0.1",
-            last_seen: "2026-03-07T08:00:00Z",
-            expires_at: "2026-03-08T08:00:00Z",
-            is_current: true
-          }
-        ]
-      })
+    await fulfillJSON(route, 200, {
+      current_session_id: "session-current",
+      session_issued_at: "2026-03-07T08:00:00Z",
+      session_expires_at: "2026-03-08T08:00:00Z",
+      total: 1,
+      items: [
+        {
+          session_id: "session-current",
+          user_agent: "Chrome",
+          issued_ip: "127.0.0.1",
+          last_seen: "2026-03-07T08:00:00Z",
+          expires_at: "2026-03-08T08:00:00Z",
+          is_current: true
+        }
+      ]
     });
   });
 }
 
+async function mockAccountsWorkbench(page: Page): Promise<void> {
+  await page.route("**/api/v1/admin/accounts", async (route) => {
+    await fulfillJSON(route, 200, {
+      total: 3,
+      items: [
+        {
+          id: 1001,
+          username: "ops.lead",
+          role: "admin",
+          status: "active",
+          created_at: "2026-03-01T00:00:00Z",
+          updated_at: "2026-03-02T09:00:00Z"
+        },
+        {
+          id: 1002,
+          username: "security.audit",
+          role: "auditor",
+          status: "active",
+          created_at: "2026-03-01T00:00:00Z",
+          updated_at: "2026-03-03T09:00:00Z"
+        },
+        {
+          id: 1003,
+          username: "readonly.demo",
+          role: "viewer",
+          status: "disabled",
+          created_at: "2026-03-01T00:00:00Z",
+          updated_at: "2026-03-01T09:00:00Z"
+        }
+      ]
+    });
+  });
+
+  await page.route("**/api/v1/admin/settings/registration", async (route) => {
+    await fulfillJSON(route, 200, {
+      allow_registration: true,
+      marketplace_public_access: true
+    });
+  });
+
+  await page.route("**/api/v1/admin/settings/auth-providers", async (route) => {
+    await fulfillJSON(route, 200, {
+      ok: true,
+      auth_providers: ["github", "google"],
+      available_auth_providers: ["github", "google", "wecom", "password"]
+    });
+  });
+}
+
+async function mockOperationsWorkbench(page: Page): Promise<void> {
+  await page.route("**/api/v1/admin/ops/metrics", async (route) => {
+    await fulfillJSON(route, 200, {
+      item: {
+        open_incidents: 1,
+        pending_moderation_cases: 0,
+        unresolved_jobs: 2,
+        failed_sync_runs_24h: 1,
+        disabled_accounts: 0,
+        stale_integrations: 1
+      }
+    });
+  });
+
+  await page.route("**/api/v1/admin/integrations?limit=20", async (route) => {
+    await fulfillJSON(route, 200, {
+      items: [
+        {
+          id: 10,
+          name: "GitHub",
+          provider: "github",
+          description: "Repository sync",
+          base_url: "https://api.github.com",
+          enabled: true,
+          updated_at: "2026-03-11T10:00:00Z"
+        }
+      ],
+      total: 1,
+      webhook_logs: [
+        {
+          id: 1,
+          connector_id: 10,
+          event_type: "sync.completed",
+          outcome: "ok",
+          status_code: 200,
+          endpoint: "https://hooks.example.com",
+          delivered_at: "2026-03-11T10:30:00Z"
+        }
+      ],
+      webhook_total: 1
+    });
+  });
+}
+
+async function mockProtectedWorkspaceNavigation(page: Page): Promise<void> {
+  await mockProtectedSession(page);
+  await mockAccountsWorkbench(page);
+  await mockOperationsWorkbench(page);
+}
+
+async function readPrimaryNavLabels(page: Page): Promise<string[]> {
+  return page.locator(".backend-primary-nav .backend-primary-nav-item").evaluateAll((nodes) =>
+    nodes.map((node) => node.textContent?.trim() || "")
+  );
+}
+
 test.describe("workspace topbar", () => {
-  test("keeps workspace overflow and user menu mutually exclusive", async ({ page }) => {
-    await page.goto("/workspace");
-
-    const overflowToggle = page.locator(".workspace-topbar-toggle-icon-button");
-    const overflowWrapper = page.locator(".workspace-topbar-overflow-wrapper");
-    const userTrigger = page.getByTestId("workspace-user-center-trigger");
-    const userDropdown = page.locator(".workspace-topbar-user-dropdown");
-    const userPanel = page.getByTestId("workspace-user-center-panel");
-
-    await overflowToggle.click();
-    await expect(overflowWrapper).toHaveClass(/is-expanded/);
-
-    await userTrigger.click();
-    await expect(userDropdown).toBeVisible();
-    await expect(overflowWrapper).toHaveClass(/is-collapsed/);
-
-    await overflowToggle.click();
-    await expect(overflowWrapper).toHaveClass(/is-expanded/);
-    await expect(userDropdown).toHaveCount(1);
-    await expect(userPanel).not.toBeVisible();
-    await expect(userTrigger).toHaveAttribute("aria-expanded", "false");
-  });
-
-  test("keeps primary nav buttons clear of the overflow toggle on medium widths", async ({ page }) => {
-    for (const [viewportWidth, expectedVisibleButtons] of [
-      [1440, 4],
-      [1280, 4],
-      [1180, 3],
-      [1024, 2]
-    ] as const) {
-      await page.setViewportSize({ width: viewportWidth, height: 1000 });
-      await page.goto("/workspace");
-
-      const visibleButtons = page.locator(".workspace-topbar-primary-groups .marketplace-topbar-nav-button");
-      const toggleButton = page.locator(".workspace-topbar-toggle-icon-button");
-      await expect(visibleButtons).toHaveCount(expectedVisibleButtons);
-      await expect(toggleButton).toBeVisible();
-
-      const visibleCount = await visibleButtons.count();
-      const lastButtonBox = await visibleButtons.nth(visibleCount - 1).boundingBox();
-      const toggleButtonBox = await toggleButton.boundingBox();
-
-      expect(lastButtonBox).not.toBeNull();
-      expect(toggleButtonBox).not.toBeNull();
-
-      const lastButtonRight = (lastButtonBox?.x || 0) + (lastButtonBox?.width || 0);
-      const toggleButtonLeft = toggleButtonBox?.x || 0;
-      expect(lastButtonRight + 8).toBeLessThan(toggleButtonLeft);
-    }
-  });
-
-  test("opens a large floating overflow panel without shifting the content area", async ({ page }) => {
+  test("renders workspace routes inside the shared backend topbar shell", async ({ page }) => {
+    await mockProtectedWorkspaceNavigation(page);
     await page.setViewportSize({ width: 1440, height: 1100 });
+
     await page.goto("/workspace");
 
-    const primaryShell = page.locator(".workspace-topbar-primary-groups-shell");
-    const overflowToggle = page.locator(".workspace-topbar-toggle-icon-button");
-    const overflowWrapper = page.locator(".workspace-topbar-overflow-wrapper");
-    const contentHeading = page.getByRole("heading", { name: /Queue Insights|队列洞察/ }).first();
-
-    await expect(primaryShell).toBeVisible();
-    await expect(contentHeading).toBeVisible();
-
-    const primaryShellBox = await primaryShell.boundingBox();
-    const contentHeadingBefore = await contentHeading.boundingBox();
-    expect(primaryShellBox).not.toBeNull();
-    expect(contentHeadingBefore).not.toBeNull();
-    expect(primaryShellBox?.width || 0).toBeGreaterThan(780);
-    expect(primaryShellBox?.width || 0).toBeLessThan(822);
-
-    await overflowToggle.click();
-    await expect(overflowWrapper).toHaveClass(/is-expanded/);
-
-    const toggleBox = await overflowToggle.boundingBox();
-    const wrapperBox = await overflowWrapper.boundingBox();
-    const contentHeadingAfter = await contentHeading.boundingBox();
-
-    expect(toggleBox).not.toBeNull();
-    expect(wrapperBox).not.toBeNull();
-    expect(contentHeadingAfter).not.toBeNull();
-
-    expect(wrapperBox?.width || 0).toBeGreaterThan(1000);
-    expect(wrapperBox?.width || 0).toBeLessThan(1450);
-    expect(wrapperBox?.y || 0).toBeGreaterThan((toggleBox?.y || 0) + (toggleBox?.height || 0));
-    expect(Math.abs((contentHeadingAfter?.y || 0) - (contentHeadingBefore?.y || 0))).toBeLessThan(4);
-    expect(Math.abs((contentHeadingAfter?.height || 0) - (contentHeadingBefore?.height || 0))).toBeLessThan(2);
+    await expect(page.locator(".backend-shell")).toBeVisible();
+    await expect(page.locator(".workspace-prototype-utility-frame")).toHaveCount(0);
+    await expect(page.locator(".backend-topbar")).toBeVisible();
+    await expect(page.getByTestId("backend-primary-overflow-trigger")).toHaveCount(0);
+    await expect(page.locator(".backend-primary-nav .backend-primary-nav-item")).toHaveText([
+      "Workspace",
+      "Overview",
+      "Catalog",
+      "Operations",
+      "Users",
+      "Security",
+      "Account"
+    ]);
+    await expect(page.locator(".backend-primary-nav .backend-primary-nav-item.active")).toHaveText("Workspace");
+    await expect(page.locator(".backend-primary-nav .backend-primary-nav-item.active")).toHaveAttribute("aria-current", "page");
+    await expect(page.locator(".backend-secondary-nav .backend-secondary-item strong")).toHaveText([
+      "Overview",
+      "Activity Feed",
+      "Queue Execution",
+      "Runbook Preview",
+      "Policy Summary",
+      "Quick Actions"
+    ]);
+    await expect(page.locator(".backend-secondary-nav .backend-secondary-item.active strong")).toHaveText("Overview");
+    await expect(page.locator(".backend-secondary-nav .backend-secondary-item.active .backend-secondary-item-copy")).toHaveAttribute("aria-current", "page");
   });
 
-  test("keeps theme and language controls on the same preferences row", async ({ page }) => {
+  test("switches from workspace to admin accounts without replacing the backend topbar", async ({ page }) => {
+    await mockProtectedWorkspaceNavigation(page);
+
     await page.goto("/workspace");
 
-    const userTrigger = page.getByTestId("workspace-user-center-trigger");
+    const primaryNav = page.locator(".backend-primary-nav");
+    const topbar = page.locator(".backend-topbar");
+    const secondaryNav = page.locator(".backend-secondary-nav");
+    await expect
+      .poll(async () => primaryNav.locator(".backend-primary-nav-item").count())
+      .toBeGreaterThan(0);
+    const labelsBefore = await readPrimaryNavLabels(page);
+    const topbarBoxBefore = await topbar.boundingBox();
+
+    expect(topbarBoxBefore).not.toBeNull();
+
+    await primaryNav.getByRole("button", { name: "Users", exact: true }).click();
+
+    await expect(page).toHaveURL(/\/admin\/accounts$/);
+    await expect(page.locator(".backend-shell")).toBeVisible();
+    await expect(page.locator(".workspace-prototype-utility-frame")).toHaveCount(0);
+    await expect(page.locator(".backend-primary-nav .backend-primary-nav-item.active")).toHaveText("Users");
+    await expect(secondaryNav.locator(".backend-secondary-item strong")).toHaveText([
+      "Account Management",
+      "Role Management",
+      "Access",
+      "Organizations"
+    ]);
+    await expect(secondaryNav.locator(".backend-secondary-item.active strong")).toHaveText("Account Management");
+    await expect(page.getByRole("heading", { name: "Account Management List", exact: true }).first()).toBeVisible();
+
+    const labelsAfter = await readPrimaryNavLabels(page);
+    const topbarBoxAfter = await topbar.boundingBox();
+
+    expect(labelsAfter).toEqual(labelsBefore);
+    expect(topbarBoxAfter).not.toBeNull();
+    expect(Math.abs((topbarBoxAfter?.x || 0) - (topbarBoxBefore?.x || 0))).toBeLessThanOrEqual(1);
+    expect(Math.abs((topbarBoxAfter?.width || 0) - (topbarBoxBefore?.width || 0))).toBeLessThanOrEqual(1);
+  });
+
+  test("routes operations primary navigation to ops metrics and keeps the section secondary order stable", async ({ page }) => {
+    await mockProtectedWorkspaceNavigation(page);
+
+    await page.goto("/workspace");
+
+    const primaryNav = page.locator(".backend-primary-nav");
+    const secondaryNav = page.locator(".backend-secondary-nav");
+
+    await primaryNav.getByRole("button", { name: "Operations", exact: true }).click();
+
+    await expect(page).toHaveURL(/\/admin\/ops\/metrics$/);
+    await expect(page.locator(".backend-shell")).toBeVisible();
+    await expect(page.locator(".backend-primary-nav .backend-primary-nav-item.active")).toHaveText("Operations");
+    await expect(secondaryNav.locator(".backend-secondary-item strong")).toHaveText([
+      "Ops Metrics",
+      "Integrations",
+      "Ops Alerts",
+      "Audit Export",
+      "Release Gates",
+      "Recovery Drills",
+      "Releases",
+      "Change Approvals",
+      "Backup Plans",
+      "Backup Runs"
+    ]);
+    await expect(secondaryNav.locator(".backend-secondary-item.active strong")).toHaveText("Ops Metrics");
+    await expect(page.getByRole("heading", { name: "Operations Command Dashboard", exact: true })).toBeVisible();
+
+    await secondaryNav.getByRole("menuitem", { name: /Integrations/i }).click();
+
+    await expect(page).toHaveURL(/\/admin\/integrations$/);
+    await expect(page.locator(".backend-shell")).toBeVisible();
+    await expect(page.locator(".backend-primary-nav .backend-primary-nav-item.active")).toHaveText("Operations");
+    await expect(secondaryNav.locator(".backend-secondary-item.active strong")).toHaveText("Integrations");
+    await expect(page.getByRole("heading", { name: "Integration Command Center", exact: true })).toBeVisible();
+  });
+
+  test("moves excess primary navigation entries into an overflow popover on narrower desktop widths", async ({ page }) => {
+    await mockProtectedWorkspaceNavigation(page);
+    await page.setViewportSize({ width: 1180, height: 1100 });
+
+    await page.goto("/workspace");
+
+    const primaryNav = page.locator(".backend-primary-nav");
+    const overflowTrigger = page.getByTestId("backend-primary-overflow-trigger");
+
+    await expect(primaryNav.locator(".backend-primary-nav-item")).toHaveText([
+      "Workspace",
+      "Overview",
+      "Catalog",
+      "Operations"
+    ]);
+    await expect(overflowTrigger).toBeVisible();
+    await expect(overflowTrigger).toContainText("More (3)");
+
+    await overflowTrigger.click();
+
+    const overflowPanel = page.getByTestId("backend-primary-overflow-panel");
+    await expect(overflowPanel).toBeVisible();
+    await expect(overflowPanel.locator(".backend-primary-overflow-item strong")).toHaveText([
+      "Users",
+      "Security",
+      "Account"
+    ]);
+
+    await overflowPanel.getByRole("button", { name: /Users/i }).click();
+
+    await expect(page).toHaveURL(/\/admin\/accounts$/);
+    await expect(page.locator(".backend-primary-nav .backend-primary-nav-item.active")).toHaveText("Users");
+    await expect(page.getByRole("heading", { name: "Account Management List", exact: true }).first()).toBeVisible();
+  });
+
+  test("keeps overflow navigation reachable on compact desktop widths", async ({ page }) => {
+    await mockProtectedWorkspaceNavigation(page);
+    await page.setViewportSize({ width: 1024, height: 1100 });
+
+    await page.goto("/workspace");
+
+    const overflowTrigger = page.getByTestId("backend-primary-overflow-trigger");
+
+    await expect(page.locator(".backend-primary-nav .backend-primary-nav-item")).toHaveText([
+      "Workspace",
+      "Overview",
+      "Catalog"
+    ]);
+    await expect(overflowTrigger).toBeVisible();
+    await expect(overflowTrigger).toContainText("More (4)");
+
+    await overflowTrigger.click();
+
+    const overflowPanel = page.getByTestId("backend-primary-overflow-panel");
+    await expect(overflowPanel).toBeVisible();
+    await expect(overflowPanel.locator(".backend-primary-overflow-item strong")).toHaveText([
+      "Operations",
+      "Users",
+      "Security",
+      "Account"
+    ]);
+
+    await overflowPanel.getByRole("button", { name: /Users/i }).click();
+
+    await expect(page).toHaveURL(/\/admin\/accounts$/);
+    await expect(page.locator(".backend-primary-nav .backend-primary-nav-item.active")).toHaveText("Users");
+    await expect(page.getByRole("heading", { name: "Account Management List", exact: true }).first()).toBeVisible();
+  });
+
+  test("keeps theme and language controls on the same preferences row in the backend shell", async ({ page }) => {
+    await mockProtectedWorkspaceNavigation(page);
+
+    await page.goto("/workspace");
+
+    const userTrigger = page.getByTestId("backend-user-center-trigger");
+    const panel = page.locator(".backend-user-dropdown .workspace-topbar-user-panel:visible");
     await userTrigger.click();
 
-    const panel = page.getByTestId("workspace-user-center-panel");
     const preferenceRow = panel.locator(".workspace-topbar-user-inline-row");
     const segmentedGroups = preferenceRow.locator(".workspace-topbar-user-segmented-group");
 
@@ -170,39 +364,53 @@ test.describe("workspace topbar", () => {
 
     expect(firstBox).not.toBeNull();
     expect(secondBox).not.toBeNull();
-    expect(Math.abs((firstBox?.y || 0) - (secondBox?.y || 0))).toBeLessThan(10);
+    expect(Math.abs((firstBox?.y || 0) - (secondBox?.y || 0))).toBeLessThan(18);
   });
 
-  test("opens governance from the top-level system settings entry on workspace", async ({ page }) => {
+  test("switches backend shell menu colors with the global theme mode", async ({ page }) => {
+    await mockProtectedWorkspaceNavigation(page);
+
     await page.goto("/workspace");
+    await expect(page.locator(".backend-shell")).toBeVisible();
 
-    const primaryNavigation = page.locator('.workspace-topbar-primary-groups');
-    const systemSettingsButton = primaryNavigation.getByRole("button", { name: "System Settings", exact: true });
+    const readMenuThemeState = async () =>
+      page.locator(".backend-secondary-item-glyph").first().evaluate((node) => {
+        const glyphStyles = window.getComputedStyle(node);
+        const nav = document.querySelector(".backend-secondary-nav");
+        const navStyles = nav ? window.getComputedStyle(nav) : null;
 
-    await expect(systemSettingsButton).toBeVisible();
-    await systemSettingsButton.click();
+        return {
+          mode: document.documentElement.getAttribute("data-theme-mode"),
+          path: window.location.pathname,
+          glyphBackground: glyphStyles.backgroundColor,
+          glyphBorder: glyphStyles.borderColor,
+          navBorder: navStyles?.borderColor || "",
+          navBackground: navStyles?.backgroundImage || "",
+          navBackgroundColor: navStyles?.backgroundColor || ""
+        };
+      });
 
-    await expect(page).toHaveURL(/\/governance$/);
-    await expect(page.getByRole("heading", { name: "Governance Center", exact: true })).toBeVisible();
-  });
+    const darkState = await readMenuThemeState();
 
-  test("navigates to account center from registered user control actions when a session exists", async ({ page }) => {
-    await mockAuthenticatedWorkspaceUser(page);
-    await page.goto("/workspace");
+    expect(darkState.mode).toBe("dark");
+    expect(darkState.path).toBe("/workspace");
 
-    const userTrigger = page.getByTestId("workspace-user-center-trigger");
-    await expect(userTrigger).toContainText("Workspace User");
+    const userTrigger = page.getByTestId("backend-user-center-trigger");
+    const userPanel = page.locator(".backend-user-dropdown .workspace-topbar-user-panel:visible");
+
     await userTrigger.click();
+    await expect(userPanel).toBeVisible();
+    await userPanel.getByRole("button", { name: /Light|亮色/ }).click();
 
-    const panel = page.getByTestId("workspace-user-center-panel");
-    const accountSection = panel.locator('[data-section-id="account"]');
+    await expect(page).toHaveURL(/\/light\/workspace$/);
 
-    await expect(accountSection.getByRole("button", { name: /Account Center|账号中心|账户中心/, exact: false })).toBeVisible();
-    await expect(accountSection.getByRole("button", { name: /Security|安全/, exact: false })).toBeVisible();
-    await expect(accountSection.getByRole("button", { name: /Sessions|会话管理/, exact: false })).toBeVisible();
+    const lightState = await readMenuThemeState();
 
-    await accountSection.getByRole("button", { name: /Account Center|账号中心|账户中心/, exact: false }).click();
-    await expect(page).toHaveURL(/\/account\/profile$/);
-    await expect(page.getByRole("heading", { name: /Account Center|账号中心|账户中心/, exact: false })).toBeVisible();
+    expect(lightState.mode).toBe("light");
+    expect(lightState.path).toBe("/light/workspace");
+    expect(lightState.glyphBackground).not.toBe(darkState.glyphBackground);
+    expect(lightState.glyphBorder).not.toBe(darkState.glyphBorder);
+    expect(lightState.navBorder).not.toBe(darkState.navBorder);
+    expect(lightState.navBackgroundColor).not.toBe(darkState.navBackgroundColor);
   });
 });

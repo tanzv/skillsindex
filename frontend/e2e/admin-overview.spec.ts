@@ -405,24 +405,29 @@ test.describe("Admin overview interactions", () => {
     await expect(userIDInput).toHaveValue("");
   });
 
-  test("organization accounts shell uses full-width utility frame on wide viewports", async ({ page }) => {
+  test("organization accounts route stays inside the backend shell on wide viewports", async ({ page }) => {
     await mockAuthAndOverview(page);
     await mockAccountManagementData(page);
     await page.setViewportSize({ width: 1800, height: 920 });
 
     await page.goto("/admin/accounts");
-    await expect(page.locator(".workspace-prototype-utility-frame")).toBeVisible();
+    await expect(page.locator(".backend-shell")).toBeVisible();
+    await expect(page.locator(".workspace-prototype-utility-frame")).toHaveCount(0);
 
     const layoutMetrics = await page.evaluate(() => {
-      const utilityFrame = document.querySelector(".workspace-prototype-utility-frame");
-      if (!utilityFrame) {
+      const shellBody = document.querySelector(".backend-shell-body");
+      const secondaryNav = document.querySelector(".backend-secondary-nav");
+      const mainPanel = document.querySelector(".backend-main-panel");
+      if (!shellBody || !secondaryNav || !mainPanel) {
         return null;
       }
-      const utilityRect = utilityFrame.getBoundingClientRect();
-      const viewportWidth = document.documentElement.clientWidth;
+      const shellRect = shellBody.getBoundingClientRect();
+      const sidebarRect = secondaryNav.getBoundingClientRect();
+      const mainRect = mainPanel.getBoundingClientRect();
       return {
-        utilityWidth: utilityRect.width,
-        viewportWidth
+        shellWidth: shellRect.width,
+        sidebarWidth: sidebarRect.width,
+        mainWidth: mainRect.width
       };
     });
 
@@ -430,6 +435,8 @@ test.describe("Admin overview interactions", () => {
     if (!layoutMetrics) {
       return;
     }
-    expect(layoutMetrics.utilityWidth).toBeGreaterThan(layoutMetrics.viewportWidth - 60);
+    expect(layoutMetrics.shellWidth).toBeGreaterThan(1500);
+    expect(layoutMetrics.sidebarWidth).toBeGreaterThan(240);
+    expect(layoutMetrics.mainWidth).toBeGreaterThan(1100);
   });
 });

@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { createPublicPageNavigator } from "../publicShared/publicPageNavigation";
 import {
   buildWorkspaceSidebarNavigation,
-  collapseWorkspaceSidebarGroupsForTopbar,
   flattenWorkspaceSidebarPrimaryMenu,
   getWorkspaceSectionRouteDefinitions,
   resolveOrganizationManagementMenuItemID,
@@ -264,14 +263,13 @@ describe("WorkspaceCenterPage.navigation", () => {
       sectionMode: "workspace-route"
     });
 
-    const topbarGroups = collapseWorkspaceSidebarGroupsForTopbar(groups, textFixture.sidebarSectionsTitle);
-    expect(topbarGroups.map((group) => group.id)).toEqual([
+    expect(groups.map((group) => group.id)).toEqual([
       "skill-management",
       "user-management",
       "system-settings",
       "workspace-panel"
     ]);
-    expect(topbarGroups[3]?.items.map((item) => item.id)).toEqual([
+    expect(groups[3]?.items.map((item) => item.id)).toEqual([
       "section-overview",
       "section-activity",
       "section-queue",

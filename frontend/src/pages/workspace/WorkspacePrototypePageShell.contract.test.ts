@@ -2,10 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import marketplaceHomeResponsiveSource from "../marketplaceHome/MarketplaceHomePage.styles.responsive.ts?raw";
 import marketplaceHomeThemeSource from "../marketplaceHome/MarketplaceHomePage.styles.theme.ts?raw";
-import organizationManagementSubpageShellSource from "../organizationCenter/OrganizationManagementSubpageShell.tsx?raw";
 import pageShellLayoutContractSource from "../prototype/pageShellLayoutContract.ts?raw";
 import prototypeCssInJsSource from "../prototype/prototypeCssInJs.tsx?raw";
-import publicSkillDetailTopbarSource from "../publicSkillDetail/PublicSkillDetailPage.styles.topbar.ts?raw";
+import publicSkillDetailThemeSource from "../publicSkillDetail/PublicSkillDetailPage.styles.theme.ts?raw";
 import workspacePrototypePageShellSource from "./WorkspacePrototypePageShell.tsx?raw";
 import workspacePrototypePageShellStylesSource from "./WorkspacePrototypePageShell.styles.ts?raw";
 import marketplacePublicPageShellSource from "../marketplacePublic/MarketplacePublicPageShell.tsx?raw";
@@ -43,18 +42,13 @@ describe("workspace shell layout contract", () => {
     expect(marketplaceHomeThemeSource).not.toContain("--prototype-shell-max-width");
   });
 
-  it("allows public skill detail pages to override the shared contract with system tokens", () => {
-    expect(publicSkillDetailTopbarSource).toContain("buildShellLayoutContract");
-    expect(publicSkillDetailTopbarSource).toContain("--si-layout-shell-inline-gap: 0.75rem");
-    expect(publicSkillDetailTopbarSource).not.toContain("--prototype-shell-horizontal-gap");
+  it("keeps public skill detail pages on the shared marketplace shell contract", () => {
+    expect(publicSkillDetailThemeSource).not.toContain("PublicSkillDetailPage.styles.topbar");
+    expect(publicSkillDetailThemeSource).not.toContain("buildShellLayoutContract");
   });
 
   it("applies resolved layout variants from the shared shell root", () => {
     expect(workspacePrototypePageShellSource).toContain("resolveWorkspacePrototypeLayoutVariant");
     expect(workspacePrototypePageShellSource).toContain("$layoutVariant={resolvedLayoutVariant}");
-  });
-
-  it("keeps organization management pages free of page-level layout overrides", () => {
-    expect(organizationManagementSubpageShellSource).not.toContain("layoutVariant=");
   });
 });

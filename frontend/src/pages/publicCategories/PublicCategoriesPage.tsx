@@ -25,7 +25,7 @@ import {
   PrototypeUtilityShell,
   PrototypeTwoColumnGrid
 } from "../prototype/prototypeCssInJs";
-import { loadMarketplaceWithFallback, resolvePrototypeDataMode } from "../prototype/prototypeDataFallback";
+import { buildEmptyMarketplacePayload, loadMarketplaceWithFallback, resolvePrototypeDataMode } from "../prototype/prototypeDataFallback";
 import { isLightPrototypePath } from "../prototype/prototypePageTheme";
 import { buildShellStageClassName } from "../prototype/pageShellLayoutContract";
 import { createPublicPageNavigator } from "../publicShared/publicPageNavigation";
@@ -67,6 +67,10 @@ export default function PublicCategoriesPage({
   const fallbackPayload = useMemo(
     () => buildMarketplaceFallback({ page: 1, sort: "recent" }, locale, sessionUser),
     [locale, sessionUser]
+  );
+  const emptyLivePayload = useMemo(
+    () => buildEmptyMarketplacePayload({ page: 1, sort: "recent" }, sessionUser),
+    [sessionUser]
   );
 
   const [loading, setLoading] = useState(!payloadOverride);
@@ -117,7 +121,7 @@ export default function PublicCategoriesPage({
         if (!active) {
           return;
         }
-        setPayload(fallbackPayload);
+        setPayload(dataMode === "live" ? emptyLivePayload : fallbackPayload);
         setErrorMessage(error instanceof Error ? error.message : text.loadError);
       })
       .finally(() => {
@@ -129,7 +133,7 @@ export default function PublicCategoriesPage({
     return () => {
       active = false;
     };
-  }, [dataMode, fallbackPayload, locale, payloadOverride, sessionUser, text.loadError]);
+  }, [dataMode, emptyLivePayload, fallbackPayload, locale, payloadOverride, sessionUser, text.loadError]);
 
   const categoryCards = useMemo(
     () =>

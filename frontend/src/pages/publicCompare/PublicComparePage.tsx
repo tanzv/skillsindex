@@ -1,6 +1,6 @@
 import { Alert, Button, Card, Empty, Select, Space, Spin, Tag, Typography } from "antd";
 import { useEffect, useMemo, useState } from "react";
-import { PublicMarketplaceResponse, SessionUser, fetchPublicMarketplace } from "../../lib/api";
+import { PublicMarketplaceResponse, PublicSkillCompareResponse, SessionUser, fetchPublicMarketplace, fetchPublicSkillCompare } from "../../lib/api";
 import { AppLocale } from "../../lib/i18n";
 import {
   PrototypeMetricTable,
@@ -18,6 +18,8 @@ import {
 import { createPrototypePalette, isLightPrototypePath } from "../prototype/prototypePageTheme";
 import { createPublicPageNavigator } from "../publicShared/publicPageNavigation";
 import { buildMarketplaceFallback } from "../marketplaceHome/MarketplaceHomePage.fallback";
+import { buildEmptyMarketplacePayload } from "../prototype/prototypeDataFallback";
+import { resolveComparedSkills } from "./PublicComparePage.data";
 
 interface PublicComparePageProps {
   locale: AppLocale;
@@ -111,13 +113,6 @@ function resolveCompareDataMode(rawMode: string | undefined): CompareDataMode {
   return normalized === "live" ? "live" : "prototype";
 }
 
-function findSkillByID(payload: PublicMarketplaceResponse | null, skillID: number) {
-  if (!payload || skillID <= 0) {
-    return null;
-  }
-  return payload.items.find((item) => item.id === skillID) || null;
-}
-
 type CompareSkill = PublicMarketplaceResponse["items"][number];
 
 export default function PublicComparePage({ locale, locationKey, onNavigate, sessionUser }: PublicComparePageProps) {
@@ -129,6 +124,7 @@ export default function PublicComparePage({ locale, locationKey, onNavigate, ses
   const dataMode = useMemo<CompareDataMode>(() => resolveCompareDataMode(import.meta.env.VITE_MARKETPLACE_HOME_MODE), []);
   const compareBasePath = navigator.toPublic("/compare");
   const [payload, setPayload] = useState<PublicMarketplaceResponse | null>(null);
+  const [comparePayload, setComparePayload] = useState<PublicSkillCompareResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -139,9 +135,11 @@ export default function PublicComparePage({ locale, locationKey, onNavigate, ses
     setLoading(true);
     setError("");
 
-    const fallbackPayload = buildMarketplaceFallback({ sort: "stars", page: 1 }, locale, sessionUser);
+    const prototypePayload = buildMarketplaceFallback({ sort: "stars", page: 1 }, locale, sessionUser);
+    const emptyLivePayload = buildEmptyMarketplacePayload({ sort: "stars", page: 1 }, sessionUser);
     if (dataMode === "prototype") {
-      setPayload(fallbackPayload);
+      setPayload(prototypePayload);
+      setComparePayload(null);
       setLoading(false);
       return () => {
         active = false;
@@ -154,13 +152,31 @@ export default function PublicComparePage({ locale, locationKey, onNavigate, ses
           return;
         }
         setPayload(data);
+        if (queryState.left > 0 && queryState.right > 0) {
+          return fetchPublicSkillCompare(queryState.left, queryState.right)
+            .then((compareData) => {
+              if (!active) {
+                return;
+              }
+              setComparePayload(compareData);
+            })
+            .catch((compareError) => {
+              if (!active) {
+                return;
+              }
+              setComparePayload(null);
+              setError(compareError instanceof Error ? compareError.message : text.loadError);
+            });
+        }
+        setComparePayload(null);
       })
-      .catch(() => {
+      .catch((loadError) => {
         if (!active) {
           return;
         }
-        setPayload(fallbackPayload);
-        setError("");
+        setPayload(emptyLivePayload);
+        setComparePayload(null);
+        setError(loadError instanceof Error ? loadError.message : text.loadError);
       })
       .finally(() => {
         if (active) {
@@ -171,22 +187,14 @@ export default function PublicComparePage({ locale, locationKey, onNavigate, ses
     return () => {
       active = false;
     };
-  }, [dataMode, locale, sessionUser]);
+  }, [dataMode, locale, queryState.left, queryState.right, sessionUser, text.loadError]);
 
   const items = payload?.items || [];
-  const fallbackLeftID = items[0]?.id || 0;
-  const fallbackRightID = items[1]?.id || items[0]?.id || 0;
   const localeTag = locale === "zh" ? "zh-CN" : "en-US";
-
-  const leftID = queryState.left || fallbackLeftID;
-  const rightID = queryState.right || (leftID === fallbackRightID ? items[2]?.id || fallbackRightID : fallbackRightID);
-
-  const leftSkill = findSkillByID(payload, leftID) || items[0] || null;
-  const rightSkill =
-    findSkillByID(payload, rightID) ||
-    items.find((item) => item.id !== leftSkill?.id) ||
-    leftSkill ||
-    null;
+  const { leftSkill, rightSkill } = useMemo(
+    () => resolveComparedSkills(payload, comparePayload, queryState),
+    [comparePayload, payload, queryState]
+  );
 
   const selectOptions = items.map((item) => ({
     label: `${item.name} (#${item.id})`,

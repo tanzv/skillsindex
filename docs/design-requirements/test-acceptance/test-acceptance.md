@@ -23,13 +23,13 @@
 | 同步 | repository/skillmp 重同步成功与异常 |
 | 定时同步与版本历史（部分覆盖） | 策略触发、运行记录、版本快照、差异对比、回滚链路 |
 | 互动 | 收藏切换、评分边界、评论删改权限 |
-| 账号管理（部分覆盖） | 资料更新、密码修改/重置、会话管理、后台账号禁用与重置 |
+| 账号管理（部分覆盖） | 资料更新、密码修改/重置、会话管理、后台账号禁用与重置、登录限流、reset 审计 |
 | 异步任务（部分覆盖） | 导入任务排队、重试、取消、幂等去重 |
 | 组织协作（部分覆盖） | 组织创建、成员角色变更、最后 owner 保护 |
 | 内容审核（部分覆盖） | 举报进入队列、审核处理、审计可追溯 |
 | API Key | 创建、撤销、过期、鉴权失败、仅创建时展示明文 |
-| API Key Scope（部分覆盖） | scope 鉴权、403 拒绝、轮换流程 |
-| 公开 API | 搜索参数组合、401、分页正确性、兼容 OpenAPI 路径可访问 |
+| API Key Scope（部分覆盖） | scope 鉴权、空 scope/非法 scope/静态 key 的 403 拒绝、轮换流程 |
+| 公开 API | 搜索参数组合、401、分页正确性、兼容 OpenAPI 路径可访问、私有 marketplace 匿名受限 |
 | 钉钉 | 未配置、授权成功、grant 过期、撤销 |
 | 企业 SSO（部分覆盖） | IdP 登录、账号映射、离职回收 |
 | 审计 | 关键操作可查且字段完整 |
@@ -110,6 +110,7 @@
    - `used_reset_token`
 4. 重置成功后必须自动启动新会话
 5. token 必须满足“哈希存储 + 30 分钟有效期 + 一次性使用”
+6. request / confirm / rate-limited 场景必须可在审计中追溯 `request_id`、`result`、`reason`、`source_ip`
 
 ### 7.4 管理端账号治理
 
@@ -119,13 +120,13 @@
 4. 禁用最后一个活跃 `super_admin` 必须返回 `last_super_admin_guard`
 5. 管理员重置密码必须校验最小长度，并在成功后使旧会话失效
 
-### 7.5 审计与安全差距
+### 7.5 审计与安全基线
 
-在最终发布闭环前，还需补齐以下验收：
+在最终发布闭环前，至少需要验证以下基线：
 
-1. 忘记密码 request / confirm 的审计策略
-2. 失败登录限流或锁定策略
-3. 审计字段扩展（至少补 `request_id`、`result`、`reason`）
+1. 忘记密码 request / confirm 的审计策略已经生效且可回查
+2. 失败登录限流在 API 与页面流均返回稳定 throttling 响应
+3. 审计字段扩展至少覆盖 `request_id`、`result`、`reason`、`source_ip`
 
 ## 8. 扩展能力专项验收（当前部分覆盖）
 
@@ -150,8 +151,10 @@
 ### 8.4 API Key Scope（FR-KEY）
 
 1. 缺少 scope 的 key 调用高权限接口返回 403
-2. key 轮换期间新旧 key 切换可控
-3. scope 变更后鉴权即时生效
+2. 空 scope、非法 scope、静态兼容 key 调用受保护公开检索接口返回 `403 api_key_scope_denied`
+3. 无效、撤销或过期 key 返回 `401 api_key_invalid`
+4. key 轮换期间新旧 key 切换可控
+5. scope 变更后鉴权即时生效
 
 ### 8.5 企业 SSO（FR-SSO）
 
@@ -172,3 +175,12 @@
 3. 版本生成：成功同步后生成 skill version 快照
 4. 差异对比：可查看版本间 content/tags/metadata 差异
 5. 回滚审计：回滚生成新版本且审计链路完整
+
+### 8.8 Marketplace Access Baseline（Window A 决策）
+
+当前分支决策：`retain marketplace_public_access`
+
+1. 当 `marketplace_public_access=false` 时，匿名访问公开前端路由应跳转到登录页
+2. 登录页跳转必须保留原始 `redirect` 目标
+3. 当 `marketplace_public_access=false` 时，`/api/v1/public/marketplace` 与 `/api/v1/public/skills/{skillID}` 的匿名请求返回 `401`
+4. 已登录用户在 marketplace private 模式下仍可访问公开市场页面与详情

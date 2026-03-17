@@ -27,6 +27,25 @@ describe("AppShellTopbar", () => {
     expect(html).toContain("marketplace-topbar-light-utility");
   });
 
+  it("supports a workspace shell class contract without rendering marketplace namespace classes", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(AppShellTopbar, {
+        brandTitle: "SkillsIndex",
+        brandSubtitle: "Workspace",
+        onBrandClick: () => undefined,
+        isLightTheme: true,
+        variant: "workspace-shell",
+        primaryActions: [{ id: "overview", label: "Overview", active: true, onClick: () => undefined }],
+        utilityActions: [{ id: "search", label: "Search", onClick: () => undefined }]
+      })
+    );
+
+    expect(html).toContain("workspace-shell-topbar-light-utility");
+    expect(html).toContain("workspace-shell-topbar-nav-button is-active");
+    expect(html).not.toContain("marketplace-topbar-light-utility");
+    expect(html).not.toContain("marketplace-topbar-nav-button");
+  });
+
   it("prefers custom primary navigation content when provided", () => {
     const html = renderToStaticMarkup(
       React.createElement(AppShellTopbar, {

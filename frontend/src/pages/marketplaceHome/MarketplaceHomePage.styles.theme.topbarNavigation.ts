@@ -1,7 +1,12 @@
 import { css } from "@emotion/react";
 
+import {
+  buildMarketplaceHomeTopbarDescendantSelector,
+  buildMarketplaceHomeTopbarSelector
+} from "./marketplaceHomeTopbarSelectors";
+
 export const marketplaceHomeTopbarNavigationStyles = css`
-  .marketplace-home .marketplace-topbar-light-nav {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home", "lightNav")} {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -22,11 +27,11 @@ export const marketplaceHomeTopbarNavigationStyles = css`
       inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
   }
 
-  .marketplace-home .marketplace-topbar-light-nav::-webkit-scrollbar {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home", "lightNav", "::-webkit-scrollbar")} {
     display: none;
   }
 
-  .marketplace-home .marketplace-topbar-nav-button {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home", "navButton")} {
     border: 1px solid color-mix(in srgb, var(--marketplace-nav-button-border) 90%, #ffffff 10%);
     height: 32px;
     border-radius: 9px;
@@ -44,11 +49,11 @@ export const marketplaceHomeTopbarNavigationStyles = css`
     transition: background-color 180ms ease, border-color 180ms ease, box-shadow 220ms ease, color 180ms ease, transform 180ms ease;
   }
 
-  .marketplace-home .marketplace-topbar-nav-button .marketplace-topbar-action-label {
+  ${buildMarketplaceHomeTopbarDescendantSelector(".marketplace-home", "navButton", "actionLabel")} {
     white-space: nowrap;
   }
 
-  .marketplace-home .marketplace-topbar-nav-button .marketplace-topbar-action-badge {
+  ${buildMarketplaceHomeTopbarDescendantSelector(".marketplace-home", "navButton", "actionBadge")} {
     min-width: 22px;
     height: 16px;
     border-radius: 999px;
@@ -64,32 +69,40 @@ export const marketplaceHomeTopbarNavigationStyles = css`
     justify-content: center;
   }
 
-  .marketplace-home .marketplace-topbar-nav-button.is-subtle {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home", "navButton", ".is-subtle")} {
     color: var(--marketplace-nav-button-subtle-text);
   }
 
-  .marketplace-home .marketplace-topbar-nav-button.is-highlight {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home", "navButton", ".is-highlight")} {
     background: color-mix(in srgb, var(--marketplace-nav-button-highlight-background) 86%, #0ea5e9 14%);
     border-color: color-mix(in srgb, var(--marketplace-nav-category-hover-border) 84%, #ffffff 16%);
   }
 
-  .marketplace-home .marketplace-topbar-nav-button.is-category-action {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home", "navButton", ".is-category-action")} {
     border-color: color-mix(in srgb, var(--si-color-accent, #7dd3fc) 28%, var(--marketplace-nav-shell-border));
     background: color-mix(in srgb, var(--si-color-accent, #7dd3fc) 12%, var(--marketplace-topbar-background-alt));
   }
 
-  .marketplace-home .marketplace-topbar-nav-button.is-category-action:not(.is-active):not(:disabled):hover {
+  ${buildMarketplaceHomeTopbarSelector(
+    ".marketplace-home",
+    "navButton",
+    ".is-category-action:not(.is-active):not(:disabled):hover"
+  )} {
     border-color: color-mix(in srgb, var(--si-color-accent, #7dd3fc) 48%, var(--marketplace-nav-category-hover-border));
     background: color-mix(in srgb, var(--si-color-accent, #7dd3fc) 20%, var(--marketplace-nav-button-hover-background));
   }
 
-  .marketplace-home .marketplace-topbar-nav-button.is-download-ranking-action {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home", "navButton", ".is-download-ranking-action")} {
     background: color-mix(in srgb, var(--marketplace-nav-ranking-background) 84%, #0f172a 16%);
     border: 1px solid color-mix(in srgb, var(--marketplace-nav-ranking-border) 88%, #ffffff 12%);
     color: var(--marketplace-nav-ranking-text);
   }
 
-  .marketplace-home .marketplace-topbar-nav-button.is-download-ranking-action:not(.is-active):not(:disabled):hover {
+  ${buildMarketplaceHomeTopbarSelector(
+    ".marketplace-home",
+    "navButton",
+    ".is-download-ranking-action:not(.is-active):not(:disabled):hover"
+  )} {
     background: var(--marketplace-nav-button-hover-background);
     border-color: var(--marketplace-nav-category-hover-border);
   }

@@ -42,6 +42,8 @@ export default function PublicSkillDetailPage({
     activePreset,
     activeResourceTab,
     selectedFileIndex,
+    selectedFileContent,
+    selectedFileLanguage,
     selectedFileName,
     selectedFilePath,
     selectedPresetLabel,
@@ -60,6 +62,10 @@ export default function PublicSkillDetailPage({
     topbarBrandSubtitle,
     topbarActionBundle,
     topbarRightRegistrations,
+    skillResources,
+    skillResourcesLoadStatus,
+    versionItems,
+    versionItemsLoadStatus,
     relatedSkills,
     relatedSkillsLoadStatus,
     setActiveResourceTab,
@@ -182,9 +188,15 @@ export default function PublicSkillDetailPage({
             activeResourceTab={activeResourceTab}
             activeSkill={activeSkill}
             detailModel={detailModel}
+            skillResources={skillResources}
+            skillResourcesLoadStatus={skillResourcesLoadStatus}
+            versionItems={versionItems}
+            versionItemsLoadStatus={versionItemsLoadStatus}
             relatedSkills={relatedSkills}
             relatedSkillsLoadStatus={relatedSkillsLoadStatus}
             selectedFileIndex={selectedFileIndex}
+            selectedFileContent={selectedFileContent}
+            selectedFileLanguage={selectedFileLanguage}
             selectedFileName={selectedFileName}
             selectedFilePath={selectedFilePath}
             text={text}

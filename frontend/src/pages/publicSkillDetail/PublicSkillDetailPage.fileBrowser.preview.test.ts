@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   formatSkillDetailDateLabel,
   resolveDocumentBlocks,
-  resolveEnrichedDocumentBlocks
+  resolveEnrichedDocumentBlocks,
+  resolvePreviewPayload
 } from "./PublicSkillDetailPage.fileBrowser.preview";
 
 describe("PublicSkillDetailPage.fileBrowser.preview", () => {
@@ -51,5 +52,24 @@ Runtime: Node.js
     expect(formatSkillDetailDateLabel(undefined)).toBe("N/A");
     expect(formatSkillDetailDateLabel("not-a-date")).toBe("not-a-date");
     expect(formatSkillDetailDateLabel("2026-03-01T08:30:00.000Z")).not.toBe("N/A");
+  });
+
+  it("prefers live file content over preset preview content when a real file is selected", () => {
+    expect(
+      resolvePreviewPayload({
+        activePreset: "readme",
+        previewLanguage: "Markdown",
+        codePanelTone: "default",
+        selectedFileName: "docs/guide.md",
+        fallbackPreviewContent: "# README\n\nFallback preview",
+        liveFileContent: "## Guide\n\nLive repository content",
+        liveFileLanguage: "Markdown"
+      })
+    ).toEqual({
+      previewContent: "## Guide\n\nLive repository content",
+      activeLanguage: "Markdown",
+      isSQLPreview: false,
+      isDocumentPreview: true
+    });
   });
 });

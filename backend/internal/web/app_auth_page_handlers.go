@@ -145,13 +145,30 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 		a.renderWithStatus(w, r, http.StatusBadRequest, ViewData{Page: loginPage, Title: "Sign In", Error: "Invalid form payload"})
 		return
 	}
-	user, err := a.authService.Authenticate(r.Context(), r.FormValue("username"), r.FormValue("password"))
+	username := strings.TrimSpace(r.FormValue("username"))
+	issuedIP := clientIPFromRequest(r)
+	if a.loginThrottleState().limited(username, issuedIP) {
+		a.renderWithStatus(w, r, http.StatusTooManyRequests, ViewData{
+			Page:  loginPage,
+			Title: "Sign In",
+			Error: "Too many failed sign-in attempts. Try again later.",
+		})
+		return
+	}
+
+	user, err := a.authService.Authenticate(r.Context(), username, r.FormValue("password"))
 	if err != nil {
+		a.loginThrottleState().recordFailure(username, issuedIP)
 		a.renderWithStatus(w, r, http.StatusUnauthorized, ViewData{Page: loginPage, Title: "Sign In", Error: "Invalid username or password"})
 		return
 	}
+	a.loginThrottleState().recordSuccess(username, issuedIP)
 	if err := a.startUserSession(w, r, user.ID); err != nil {
 		a.renderWithStatus(w, r, http.StatusInternalServerError, ViewData{Page: loginPage, Title: "Sign In", Error: "Failed to start session"})
+		return
+	}
+	if redirectTarget := normalizeLocalRedirectTarget(r.URL.Query().Get("redirect")); redirectTarget != "" {
+		http.Redirect(w, r, redirectTarget, http.StatusSeeOther)
 		return
 	}
 	http.Redirect(w, r, "/admin?msg="+url.QueryEscape("Signed in"), http.StatusSeeOther)

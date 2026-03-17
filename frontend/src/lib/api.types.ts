@@ -171,6 +171,64 @@ export interface PublicSkillDetailResponse {
   comments_limit: number;
 }
 
+export interface PublicSkillCompareResponse {
+  left_skill: MarketplaceSkill;
+  right_skill: MarketplaceSkill;
+}
+
+export interface PublicSkillResourceFile {
+  name: string;
+  display_name: string;
+  size_bytes: number;
+  size_label: string;
+  language: string;
+}
+
+export interface PublicSkillResourcesResponse {
+  skill_id: number;
+  source_type: string;
+  source_url: string;
+  repo_url: string;
+  source_branch: string;
+  source_path: string;
+  install_command: string;
+  updated_at: string;
+  file_count: number;
+  files: PublicSkillResourceFile[];
+}
+
+export interface PublicSkillResourceContentResponse {
+  skill_id: number;
+  path: string;
+  display_name: string;
+  language: string;
+  size_bytes: number;
+  size_label: string;
+  content: string;
+  updated_at: string;
+}
+
+export interface PublicSkillVersionItem {
+  id: number;
+  skill_id: number;
+  version_number: number;
+  trigger: string;
+  change_summary: string;
+  risk_level: string;
+  captured_at: string;
+  archived_at?: string;
+  archive_reason?: string;
+  actor_username: string;
+  actor_display_name: string;
+  tags: string[];
+  changed_fields: string[];
+}
+
+export interface PublicSkillVersionsResponse {
+  items: PublicSkillVersionItem[];
+  total: number;
+}
+
 export interface SkillFavoriteMutationResponse {
   ok: boolean;
   favorited: boolean;

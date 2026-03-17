@@ -1,0 +1,200 @@
+.marketplace-ranking-stage,
+.marketplace-ranking-panel,
+.marketplace-ranking-head,
+.marketplace-ranking-summary-row,
+.marketplace-ranking-sort-row,
+.marketplace-ranking-sort-tabs,
+.marketplace-ranking-section,
+.marketplace-ranking-highlight-grid,
+.marketplace-ranking-highlight-head,
+.marketplace-ranking-table,
+.marketplace-ranking-table-head,
+.marketplace-ranking-table-row,
+.marketplace-ranking-table-skill {
+  display: grid;
+}
+
+.marketplace-ranking-stage,
+.marketplace-ranking-panel,
+.marketplace-ranking-main-column,
+.marketplace-ranking-section,
+.marketplace-ranking-table,
+.marketplace-ranking-table-body {
+  gap: 16px;
+}
+
+.marketplace-ranking-layout {
+  align-items: start;
+}
+
+.marketplace-ranking-panel {
+  padding: 20px;
+}
+
+.marketplace-ranking-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.marketplace-ranking-summary-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.marketplace-ranking-summary-chip {
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: end;
+  background: var(--marketplace-section-emphasis-background);
+  color: var(--marketplace-home-text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.marketplace-ranking-sort-row {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.marketplace-ranking-sort-tabs {
+  grid-auto-flow: column;
+  justify-content: start;
+  gap: 8px;
+}
+
+.marketplace-ranking-highlight-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.marketplace-ranking-highlight-card {
+  padding: 14px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 16px;
+  display: block;
+  background: var(--marketplace-section-emphasis-background);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.marketplace-ranking-highlight-card:hover,
+.marketplace-ranking-table-row:hover {
+  border-color: var(--marketplace-card-border);
+  transform: translateY(-1px);
+}
+
+.marketplace-ranking-highlight-card article {
+  display: grid;
+  gap: 10px;
+}
+
+.marketplace-ranking-highlight-head {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.marketplace-ranking-rank-chip {
+  min-width: 54px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--marketplace-chip-background);
+  color: var(--marketplace-home-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.marketplace-ranking-rank-chip.is-top {
+  background: var(--marketplace-topbar-button-primary-background);
+  color: var(--marketplace-topbar-button-primary-text);
+}
+
+.marketplace-ranking-table {
+  width: 100%;
+}
+
+.marketplace-ranking-table-head,
+.marketplace-ranking-table-row {
+  grid-template-columns: 72px minmax(0, 1.8fr) minmax(0, 1.15fr) 92px 92px 124px 112px;
+  gap: 10px;
+  align-items: center;
+}
+
+.marketplace-ranking-table-head {
+  padding: 0 10px;
+  color: var(--si-color-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.marketplace-ranking-table-row {
+  padding: 12px 10px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 16px;
+  display: grid;
+  background: var(--marketplace-section-emphasis-background);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.marketplace-ranking-table-row > span {
+  color: var(--marketplace-home-text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.marketplace-ranking-table-skill {
+  gap: 4px;
+}
+
+.marketplace-ranking-table-skill strong,
+.marketplace-ranking-table-skill small {
+  display: block;
+}
+
+.marketplace-ranking-table-skill strong {
+  color: var(--marketplace-home-text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.marketplace-ranking-table-skill small {
+  color: var(--si-color-text-secondary);
+  font-size: 12px;
+}
+
+@media (max-width: 1100px) {
+  .marketplace-ranking-summary-row,
+  .marketplace-ranking-highlight-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .marketplace-ranking-head,
+  .marketplace-ranking-sort-row,
+  .marketplace-ranking-table-row {
+    grid-template-columns: 1fr;
+  }
+
+  .marketplace-ranking-table-head {
+    display: none;
+  }
+}

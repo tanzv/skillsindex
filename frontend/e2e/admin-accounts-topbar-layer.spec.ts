@@ -88,59 +88,56 @@ async function mockAdminAccountsTopbarData(page: Page): Promise<void> {
       ]
     });
   });
+
+  await page.route("**/api/v1/admin/settings/registration", async (route) => {
+    await fulfillJSON(route, 200, {
+      allow_registration: true,
+      marketplace_public_access: true
+    });
+  });
 }
 
-test("admin accounts overflow panel stays above the sidebar overlap zone", async ({ page }) => {
+test("admin accounts route uses backend shell with stable two-level navigation", async ({ page }) => {
   await mockAdminAccountsTopbarData(page);
   await page.setViewportSize({ width: 1440, height: 1100 });
 
   await page.goto("/admin/accounts");
 
-  const overflowToggle = page.locator(".workspace-topbar-toggle-icon-button");
-  const overflowWrapper = page.locator(".workspace-topbar-overflow-wrapper");
-  await expect(overflowToggle).toBeVisible();
+  await expect(page.locator(".backend-shell")).toBeVisible();
+  await expect(page.locator(".workspace-prototype-utility-frame")).toHaveCount(0);
+  await expect(page.locator(".workspace-topbar-toggle-icon-button")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Account Management List", exact: true })).toBeVisible();
+  await expect(page.getByText("Live backend data", { exact: true })).toBeVisible();
+  await expect(page.getByText("Fallback prototype data", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Loading account and role workbench...", { exact: true })).toHaveCount(0);
 
-  await overflowToggle.click();
-  await expect(overflowWrapper).toHaveClass(/is-expanded/);
+  const primaryNav = page.locator(".backend-primary-nav");
+  const usersEntry = primaryNav.getByRole("button", { name: "Users" });
+  await expect(usersEntry).toBeVisible();
+  await expect(usersEntry).toHaveAttribute("aria-pressed", "true");
 
-  const overlapHitTest = await page.evaluate(() => {
-    const panel = document.querySelector(".marketplace-topbar-overflow-panel");
-    const sidebar = document.querySelector("aside");
-    if (!(panel instanceof HTMLElement) || !(sidebar instanceof HTMLElement)) {
-      return null;
-    }
+  const secondaryNav = page.locator(".backend-secondary-nav");
+  await expect(secondaryNav).toContainText("Users");
 
-    const panelRect = panel.getBoundingClientRect();
-    const sidebarRect = sidebar.getBoundingClientRect();
-    const overlapLeft = Math.max(panelRect.left, sidebarRect.left);
-    const overlapRight = Math.min(panelRect.right, sidebarRect.right);
-    const overlapWidth = overlapRight - overlapLeft;
-    if (overlapWidth <= 0) {
-      return null;
-    }
+  const secondaryLabels = secondaryNav.locator(".backend-secondary-item strong");
+  await expect(secondaryLabels).toHaveCount(4);
+  await expect(secondaryLabels).toHaveText([
+    "Account Management",
+    "Role Management",
+    "Access",
+    "Organizations"
+  ]);
 
-    const sampleXs = [0.2, 0.5, 0.8].map((ratio) => Math.round(overlapLeft + overlapWidth * ratio));
-    const sampleYs = [0.25, 0.5, 0.75].map((ratio) => Math.round(panelRect.top + panelRect.height * ratio));
-    const samples = sampleXs.flatMap((sampleX) =>
-      sampleYs.map((sampleY) => {
-        const topElement = document.elementFromPoint(sampleX, sampleY);
-        return {
-          sampleX,
-          sampleY,
-          inOverflowWrapper: Boolean(topElement?.closest(".workspace-topbar-overflow-wrapper"))
-        };
-      })
-    );
+  await expect(secondaryNav.locator(".backend-secondary-item.active strong")).toHaveText("Account Management");
 
-    return {
-      overlapWidth,
-      samples
-    };
-  });
+  await secondaryNav.getByRole("menuitem", { name: /Role Management/i }).click();
 
-  expect(overlapHitTest).not.toBeNull();
-  expect(overlapHitTest?.overlapWidth ?? 0).toBeGreaterThan(0);
-  for (const sample of overlapHitTest?.samples ?? []) {
-    expect(sample.inOverflowWrapper).toBe(true);
-  }
+  await expect(page).toHaveURL(/\/admin\/roles$/);
+  await expect(page.locator(".backend-shell")).toBeVisible();
+  await expect(primaryNav.getByRole("button", { name: "Users" })).toHaveAttribute("aria-pressed", "true");
+  await expect(secondaryNav.locator(".backend-secondary-item.active strong")).toHaveText("Role Management");
+  await expect(page.getByRole("heading", { name: "Role Management List", exact: true })).toBeVisible();
+  await expect(page.getByText("Live backend data", { exact: true })).toBeVisible();
+  await expect(page.getByText("Fallback prototype data", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Loading account and role workbench...", { exact: true })).toHaveCount(0);
 });

@@ -26,10 +26,6 @@ export const publicSkillDetailResponsiveStyles = css`
     .skill-detail-page:not(.is-visual-baseline) {
       width: 100%;
     }
-
-    .skill-detail-page:not(.is-visual-baseline) .skill-detail-main {
-      width: 100%;
-    }
   }
 
   @media (max-width: 1320px) {
@@ -41,7 +37,6 @@ export const publicSkillDetailResponsiveStyles = css`
 
     .skill-detail-page:not(.is-visual-baseline) .skill-detail-top {
       height: auto;
-      width: 100%;
       padding: 16px 0;
     }
 
@@ -156,14 +151,6 @@ export const publicSkillDetailResponsiveStyles = css`
   }
 
   @media (max-width: 760px) {
-    .skill-detail-page:not(.is-visual-baseline) {
-      --skill-detail-content-width: 100%;
-    }
-
-    .skill-detail-page:not(.is-visual-baseline) .skill-detail-main {
-      width: 100%;
-    }
-
     .skill-detail-page:not(.is-visual-baseline) .skill-detail-top {
       padding: 14px 0;
     }

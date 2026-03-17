@@ -6,7 +6,7 @@ func openAPIPathsPublicAuth() map[string]any {
 			"get": map[string]any{
 				"tags":        []string{"skills"},
 				"summary":     "Get public marketplace payload for prototype frontend",
-				"description": "Public endpoint that returns query filters, stats, pagination, categories, top tags, and skill cards. Session user context is included when cookie is present.",
+				"description": "Public endpoint that returns query filters, stats, pagination, categories, top tags, and skill cards. Session user context is included when cookie is present. When marketplace_public_access=false, anonymous callers receive 401 and frontend routes should redirect to login.",
 				"parameters": []map[string]any{
 					queryParam("q", "string", false, "Search keyword"),
 					queryParam("tags", "string", false, "Comma-separated tags"),
@@ -18,6 +18,7 @@ func openAPIPathsPublicAuth() map[string]any {
 				},
 				"responses": map[string]any{
 					"200": jsonResponse("Public marketplace payload", "PublicMarketplaceResponse"),
+					"401": jsonResponse("Authentication required when marketplace is private", "ErrorResponse"),
 					"500": jsonResponse("Server error", "ErrorResponse"),
 					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
@@ -27,12 +28,13 @@ func openAPIPathsPublicAuth() map[string]any {
 			"get": map[string]any{
 				"tags":        []string{"skills"},
 				"summary":     "Get one skill detail with interaction aggregation",
-				"description": "Public endpoint for skill detail page. Returns visible skill, stats, comments (max 80), and current viewer interaction state.",
+				"description": "Public endpoint for skill detail page. Returns visible skill, stats, comments (max 80), and current viewer interaction state. When marketplace_public_access=false, anonymous callers receive 401 before public detail is resolved.",
 				"parameters": []map[string]any{
 					pathParam("skillID", "Skill identifier"),
 				},
 				"responses": map[string]any{
 					"200": jsonResponse("Public skill detail payload", "PublicSkillDetailResponse"),
+					"401": jsonResponse("Authentication required when marketplace is private", "ErrorResponse"),
 					"404": jsonResponse("Skill not found", "ErrorResponse"),
 					"500": jsonResponse("Server error", "ErrorResponse"),
 					"503": jsonResponse("Service unavailable", "ErrorResponse"),
@@ -43,7 +45,7 @@ func openAPIPathsPublicAuth() map[string]any {
 			"get": map[string]any{
 				"tags":        []string{"skills"},
 				"summary":     "Keyword search public skills",
-				"description": "Search public skills with keyword and metadata filters. Required scope: skills.search.read",
+				"description": "Search public skills with keyword and metadata filters. Required scope: skills.search.read. Invalid, expired, or missing keys return 401 api_key_invalid. Keys that authenticate but lack required scope, including static compatibility keys on protected routes and empty or invalid stored scope sets, return 403 api_key_scope_denied.",
 				"security":    apiKeySecurity(),
 				"parameters": []map[string]any{
 					queryParam("q", "string", false, "Search keyword"),
@@ -67,7 +69,7 @@ func openAPIPathsPublicAuth() map[string]any {
 			"get": map[string]any{
 				"tags":        []string{"skills"},
 				"summary":     "AI semantic search public skills",
-				"description": "Semantic search against public skills. Required scope: skills.ai_search.read",
+				"description": "Semantic search against public skills. Required scope: skills.ai_search.read. Invalid, expired, or missing keys return 401 api_key_invalid. Keys that authenticate but lack required scope, including static compatibility keys on protected routes and empty or invalid stored scope sets, return 403 api_key_scope_denied.",
 				"security":    apiKeySecurity(),
 				"parameters": []map[string]any{
 					queryParam("q", "string", true, "Natural language query"),
@@ -86,12 +88,13 @@ func openAPIPathsPublicAuth() map[string]any {
 			"post": map[string]any{
 				"tags":        []string{"oauth"},
 				"summary":     "Create session with username and password",
-				"description": "Authenticate one account and issue session cookie for frontend API usage.",
+				"description": "Authenticate one account and issue session cookie for frontend API usage. Repeated failed attempts are rate limited per username and source IP window.",
 				"requestBody": jsonRequestBody("AuthLoginRequest", true),
 				"responses": map[string]any{
 					"200": jsonResponse("Session established", "AuthSessionResponse"),
 					"400": jsonResponse("Invalid payload", "ErrorResponse"),
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
+					"429": jsonResponse("Too many failed sign-in attempts", "ErrorResponse"),
 					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},

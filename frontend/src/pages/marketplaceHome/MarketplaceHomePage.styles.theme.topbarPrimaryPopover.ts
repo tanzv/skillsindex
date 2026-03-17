@@ -1,5 +1,7 @@
 import { css } from "@emotion/react";
 
+import { buildMarketplaceHomeTopbarSelector } from "./marketplaceHomeTopbarSelectors";
+
 export const marketplaceHomeTopbarPrimaryPopoverStyles = css`
   .marketplace-home .workspace-topbar-interaction-scope {
     --workspace-topbar-overflow-panel-width: min(1120px, calc(100vw - 48px));
@@ -139,7 +141,7 @@ export const marketplaceHomeTopbarPrimaryPopoverStyles = css`
     color: color-mix(in srgb, var(--marketplace-nav-button-text) 96%, #ffffff 4%);
   }
 
-  .marketplace-home .workspace-topbar-interaction-scope .marketplace-topbar-overflow-panel {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home .workspace-topbar-interaction-scope", "overflowPanel")} {
     position: relative;
     width: 100%;
     max-height: min(72vh, 760px);
@@ -162,7 +164,11 @@ export const marketplaceHomeTopbarPrimaryPopoverStyles = css`
     transform: translateZ(0);
   }
 
-  .marketplace-home .workspace-topbar-interaction-scope .marketplace-topbar-overflow-panel::before {
+  ${buildMarketplaceHomeTopbarSelector(
+    ".marketplace-home .workspace-topbar-interaction-scope",
+    "overflowPanel",
+    "::before"
+  )} {
     display: none;
   }
 

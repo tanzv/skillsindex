@@ -122,13 +122,6 @@ export const prototypeCatalog: PrototypeCatalogEntry[] = [
     "previewURL": "/prototypes/previews/login_page_prototype_mobile_light.png"
   },
   {
-    "key": "access_management",
-    "name": "Access and Identity Gateway",
-    "path": "access_management",
-    "primaryRoute": "/admin/access",
-    "previewURL": "/prototypes/previews/access_management.png"
-  },
-  {
     "key": "integration_settings",
     "name": "Integration Gateway",
     "path": "integration_settings",
@@ -141,13 +134,6 @@ export const prototypeCatalog: PrototypeCatalogEntry[] = [
     "path": "incident_recovery",
     "primaryRoute": "/admin/incidents",
     "previewURL": "/prototypes/previews/incident_recovery.png"
-  },
-  {
-    "key": "access_management_light",
-    "name": "Access and Identity Gateway Light",
-    "path": "access_management_light",
-    "primaryRoute": "/light/admin/access",
-    "previewURL": "/prototypes/previews/access_management_light.png"
   },
   {
     "key": "account_management_list",

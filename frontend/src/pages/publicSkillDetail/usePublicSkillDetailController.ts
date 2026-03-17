@@ -1,19 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
-  type MarketplaceQueryParams,
   type MarketplaceSkill,
   type PublicSkillDetailComment,
   type PublicSkillDetailResponse,
   type SessionUser,
-  fetchPublicMarketplace,
   fetchPublicSkillDetail
 } from "../../lib/api";
 import type { AppLocale } from "../../lib/i18n";
-import type { ThemeMode } from "../../lib/themeModePath";
-import { marketplaceHomeCopy } from "../marketplaceHome/MarketplaceHomePage.copy";
-import { buildMarketplaceTopbarActionBundle } from "../marketplaceHome/MarketplaceHomePage.lightTopbar";
-import { buildMarketplaceWorkspaceAccessRightRegistrations } from "../marketplacePublic/MarketplaceTopbarRightRegistrations";
 import { publicSkillDetailCopy } from "./PublicSkillDetailPage.copy";
 import {
   buildInteractionSnapshot,
@@ -21,20 +15,26 @@ import {
   defaultSkillViewerState
 } from "./PublicSkillDetailPage.interaction";
 import {
+  buildEmptySkillDetailViewModel,
   type SkillDetailDataMode,
   type SkillDetailPresetKey,
   buildPrototypeSkillDetailSkill,
   buildSkillDetailViewModel,
   resolveFileIndexForPreset,
+  resolveSkillDetailViewSkill,
   resolveSkillDetailDataMode
 } from "./PublicSkillDetailPage.helpers";
 import { resolveSkillDetailLoadFailure, type SkillDetailLoadStatus } from "./PublicSkillDetailPage.loadState";
 import { createPublicPageNavigator } from "../publicShared/publicPageNavigation";
 import { isLightPrototypePath } from "../prototype/prototypePageTheme";
-import type { RelatedSkillsLoadStatus } from "./PublicSkillDetailPage.fileBrowser.contract";
 import { resolveFilePresetLabel, resolveResourceTabLabel } from "./PublicSkillDetailPageViewHelpers";
 import { type SkillDetailResourceTabKey } from "./PublicSkillDetailResourceTabs";
 import { usePublicSkillDetailInteractions } from "./usePublicSkillDetailInteractions";
+import { resolveDetailFileEntries } from "./PublicSkillDetailPage.liveData";
+import { usePublicSkillDetailLiveExtensions } from "./usePublicSkillDetailLiveExtensions";
+import { usePublicSkillDetailLiveFilePreview } from "./usePublicSkillDetailLiveFilePreview";
+import { usePublicSkillDetailRelatedSkills } from "./usePublicSkillDetailRelatedSkills";
+import { usePublicSkillDetailTopbar } from "./usePublicSkillDetailTopbar";
 
 interface UsePublicSkillDetailControllerOptions {
   locale: AppLocale;
@@ -48,57 +48,6 @@ interface SkillDetailTopMetaEntry {
   key: string;
   value: string;
   tone: "is-neutral" | "is-accent" | "is-success";
-}
-
-async function loadRelatedSkillsCatalog(skill: MarketplaceSkill): Promise<MarketplaceSkill[]> {
-  const primaryTag = (skill.tags || []).find((tag) => String(tag || "").trim());
-  const queries: MarketplaceQueryParams[] = [];
-
-  if (skill.category && skill.subcategory) {
-    queries.push({
-      category: skill.category,
-      subcategory: skill.subcategory,
-      sort: "recent",
-      page: 1
-    });
-  }
-
-  if (skill.category) {
-    queries.push({
-      category: skill.category,
-      sort: "recent",
-      page: 1
-    });
-  }
-
-  if (primaryTag) {
-    queries.push({
-      tags: primaryTag,
-      sort: "recent",
-      page: 1
-    });
-  }
-
-  if (queries.length === 0) {
-    return [];
-  }
-
-  const relatedSkills = new Map<number, MarketplaceSkill>();
-
-  for (const query of queries) {
-    const payload = await fetchPublicMarketplace(query);
-    payload.items.forEach((item) => {
-      if (item.id === skill.id || relatedSkills.has(item.id)) {
-        return;
-      }
-      relatedSkills.set(item.id, item);
-    });
-    if (relatedSkills.size >= 6) {
-      break;
-    }
-  }
-
-  return Array.from(relatedSkills.values()).slice(0, 6);
 }
 
 export function usePublicSkillDetailController({
@@ -128,8 +77,6 @@ export function usePublicSkillDetailController({
   const [interactionStats, setInteractionStats] = useState(defaultSkillInteractionStats);
   const [viewerState, setViewerState] = useState(defaultSkillViewerState);
   const [comments, setComments] = useState<PublicSkillDetailComment[]>([]);
-  const [relatedSkills, setRelatedSkills] = useState<MarketplaceSkill[]>([]);
-  const [relatedSkillsLoadStatus, setRelatedSkillsLoadStatus] = useState<RelatedSkillsLoadStatus>("idle");
 
   function applyInteractionSnapshot() {
     setInteractionStats(defaultSkillInteractionStats);
@@ -161,8 +108,6 @@ export function usePublicSkillDetailController({
     setLoadStatus("loading");
     setError("");
     setSkill(null);
-    setRelatedSkills([]);
-    setRelatedSkillsLoadStatus("idle");
     applyInteractionSnapshot();
 
     if (dataMode === "prototype") {
@@ -201,11 +146,49 @@ export function usePublicSkillDetailController({
   }, [dataMode, skillID, text.loadError]);
 
   const activeSkill = skill;
-  const detailViewSkill = activeSkill || buildPrototypeSkillDetailSkill(skillID);
-  const detailModel = useMemo(
-    () => buildSkillDetailViewModel(detailViewSkill, locale, text, interactionStats, dataMode),
+  const {
+    skillResources,
+    skillResourcesLoadStatus,
+    versionItems,
+    versionItemsLoadStatus
+  } = usePublicSkillDetailLiveExtensions({
+    activeSkill,
+    dataMode
+  });
+  const detailViewSkill = useMemo(
+    () => resolveSkillDetailViewSkill(activeSkill, skillID, dataMode),
+    [activeSkill, dataMode, skillID]
+  );
+  const baseDetailModel = useMemo(
+    () =>
+      detailViewSkill
+        ? buildSkillDetailViewModel(detailViewSkill, locale, text, interactionStats, dataMode)
+        : buildEmptySkillDetailViewModel(text),
     [dataMode, detailViewSkill, interactionStats, locale, text]
   );
+  const detailModel = useMemo(
+    () => ({
+      ...baseDetailModel,
+      fileEntries: resolveDetailFileEntries(baseDetailModel.fileEntries, skillResources)
+    }),
+    [baseDetailModel, skillResources]
+  );
+  const selectedFileEntryName = detailModel.fileEntries[selectedFileIndex]?.name || detailModel.fileEntries[0]?.name || "";
+  const {
+    selectedFileContent,
+    selectedFileLanguage
+  } = usePublicSkillDetailLiveFilePreview({
+    activeSkill,
+    dataMode,
+    selectedFileName: selectedFileEntryName
+  });
+  const {
+    relatedSkills,
+    relatedSkillsLoadStatus
+  } = usePublicSkillDetailRelatedSkills({
+    activeSkill,
+    dataMode
+  });
 
   useEffect(() => {
     if (selectedFileIndex < detailModel.fileEntries.length) {
@@ -217,40 +200,6 @@ export function usePublicSkillDetailController({
   useEffect(() => {
     setSelectedFileIndex((previousIndex) => resolveFileIndexForPreset(activePreset, detailModel.fileEntries, previousIndex));
   }, [activePreset, detailModel.fileEntries]);
-
-  useEffect(() => {
-    let active = true;
-
-    if (dataMode !== "live" || !activeSkill) {
-      setRelatedSkills([]);
-      setRelatedSkillsLoadStatus("idle");
-      return () => {
-        active = false;
-      };
-    }
-
-    setRelatedSkillsLoadStatus("loading");
-
-    loadRelatedSkillsCatalog(activeSkill)
-      .then((items) => {
-        if (!active) {
-          return;
-        }
-        setRelatedSkills(items);
-        setRelatedSkillsLoadStatus("ready");
-      })
-      .catch(() => {
-        if (!active) {
-          return;
-        }
-        setRelatedSkills([]);
-        setRelatedSkillsLoadStatus("error");
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [activeSkill, dataMode]);
 
   async function refreshLiveDetail() {
     if (dataMode !== "live") {
@@ -310,61 +259,38 @@ export function usePublicSkillDetailController({
   const activeSkillDisplayName = String(activeSkill?.name || "").trim() || text.title;
 
   const topMetaEntries = useMemo<SkillDetailTopMetaEntry[]>(
-    () => [
-      {
-        key: "entry",
-        value: `${text.metaEntryLabel} ${
-          activeResourceTab === "skill" ? resolveFilePresetLabel(activePreset) : resolveResourceTabLabel(text, activeResourceTab)
-        }`,
-        tone: "is-neutral"
-      },
-      { key: "source", value: `${text.metaSourceLabel} ${(activeSkill?.source_type || "repository").toLowerCase()}`, tone: "is-accent" },
-      { key: "language", value: `${text.metaLanguageLabel} ${activePreviewLanguage.toLowerCase()}`, tone: "is-success" }
-    ],
-    [activePreset, activePreviewLanguage, activeResourceTab, activeSkill?.source_type, text]
+    () => {
+      if (!activeSkill) {
+        return [];
+      }
+      return [
+        {
+          key: "entry",
+          value: `${text.metaEntryLabel} ${
+            activeResourceTab === "skill" ? resolveFilePresetLabel(activePreset) : resolveResourceTabLabel(text, activeResourceTab)
+          }`,
+          tone: "is-neutral"
+        },
+        { key: "source", value: `${text.metaSourceLabel} ${activeSkill.source_type.toLowerCase()}`, tone: "is-accent" },
+        { key: "language", value: `${text.metaLanguageLabel} ${activePreviewLanguage.toLowerCase()}`, tone: "is-success" }
+      ];
+    },
+    [activePreset, activePreviewLanguage, activeResourceTab, activeSkill, text]
   );
-
-  const toPublicPath = routeNavigator.toPublic;
-  const topbarCopy = marketplaceHomeCopy[locale] || marketplaceHomeCopy.en;
-
-  function handleTopbarAuthAction(): void {
-    if (sessionUser) {
-      void onLogout?.();
-      return;
-    }
-    onNavigate(toPublicPath("/login"));
-  }
-
-  const topbarActionBundle = useMemo(
-    () =>
-      buildMarketplaceTopbarActionBundle({
-        onNavigate,
-        toPublicPath,
-        locale,
-        hasSessionUser: Boolean(sessionUser),
-        authActionLabel: sessionUser ? topbarCopy.signOut : topbarCopy.signIn,
-        onAuthAction: handleTopbarAuthAction
-      }),
-    [handleTopbarAuthAction, locale, onNavigate, sessionUser, toPublicPath, topbarCopy.signIn, topbarCopy.signOut]
-  );
-
-  const topbarThemeMode: ThemeMode = lightMode ? "light" : "dark";
-  const topbarBrandTitle = "SkillsIndex";
-  const topbarBrandSubtitle = topbarCopy.brandSubtitle;
-
-  const topbarRightRegistrations = useMemo(
-    () =>
-      buildMarketplaceWorkspaceAccessRightRegistrations({
-        sessionUser,
-        signedInLabel: topbarCopy.signedIn,
-        signedOutLabel: topbarCopy.signedOut,
-        workspaceLabel: topbarCopy.openWorkspace,
-        signInLabel: topbarCopy.signIn,
-        onNavigate,
-        toPublicPath
-      }),
-    [onNavigate, sessionUser, toPublicPath, topbarCopy.openWorkspace, topbarCopy.signIn, topbarCopy.signedIn, topbarCopy.signedOut]
-  );
+  const {
+    topbarThemeMode,
+    topbarBrandTitle,
+    topbarBrandSubtitle,
+    topbarActionBundle,
+    topbarRightRegistrations
+  } = usePublicSkillDetailTopbar({
+    locale,
+    lightMode,
+    onNavigate,
+    onLogout,
+    sessionUser,
+    toPublicPath: routeNavigator.toPublic
+  });
 
   return {
     text,
@@ -376,6 +302,8 @@ export function usePublicSkillDetailController({
     activePreset,
     activeResourceTab,
     selectedFileIndex,
+    selectedFileContent,
+    selectedFileLanguage,
     selectedFileName,
     selectedFilePath,
     selectedPresetLabel,
@@ -395,6 +323,10 @@ export function usePublicSkillDetailController({
     topbarBrandSubtitle,
     topbarActionBundle,
     topbarRightRegistrations,
+    skillResources,
+    skillResourcesLoadStatus,
+    versionItems,
+    versionItemsLoadStatus,
     relatedSkills,
     relatedSkillsLoadStatus,
     setActiveResourceTab,

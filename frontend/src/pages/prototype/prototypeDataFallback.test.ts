@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { MarketplaceQueryParams } from "../../lib/api";
+import * as marketplaceAPI from "../../lib/api";
 import { loadMarketplaceWithFallback, resolvePrototypeDataMode } from "./prototypeDataFallback";
 
 const baseQuery: MarketplaceQueryParams = {
@@ -68,5 +69,41 @@ describe("prototypeDataFallback", () => {
     await vi.runAllTimersAsync();
     await task;
     expect(settled).toBe(true);
+  });
+
+  it("returns an empty degraded payload when live mode request fails", async () => {
+    const fetchSpy = vi
+      .spyOn(marketplaceAPI, "fetchPublicMarketplace")
+      .mockRejectedValueOnce(new Error("backend unavailable"));
+
+    const result = await loadMarketplaceWithFallback({
+      query: {
+        ...baseQuery,
+        q: "repo sync",
+        page: 3
+      },
+      locale: "en",
+      sessionUser: null,
+      mode: "live"
+    });
+
+    expect(fetchSpy).toHaveBeenCalledOnce();
+    expect(result.degraded).toBe(true);
+    expect(result.errorMessage).toBe("backend unavailable");
+    expect(result.payload.items).toEqual([]);
+    expect(result.payload.categories).toEqual([]);
+    expect(result.payload.stats).toEqual({
+      total_skills: 0,
+      matching_skills: 0
+    });
+    expect(result.payload.pagination).toEqual({
+      page: 3,
+      page_size: 24,
+      total_items: 0,
+      total_pages: 3,
+      prev_page: 2,
+      next_page: 0
+    });
+    expect(result.payload.filters.q).toBe("repo sync");
   });
 });

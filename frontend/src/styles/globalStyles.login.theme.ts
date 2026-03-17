@@ -358,7 +358,7 @@ export const globalLoginStylesTheme = `
 }
 
 .auth-shell.auth-shell-prototype:not(.is-visual-baseline) .login-visual-panel {
-  padding: clamp(56px, 7vw, 108px) clamp(40px, 4.8vw, 72px) 40px;
+  padding: clamp(72px, 8vw, 132px) clamp(56px, 6vw, 96px) 48px;
   background:
     radial-gradient(circle at 12% 16%, rgba(255, 255, 255, 0.08), transparent 24%),
     radial-gradient(circle at 48% 74%, rgba(255, 255, 255, 0.04), transparent 32%),
@@ -383,7 +383,7 @@ export const globalLoginStylesTheme = `
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  gap: 20px;
+  gap: 18px;
   overflow: hidden;
 }
 

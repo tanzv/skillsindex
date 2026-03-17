@@ -1,0 +1,388 @@
+.marketplace-results-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.22fr) 340px;
+  gap: 20px;
+}
+
+.marketplace-narrative-stage {
+  gap: 20px;
+}
+
+.marketplace-narrative-hero {
+  gap: 18px;
+}
+
+.marketplace-narrative-stat-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.marketplace-narrative-layout {
+  align-items: start;
+}
+
+.marketplace-skill-row {
+  padding: 14px 16px;
+  border: 1px solid var(--marketplace-card-border);
+  border-radius: 16px;
+  background: var(--marketplace-section-emphasis-background);
+}
+
+.marketplace-skill-row.is-featured {
+  background: var(--marketplace-section-background);
+}
+
+.marketplace-skill-row:hover {
+  transform: translateY(-1px);
+}
+
+.marketplace-skill-link {
+  display: block;
+}
+
+.marketplace-skill-layout {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.marketplace-card-head {
+  width: 72px;
+}
+
+.marketplace-card-cover {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+  border: 1px solid var(--marketplace-card-border-soft);
+}
+
+.marketplace-shell.is-light-theme .marketplace-card-cover {
+  background: linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%);
+}
+
+.marketplace-card-cover-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--marketplace-home-text);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.marketplace-shell.is-light-theme .marketplace-card-cover-thumb {
+  background: #111111;
+  color: #ffffff;
+}
+
+.marketplace-skill-body {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.marketplace-skill-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.marketplace-skill-name {
+  margin: 0;
+  color: var(--marketplace-home-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.marketplace-skill-description {
+  margin: 0;
+  color: var(--si-color-text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.marketplace-skill-chip-row,
+.marketplace-skill-row-foot,
+.marketplace-compare-metrics,
+.marketplace-sidebar-chip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.marketplace-skill-chip,
+.marketplace-skill-row-foot span,
+.marketplace-ranking-pill {
+  min-height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--marketplace-chip-border);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--marketplace-chip-background);
+  color: var(--marketplace-chip-text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.marketplace-skill-row-foot span.is-primary {
+  color: var(--marketplace-home-text);
+}
+
+.marketplace-simple-link-list {
+  gap: 12px;
+}
+
+.marketplace-breadcrumb,
+.marketplace-chip-control-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.marketplace-breadcrumb {
+  color: var(--si-color-text-secondary);
+  font-size: 12px;
+}
+
+.marketplace-breadcrumb-link,
+.marketplace-breadcrumb-current {
+  color: var(--marketplace-link-text);
+}
+
+.marketplace-breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.marketplace-breadcrumb-separator {
+  color: var(--si-color-text-weak);
+}
+
+.marketplace-control-label {
+  color: var(--si-color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.marketplace-chip-control {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--marketplace-chip-border);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--marketplace-chip-background);
+  color: var(--marketplace-chip-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.marketplace-chip-control:hover {
+  border-color: var(--marketplace-card-border);
+}
+
+.marketplace-chip-control.is-active {
+  border-color: var(--marketplace-card-border);
+  background: var(--marketplace-topbar-button-primary-background);
+  color: var(--marketplace-topbar-button-primary-text);
+}
+
+.marketplace-category-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.marketplace-simple-link-item {
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 14px;
+  background: var(--marketplace-section-emphasis-background);
+}
+
+.marketplace-simple-link-item:hover {
+  border-color: var(--marketplace-card-border);
+}
+
+.marketplace-simple-link-item.is-active {
+  border-color: var(--marketplace-card-border);
+  background: var(--marketplace-topbar-button-hover-background);
+}
+
+.marketplace-sidebar-link,
+.marketplace-text-link {
+  color: var(--marketplace-link-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.marketplace-text-link:hover {
+  text-decoration: underline;
+}
+
+.marketplace-empty-state {
+  padding: 20px;
+  border: 1px dashed var(--marketplace-card-border);
+  border-radius: 16px;
+  background: var(--marketplace-section-emphasis-background);
+}
+
+.marketplace-empty-state h3 {
+  margin: 0 0 8px;
+  color: var(--marketplace-home-text);
+  font-size: 18px;
+}
+
+.marketplace-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--marketplace-overlay-background);
+}
+
+.marketplace-overlay-panel {
+  width: min(100%, 860px);
+  max-height: min(80vh, 720px);
+  overflow: auto;
+  padding: 18px;
+}
+
+.marketplace-search-overlay-head {
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.marketplace-overlay-actions {
+  align-items: center;
+  gap: 8px;
+}
+
+.marketplace-overlay-list {
+  gap: 10px;
+}
+
+.marketplace-overlay-list .marketplace-simple-link-item {
+  width: 100%;
+}
+
+.marketplace-compare-form {
+  display: grid;
+  gap: 12px;
+}
+
+.marketplace-compare-form select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--marketplace-search-field-border);
+  border-radius: 12px;
+  background: var(--marketplace-search-field-background);
+  color: var(--marketplace-home-text);
+  outline: none;
+}
+
+.marketplace-compare-card {
+  padding: 14px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 14px;
+  background: var(--marketplace-section-emphasis-background);
+}
+
+.marketplace-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.marketplace-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.marketplace-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--marketplace-card-border-soft);
+}
+
+@media (max-width: 1100px) {
+  .marketplace-topbar,
+  .marketplace-results-layout,
+  .marketplace-top-stats-card {
+    grid-template-columns: 1fr;
+  }
+
+  .marketplace-narrative-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .marketplace-topbar {
+    display: grid;
+  }
+
+  .marketplace-topbar-right {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .marketplace-shell-content,
+  .marketplace-topbar {
+    width: min(calc(100% - 20px), 1412px);
+  }
+
+  .marketplace-search-main-row,
+  .marketplace-search-row,
+  .marketplace-topbar-main,
+  .marketplace-topbar-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .marketplace-nav-shell,
+  .marketplace-topbar-switch {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .marketplace-nav-button,
+  .marketplace-topbar-button,
+  .marketplace-toggle-button,
+  .marketplace-search-submit {
+    width: 100%;
+  }
+
+  .marketplace-search-input.is-semantic {
+    flex-basis: auto;
+  }
+
+  .marketplace-skill-layout,
+  .marketplace-category-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .marketplace-narrative-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}

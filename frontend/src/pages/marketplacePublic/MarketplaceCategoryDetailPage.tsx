@@ -33,7 +33,7 @@ import { normalizeFilterFormQuery, normalizeRouteCategorySlug } from "./Marketpl
 import MarketplaceTopbar from "./MarketplaceTopbar";
 import { createPublicPageNavigator } from "../publicShared/publicPageNavigation";
 import { isLightPrototypePath } from "../prototype/prototypePageTheme";
-import { loadMarketplaceWithFallback } from "../prototype/prototypeDataFallback";
+import { buildEmptyMarketplacePayload, loadMarketplaceWithFallback } from "../prototype/prototypeDataFallback";
 
 interface MarketplaceCategoryDetailPageProps {
   locale: AppLocale;
@@ -95,6 +95,10 @@ export default function MarketplaceCategoryDetailPage({
     () => buildMarketplaceFallback(effectiveQueryState, locale, sessionUser),
     [effectiveQueryState, locale, sessionUser]
   );
+  const emptyLiveData = useMemo(
+    () => buildEmptyMarketplacePayload(effectiveQueryState, sessionUser),
+    [effectiveQueryState, sessionUser]
+  );
   const hasLiveQueryConstraints = Boolean(
     effectiveQueryState.q ||
       effectiveQueryState.tags ||
@@ -146,8 +150,10 @@ export default function MarketplaceCategoryDetailPage({
         }
         const fallbackPayload =
           homeMode === "live" && hasLiveQueryConstraints
-            ? normalizeUnavailableLiveMarketplacePayload(fallbackData, effectiveQueryState.page)
-            : fallbackData;
+            ? normalizeUnavailableLiveMarketplacePayload(emptyLiveData, effectiveQueryState.page)
+            : homeMode === "live"
+              ? emptyLiveData
+              : fallbackData;
         setData((previousPayload) =>
           mergeMarketplacePayloadForHomeAutoLoad({
             previousPayload,
@@ -167,6 +173,7 @@ export default function MarketplaceCategoryDetailPage({
     };
   }, [
     autoLoadConfig.prototypeDataDelayMs,
+    emptyLiveData,
     effectiveQueryState,
     fallbackData,
     hasLiveQueryConstraints,
@@ -189,7 +196,7 @@ export default function MarketplaceCategoryDetailPage({
     };
   }, []);
 
-  const resolvedData = data || fallbackData;
+  const resolvedData = data || (homeMode === "live" ? emptyLiveData : fallbackData);
   const items = resolvedData.items || [];
   const totalItems = resolvedData.pagination.total_items || 0;
   const currentPage = resolvedData.pagination.page || 1;

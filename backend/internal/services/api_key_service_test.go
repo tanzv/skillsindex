@@ -211,6 +211,32 @@ func TestAPIKeyServiceCreateWithScopesAndScopeChecks(t *testing.T) {
 	}
 }
 
+func TestAPIKeyHasScopeDeniesEmptyOrInvalidStoredScopesForProtectedRoutes(t *testing.T) {
+	testCases := []struct {
+		name   string
+		scopes string
+	}{
+		{
+			name:   "empty scopes",
+			scopes: "",
+		},
+		{
+			name:   "invalid scopes",
+			scopes: "invalid.scope",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			key := models.APIKey{Scopes: tc.scopes}
+			if APIKeyHasScope(key, APIKeyScopeSkillsSearchRead) {
+				t.Fatalf("expected protected scope check to deny key with scopes=%q", tc.scopes)
+			}
+		})
+	}
+}
+
 func TestAPIKeyServiceRotate(t *testing.T) {
 	db := setupAPIKeyServiceTestDB(t)
 	ctx := context.Background()

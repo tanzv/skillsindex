@@ -24,7 +24,6 @@ import {
   buildSkillMPPayload,
   type SkillOperationsMutationResponse
 } from "./SkillOperationsPage.submissions";
-import SkillOperationsSubpageShell from "./SkillOperationsSubpageShell";
 import type {
   ManualSkillDraft,
   RepositorySkillDraft,
@@ -228,15 +227,9 @@ export function SkillOperationsPageContent({
 export default function SkillOperationsPage({
   locale,
   route,
-  currentPath,
-  onNavigate,
-  sessionUser,
-  onThemeModeChange,
-  onLocaleChange,
-  onLogout
+  onNavigate
 }: SkillOperationsPageProps) {
   const copy = useMemo(() => getSkillOperationsCopy(locale), [locale]);
-  const meta = useMemo(() => getSkillOperationsRouteMeta(locale, route), [locale, route]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -483,45 +476,34 @@ export default function SkillOperationsPage({
     }
   }, [copy.policySaved, copy.requestFailed, loadData, policy, selectedRunID]);
 
-  return (
-    <SkillOperationsSubpageShell
+  const content = (
+    <SkillOperationsPageContent
       locale={locale}
-      currentPath={currentPath}
+      route={route}
+      loading={loading}
+      error={error}
+      message={message}
+      submittingAction={submittingAction}
+      skills={skills}
+      importJobs={importJobs}
+      syncRuns={syncRuns}
+      selectedRunID={selectedRunID}
+      syncDetail={syncDetail}
+      policy={policy}
+      onRefresh={() => void loadData(selectedRunID || undefined)}
+      onSubmitManual={handleSubmitManual}
+      onSubmitRepository={handleSubmitRepository}
+      onSubmitArchiveImport={handleSubmitArchiveImport}
+      onSubmitSkillMPImport={handleSubmitSkillMPImport}
+      onRunRepositorySyncBatch={handleRunRepositorySyncBatch}
+      onRetryImportJob={handleRetryImportJob}
+      onCancelImportJob={handleCancelImportJob}
+      onSelectRun={handleSelectRun}
+      onSavePolicy={handleSavePolicy}
+      onPolicyChange={(patch) => setPolicy((previous) => ({ ...previous, ...patch }))}
       onNavigate={onNavigate}
-      sessionUser={sessionUser}
-      onThemeModeChange={onThemeModeChange}
-      onLocaleChange={onLocaleChange}
-      onLogout={onLogout}
-      eyebrow={meta.eyebrow}
-      title={meta.title}
-      subtitle={meta.subtitle}
-    >
-      <SkillOperationsPageContent
-        locale={locale}
-        route={route}
-        loading={loading}
-        error={error}
-        message={message}
-        submittingAction={submittingAction}
-        skills={skills}
-        importJobs={importJobs}
-        syncRuns={syncRuns}
-        selectedRunID={selectedRunID}
-        syncDetail={syncDetail}
-        policy={policy}
-        onRefresh={() => void loadData(selectedRunID || undefined)}
-        onSubmitManual={handleSubmitManual}
-        onSubmitRepository={handleSubmitRepository}
-        onSubmitArchiveImport={handleSubmitArchiveImport}
-        onSubmitSkillMPImport={handleSubmitSkillMPImport}
-        onRunRepositorySyncBatch={handleRunRepositorySyncBatch}
-        onRetryImportJob={handleRetryImportJob}
-        onCancelImportJob={handleCancelImportJob}
-        onSelectRun={handleSelectRun}
-        onSavePolicy={handleSavePolicy}
-        onPolicyChange={(patch) => setPolicy((previous) => ({ ...previous, ...patch }))}
-        onNavigate={onNavigate}
-      />
-    </SkillOperationsSubpageShell>
+    />
   );
+
+  return content;
 }

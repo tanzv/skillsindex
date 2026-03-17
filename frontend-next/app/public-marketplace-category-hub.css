@@ -1,0 +1,312 @@
+.marketplace-category-index-stage,
+.marketplace-category-reference-layout,
+.marketplace-category-reference-stream,
+.marketplace-category-reference-heading,
+.marketplace-category-reference-metrics,
+.marketplace-category-reference-metric,
+.marketplace-category-rail-card,
+.marketplace-category-nav-list,
+.marketplace-category-skill-section,
+.marketplace-category-skill-grid,
+.marketplace-category-browse-section,
+.marketplace-category-browse-grid,
+.marketplace-category-browse-card,
+.marketplace-category-browse-card-head,
+.marketplace-category-browse-card-title,
+.marketplace-category-browse-featured,
+.marketplace-category-browse-featured-meta {
+  display: grid;
+}
+.marketplace-category-index-stage {
+  gap: 24px;
+}
+.marketplace-category-reference-intro {
+  padding: 8px 2px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 360px);
+  gap: 18px;
+  align-items: start;
+}
+.marketplace-category-reference-heading {
+  gap: 10px;
+}
+.marketplace-category-reference-heading h1,
+.marketplace-category-reference-heading p,
+.marketplace-category-reference-metric dt,
+.marketplace-category-reference-metric dd {
+  margin: 0;
+}
+.marketplace-category-reference-heading h1 {
+  color: var(--marketplace-home-text);
+  font-size: clamp(2.25rem, 4vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+}
+.marketplace-category-reference-heading p {
+  max-width: 62ch;
+  color: var(--si-color-text-secondary);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.marketplace-category-reference-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.marketplace-category-reference-metric {
+  padding: 16px;
+  border: 1px solid var(--marketplace-card-border);
+  border-radius: 18px;
+  background: var(--marketplace-section-background);
+  gap: 6px;
+}
+.marketplace-category-reference-metric dt {
+  color: var(--si-color-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.marketplace-category-reference-metric dd {
+  color: var(--marketplace-home-text);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+}
+.marketplace-category-reference-layout {
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.marketplace-category-reference-sidebar {
+  position: sticky;
+  top: 116px;
+  align-self: start;
+}
+
+.marketplace-category-rail-card,
+.marketplace-category-browse-card {
+  padding: 18px;
+  gap: 16px;
+}
+
+.marketplace-category-reference-stream {
+  gap: 28px;
+}
+
+.marketplace-category-skill-section,
+.marketplace-category-browse-section {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  gap: 16px;
+}
+
+.marketplace-category-section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 16px;
+}
+
+.marketplace-category-nav-list {
+  gap: 8px;
+}
+
+.marketplace-category-nav-item {
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: transparent;
+  color: var(--marketplace-link-text);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.marketplace-category-nav-item:hover {
+  border-color: var(--marketplace-card-border-soft);
+  background: var(--marketplace-section-emphasis-background);
+  transform: translateY(-1px);
+}
+
+.marketplace-category-nav-item.is-active {
+  border-color: var(--marketplace-card-border);
+  background: var(--marketplace-topbar-button-primary-background);
+  color: var(--marketplace-topbar-button-primary-text);
+}
+
+.marketplace-category-nav-item.is-active .marketplace-sidebar-link {
+  color: inherit;
+}
+
+.marketplace-category-nav-item.is-active .marketplace-category-nav-count {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+}
+
+.marketplace-category-nav-count {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--marketplace-chip-border);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--marketplace-chip-background);
+  color: var(--marketplace-chip-text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.marketplace-category-skill-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.marketplace-category-skill-card-title,
+.marketplace-category-browse-card h4,
+.marketplace-category-browse-card p {
+  margin: 0;
+}
+
+.marketplace-category-detail-title {
+  margin: 0;
+  color: var(--marketplace-home-text);
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+
+.marketplace-category-browse-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.marketplace-category-browse-card {
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 18px;
+  background: var(--marketplace-section-background);
+  scroll-margin-top: 132px;
+}
+
+.marketplace-category-browse-card-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.marketplace-category-browse-card-title {
+  gap: 8px;
+}
+
+.marketplace-category-browse-card h4 {
+  color: var(--marketplace-home-text);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.marketplace-category-browse-card p {
+  color: var(--si-color-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.marketplace-category-browse-featured {
+  padding: 14px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 16px;
+  background: var(--marketplace-section-emphasis-background);
+  gap: 8px;
+}
+
+.marketplace-category-browse-featured p,
+.marketplace-category-browse-featured strong,
+.marketplace-category-browse-featured-meta span {
+  margin: 0;
+}
+
+.marketplace-category-browse-featured strong {
+  color: var(--marketplace-home-text);
+}
+
+.marketplace-category-browse-featured-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.marketplace-category-browse-featured-meta span {
+  color: var(--si-color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.marketplace-category-detail-support-grid,
+.marketplace-category-context-card,
+.marketplace-category-context-metrics {
+  display: grid;
+}
+
+.marketplace-category-detail-support-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.marketplace-category-context-card {
+  gap: 16px;
+}
+
+.marketplace-category-context-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 1180px) {
+  .marketplace-category-reference-intro,
+  .marketplace-category-reference-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .marketplace-category-reference-sidebar {
+    position: static;
+  }
+
+  .marketplace-category-nav-list {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+  }
+
+  .marketplace-category-skill-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .marketplace-category-skill-grid,
+  .marketplace-category-browse-grid,
+  .marketplace-category-reference-metrics,
+  .marketplace-category-detail-support-grid,
+  .marketplace-category-context-metrics,
+  .marketplace-category-section-head {
+    grid-template-columns: 1fr;
+  }
+
+  .marketplace-category-section-head {
+    align-items: start;
+  }
+}

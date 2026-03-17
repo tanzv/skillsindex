@@ -41,7 +41,7 @@ func (a *App) ensureMarketplaceAccess(w http.ResponseWriter, r *http.Request) bo
 		})
 		return false
 	}
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	http.Redirect(w, r, buildLoginRedirectPathFromRequest(r), http.StatusSeeOther)
 	return false
 }
 

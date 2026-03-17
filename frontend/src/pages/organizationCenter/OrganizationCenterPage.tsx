@@ -1,20 +1,13 @@
-import { Button } from "antd";
+import { Alert, Button } from "antd";
 import { useEffect, useMemo, useState } from "react";
 
 import { fetchConsoleJSON, postConsoleJSON } from "../../lib/api";
 import { AppLocale } from "../../lib/i18n";
-import { getWorkspaceCenterCopy } from "../workspace/WorkspaceCenterPage.copy";
-import {
-  buildWorkspaceSidebarNavigation,
-  resolveOrganizationManagementMenuItemID,
-  resolveWorkspaceSidebarGroupsByPanelMode,
-  resolveWorkspaceSidebarPanelMode
-} from "../workspace/WorkspaceCenterPage.navigation";
+import AdminSubpageSummaryPanel from "../adminShared/AdminSubpageSummaryPanel";
 import OrganizationCenterPageContent from "./OrganizationCenterPageContent";
 import type { OrganizationCenterPageProps, OrganizationItem, OrganizationMember } from "./OrganizationCenterPage.types";
 import { createPrototypePalette, isLightPrototypePath } from "../prototype/prototypePageTheme";
 import { createPublicPageNavigator } from "../publicShared/publicPageNavigation";
-import WorkspacePrototypePageShell from "../workspace/WorkspacePrototypePageShell";
 
 const roleValues = ["owner", "admin", "member", "viewer"] as const;
 
@@ -82,14 +75,9 @@ function formatDate(value: string, locale: AppLocale, fallback: string): string 
 export default function OrganizationCenterPage({
   locale,
   currentPath,
-  onNavigate,
-  sessionUser,
-  onThemeModeChange,
-  onLocaleChange,
-  onLogout
+  onNavigate
 }: OrganizationCenterPageProps) {
   const text = copy[locale];
-  const workspaceText = useMemo(() => getWorkspaceCenterCopy(locale), [locale]);
   const lightMode = useMemo(() => isLightPrototypePath(currentPath), [currentPath]);
   const palette = useMemo(() => createPrototypePalette(lightMode), [lightMode]);
   const pageNavigator = useMemo(() => createPublicPageNavigator(currentPath), [currentPath]);
@@ -285,92 +273,64 @@ export default function OrganizationCenterPage({
     }
   }
 
-  const topbarMenuGroups = useMemo(
-    () =>
-      buildWorkspaceSidebarNavigation({
-        text: workspaceText,
-        toPublicPath: pageNavigator.toPublic,
-        toAdminPath: pageNavigator.toAdmin,
-        sectionMode: "workspace-route"
-      }),
-    [pageNavigator.toAdmin, pageNavigator.toPublic, workspaceText]
+  const summaryMetrics = [
+    { id: "summary-organizations", label: text.organizationsCount, value: String(organizations.length) },
+    { id: "summary-members", label: text.membersCount, value: String(membersCount) },
+    { id: "summary-selected", label: text.selectedOrganization, value: selectedOrganization?.name || text.noData },
+    { id: "summary-slug", label: text.slug, value: selectedOrganization?.slug || text.noData }
+  ];
+  const summaryActions = (
+    <>
+      <Button onClick={() => onNavigate(pageNavigator.toAdmin("/admin/access"))}>{text.openAccess}</Button>
+      <Button onClick={() => onNavigate(pageNavigator.toAdmin("/admin/overview"))}>{text.openAdmin}</Button>
+      <Button type="primary" onClick={() => void refreshAll(selectedOrgID || undefined)} loading={saving}>
+        {text.refresh}
+      </Button>
+    </>
   );
-  const sidebarGroups = useMemo(() => {
-    const panelMode = resolveWorkspaceSidebarPanelMode(currentPath);
-    return resolveWorkspaceSidebarGroupsByPanelMode(topbarMenuGroups, panelMode);
-  }, [currentPath, topbarMenuGroups]);
-  const activeMenuID = useMemo(() => resolveOrganizationManagementMenuItemID(currentPath), [currentPath]);
+  const content = (
+    <OrganizationCenterPageContent
+      text={text}
+      locale={locale}
+      palette={palette}
+      roleValues={roleValues}
+      organizations={organizations}
+      selectedOrganization={selectedOrganization}
+      selectedOrgID={selectedOrgID}
+      setSelectedOrgID={setSelectedOrgID}
+      onOrganizationSelect={(orgID) => void loadMembers(orgID)}
+      newOrganizationName={newOrganizationName}
+      onNewOrganizationNameChange={setNewOrganizationName}
+      onCreateOrganization={() => void createOrganization()}
+      membersLoading={membersLoading}
+      members={members}
+      rowRoleMap={rowRoleMap}
+      setRowRoleMap={setRowRoleMap}
+      onUpdateMemberRole={(userID) => void updateMemberRole(userID)}
+      onRemoveMember={(userID) => void removeMember(userID)}
+      saving={saving}
+      targetUserID={targetUserID}
+      onTargetUserIDChange={setTargetUserID}
+      targetRole={targetRole}
+      onTargetRoleChange={setTargetRole}
+      onAddOrUpdateMember={() => void addOrUpdateMember()}
+      onNavigate={onNavigate}
+      accessPath={pageNavigator.toAdmin("/admin/access")}
+      integrationsPath={pageNavigator.toAdmin("/admin/integrations")}
+      incidentsPath={pageNavigator.toAdmin("/admin/incidents")}
+      formatDate={(value) => formatDate(value, locale, text.noData)}
+    />
+  );
 
   return (
-    <WorkspacePrototypePageShell
-      locale={locale}
-      currentPath={currentPath}
-      onNavigate={onNavigate}
-      sessionUser={sessionUser || null}
-      onThemeModeChange={onThemeModeChange}
-      onLocaleChange={onLocaleChange}
-      onLogout={onLogout}
-      activeMenuID={activeMenuID}
-      sidebarGroups={sidebarGroups}
-      topbarMenuGroups={topbarMenuGroups}
-      sidebarMeta={[
-        { id: "organization-count", label: `${organizations.length} ${text.organizationsCount.toLowerCase()}`, tone: "accent" },
-        { id: "organization-members", label: `${membersCount} ${text.membersCount.toLowerCase()}` }
-      ]}
-      eyebrow={text.eyebrow}
-      title={text.title}
-      subtitle={text.subtitle}
-      summaryMetrics={[
-        { id: "summary-organizations", label: text.organizationsCount, value: String(organizations.length) },
-        { id: "summary-members", label: text.membersCount, value: String(membersCount) },
-        { id: "summary-selected", label: text.selectedOrganization, value: selectedOrganization?.name || text.noData },
-        { id: "summary-slug", label: text.slug, value: selectedOrganization?.slug || text.noData }
-      ]}
-      summaryActions={
-        <>
-          <Button onClick={() => onNavigate(pageNavigator.toAdmin("/admin/access"))}>{text.openAccess}</Button>
-          <Button onClick={() => onNavigate(pageNavigator.toAdmin("/admin/overview"))}>{text.openAdmin}</Button>
-          <Button type="primary" onClick={() => void refreshAll(selectedOrgID || undefined)} loading={saving}>
-            {text.refresh}
-          </Button>
-        </>
-      }
-      loading={loading}
-      loadingText={text.loading}
-      error={error}
-      success={message}
-    >
-      <OrganizationCenterPageContent
-        text={text}
-        locale={locale}
-        palette={palette}
-        roleValues={roleValues}
-        organizations={organizations}
-        selectedOrganization={selectedOrganization}
-        selectedOrgID={selectedOrgID}
-        setSelectedOrgID={setSelectedOrgID}
-        onOrganizationSelect={(orgID) => void loadMembers(orgID)}
-        newOrganizationName={newOrganizationName}
-        onNewOrganizationNameChange={setNewOrganizationName}
-        onCreateOrganization={() => void createOrganization()}
-        membersLoading={membersLoading}
-        members={members}
-        rowRoleMap={rowRoleMap}
-        setRowRoleMap={setRowRoleMap}
-        onUpdateMemberRole={(userID) => void updateMemberRole(userID)}
-        onRemoveMember={(userID) => void removeMember(userID)}
-        saving={saving}
-        targetUserID={targetUserID}
-        onTargetUserIDChange={setTargetUserID}
-        targetRole={targetRole}
-        onTargetRoleChange={setTargetRole}
-        onAddOrUpdateMember={() => void addOrUpdateMember()}
-        onNavigate={onNavigate}
-        accessPath={pageNavigator.toAdmin("/admin/access")}
-        integrationsPath={pageNavigator.toAdmin("/admin/integrations")}
-        incidentsPath={pageNavigator.toAdmin("/admin/incidents")}
-        formatDate={(value) => formatDate(value, locale, text.noData)}
+    <>
+      <AdminSubpageSummaryPanel
+        title={text.title}
+        notice={error ? <Alert type="error" showIcon message={error} /> : message ? <Alert type="success" showIcon message={message} /> : undefined}
+        metrics={summaryMetrics}
+        actions={summaryActions}
       />
-    </WorkspacePrototypePageShell>
+      {loading ? <section className="panel panel-hero loading">{text.loading}</section> : content}
+    </>
   );
 }

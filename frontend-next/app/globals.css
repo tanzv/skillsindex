@@ -1,0 +1,114 @@
+@import "tailwindcss";
+@import "./public-marketplace-shell.css";
+@import "./public-marketplace-primitives.css";
+@import "./public-marketplace-home.css";
+@import "./public-marketplace-home-deck-card.css";
+@import "./public-marketplace-home-baseline.css";
+@import "./public-marketplace-home-topbar-baseline.css";
+@import "./public-marketplace-home-search-baseline.css";
+@import "./public-marketplace-layout.css";
+@import "./public-marketplace-categories.css";
+@import "./public-marketplace-category-hub.css";
+@import "./public-marketplace-category-skill-card.css";
+@import "./public-marketplace-ranking.css";
+@import "./public-skill-detail.css";
+@import "./public-skill-detail-resources.css";
+@import "./public-skill-detail-sidebar.css";
+@import "./public-skill-detail-topbar.css";
+@import "./protected-theme.css";
+@import "./workspace-shell.css";
+@import "./workspace-topbar.css";
+@import "./workspace-overview.css";
+@import "./account-shell.css";
+@import "./account-center.css";
+@import "./admin-shell.css";
+@import "./admin-overview.css";
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: "Noto Sans SC", "Segoe UI", sans-serif;
+  background: #f4f7fb;
+  color: #111827;
+}
+
+body {
+  min-height: 100vh;
+  background: #f3f4f6;
+}
+
+html:has(body > .marketplace-shell),
+body:has(.marketplace-shell) {
+  background: #101010;
+}
+
+html:has(body > .marketplace-shell.is-light-theme),
+body:has(.marketplace-shell.is-light-theme) {
+  background: #eef1f5;
+}
+
+html:has(body > .marketplace-shell.is-light-theme.is-landing-route),
+body:has(.marketplace-shell.is-light-theme.is-landing-route) {
+  background: #f4f6fb;
+}
+
+html:has(body > .workspace-shell-root),
+body:has(.workspace-shell-root),
+html:has(body > .admin-shell-root),
+body:has(.admin-shell-root),
+html:has(body > .account-shell-root),
+body:has(.account-shell-root) {
+  background: #060d1b;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-root {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 32px;
+}
+
+.app-card {
+  width: min(100%, 720px);
+  border: 1px solid #dbe4f0;
+  border-radius: 24px;
+  background: #ffffff;
+  padding: 32px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+.app-kicker {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #3158a3;
+}
+
+.app-card h1 {
+  margin: 0 0 12px;
+  font-size: 32px;
+  line-height: 1.1;
+}
+
+.app-card p:last-child {
+  margin: 0;
+  color: #475569;
+  font-size: 16px;
+  line-height: 1.6;
+}

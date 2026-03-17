@@ -1,32 +1,15 @@
-import { Button, Tag } from "antd";
 import { useEffect, useMemo, useState } from "react";
 
 import { PublicMarketplaceResponse, SessionUser } from "../../lib/api";
 import { AppLocale } from "../../lib/i18n";
 import type { ThemeMode } from "../../lib/themeModePath";
+import GovernanceCenterPageContent, { type GovernanceCenterPageContentText } from "./GovernanceCenterPageContent";
 import { buildWorkspaceSnapshot } from "../workspace/WorkspaceCenterPage.helpers";
 import { buildWorkspaceSidebarNavigation } from "../workspace/WorkspaceCenterPage.navigation";
 import { getWorkspaceCenterCopy } from "../workspace/WorkspaceCenterPage.copy";
-import { WorkspaceMutedText, WorkspacePanelHeading, WorkspaceQuickActionGrid, WorkspaceTagCloud } from "../workspace/WorkspaceCenterPage.styles";
 import { loadMarketplaceWithFallback, resolvePrototypeDataMode } from "../prototype/prototypeDataFallback";
 import { createPublicPageNavigator } from "../publicShared/publicPageNavigation";
 import WorkspacePrototypePageShell from "../workspace/WorkspacePrototypePageShell";
-import {
-  WorkspacePrototypeActionCluster,
-  WorkspacePrototypeDataItem,
-  WorkspacePrototypeDataLabel,
-  WorkspacePrototypeDataList,
-  WorkspacePrototypeDataValue,
-  WorkspacePrototypeItemText,
-  WorkspacePrototypeItemTitle,
-  WorkspacePrototypeList,
-  WorkspacePrototypeListItem,
-  WorkspacePrototypeMarker,
-  WorkspacePrototypePanelGrid,
-  WorkspacePrototypePanelStack,
-  WorkspacePrototypeTextStack
-} from "../workspace/WorkspacePrototypePageShell.styles";
-import WorkspaceSurfaceCard from "../workspace/WorkspaceSurfaceCard";
 
 interface GovernanceCenterPageProps {
   locale: AppLocale;
@@ -38,20 +21,27 @@ interface GovernanceCenterPageProps {
   onLogout?: () => Promise<void> | void;
 }
 
-const baseCopy = {
+const baseCopy: GovernanceCenterPageContentText & {
+  loading: string;
+  requestFailed: string;
+  degradedData: string;
+} = {
   title: "Governance Center",
   subtitle: "Coordinate policy guardrails, audit signals, and operator controls without leaving the workspace navigation stack.",
   eyebrow: "Control Plane",
   loading: "Loading governance center",
   requestFailed: "Request failed",
-  degradedData: "Live governance data is unavailable. Fallback workspace signals are currently shown.",
+  degradedData: "Live governance data is unavailable. Some workspace insights are currently unavailable.",
   policyEngine: "Policy Engine",
   auditLedger: "Audit Ledger",
   controlPosture: "Control Posture",
   operationalControls: "Operational Controls",
   incidentResponse: "Incident Response",
+  controlVisibilityTitle: "Visibility Gates",
   controlVisibility: "Visibility gates stay attached to every queue candidate and destination surface.",
+  controlSyncTitle: "Synchronization Checks",
   controlSync: "Synchronization checks verify repository lineage, records parity, and import policy alignment.",
+  controlAccessTitle: "Access Windows",
   controlAccess: "Role-based access and escalation windows remain explicit before any release action is executed.",
   ledgerWindow: "Tracked tags",
   ledgerScope: "Coverage scope",
@@ -63,8 +53,11 @@ const baseCopy = {
   lifecycleActive: "Active keys",
   lifecycleExpiring: "Expiring soon",
   lifecycleRotation: "Rotation window",
+  responseCaptureTitle: "Capture",
   responseCapture: "Capture policy drift, operator overrides, and rollback triggers in one timeline.",
+  responseReviewTitle: "Review",
   responseReview: "Keep reviewer assignment, evidence, and remediation actions grouped by control family.",
+  responseDrillTitle: "Drill",
   responseDrill: "Use workspace-linked hubs to run drills without losing operational context.",
   access: "Access Management",
   integrations: "Integrations",
@@ -149,13 +142,6 @@ export default function GovernanceCenterPage({
     [pageNavigator.toAdmin, pageNavigator.toPublic, workspaceText]
   );
 
-  const categoryCount = useMemo(() => new Set(snapshot.queueEntries.map((entry) => entry.category)).size, [snapshot.queueEntries]);
-  const openIncidents = snapshot.queueCounts.risk;
-  const policyScore = snapshot.metrics.healthScore;
-  const activeKeys = snapshot.queueCounts.running + snapshot.queueCounts.pending;
-  const expiringKeys = Math.max(snapshot.queueCounts.risk, 1);
-  const visibleTopTags = snapshot.topTags.filter((tag) => String(tag.name || "").trim());
-
   return (
     <WorkspacePrototypePageShell
       locale={locale}
@@ -167,145 +153,24 @@ export default function GovernanceCenterPage({
       onLogout={onLogout}
       activeMenuID="system-governance"
       sidebarGroups={sidebarGroups}
-      sidebarMeta={[
-        { id: "governance-score", label: `${policyScore.toFixed(1)} ${text.scoreLabel}`, tone: "accent" },
-        { id: "governance-alerts", label: `${openIncidents} ${text.alertsLabel}` }
-      ]}
+      sidebarTitle={workspaceText.sidebarMenuTitle}
       eyebrow={text.eyebrow}
       title={text.title}
       subtitle={text.subtitle}
-      summaryMetrics={[
-        { id: "summary-policy", label: text.statusPolicy, value: `${policyScore.toFixed(1)} / 10` },
-        { id: "summary-alerts", label: text.statusAccess, value: String(openIncidents) },
-        { id: "summary-scope", label: text.statusSync, value: `${snapshot.metrics.installedSkills}` }
-      ]}
-      summaryActions={
-        <>
-          <Button onClick={() => onNavigate(pageNavigator.toPublic("/workspace"))}>{text.openWorkspace}</Button>
-          <Button type="primary" onClick={() => onNavigate(pageNavigator.toAdmin("/admin/overview"))}>
-            {text.openDashboard}
-          </Button>
-        </>
-      }
+      hideSummaryHeader
       loading={loading}
       loadingText={text.loading}
       error={error}
       notice={degradedMessage}
     >
-      <WorkspacePrototypePanelGrid>
-        <WorkspacePrototypePanelStack>
-          <WorkspaceSurfaceCard tone="panel">
-            <WorkspacePanelHeading>{text.policyEngine}</WorkspacePanelHeading>
-            <WorkspacePrototypeList>
-              {[
-                text.controlVisibility,
-                text.controlSync,
-                text.controlAccess
-              ].map((item, index) => (
-                <WorkspacePrototypeListItem key={item}>
-                  <WorkspacePrototypeActionCluster>
-                    <WorkspacePrototypeMarker $accent>{String(index + 1).padStart(2, "0")}</WorkspacePrototypeMarker>
-                    <WorkspacePrototypeTextStack>
-                      <WorkspacePrototypeItemTitle>{[text.policyEngine, text.auditLedger, text.controlPosture][index] || text.policyEngine}</WorkspacePrototypeItemTitle>
-                      <WorkspacePrototypeItemText>{item}</WorkspacePrototypeItemText>
-                    </WorkspacePrototypeTextStack>
-                  </WorkspacePrototypeActionCluster>
-                </WorkspacePrototypeListItem>
-              ))}
-            </WorkspacePrototypeList>
-          </WorkspaceSurfaceCard>
-
-          <WorkspaceSurfaceCard tone="panel">
-            <WorkspacePanelHeading>{text.auditLedger}</WorkspacePanelHeading>
-            <WorkspacePrototypeDataList>
-              <WorkspacePrototypeDataItem>
-                <WorkspacePrototypeDataLabel>{text.ledgerWindow}</WorkspacePrototypeDataLabel>
-                <WorkspacePrototypeDataValue>{snapshot.topTags.length}</WorkspacePrototypeDataValue>
-              </WorkspacePrototypeDataItem>
-              <WorkspacePrototypeDataItem>
-                <WorkspacePrototypeDataLabel>{text.ledgerScope}</WorkspacePrototypeDataLabel>
-                <WorkspacePrototypeDataValue>{`${categoryCount} ${text.scopeLabel}`}</WorkspacePrototypeDataValue>
-              </WorkspacePrototypeDataItem>
-              <WorkspacePrototypeDataItem>
-                <WorkspacePrototypeDataLabel>{text.complianceStatus}</WorkspacePrototypeDataLabel>
-                <WorkspacePrototypeDataValue>{policyScore.toFixed(1)}</WorkspacePrototypeDataValue>
-              </WorkspacePrototypeDataItem>
-            </WorkspacePrototypeDataList>
-
-            <WorkspaceTagCloud>
-              {visibleTopTags.length > 0 ? (
-                visibleTopTags.map((tag) => (
-                  <Tag key={tag.name} color="blue">
-                    {tag.name} ({tag.count})
-                  </Tag>
-                ))
-              ) : (
-                <Tag>{workspaceText.queueTagNone}</Tag>
-              )}
-            </WorkspaceTagCloud>
-          </WorkspaceSurfaceCard>
-        </WorkspacePrototypePanelStack>
-
-        <WorkspacePrototypePanelStack>
-          <WorkspaceSurfaceCard
-            tone="panel"
-            style={{
-              border: "1px solid color-mix(in srgb, var(--si-color-accent) 34%, transparent)",
-              background:
-                "linear-gradient(165deg, color-mix(in srgb, var(--si-color-accent) 18%, transparent) 0%, transparent 58%), color-mix(in srgb, var(--si-color-panel) 88%, transparent)",
-              boxShadow: "0 18px 32px color-mix(in srgb, #05080f 48%, transparent)"
-            }}
-          >
-            <WorkspacePanelHeading>{text.operationalControls}</WorkspacePanelHeading>
-            <WorkspaceQuickActionGrid>
-              <Button onClick={() => onNavigate(pageNavigator.toAdmin("/admin/access"))}>{text.access}</Button>
-              <Button onClick={() => onNavigate(pageNavigator.toAdmin("/admin/integrations"))}>{text.integrations}</Button>
-              <Button onClick={() => onNavigate(pageNavigator.toAdmin("/admin/incidents"))}>{text.incidents}</Button>
-              <Button onClick={() => onNavigate(pageNavigator.toAdmin("/admin/ops/audit-export"))}>{text.audit}</Button>
-            </WorkspaceQuickActionGrid>
-          </WorkspaceSurfaceCard>
-
-          <WorkspaceSurfaceCard tone="panel">
-            <WorkspacePanelHeading>{text.controlPosture}</WorkspacePanelHeading>
-            <WorkspacePrototypeDataList>
-              <WorkspacePrototypeDataItem>
-                <WorkspacePrototypeDataLabel>{text.lifecycleActive}</WorkspacePrototypeDataLabel>
-                <WorkspacePrototypeDataValue>{activeKeys}</WorkspacePrototypeDataValue>
-              </WorkspacePrototypeDataItem>
-              <WorkspacePrototypeDataItem>
-                <WorkspacePrototypeDataLabel>{text.lifecycleExpiring}</WorkspacePrototypeDataLabel>
-                <WorkspacePrototypeDataValue>{expiringKeys}</WorkspacePrototypeDataValue>
-              </WorkspacePrototypeDataItem>
-              <WorkspacePrototypeDataItem>
-                <WorkspacePrototypeDataLabel>{text.lifecycleRotation}</WorkspacePrototypeDataLabel>
-                <WorkspacePrototypeDataValue>72h</WorkspacePrototypeDataValue>
-              </WorkspacePrototypeDataItem>
-              <WorkspacePrototypeDataItem>
-                <WorkspacePrototypeDataLabel>{text.statusAccess}</WorkspacePrototypeDataLabel>
-                <WorkspacePrototypeDataValue>{openIncidents}</WorkspacePrototypeDataValue>
-              </WorkspacePrototypeDataItem>
-            </WorkspacePrototypeDataList>
-          </WorkspaceSurfaceCard>
-
-          <WorkspaceSurfaceCard tone="panel">
-            <WorkspacePanelHeading>{text.incidentResponse}</WorkspacePanelHeading>
-            <WorkspacePrototypeList>
-              {[text.responseCapture, text.responseReview, text.responseDrill].map((item, index) => (
-                <WorkspacePrototypeListItem key={item}>
-                  <WorkspacePrototypeActionCluster>
-                    <WorkspacePrototypeMarker>{String(index + 1).padStart(2, "0")}</WorkspacePrototypeMarker>
-                    <WorkspacePrototypeTextStack>
-                      <WorkspacePrototypeItemTitle>{text.incidentResponse}</WorkspacePrototypeItemTitle>
-                      <WorkspacePrototypeItemText>{item}</WorkspacePrototypeItemText>
-                    </WorkspacePrototypeTextStack>
-                  </WorkspacePrototypeActionCluster>
-                </WorkspacePrototypeListItem>
-              ))}
-            </WorkspacePrototypeList>
-            {snapshot.queueEntries.length === 0 ? <WorkspaceMutedText>{workspaceText.emptyQueue}</WorkspaceMutedText> : null}
-          </WorkspaceSurfaceCard>
-        </WorkspacePrototypePanelStack>
-      </WorkspacePrototypePanelGrid>
+      <GovernanceCenterPageContent
+        text={text}
+        workspaceText={workspaceText}
+        snapshot={snapshot}
+        onNavigate={onNavigate}
+        toPublicPath={pageNavigator.toPublic}
+        toAdminPath={pageNavigator.toAdmin}
+      />
     </WorkspacePrototypePageShell>
   );
 }

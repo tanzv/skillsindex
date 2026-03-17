@@ -1,0 +1,318 @@
+.skill-detail-feedback {
+  padding: 12px 14px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 72%, transparent);
+  color: var(--marketplace-home-text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.skill-detail-install-mode-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-detail-install-mode-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--marketplace-chip-border);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--marketplace-chip-background);
+  color: var(--marketplace-chip-text);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.skill-detail-install-mode-button.is-active {
+  border-color: var(--marketplace-card-border);
+  background: var(--marketplace-topbar-button-primary-background);
+  color: var(--marketplace-topbar-button-primary-text);
+}
+
+.skill-detail-install-mode-button:hover {
+  transform: translateY(-1px);
+}
+
+.skill-detail-agent-panel,
+.skill-detail-human-panel,
+.skill-detail-install-action-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.skill-detail-agent-hint {
+  margin: 0;
+  color: var(--si-color-text-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.skill-detail-agent-prompt-shell {
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 16px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--marketplace-section-background) 82%, transparent);
+}
+
+.skill-detail-agent-prompt-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--marketplace-card-border-soft);
+}
+
+.skill-detail-agent-prompt-head h4 {
+  margin: 0;
+  color: var(--marketplace-home-text);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.skill-detail-agent-prompt-body {
+  margin: 0;
+  padding: 14px;
+  color: var(--marketplace-home-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.skill-detail-primary-action,
+.skill-detail-secondary-action {
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.skill-detail-primary-action {
+  border: 1px solid transparent;
+  background: var(--marketplace-topbar-button-primary-background);
+  color: var(--marketplace-topbar-button-primary-text);
+}
+
+.skill-detail-secondary-action {
+  border: 1px solid var(--marketplace-card-border-soft);
+  background: var(--marketplace-section-emphasis-background);
+  color: var(--marketplace-home-text);
+}
+
+.skill-detail-signin-link {
+  width: 100%;
+}
+
+.skill-detail-link-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.skill-detail-link-grid > :only-child {
+  grid-column: 1 / -1;
+}
+
+.skill-detail-side-fact {
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.skill-detail-directory-shell {
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--marketplace-section-background) 82%, transparent);
+  overflow: hidden;
+}
+
+.skill-detail-directory-head {
+  padding: 14px 15px;
+  border-bottom: 1px solid var(--marketplace-card-border-soft);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.skill-detail-directory-head-main {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.skill-detail-directory-title,
+.skill-detail-directory-meta,
+.skill-detail-directory-current {
+  margin: 0;
+}
+
+.skill-detail-directory-title {
+  color: var(--marketplace-home-text);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.skill-detail-directory-meta,
+.skill-detail-directory-current {
+  color: var(--si-color-text-secondary);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.skill-detail-directory-current {
+  max-width: min(50%, 220px);
+  text-align: right;
+  word-break: break-word;
+}
+
+.skill-detail-directory-tree {
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.skill-detail-directory-row {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px 0 calc(10px + (var(--skill-detail-tree-depth, 1) - 1) * 16px);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: 0 14px 12px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--marketplace-home-text);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.skill-detail-directory-row:hover {
+  border-color: var(--marketplace-card-border-soft);
+  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 76%, transparent);
+  transform: translateY(-1px);
+}
+
+.skill-detail-directory-row.is-selected {
+  border-color: var(--marketplace-card-border);
+  background: color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 12%, transparent);
+}
+
+.skill-detail-directory-row-caret,
+.skill-detail-directory-row-label {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.skill-detail-directory-row-caret {
+  color: var(--si-color-text-secondary);
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+}
+
+.skill-detail-directory-row-icon {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.skill-detail-directory-row-icon.is-directory {
+  background: color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 28%, transparent);
+}
+
+.skill-detail-directory-row-icon.is-file {
+  border: 1px solid color-mix(in srgb, var(--marketplace-card-border) 74%, transparent);
+  background: color-mix(in srgb, var(--marketplace-section-emphasis-background) 82%, transparent);
+}
+
+.skill-detail-directory-row-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: inherit;
+  font-weight: 600;
+}
+
+.skill-detail-comment-input {
+  width: 100%;
+  min-height: 128px;
+  padding: 14px 16px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 16px;
+  resize: vertical;
+  background: var(--marketplace-search-field-background);
+  color: var(--marketplace-home-text);
+  font-size: 14px;
+  line-height: 1.65;
+  outline: none;
+}
+
+.skill-detail-comment-input::placeholder {
+  color: var(--si-color-text-weak);
+}
+
+.skill-detail-comment-item {
+  padding: 14px;
+}
+
+.skill-detail-comment-head {
+  align-items: center;
+}
+
+.skill-detail-comment-content {
+  margin: 10px 0 0;
+  color: var(--marketplace-home-text);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.skill-detail-tab-button:disabled,
+.skill-detail-file-button:disabled,
+.skill-detail-primary-action:disabled,
+.skill-detail-secondary-action:disabled,
+.skill-detail-rating-button:disabled,
+.skill-detail-comment-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 760px) {
+  .skill-detail-link-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .skill-detail-directory-head {
+    flex-direction: column;
+  }
+
+  .skill-detail-directory-current {
+    max-width: none;
+    text-align: left;
+  }
+}

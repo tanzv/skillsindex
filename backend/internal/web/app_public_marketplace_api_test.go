@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -27,6 +28,7 @@ func setupPublicMarketplaceAPITestApp(t *testing.T) (*App, models.User) {
 		&models.User{},
 		&models.Organization{},
 		&models.Skill{},
+		&models.SkillVersion{},
 		&models.Tag{},
 		&models.SkillTag{},
 		&models.SystemSetting{},
@@ -50,6 +52,7 @@ func setupPublicMarketplaceAPITestApp(t *testing.T) (*App, models.User) {
 			SubcategorySlug: "frontend",
 			Visibility:      models.VisibilityPublic,
 			SourceType:      models.SourceTypeManual,
+			RecordOrigin:    models.RecordOriginImported,
 			StarCount:       452,
 			QualityScore:    9.4,
 			UpdatedAt:       now,
@@ -63,6 +66,7 @@ func setupPublicMarketplaceAPITestApp(t *testing.T) (*App, models.User) {
 			SubcategorySlug: "monitoring",
 			Visibility:      models.VisibilityPublic,
 			SourceType:      models.SourceTypeRepository,
+			RecordOrigin:    models.RecordOriginImported,
 			StarCount:       188,
 			QualityScore:    8.1,
 			UpdatedAt:       now.Add(-12 * time.Hour),
@@ -130,6 +134,42 @@ func TestHandleAPIPublicMarketplaceReturnsExpectedPayload(t *testing.T) {
 	}
 }
 
+func TestHandleAPIPublicMarketplaceUsesStableLowercaseTopTagKeys(t *testing.T) {
+	app, _ := setupPublicMarketplaceAPITestApp(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/marketplace", nil)
+	req.Header.Set("Accept", "application/json")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicMarketplace(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
+	}
+
+	var payload struct {
+		TopTags []map[string]any `json:"top_tags"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("failed to decode marketplace payload: %v", err)
+	}
+	if len(payload.TopTags) == 0 {
+		t.Fatalf("expected top_tags payload to be populated")
+	}
+	if _, ok := payload.TopTags[0]["name"]; !ok {
+		t.Fatalf("expected lowercase name key in top_tags payload: %+v", payload.TopTags[0])
+	}
+	if _, ok := payload.TopTags[0]["count"]; !ok {
+		t.Fatalf("expected lowercase count key in top_tags payload: %+v", payload.TopTags[0])
+	}
+	if _, ok := payload.TopTags[0]["Name"]; ok {
+		t.Fatalf("unexpected exported Go field key in top_tags payload: %+v", payload.TopTags[0])
+	}
+	if _, ok := payload.TopTags[0]["Count"]; ok {
+		t.Fatalf("unexpected exported Go field key in top_tags payload: %+v", payload.TopTags[0])
+	}
+}
+
 func TestHandleAPIPublicMarketplaceIncludesSessionUserContext(t *testing.T) {
 	app, admin := setupPublicMarketplaceAPITestApp(t)
 
@@ -183,5 +223,45 @@ func TestHandleAPIPublicMarketplaceRequiresAuthenticationWhenMarketplaceIsPrivat
 
 	if authenticatedRecorder.Code != http.StatusOK {
 		t.Fatalf("unexpected authenticated status code: got=%d want=%d", authenticatedRecorder.Code, http.StatusOK)
+	}
+}
+
+func TestHandleAPIPublicMarketplaceExcludesSeedRecords(t *testing.T) {
+	app, admin := setupPublicMarketplaceAPITestApp(t)
+
+	seedSkill, err := app.skillService.CreateSkill(context.Background(), services.CreateSkillInput{
+		OwnerID:         admin.ID,
+		Name:            "Seed Marketplace Skill",
+		Description:     "Seed data should stay hidden from public marketplace payloads",
+		Content:         "seed-content",
+		CategorySlug:    "development",
+		SubcategorySlug: "frontend",
+		Visibility:      models.VisibilityPublic,
+		SourceType:      models.SourceTypeManual,
+		RecordOrigin:    models.RecordOriginSeed,
+	})
+	if err != nil {
+		t.Fatalf("failed to create seed skill: %v", err)
+	}
+	if err := app.skillService.ReplaceSkillTags(context.Background(), seedSkill.ID, []string{"seed"}); err != nil {
+		t.Fatalf("failed to replace seed skill tags: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/marketplace", nil)
+	req.Header.Set("Accept", "application/json")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicMarketplace(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
+	}
+
+	body := recorder.Body.String()
+	if strings.Contains(body, `"Seed Marketplace Skill"`) {
+		t.Fatalf("seed skill should not appear in public marketplace payload: %s", body)
+	}
+	if !strings.Contains(body, `"total_skills":2`) {
+		t.Fatalf("seed records should not change marketplace totals: %s", body)
 	}
 }

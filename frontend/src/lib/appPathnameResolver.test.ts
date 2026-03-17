@@ -49,18 +49,22 @@ describe("normalizeAppRoute", () => {
 
   it("maps representative prototype routes to prototype shell route", () => {
     expect(normalizeAppRoute("/rollout")).toBe("/prototype");
-    expect(normalizeAppRoute("/light/workspace")).toBe("/prototype");
-    expect(normalizeAppRoute("/workspace/activity")).toBe("/prototype");
-    expect(normalizeAppRoute("/mobile/light/workspace/actions")).toBe("/prototype");
     expect(normalizeAppRoute("/states/error")).toBe("/prototype");
     expect(normalizeAppRoute("/admin/records/exports")).toBe("/prototype");
     expect(normalizeAppRoute("/admin/integrations/list")).toBe("/prototype");
     expect(normalizeAppRoute("/admin/integrations/new")).toBe("/prototype");
-    expect(normalizeAppRoute("/admin/access")).toBe("/prototype");
+  });
+
+  it("promotes workspace routes to protected routes", () => {
+    expect(normalizeAppRoute("/workspace")).toBe("/workspace");
+    expect(normalizeAppRoute("/light/workspace")).toBe("/workspace");
+    expect(normalizeAppRoute("/workspace/activity")).toBe("/workspace/activity");
+    expect(normalizeAppRoute("/mobile/light/workspace/actions")).toBe("/workspace/actions");
   });
 
   it("promotes skill operation routes to protected admin routes", () => {
     expect(normalizeAppRoute("/admin/ingestion/manual")).toBe("/admin/ingestion/manual");
+    expect(normalizeAppRoute("/admin/integrations")).toBe("/admin/integrations");
     expect(normalizeAppRoute("/light/admin/ingestion/repository")).toBe("/admin/ingestion/repository");
     expect(normalizeAppRoute("/admin/records/imports")).toBe("/admin/records/imports");
     expect(normalizeAppRoute("/light/admin/records/sync-jobs")).toBe("/admin/sync-jobs");
@@ -69,9 +73,14 @@ describe("normalizeAppRoute", () => {
   it("promotes organization management routes to protected admin routes", () => {
     expect(normalizeAppRoute("/admin/accounts")).toBe("/admin/accounts");
     expect(normalizeAppRoute("/light/admin/accounts/new")).toBe("/admin/accounts/new");
+    expect(normalizeAppRoute("/mobile/admin/accounts")).toBe("/admin/accounts");
+    expect(normalizeAppRoute("/mobile/admin/accounts/new")).toBe("/admin/accounts/new");
     expect(normalizeAppRoute("/admin/permissions/accounts")).toBe("/admin/accounts");
+    expect(normalizeAppRoute("/mobile/admin/permissions/accounts")).toBe("/admin/accounts");
     expect(normalizeAppRoute("/light/admin/permissions/accounts/new")).toBe("/admin/accounts/new");
+    expect(normalizeAppRoute("/admin/access")).toBe("/admin/access");
     expect(normalizeAppRoute("/admin/roles")).toBe("/admin/roles");
     expect(normalizeAppRoute("/mobile/light/admin/roles/new")).toBe("/admin/roles/new");
+    expect(normalizeAppRoute("/mobile/admin/roles/new")).toBe("/admin/roles/new");
   });
 });

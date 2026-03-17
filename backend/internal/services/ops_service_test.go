@@ -37,9 +37,9 @@ func TestOpsServiceBuildMetricsAndAlerts(t *testing.T) {
 	now := time.Now().UTC()
 
 	auditEntries := []models.AuditLog{
-		{ActorUserID: user.ID, Action: "integration_update", TargetType: "setting", Summary: "a", CreatedAt: now.Add(-5 * time.Minute)},
-		{ActorUserID: user.ID, Action: "audit_write_failed", TargetType: "audit", Summary: "b", CreatedAt: now.Add(-4 * time.Minute)},
-		{ActorUserID: user.ID, Action: "role_update", TargetType: "user", Summary: "c", CreatedAt: now.Add(-3 * time.Minute)},
+		{ActorUserID: &user.ID, Action: "integration_update", TargetType: "setting", Summary: "a", CreatedAt: now.Add(-5 * time.Minute)},
+		{ActorUserID: &user.ID, Action: "audit_write_failed", TargetType: "audit", Summary: "b", CreatedAt: now.Add(-4 * time.Minute)},
+		{ActorUserID: &user.ID, Action: "role_update", TargetType: "user", Summary: "c", CreatedAt: now.Add(-3 * time.Minute)},
 	}
 	for _, item := range auditEntries {
 		if err := db.Create(&item).Error; err != nil {
@@ -134,10 +134,14 @@ func TestOpsServiceExportAudit(t *testing.T) {
 	}
 	now := time.Now().UTC()
 	if err := db.Create(&models.AuditLog{
-		ActorUserID: user.ID,
+		ActorUserID: &user.ID,
 		Action:      "user_update_role",
 		TargetType:  "user",
 		TargetID:    user.ID,
+		RequestID:   "req-export-123",
+		Result:      "success",
+		Reason:      "role escalation approved",
+		SourceIP:    "10.20.30.40",
 		Summary:     "role updated",
 		Details:     `{"from":"member","to":"admin"}`,
 		CreatedAt:   now.Add(-10 * time.Minute),
@@ -162,6 +166,18 @@ func TestOpsServiceExportAudit(t *testing.T) {
 	if !strings.Contains(string(rawJSON), "user_update_role") {
 		t.Fatalf("expected action in json export")
 	}
+	if !strings.Contains(string(rawJSON), "\"request_id\": \"req-export-123\"") {
+		t.Fatalf("expected request_id in json export")
+	}
+	if !strings.Contains(string(rawJSON), "\"result\": \"success\"") {
+		t.Fatalf("expected result in json export")
+	}
+	if !strings.Contains(string(rawJSON), "\"reason\": \"role escalation approved\"") {
+		t.Fatalf("expected reason in json export")
+	}
+	if !strings.Contains(string(rawJSON), "\"source_ip\": \"10.20.30.40\"") {
+		t.Fatalf("expected source_ip in json export")
+	}
 
 	rawCSV, contentTypeCSV, filenameCSV, err := svc.ExportAudit(context.Background(), AuditExportInput{
 		From:   now.Add(-1 * time.Hour),
@@ -179,6 +195,18 @@ func TestOpsServiceExportAudit(t *testing.T) {
 	}
 	if !strings.Contains(string(rawCSV), "action") || !strings.Contains(string(rawCSV), "user_update_role") {
 		t.Fatalf("expected header and action in csv export")
+	}
+	if !strings.Contains(string(rawCSV), "request_id") || !strings.Contains(string(rawCSV), "req-export-123") {
+		t.Fatalf("expected request_id header and value in csv export")
+	}
+	if !strings.Contains(string(rawCSV), "result") || !strings.Contains(string(rawCSV), "success") {
+		t.Fatalf("expected result header and value in csv export")
+	}
+	if !strings.Contains(string(rawCSV), "reason") || !strings.Contains(string(rawCSV), "role escalation approved") {
+		t.Fatalf("expected reason header and value in csv export")
+	}
+	if !strings.Contains(string(rawCSV), "source_ip") || !strings.Contains(string(rawCSV), "10.20.30.40") {
+		t.Fatalf("expected source_ip header and value in csv export")
 	}
 }
 

@@ -21,6 +21,10 @@ type RecordAuditInput struct {
 	Action      string
 	TargetType  string
 	TargetID    uint
+	RequestID   string
+	Result      string
+	Reason      string
+	SourceIP    string
 	Summary     string
 	Details     string
 }
@@ -46,15 +50,16 @@ func (s *AuditService) Record(ctx context.Context, input RecordAuditInput) error
 	if targetType == "" {
 		return fmt.Errorf("audit target type is required")
 	}
-	if input.ActorUserID == 0 {
-		return fmt.Errorf("audit actor user id is required")
-	}
 
 	entry := models.AuditLog{
-		ActorUserID: input.ActorUserID,
+		ActorUserID: auditActorPointer(input.ActorUserID),
 		Action:      action,
 		TargetType:  targetType,
 		TargetID:    input.TargetID,
+		RequestID:   trimAuditField(input.RequestID, 128),
+		Result:      normalizeAuditResult(input.Result),
+		Reason:      trimAuditField(input.Reason, 256),
+		SourceIP:    sanitizeIssuedIP(input.SourceIP),
 		Summary:     strings.TrimSpace(input.Summary),
 		Details:     strings.TrimSpace(input.Details),
 	}
@@ -62,6 +67,37 @@ func (s *AuditService) Record(ctx context.Context, input RecordAuditInput) error
 		return fmt.Errorf("failed to create audit log: %w", err)
 	}
 	return nil
+}
+
+func auditActorPointer(actorUserID uint) *uint {
+	if actorUserID == 0 {
+		return nil
+	}
+	value := actorUserID
+	return &value
+}
+
+func auditActorValue(actorUserID *uint) uint {
+	if actorUserID == nil {
+		return 0
+	}
+	return *actorUserID
+}
+
+func normalizeAuditResult(value string) string {
+	result := strings.TrimSpace(strings.ToLower(value))
+	if result == "" {
+		return ""
+	}
+	return trimAuditField(result, 32)
+}
+
+func trimAuditField(value string, limit int) string {
+	trimmed := strings.TrimSpace(value)
+	if limit <= 0 || len(trimmed) <= limit {
+		return trimmed
+	}
+	return trimmed[:limit]
 }
 
 // ListRecent returns recent logs with optional actor filter.

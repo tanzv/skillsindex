@@ -7,7 +7,6 @@ import adminOpsMetricsPageSource from "../adminOps/AdminOpsMetricsPage.tsx?raw";
 import adminSecurityPageHelpersSource from "../adminSecurity/AdminSecurityPage.helpers.ts?raw";
 import adminSubpageSummaryPanelSource from "./AdminSubpageSummaryPanel.tsx?raw";
 import adminIntegrationsPageSource from "../adminWorkbench/AdminIntegrationsPage.tsx?raw";
-import organizationManagementSubpageShellSource from "../organizationCenter/OrganizationManagementSubpageShell.tsx?raw";
 
 const tokenGovernedSources = [
   {
@@ -25,11 +24,7 @@ const tokenGovernedSources = [
   { path: "src/pages/adminWorkbench/AdminIntegrationsPage.tsx", content: adminIntegrationsPageSource },
   { path: "src/pages/adminOps/AdminOpsMetricsPage.tsx", content: adminOpsMetricsPageSource },
   { path: "src/pages/adminSecurity/AdminSecurityPage.helpers.ts", content: adminSecurityPageHelpersSource },
-  { path: "src/pages/adminShared/AdminSubpageSummaryPanel.tsx", content: adminSubpageSummaryPanelSource },
-  {
-    path: "src/pages/organizationCenter/OrganizationManagementSubpageShell.tsx",
-    content: organizationManagementSubpageShellSource
-  }
+  { path: "src/pages/adminShared/AdminSubpageSummaryPanel.tsx", content: adminSubpageSummaryPanelSource }
 ];
 
 const prototypeAlignmentExceptions = [

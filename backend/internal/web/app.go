@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"math"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -58,6 +59,7 @@ var authProviderIconPaths = map[string]string{
 type App struct {
 	authService       *services.AuthService
 	sessionService    *services.SessionService
+	sessionStarter    func(http.ResponseWriter, *http.Request, uint) error
 	userSessionSvc    *services.UserSessionService
 	skillService      *services.SkillService
 	apiKeyService     *services.APIKeyService
@@ -79,6 +81,7 @@ type App struct {
 	skillMPService    *services.SkillMPService
 	settingsService   *services.SettingsService
 	syncPolicyService *services.RepositorySyncPolicyService
+	loginThrottle     *loginThrottleState
 	allowRegistration bool
 	apiKeys           map[string]struct{}
 	translations      translationCatalog
@@ -114,8 +117,8 @@ type TimelineViewPoint struct {
 
 // TagCard stores top tag usage for marketplace spotlight sections.
 type TagCard struct {
-	Name  string
-	Count int
+	Name  string `json:"name"`
+	Count int    `json:"count"`
 }
 
 // AuthProviderOption describes one third-party auth provider rendered in auth pages.

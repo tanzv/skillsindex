@@ -198,6 +198,28 @@ func TestAPIAdminRegistrationSettingUpdateInvalidPayload(t *testing.T) {
 	}
 }
 
+func TestEnsureMarketplaceAccessRedirectsAnonymousHTMLToVariantLoginWithRedirect(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	if err := app.settingsService.SetBool(context.Background(), services.SettingMarketplacePublicAccess, false); err != nil {
+		t.Fatalf("failed to seed marketplace access setting: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/light/skills/11?tab=files", nil)
+	recorder := httptest.NewRecorder()
+
+	allowed := app.ensureMarketplaceAccess(recorder, req)
+
+	if allowed {
+		t.Fatalf("expected marketplace access guard to block anonymous request")
+	}
+	if recorder.Code != http.StatusSeeOther {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusSeeOther)
+	}
+	if got := recorder.Header().Get("Location"); got != "/light/login?redirect=%2Flight%2Fskills%2F11%3Ftab%3Dfiles" {
+		t.Fatalf("unexpected redirect location: got=%s", got)
+	}
+}
+
 func TestAdminAccessRegistrationUpdateForm(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	form := url.Values{}

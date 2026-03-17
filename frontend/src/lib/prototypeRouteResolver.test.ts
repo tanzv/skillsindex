@@ -40,10 +40,9 @@ describe("resolvePrototypeRoute", () => {
     expect(resolvePrototypeRoute("/light/admin/ingestion/manual")).toBeNull();
   });
 
-  it("resolves admin families for integrations/access/incidents/overview", () => {
+  it("resolves admin families for integrations/incidents/overview", () => {
     expect(resolvePrototypeRoute("/admin/integrations")?.key).toBe("admin-integrations");
     expect(resolvePrototypeRoute("/admin/integrations/webhooks/logs")?.key).toBe("admin-integrations");
-    expect(resolvePrototypeRoute("/admin/access")?.key).toBe("admin-access");
     expect(resolvePrototypeRoute("/admin/incidents/12/response")?.key).toBe("admin-incidents");
     expect(resolvePrototypeRoute("/light/admin")?.key).toBe("admin-overview");
     expect(resolvePrototypeRoute("/light/admin/overview")?.key).toBe("admin-overview");
@@ -52,6 +51,8 @@ describe("resolvePrototypeRoute", () => {
   it("stops owning organization management routes", () => {
     expect(resolvePrototypeRoute("/admin/accounts")).toBeNull();
     expect(resolvePrototypeRoute("/admin/accounts/new")).toBeNull();
+    expect(resolvePrototypeRoute("/admin/access")).toBeNull();
+    expect(resolvePrototypeRoute("/light/admin/access")).toBeNull();
     expect(resolvePrototypeRoute("/admin/permissions/accounts")).toBeNull();
     expect(resolvePrototypeRoute("/light/admin/permissions/accounts/new")).toBeNull();
     expect(resolvePrototypeRoute("/admin/roles")).toBeNull();

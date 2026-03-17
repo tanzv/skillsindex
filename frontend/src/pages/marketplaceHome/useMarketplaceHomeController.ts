@@ -34,7 +34,7 @@ import {
 import { normalizeFilterFormQuery } from "../marketplacePublic/MarketplacePublicQuery";
 import { createPublicPageNavigator } from "../publicShared/publicPageNavigation";
 import { isLightPrototypePath } from "../prototype/prototypePageTheme";
-import { loadMarketplaceWithFallback } from "../prototype/prototypeDataFallback";
+import { buildEmptyMarketplacePayload, loadMarketplaceWithFallback } from "../prototype/prototypeDataFallback";
 import type { MarketplaceText } from "../marketplacePublic/marketplaceText";
 import { useMarketplaceHomeActions } from "./useMarketplaceHomeActions";
 
@@ -82,6 +82,10 @@ export function useMarketplaceHomeController({
   const fallbackData = useMemo(
     () => buildMarketplaceFallback(effectiveQueryState, locale, sessionUser),
     [effectiveQueryState, locale, sessionUser]
+  );
+  const emptyLiveData = useMemo(
+    () => buildEmptyMarketplacePayload(effectiveQueryState, sessionUser),
+    [effectiveQueryState, sessionUser]
   );
   const hasLiveQueryConstraints = Boolean(
     effectiveQueryState.q ||
@@ -134,8 +138,10 @@ export function useMarketplaceHomeController({
         }
         const fallbackPayload =
           effectiveDataMode === "live" && hasLiveQueryConstraints
-            ? normalizeUnavailableLiveMarketplacePayload(fallbackData, effectiveQueryState.page)
-            : fallbackData;
+            ? normalizeUnavailableLiveMarketplacePayload(emptyLiveData, effectiveQueryState.page)
+            : effectiveDataMode === "live"
+              ? emptyLiveData
+              : fallbackData;
         setData((previousPayload) =>
           mergeMarketplacePayloadForHomeAutoLoad({
             previousPayload,
@@ -155,6 +161,7 @@ export function useMarketplaceHomeController({
     };
   }, [
     effectiveQueryState,
+    emptyLiveData,
     fallbackData,
     effectiveDataMode,
     locale,
@@ -184,7 +191,7 @@ export function useMarketplaceHomeController({
     };
   }, []);
 
-  const resolvedData = data || fallbackData;
+  const resolvedData = data || (effectiveDataMode === "live" ? emptyLiveData : fallbackData);
   const items = resolvedData.items || [];
   const currentPage = resolvedData.pagination.page || 1;
   const pageSize = resolvedData.pagination.page_size || 24;

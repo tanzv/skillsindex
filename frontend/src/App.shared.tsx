@@ -3,6 +3,7 @@ import type { ProtectedRoute } from "./appNavigationConfig";
 import type { AppRoute } from "./lib/appPathnameResolver";
 import type { AccountRoute } from "./pages/accountWorkbench/AccountWorkbenchPage";
 import type { AdminRoute } from "./pages/adminWorkbench/AdminWorkbenchPage";
+import type { WorkspaceRoute } from "./pages/workspace/WorkspaceCenterPage.types";
 
 export type PublicLocaleSwitchMode = "hidden" | "overlay";
 
@@ -55,6 +56,10 @@ export function isAdminRoute(route: ProtectedRoute): route is AdminRoute {
 
 export function isAccountRoute(route: ProtectedRoute): route is AccountRoute {
   return route.startsWith("/account");
+}
+
+export function isWorkspaceRoute(route: ProtectedRoute): route is WorkspaceRoute {
+  return route.startsWith("/workspace");
 }
 
 function normalizePath(pathname: string): string {

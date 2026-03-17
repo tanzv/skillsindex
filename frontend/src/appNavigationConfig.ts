@@ -3,10 +3,11 @@ import { AdminCatalogRoute } from "./pages/adminCatalog/AdminCatalogPage";
 import { AdminOpsControlRoute } from "./pages/adminOps/AdminOpsControlPage";
 import { AdminSecurityRoute } from "./pages/adminSecurity/AdminSecurityPage";
 import { AdminRoute } from "./pages/adminWorkbench/AdminWorkbenchPage";
+import { WorkspaceRoute } from "./pages/workspace/WorkspaceCenterPage.types";
 
-export type ProtectedRoute = AdminRoute | AccountRoute;
+export type ProtectedRoute = AdminRoute | AccountRoute | WorkspaceRoute;
 
-export type NavigationSection = "admin" | "account";
+export type NavigationSection = "workspace" | "admin" | "account";
 
 export interface NavigationItem {
   path: ProtectedRoute;
@@ -16,6 +17,12 @@ export interface NavigationItem {
 }
 
 export const protectedRoutes: ProtectedRoute[] = [
+  "/workspace",
+  "/workspace/activity",
+  "/workspace/queue",
+  "/workspace/policy",
+  "/workspace/runbook",
+  "/workspace/actions",
   "/admin/overview",
   "/admin/ingestion/manual",
   "/admin/ingestion/repository",
@@ -48,6 +55,15 @@ export const protectedRoutes: ProtectedRoute[] = [
   "/account/api-credentials"
 ];
 
+export const workspaceRoutes: WorkspaceRoute[] = [
+  "/workspace",
+  "/workspace/activity",
+  "/workspace/queue",
+  "/workspace/policy",
+  "/workspace/runbook",
+  "/workspace/actions"
+];
+
 export const adminQuickRoutes: AdminRoute[] = [
   "/admin/overview",
   "/admin/ingestion/repository",
@@ -72,7 +88,7 @@ export const adminCatalogRoutes: AdminRoute[] = [
   "/admin/sync-policy/repository"
 ];
 
-export const adminSecurityRoutes: AdminRoute[] = ["/admin/apikeys", "/admin/access", "/admin/moderation"];
+export const adminSecurityRoutes: AdminRoute[] = ["/admin/apikeys", "/admin/moderation"];
 
 export const adminOpsControlRoutes: AdminRoute[] = [
   "/admin/ops/alerts",
@@ -98,6 +114,42 @@ export function isAdminOpsControlRoute(route: AdminRoute): route is AdminOpsCont
 }
 
 export const navItems: NavigationItem[] = [
+  {
+    path: "/workspace",
+    title: "Overview",
+    subtitle: "Operational workspace summary",
+    section: "workspace"
+  },
+  {
+    path: "/workspace/activity",
+    title: "Activity Feed",
+    subtitle: "Recent team execution signals",
+    section: "workspace"
+  },
+  {
+    path: "/workspace/queue",
+    title: "Queue Execution",
+    subtitle: "Active run queue and risk hotspots",
+    section: "workspace"
+  },
+  {
+    path: "/workspace/runbook",
+    title: "Runbook Preview",
+    subtitle: "Operational steps and release drills",
+    section: "workspace"
+  },
+  {
+    path: "/workspace/policy",
+    title: "Policy Summary",
+    subtitle: "Governance coverage and exceptions",
+    section: "workspace"
+  },
+  {
+    path: "/workspace/actions",
+    title: "Quick Actions",
+    subtitle: "Shortcuts for common operator tasks",
+    section: "workspace"
+  },
   {
     path: "/admin/overview",
     title: "Overview",
@@ -126,6 +178,18 @@ export const navItems: NavigationItem[] = [
     path: "/admin/skills",
     title: "Skills",
     subtitle: "Governed skill inventory",
+    section: "admin"
+  },
+  {
+    path: "/admin/accounts",
+    title: "Account Management",
+    subtitle: "User records and provisioning controls",
+    section: "admin"
+  },
+  {
+    path: "/admin/roles",
+    title: "Role Management",
+    subtitle: "Role definitions and assignment governance",
     section: "admin"
   },
   {

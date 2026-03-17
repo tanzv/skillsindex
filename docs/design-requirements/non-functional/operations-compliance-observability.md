@@ -98,7 +98,9 @@
 2. 仅支持 `json` 与 `csv`
 3. `to < from` 时返回错误
 4. 单次导出当前最多 50,000 条审计记录
-5. 导出内容来自 `AuditLog` 原始记录，不做额外签名包装
+5. JSON / CSV 当前稳定导出以下审计字段：`id`、`created_at`、`actor_user_id`、`action`、`target_type`、`target_id`、`request_id`、`result`、`reason`、`source_ip`、`summary`、`details`
+6. `actor_user_id` 对匿名或系统事件允许为空
+7. 导出内容来自 `AuditLog` 原始记录，不做额外签名包装
 
 ### 3.4 Release Gates
 
@@ -164,6 +166,7 @@
 2. `summary` 为人类可读摘要
 3. `details` 为 JSON 序列化结构化内容
 4. `created_at` 作为事件时间
+5. `request_id`、`result`、`reason`、`source_ip` 已提升为显式列，便于导出与筛选
 
 ### 4.2 当前优点
 
@@ -175,7 +178,7 @@
 
 1. 缺少单独的 immutable store / WORM 存储
 2. 不具备事件签名或防篡改校验链
-3. 结构化字段仍被包裹在 `details` JSON 中，查询粒度有限
+3. 长尾业务字段仍主要包裹在 `details` JSON 中，复杂条件查询粒度仍有限
 
 ## 5. 当前未闭环差距
 
@@ -197,7 +200,8 @@
 进入发布闭环前，至少需要完成以下验证：
 
 1. 审计导出 JSON / CSV 均可成功导出
-2. release gate 至少有 1 次成功、1 次失败样例
-3. recovery drill 记录可验证 RPO/RTO 判定
-4. backup plan 与 backup run 记录可通过 API 创建并回读
-5. 告警与门禁结果能被人工复核解释
+2. 导出内容应包含 `request_id`、`result`、`reason`、`source_ip`，并验证匿名事件可导出空 `actor_user_id`
+3. release gate 至少有 1 次成功、1 次失败样例
+4. recovery drill 记录可验证 RPO/RTO 判定
+5. backup plan 与 backup run 记录可通过 API 创建并回读
+6. 告警与门禁结果能被人工复核解释

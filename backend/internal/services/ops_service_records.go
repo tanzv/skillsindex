@@ -47,7 +47,7 @@ func (s *OpsService) RecordRelease(ctx context.Context, actorUserID uint, input 
 		return OpsReleaseRecord{}, fmt.Errorf("failed to marshal release payload: %w", err)
 	}
 	entry := models.AuditLog{
-		ActorUserID: actorUserID,
+		ActorUserID: auditActorPointer(actorUserID),
 		Action:      opsReleaseAction,
 		TargetType:  opsTargetType,
 		Summary:     fmt.Sprintf("Release %s to %s is %s", record.Version, record.Environment, record.Status),
@@ -70,7 +70,7 @@ func (s *OpsService) ListReleases(ctx context.Context, limit int) ([]OpsReleaseR
 	for _, item := range logs {
 		record := OpsReleaseRecord{
 			ReleasedAt:  item.CreatedAt.UTC(),
-			ActorUserID: item.ActorUserID,
+			ActorUserID: auditActorValue(item.ActorUserID),
 			Note:        strings.TrimSpace(item.Summary),
 		}
 		var payload struct {
@@ -135,7 +135,7 @@ func (s *OpsService) RecordChangeApproval(ctx context.Context, actorUserID uint,
 		return OpsChangeApprovalRecord{}, fmt.Errorf("failed to marshal change approval payload: %w", err)
 	}
 	entry := models.AuditLog{
-		ActorUserID: actorUserID,
+		ActorUserID: auditActorPointer(actorUserID),
 		Action:      opsChangeApprovalAction,
 		TargetType:  opsTargetType,
 		Summary:     fmt.Sprintf("Change ticket %s %s", record.TicketID, record.Status),
@@ -158,7 +158,7 @@ func (s *OpsService) ListChangeApprovals(ctx context.Context, limit int) ([]OpsC
 	for _, item := range logs {
 		record := OpsChangeApprovalRecord{
 			OccurredAt:  item.CreatedAt.UTC(),
-			ActorUserID: item.ActorUserID,
+			ActorUserID: auditActorValue(item.ActorUserID),
 			Note:        strings.TrimSpace(item.Summary),
 		}
 		var payload struct {
@@ -231,7 +231,7 @@ func (s *OpsService) UpsertBackupPlan(ctx context.Context, actorUserID uint, inp
 		state = "enabled"
 	}
 	entry := models.AuditLog{
-		ActorUserID: actorUserID,
+		ActorUserID: auditActorPointer(actorUserID),
 		Action:      opsBackupPlanAction,
 		TargetType:  opsTargetType,
 		Summary:     fmt.Sprintf("Backup plan %s %s", record.PlanKey, state),
@@ -254,7 +254,7 @@ func (s *OpsService) ListBackupPlans(ctx context.Context, limit int) ([]OpsBacku
 	for _, item := range logs {
 		record := OpsBackupPlanRecord{
 			LoggedAt:    item.CreatedAt.UTC(),
-			ActorUserID: item.ActorUserID,
+			ActorUserID: auditActorValue(item.ActorUserID),
 			Note:        strings.TrimSpace(item.Summary),
 		}
 		var payload struct {
@@ -326,7 +326,7 @@ func (s *OpsService) RecordBackupRun(ctx context.Context, actorUserID uint, inpu
 		return OpsBackupRunRecord{}, fmt.Errorf("failed to marshal backup run payload: %w", err)
 	}
 	entry := models.AuditLog{
-		ActorUserID: actorUserID,
+		ActorUserID: auditActorPointer(actorUserID),
 		Action:      opsBackupRunAction,
 		TargetType:  opsTargetType,
 		Summary:     fmt.Sprintf("Backup run %s %s", record.PlanKey, record.Status),
@@ -349,7 +349,7 @@ func (s *OpsService) ListBackupRuns(ctx context.Context, limit int) ([]OpsBackup
 	for _, item := range logs {
 		record := OpsBackupRunRecord{
 			LoggedAt:    item.CreatedAt.UTC(),
-			ActorUserID: item.ActorUserID,
+			ActorUserID: auditActorValue(item.ActorUserID),
 			Note:        strings.TrimSpace(item.Summary),
 		}
 		var payload struct {

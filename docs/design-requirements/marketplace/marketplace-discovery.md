@@ -2,6 +2,8 @@
 
 ## 1. 功能总览
 
+当前分支决策：`retain marketplace_public_access`
+
 覆盖站点公开发现链路：
 
 1. 市场主页 `/`
@@ -95,6 +97,24 @@
 - 支持 `/zh` 与 `/zh/*` 语言别名路由
 - 支持通过 `lang=en|zh` 切换
 - 支持 `/skillsmp` 兼容别名入口（重定向到市场首页）
+
+### FR-MKT-009 市场公开访问基线
+
+当前实现保留 `marketplace_public_access` 开关，由后台访问设置管理。
+
+规则：
+
+1. 当 `marketplace_public_access=true` 时，匿名用户可访问市场首页、分类页、时间线与公开技能详情
+2. 当 `marketplace_public_access=false` 时，匿名用户访问前端公开市场路由应跳转到登录页
+3. 前端跳转必须保留原始 `redirect` 目标，登录成功后可返回原路径
+4. 当 `marketplace_public_access=false` 时，匿名调用 `GET /api/v1/public/marketplace` 与 `GET /api/v1/public/skills/{skillID}` 应返回 `401`
+5. 已登录用户在 private 模式下仍可访问公开市场与公开技能详情
+
+验收标准：
+
+1. 管理端切换开关后，前端公共路由与公开 API 行为保持一致
+2. 匿名用户在 private 模式下不能直接浏览公开市场页面
+3. 登录成功后可返回原始市场路径继续浏览
 
 ## 3. 页面级非功能要求
 

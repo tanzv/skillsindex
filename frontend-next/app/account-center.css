@@ -1,0 +1,296 @@
+.account-center-stage,
+.account-center-left,
+.account-center-right,
+.account-center-section-stack,
+.account-center-summary-grid,
+.account-center-form-grid,
+.account-center-links,
+.account-center-stage-grid,
+.account-center-feedback-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.account-center-stage-panel,
+.account-center-message,
+.account-center-secret,
+.account-center-session-card,
+.account-center-credential-card {
+  border: 1px solid rgba(191, 216, 255, 0.16);
+  border-radius: 20px;
+}
+
+.account-center-stage-panel {
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(27, 46, 87, 0.96) 0%, rgba(20, 37, 72, 0.96) 100%);
+  box-shadow: 0 18px 40px rgba(4, 10, 23, 0.26);
+}
+
+.account-center-hero {
+  display: grid;
+  gap: 16px;
+}
+
+.account-center-kicker,
+.account-center-summary-label,
+.account-center-section-kicker {
+  color: #93b4e8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.account-center-hero h1,
+.account-center-panel-title-row h2,
+.account-center-panel-title-row h3 {
+  margin: 0;
+  color: #eaf2ff;
+}
+
+.account-center-hero h1 {
+  font-size: clamp(28px, 4vw, 34px);
+  line-height: 1.08;
+}
+
+.account-center-description,
+.account-center-panel-description,
+.account-center-summary-detail,
+.account-center-surface-copy {
+  margin: 0;
+  color: #bfd8ff;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.account-center-hero-actions,
+.account-center-action-row,
+.account-center-section-badges,
+.account-center-session-meta,
+.account-center-credential-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.account-center-action,
+.account-center-tab-link,
+.account-center-badge {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(191, 216, 255, 0.16);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #bfd8ff;
+  background: rgba(234, 242, 255, 0.05);
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.account-center-action:hover,
+.account-center-tab-link:hover {
+  border-color: rgba(191, 216, 255, 0.28);
+  background: rgba(234, 242, 255, 0.1);
+  color: #eaf2ff;
+}
+
+.account-center-action.is-primary,
+.account-center-tab-link.is-active {
+  border-color: rgba(94, 234, 212, 0.28);
+  background: rgba(94, 234, 212, 0.16);
+  color: #eaf2ff;
+}
+
+.account-center-summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.account-center-summary-card {
+  padding: 14px;
+  border: 1px solid rgba(191, 216, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.account-center-summary-value {
+  margin-top: 10px;
+  color: #eaf2ff;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.account-center-feedback-stack {
+  gap: 12px;
+}
+
+.account-center-message,
+.account-center-secret {
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.account-center-message.is-error {
+  border-color: rgba(248, 113, 113, 0.32);
+  background: rgba(127, 29, 29, 0.32);
+  color: #fee2e2;
+}
+
+.account-center-message.is-success {
+  border-color: rgba(94, 234, 212, 0.32);
+  background: rgba(6, 78, 59, 0.32);
+  color: #d1fae5;
+}
+
+.account-center-secret {
+  background: rgba(20, 184, 166, 0.22);
+  color: #d7fffb;
+}
+
+.account-center-stage-grid {
+  grid-template-columns: minmax(0, 1.34fr) 320px;
+  align-items: start;
+}
+
+.account-center-left,
+.account-center-right {
+  align-content: start;
+}
+
+.account-center-panel-title-row {
+  display: grid;
+  gap: 8px;
+}
+
+.account-center-profile-head,
+.account-center-session-row,
+.account-center-credential-row {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.account-center-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(94, 234, 212, 0.18);
+  color: #eaf2ff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.account-center-form-grid {
+  gap: 12px;
+}
+
+.account-center-form-grid.is-two-column {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.account-center-field,
+.account-center-textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(191, 216, 255, 0.18);
+  border-radius: 14px;
+  background: rgba(9, 17, 32, 0.34);
+  color: #eaf2ff;
+  font-size: 14px;
+  outline: none;
+}
+
+.account-center-field::placeholder,
+.account-center-textarea::placeholder {
+  color: #93b4e8;
+}
+
+.account-center-field:focus,
+.account-center-textarea:focus {
+  border-color: rgba(94, 234, 212, 0.42);
+}
+
+.account-center-textarea {
+  min-height: 112px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.account-center-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #bfd8ff;
+  font-size: 14px;
+}
+
+.account-center-checkbox-row input {
+  accent-color: #5eead4;
+}
+
+.account-center-session-card,
+.account-center-credential-card {
+  padding: 14px;
+  background: rgba(7, 15, 30, 0.18);
+}
+
+.account-center-badge {
+  min-height: 28px;
+  padding-inline: 10px;
+  font-size: 11px;
+}
+
+.account-center-badge.is-soft {
+  border-color: rgba(94, 234, 212, 0.28);
+  background: rgba(94, 234, 212, 0.16);
+  color: #eaf2ff;
+}
+
+.account-center-side-panel-highlight {
+  background: linear-gradient(180deg, rgba(20, 148, 165, 0.92) 0%, rgba(17, 94, 89, 0.92) 100%);
+}
+
+.account-center-side-panel-highlight .account-center-panel-title-row h2,
+.account-center-side-panel-highlight .account-center-panel-description,
+.account-center-side-panel-highlight .account-center-surface-copy {
+  color: #e6fffb;
+}
+
+@media (max-width: 1180px) {
+  .account-center-stage-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 780px) {
+  .account-center-form-grid.is-two-column,
+  .account-center-profile-head,
+  .account-center-session-row,
+  .account-center-credential-row {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .account-center-hero-actions,
+  .account-center-action-row {
+    width: 100%;
+  }
+
+  .account-center-action,
+  .account-center-tab-link {
+    width: 100%;
+  }
+}

@@ -257,7 +257,7 @@ func openAPIPathsAdminOps() map[string]any {
 			"get": map[string]any{
 				"tags":        []string{"dashboard"},
 				"summary":     "Export audit logs for compliance",
-				"description": "Session endpoint for admin/super_admin to export audit logs as JSON or CSV.",
+				"description": "Session endpoint for admin/super_admin to export audit logs as JSON or CSV. Export records include request_id, result, reason, and source_ip, and actor_user_id may be empty for anonymous or system-generated events.",
 				"security":    sessionSecurity(),
 				"parameters": []map[string]any{
 					queryParam("from", "string", false, "Start time (RFC3339 or YYYY-MM-DD)"),

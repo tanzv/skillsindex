@@ -7,14 +7,8 @@ import {
   fetchSecurityViewData,
   isEmptyData
 } from "./AdminSecurityPage.helpers";
-import {
-  AccessAccountsSection,
-  AccessPolicySection,
-  ApiKeysSection,
-  ModerationSection
-} from "./AdminSecurityPage.sections";
+import { ApiKeysSection, ModerationSection } from "./AdminSecurityPage.sections";
 import type {
-  AccessViewData,
   AdminSecurityPageProps,
   AdminSecurityRoute,
   ApiKeysViewData,
@@ -27,16 +21,6 @@ export type { AdminSecurityRoute } from "./AdminSecurityPage.types";
 function renderRouteSection(route: AdminSecurityRoute, data: SecurityViewData): JSX.Element {
   if (route === "/admin/apikeys") {
     return <ApiKeysSection data={data as ApiKeysViewData} />;
-  }
-
-  if (route === "/admin/access") {
-    const accessData = data as AccessViewData;
-    return (
-      <>
-        <AccessPolicySection data={accessData} />
-        <AccessAccountsSection data={accessData} />
-      </>
-    );
   }
 
   return <ModerationSection data={data as ModerationViewData} />;

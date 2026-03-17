@@ -93,13 +93,13 @@ describe("PublicRankingPage helpers", () => {
     expect(buildRankingSkillPath("/mobile/light/rankings", 912)).toBe("/mobile/light/skills/912");
   });
 
-  it("prefers live payload items and falls back when live payload is empty", () => {
+  it("prefers resolved payload items and only falls back when payload is missing", () => {
     const fallbackItems = [createSkill({ id: 201, starCount: 10, qualityScore: 7.1 })];
     const liveItems = [createSkill({ id: 301, starCount: 20, qualityScore: 8.3 })];
     const fallbackPayload = createPayload(fallbackItems);
 
     expect(resolveRankingSourceItems(createPayload(liveItems), fallbackPayload).map((item) => item.id)).toEqual([301]);
-    expect(resolveRankingSourceItems(createPayload([]), fallbackPayload).map((item) => item.id)).toEqual([201]);
+    expect(resolveRankingSourceItems(createPayload([]), fallbackPayload).map((item) => item.id)).toEqual([]);
     expect(resolveRankingSourceItems(null, fallbackPayload).map((item) => item.id)).toEqual([201]);
   });
 

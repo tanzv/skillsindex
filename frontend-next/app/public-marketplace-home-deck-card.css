@@ -1,0 +1,190 @@
+.marketplace-home-deck-link {
+  display: block;
+}
+
+.marketplace-home-deck-card {
+  min-height: 196px;
+  height: 196px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: space-between;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
+}
+
+.marketplace-home-deck-card:hover {
+  transform: translateY(-1px);
+}
+
+.marketplace-home-deck-card .marketplace-card-head {
+  width: 72px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.marketplace-home-deck-card .marketplace-card-cover {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.marketplace-home-deck-card .marketplace-card-cover-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 0;
+  background: #2a2a2a;
+  color: #f3f4f6;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-card-cover-thumb {
+  background: #111111;
+  color: #ffffff;
+}
+
+.marketplace-home-deck-card .marketplace-card-cover-chip {
+  position: absolute;
+  right: -6px;
+  bottom: -3px;
+  height: 18px;
+  min-width: 24px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 999px;
+  background: #111111;
+  color: #f3f4f6;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-card-cover-chip {
+  background: #111111;
+  color: #f3f4f6;
+}
+
+.marketplace-home-deck-card .marketplace-home-deck-body,
+.marketplace-home-deck-card .marketplace-home-deck-secondary {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.marketplace-home-deck-card .marketplace-home-deck-body {
+  flex: 1;
+  gap: 8px;
+}
+
+.marketplace-home-deck-card .marketplace-home-deck-secondary {
+  margin-top: auto;
+  gap: 10px;
+}
+
+.marketplace-home-deck-card .marketplace-home-deck-name,
+.marketplace-home-deck-card .marketplace-home-deck-description,
+.marketplace-home-deck-card .marketplace-home-deck-foot span:last-child {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.marketplace-home-deck-card .marketplace-home-deck-name {
+  min-width: 0;
+  color: #f8fafc;
+  font-family: "Noto Sans SC", "Noto Sans", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  -webkit-line-clamp: 2;
+}
+
+.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-home-deck-name {
+  color: #111827;
+}
+
+.marketplace-home-deck-card .marketplace-home-deck-description {
+  color: #d1d5db;
+  font-family: "Noto Sans SC", "Noto Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+  -webkit-line-clamp: 2;
+}
+
+.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-home-deck-description {
+  color: #4b5563;
+}
+
+.marketplace-home-deck-card .marketplace-home-deck-chip-row {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.marketplace-home-deck-card .marketplace-home-deck-chip-row .marketplace-skill-chip {
+  min-height: 20px;
+  padding: 0 9px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: #d2d6de;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-home-deck-chip-row .marketplace-skill-chip {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.marketplace-home-deck-card .marketplace-home-deck-foot {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.marketplace-home-deck-card .marketplace-home-deck-foot span {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #cfd4dd;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-home-deck-foot span {
+  color: #4b5563;
+}
+
+.marketplace-home-deck-card .marketplace-home-deck-foot span.is-primary {
+  color: #f3f4f6;
+  font-weight: 700;
+}
+
+.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-home-deck-foot span.is-primary {
+  color: #111827;
+}
+
+.marketplace-home-deck-card .marketplace-home-deck-foot span:last-child {
+  -webkit-line-clamp: 1;
+  max-width: min(100%, 18ch);
+}

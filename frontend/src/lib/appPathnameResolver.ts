@@ -1,4 +1,4 @@
-import { protectedRoutes, type ProtectedRoute } from "../appNavigationConfig";
+import { protectedRoutes, workspaceRoutes, type ProtectedRoute } from "../appNavigationConfig";
 import { matchPrototypeCatalog } from "./prototypeCatalog";
 
 export type PublicRoute =
@@ -23,6 +23,8 @@ const defaultDependencies: AppPathnameResolverDependencies = {
   protectedRoutes,
   matchPrototypeCatalog
 };
+
+const promotedWorkspaceRoutes = [...workspaceRoutes].sort((left, right) => right.length - left.length);
 
 function normalizeTrailingSlash(pathname: string): string {
   return pathname.replace(/\/+$/, "") || "/";
@@ -77,6 +79,18 @@ function resolvePromotedProtectedRoute(pathname: string): ProtectedRoute | null 
   }
   if (normalizedCorePath === "/admin/records/sync-jobs" || normalizedCorePath.startsWith("/admin/records/sync-jobs/")) {
     return "/admin/sync-jobs";
+  }
+  if (normalizedCorePath === "/admin/integrations" || normalizedCorePath === "/admin/integrations/") {
+    return "/admin/integrations";
+  }
+  if (normalizedCorePath === "/admin/access" || normalizedCorePath === "/admin/access/") {
+    return "/admin/access";
+  }
+
+  for (const route of promotedWorkspaceRoutes) {
+    if (normalizedCorePath === route || normalizedCorePath.startsWith(`${route}/`)) {
+      return route;
+    }
   }
 
   return null;

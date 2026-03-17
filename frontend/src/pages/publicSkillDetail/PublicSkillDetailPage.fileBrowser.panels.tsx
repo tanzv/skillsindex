@@ -2,6 +2,10 @@ import type { PublicSkillDetailFileBrowserProps } from "./PublicSkillDetailPage.
 import { SkillDetailPreviewPanel, formatSkillDetailDateLabel } from "./PublicSkillDetailPage.fileBrowser.preview";
 import { resolveOverviewMetricSections, resolveResourceTabLabel } from "./PublicSkillDetailPageViewHelpers";
 import { skillDetailResourceTabs } from "./PublicSkillDetailResourceTabs";
+import {
+  resolveSkillResourceSnapshot,
+  resolveSkillVersionHistoryEntries
+} from "./PublicSkillDetailPage.liveData";
 
 type ResourceTabListProps = Pick<
   PublicSkillDetailFileBrowserProps,
@@ -14,6 +18,8 @@ type OverviewPanelProps = Pick<
   | "activeSkill"
   | "detailModel"
   | "selectedFileIndex"
+  | "selectedFileContent"
+  | "selectedFileLanguage"
   | "selectedFileName"
   | "selectedFilePath"
   | "text"
@@ -25,7 +31,7 @@ type InstallationPanelProps = Pick<PublicSkillDetailFileBrowserProps, "activeSki
 
 type ResourcesPanelProps = Pick<
   PublicSkillDetailFileBrowserProps,
-  "activeSkill" | "detailModel" | "selectedFileName" | "text"
+  "activeSkill" | "detailModel" | "selectedFileName" | "skillResources" | "skillResourcesLoadStatus" | "text"
 >;
 
 type RelatedPanelProps = Pick<
@@ -33,7 +39,16 @@ type RelatedPanelProps = Pick<
   "relatedSkills" | "relatedSkillsLoadStatus" | "text"
 >;
 
-type HistoryPanelProps = Pick<PublicSkillDetailFileBrowserProps, "activeSkill" | "text">;
+type HistoryPanelProps = Pick<PublicSkillDetailFileBrowserProps, "text" | "versionItems" | "versionItemsLoadStatus">;
+
+function renderPanelFact(label: string, value: string, emptyValue = "N/A") {
+  return (
+    <div className="skill-detail-resource-fact">
+      <span className="skill-detail-resource-fact-label">{label}</span>
+      <span className="skill-detail-resource-fact-value">{String(value || "").trim() || emptyValue}</span>
+    </div>
+  );
+}
 
 export function SkillDetailResourceTabList({
   activeResourceTab,
@@ -69,6 +84,8 @@ function SkillDetailOverviewPanel({
   activeSkill,
   detailModel,
   selectedFileIndex,
+  selectedFileContent,
+  selectedFileLanguage,
   selectedFileName,
   selectedFilePath,
   text,
@@ -116,6 +133,8 @@ function SkillDetailOverviewPanel({
         activeSkill={activeSkill}
         detailModel={detailModel}
         selectedFileIndex={selectedFileIndex}
+        selectedFileContent={selectedFileContent}
+        selectedFileLanguage={selectedFileLanguage}
         selectedFileName={selectedFileName}
         selectedFilePath={selectedFilePath}
         text={text}
@@ -158,9 +177,18 @@ function SkillDetailInstallationPanel({ activeSkill, detailModel, text }: Instal
 function SkillDetailResourcesPanel({
   activeSkill,
   detailModel,
+  skillResources,
+  skillResourcesLoadStatus,
   selectedFileName,
   text
 }: ResourcesPanelProps) {
+  const snapshot = resolveSkillResourceSnapshot({
+    activeSkill,
+    detailModel,
+    selectedFileName,
+    resources: skillResources
+  });
+
   return (
     <article className="skill-detail-card skill-detail-resource-panel skill-detail-resources-panel" role="tabpanel" aria-label={text.tabResources}>
       <div className="skill-detail-resource-head">
@@ -169,31 +197,19 @@ function SkillDetailResourcesPanel({
           <p className="skill-detail-resource-subheading">{text.metadataTitle}</p>
         </div>
       </div>
+      {skillResourcesLoadStatus === "loading" ? <p className="skill-detail-empty-state">Loading resource metadata</p> : null}
+      {skillResourcesLoadStatus === "error" && !skillResources ? (
+        <p className="skill-detail-empty-state">Resource metadata is unavailable</p>
+      ) : null}
       <div className="skill-detail-resource-facts">
-        <div className="skill-detail-resource-fact">
-          <span className="skill-detail-resource-fact-label">{text.sourceUrlLabel}</span>
-          <span className="skill-detail-resource-fact-value">{activeSkill?.source_url || detailModel.repositoryHostPath}</span>
-        </div>
-        <div className="skill-detail-resource-fact">
-          <span className="skill-detail-resource-fact-label">{text.repositoryLabel}</span>
-          <span className="skill-detail-resource-fact-value">{detailModel.repositoryHostPath}</span>
-        </div>
-        <div className="skill-detail-resource-fact">
-          <span className="skill-detail-resource-fact-label">{text.selectedFileLabel}</span>
-          <span className="skill-detail-resource-fact-value">{selectedFileName}</span>
-        </div>
-        <div className="skill-detail-resource-fact">
-          <span className="skill-detail-resource-fact-label">{text.updatedAtLabel}</span>
-          <span className="skill-detail-resource-fact-value">{formatSkillDetailDateLabel(activeSkill?.updated_at)}</span>
-        </div>
-        <div className="skill-detail-resource-fact">
-          <span className="skill-detail-resource-fact-label">{text.typeLabel}</span>
-          <span className="skill-detail-resource-fact-value">{activeSkill?.source_type || "repository"}</span>
-        </div>
-        <div className="skill-detail-resource-fact">
-          <span className="skill-detail-resource-fact-label">{text.fileCountLabel}</span>
-          <span className="skill-detail-resource-fact-value">{String(detailModel.fileEntries.length)}</span>
-        </div>
+        {renderPanelFact(text.sourceUrlLabel, snapshot.sourceUrl)}
+        {renderPanelFact(text.repositoryLabel, snapshot.repository)}
+        {renderPanelFact("Source Branch", snapshot.sourceBranch)}
+        {renderPanelFact("Source Path", snapshot.sourcePath)}
+        {renderPanelFact(text.selectedFileLabel, snapshot.selectedFile)}
+        {renderPanelFact(text.updatedAtLabel, formatSkillDetailDateLabel(snapshot.updatedAt))}
+        {renderPanelFact(text.typeLabel, snapshot.sourceType)}
+        {renderPanelFact(text.fileCountLabel, snapshot.fileCount)}
       </div>
     </article>
   );
@@ -230,24 +246,42 @@ function SkillDetailRelatedPanel({ relatedSkills, relatedSkillsLoadStatus, text 
   );
 }
 
-function SkillDetailHistoryPanel({ activeSkill, text }: HistoryPanelProps) {
+function SkillDetailHistoryPanel({ text, versionItems, versionItemsLoadStatus }: HistoryPanelProps) {
+  const historyEntries = resolveSkillVersionHistoryEntries(versionItems);
+  const historySubheading =
+    historyEntries.length > 0 ? "Captured versions from public sync records" : text.versionHistorySourceNote;
+
   return (
     <article className="skill-detail-card skill-detail-resource-panel skill-detail-history-panel" role="tabpanel" aria-label={text.tabVersionHistory}>
       <div className="skill-detail-resource-head">
         <div>
           <h2 className="skill-detail-resource-heading">{text.tabVersionHistory}</h2>
-          <p className="skill-detail-resource-subheading">{text.versionHistorySourceNote}</p>
+          <p className="skill-detail-resource-subheading">{historySubheading}</p>
         </div>
       </div>
-      <div className="skill-detail-history-list">
-        <div className="skill-detail-history-item">
-          <div className="skill-detail-history-dot" aria-hidden="true" />
-          <div className="skill-detail-history-content">
-            <p className="skill-detail-history-date">{formatSkillDetailDateLabel(activeSkill?.updated_at)}</p>
-            <p className="skill-detail-history-text">{text.versionHistoryEmpty}</p>
-          </div>
+      {versionItemsLoadStatus === "loading" ? <p className="skill-detail-empty-state">Loading version history</p> : null}
+      {versionItemsLoadStatus !== "loading" && historyEntries.length === 0 ? (
+        <p className="skill-detail-empty-state">{text.versionHistoryEmpty}</p>
+      ) : null}
+      {historyEntries.length > 0 ? (
+        <div className="skill-detail-history-list">
+          {historyEntries.map((entry) => (
+            <div className="skill-detail-history-item" key={entry.id}>
+              <div className="skill-detail-history-dot" aria-hidden="true" />
+              <div className="skill-detail-history-content">
+                <p className="skill-detail-history-date">{formatSkillDetailDateLabel(entry.capturedAt)}</p>
+                <p className="skill-detail-history-text">
+                  {entry.versionLabel} · {entry.trigger || "manual"} · {entry.riskLevel || "unknown"}
+                </p>
+                <p className="skill-detail-history-text">{entry.summary || "No summary available"}</p>
+                <p className="skill-detail-history-text">Actor: {entry.actor || "system"}</p>
+                {entry.changedFields ? <p className="skill-detail-history-text">Changed Fields: {entry.changedFields}</p> : null}
+                {entry.tags ? <p className="skill-detail-history-text">Tags: {entry.tags}</p> : null}
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
+      ) : null}
     </article>
   );
 }

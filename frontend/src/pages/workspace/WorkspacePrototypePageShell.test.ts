@@ -133,7 +133,8 @@ describe("WorkspacePrototypePageShell", () => {
     expect(html).toContain("Personnel Management");
     expect(html).toContain("Workspace Panel");
     expect(html).toContain("System Settings");
-    expect(html).toContain("marketplace-topbar-nav-button is-active");
+    expect(html).toContain("workspace-shell-topbar-nav-button is-active");
+    expect(html).not.toContain('class="marketplace-topbar-nav-button');
   });
 
   it("can hide summary hero block for organization management embedded pages", () => {

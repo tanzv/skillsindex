@@ -1,4 +1,4 @@
-import { access, constants, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, constants, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -11,6 +11,7 @@ import {
   resolveVisualScenario,
   stabilizeVisualCapture
 } from "./scenarios.mjs";
+import { findAvailablePort, terminateChildProcess } from "./runtime.mjs";
 import { buildComparisonSummary } from "./utils.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,8 +23,7 @@ const previewIndexPath = path.resolve(frontendRoot, "dist/index.html");
 const outputDirectory = path.resolve(frontendRoot, "test-results/visual");
 const threshold = Number.parseFloat(process.env.VISUAL_MISMATCH_THRESHOLD ?? "0.01");
 const host = process.env.VISUAL_HOST ?? "127.0.0.1";
-const port = Number.parseInt(process.env.VISUAL_PORT ?? "4217", 10);
-const baseUrl = process.env.VISUAL_BASE_URL ?? `http://${host}:${port}`;
+const requestedPort = Number.parseInt(process.env.VISUAL_PORT ?? "4217", 10);
 
 function delay(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -83,6 +83,8 @@ function ensureValidThreshold(value) {
 async function main() {
   ensureValidThreshold(threshold);
   const { scenarioKey, scenario } = resolveVisualScenario();
+  const port = await findAvailablePort(host, requestedPort);
+  const baseUrl = process.env.VISUAL_BASE_URL ?? `http://${host}:${port}`;
   const navigationWaitUntil = scenario.navigationWaitUntil ?? "domcontentloaded";
   const baselineImagePath = resolveVisualBaselinePath(frontendRoot, scenario, process.env.VISUAL_BASELINE_PATH);
   const actualImagePath = path.resolve(outputDirectory, `${scenario.outputPrefix}-actual.png`);
@@ -98,6 +100,11 @@ async function main() {
   }
 
   await mkdir(outputDirectory, { recursive: true });
+  await Promise.all([
+    rm(actualImagePath, { force: true }),
+    rm(diffImagePath, { force: true }),
+    rm(summaryPath, { force: true })
+  ]);
   const baselineImage = await readPNG(baselineImagePath);
   await ensurePreviewBundle();
 
@@ -110,6 +117,7 @@ async function main() {
       VITE_MARKETPLACE_HOME_MODE: "prototype"
     }
   });
+  let captureError = null;
 
   try {
     await waitForServer(baseUrl, 120_000);
@@ -131,16 +139,23 @@ async function main() {
         await scenario.setupRoutes(page);
       }
 
-      await page.goto(`${baseUrl}${scenario.routePath}`, { waitUntil: navigationWaitUntil });
-      await page.waitForSelector(scenario.waitSelector, { state: "visible", timeout: 30_000 });
-      await stabilizeVisualCapture(page);
-      await page.screenshot({ path: actualImagePath, fullPage: false });
+      try {
+        await page.goto(`${baseUrl}${scenario.routePath}`, { waitUntil: navigationWaitUntil });
+        await page.waitForSelector(scenario.waitSelector, { state: "visible", timeout: 30_000 });
+        await stabilizeVisualCapture(page);
+        await page.screenshot({ path: actualImagePath, fullPage: false });
+      } catch (error) {
+        captureError = error;
+      }
     } finally {
       await browser.close();
     }
   } finally {
-    devServer.kill("SIGTERM");
-    await delay(500);
+    await terminateChildProcess(devServer);
+  }
+
+  if (captureError) {
+    throw captureError;
   }
 
   await waitForFile(actualImagePath, 10_000);

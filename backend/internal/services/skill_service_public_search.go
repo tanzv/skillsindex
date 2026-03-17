@@ -10,7 +10,15 @@ import (
 	"unicode"
 
 	"skillsindex/internal/models"
+
+	"gorm.io/gorm"
 )
+
+func applyMarketplacePublicScope(query *gorm.DB) *gorm.DB {
+	return query.
+		Where("visibility = ?", models.VisibilityPublic).
+		Where("record_origin = ?", models.RecordOriginImported)
+}
 
 func (s *SkillService) SearchPublicSkills(ctx context.Context, input PublicSearchInput) (PublicSearchResult, error) {
 	page := input.Page
@@ -25,9 +33,10 @@ func (s *SkillService) SearchPublicSkills(ctx context.Context, input PublicSearc
 		limit = 100
 	}
 
-	query := s.db.WithContext(ctx).
-		Model(&models.Skill{}).
-		Where("visibility = ?", models.VisibilityPublic)
+	query := applyMarketplacePublicScope(
+		s.db.WithContext(ctx).
+			Model(&models.Skill{}),
+	)
 
 	if text := strings.TrimSpace(strings.ToLower(input.Query)); text != "" {
 		like := "%" + text + "%"
@@ -92,6 +101,7 @@ func (s *SkillService) CountPublicSkills(ctx context.Context) (int64, error) {
 	if err := s.db.WithContext(ctx).
 		Model(&models.Skill{}).
 		Where("visibility = ?", models.VisibilityPublic).
+		Where("record_origin = ?", models.RecordOriginImported).
 		Count(&total).Error; err != nil {
 		return 0, fmt.Errorf("failed to count public skills: %w", err)
 	}
@@ -109,6 +119,7 @@ func (s *SkillService) CountPublicCategorySkills(ctx context.Context) ([]Categor
 		Model(&models.Skill{}).
 		Select("category_slug, COUNT(*) as count").
 		Where("visibility = ?", models.VisibilityPublic).
+		Where("record_origin = ?", models.RecordOriginImported).
 		Group("category_slug").
 		Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("failed to count category skills: %w", err)
@@ -135,7 +146,8 @@ func (s *SkillService) CountPublicSubcategorySkills(ctx context.Context, categor
 	query := s.db.WithContext(ctx).
 		Model(&models.Skill{}).
 		Select("subcategory_slug, COUNT(*) as count").
-		Where("visibility = ?", models.VisibilityPublic)
+		Where("visibility = ?", models.VisibilityPublic).
+		Where("record_origin = ?", models.RecordOriginImported)
 	if strings.TrimSpace(categorySlug) != "" {
 		query = query.Where("category_slug = ?", strings.TrimSpace(categorySlug))
 	}
@@ -160,6 +172,7 @@ func (s *SkillService) BuildTimeline(ctx context.Context, interval string) ([]Ti
 	if err := s.db.WithContext(ctx).
 		Model(&models.Skill{}).
 		Where("visibility = ?", models.VisibilityPublic).
+		Where("record_origin = ?", models.RecordOriginImported).
 		Select("created_at").
 		Order("created_at ASC").
 		Find(&skills).Error; err != nil {

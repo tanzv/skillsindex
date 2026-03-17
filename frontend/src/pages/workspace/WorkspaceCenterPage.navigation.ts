@@ -310,13 +310,6 @@ export function buildWorkspaceSidebarNavigation({
   ];
 }
 
-export function collapseWorkspaceSidebarGroupsForTopbar(
-  groups: WorkspaceSidebarGroup[],
-  _sidebarSectionsTitle: string
-): WorkspaceSidebarGroup[] {
-  return groups;
-}
-
 export function resolveWorkspaceSidebarPanelMode(currentPath: string): WorkspaceSidebarPanelMode {
   const corePath = toPrototypeCorePath(currentPath);
   if (

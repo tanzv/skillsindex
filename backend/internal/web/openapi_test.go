@@ -206,6 +206,54 @@ func TestBuildOpenAPISpecPublicSearchIncludesScopeDeniedResponse(t *testing.T) {
 	}
 }
 
+func TestBuildOpenAPISpecPublicMarketplaceIncludesConditionalUnauthorizedResponse(t *testing.T) {
+	spec := buildOpenAPISpec("http://127.0.0.1:8080")
+	paths, ok := spec["paths"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing paths object")
+	}
+
+	marketplacePath, ok := paths["/api/v1/public/marketplace"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing public marketplace path")
+	}
+	getOp, ok := marketplacePath["get"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing public marketplace get operation")
+	}
+	responses, ok := getOp["responses"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing public marketplace responses")
+	}
+	if _, exists := responses["401"]; !exists {
+		t.Fatalf("public marketplace responses should include 401 for private marketplace mode")
+	}
+}
+
+func TestBuildOpenAPISpecAuthLoginIncludesTooManyRequestsResponse(t *testing.T) {
+	spec := buildOpenAPISpec("http://127.0.0.1:8080")
+	paths, ok := spec["paths"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing paths object")
+	}
+
+	loginPath, ok := paths["/api/v1/auth/login"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing auth login path")
+	}
+	postOp, ok := loginPath["post"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing auth login post operation")
+	}
+	responses, ok := postOp["responses"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing auth login responses")
+	}
+	if _, exists := responses["429"]; !exists {
+		t.Fatalf("auth login responses should include 429 for login throttling")
+	}
+}
+
 func TestBuildOpenAPISpecVersionCompareQueryParams(t *testing.T) {
 	spec := buildOpenAPISpec("http://127.0.0.1:8080")
 	paths, ok := spec["paths"].(map[string]any)

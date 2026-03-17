@@ -16,6 +16,23 @@ type Category struct {
 
 var categories = []Category{
 	{
+		Slug:        "operations",
+		Name:        "Operations",
+		Description: "Release, recovery, and execution workflows.",
+		Subcategories: []Subcategory{
+			{Slug: "release", Name: "Release"},
+			{Slug: "recovery", Name: "Recovery"},
+		},
+	},
+	{
+		Slug:        "engineering",
+		Name:        "Engineering",
+		Description: "Repository automation and governance helpers.",
+		Subcategories: []Subcategory{
+			{Slug: "repository", Name: "Repository"},
+		},
+	},
+	{
 		Slug:        "tools",
 		Name:        "Tools",
 		Description: "Productivity, automation, CLI and systems utility skills.",

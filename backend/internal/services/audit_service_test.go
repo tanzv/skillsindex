@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"skillsindex/internal/models"
@@ -12,7 +13,8 @@ import (
 
 func setupAuditServiceTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("failed to open db: %v", err)
 	}
@@ -40,6 +42,10 @@ func TestAuditServiceRecordAndList(t *testing.T) {
 		Action:      "skill_visibility_update",
 		TargetType:  "skill",
 		TargetID:    11,
+		RequestID:   "req-audit-001",
+		Result:      "success",
+		Reason:      "visibility policy approved",
+		SourceIP:    "192.168.10.20",
 		Summary:     "Visibility changed to public",
 		Details:     `{"visibility":"public"}`,
 	})
@@ -59,8 +65,20 @@ func TestAuditServiceRecordAndList(t *testing.T) {
 	if logs[0].Action != "skill_visibility_update" {
 		t.Fatalf("unexpected action: %s", logs[0].Action)
 	}
-	if logs[0].ActorUserID != user.ID {
-		t.Fatalf("unexpected actor id: got=%d want=%d", logs[0].ActorUserID, user.ID)
+	if logs[0].ActorUserID == nil || *logs[0].ActorUserID != user.ID {
+		t.Fatalf("unexpected actor id: got=%v want=%d", logs[0].ActorUserID, user.ID)
+	}
+	if logs[0].RequestID != "req-audit-001" {
+		t.Fatalf("unexpected request id: got=%q want=%q", logs[0].RequestID, "req-audit-001")
+	}
+	if logs[0].Result != "success" {
+		t.Fatalf("unexpected result: got=%q want=%q", logs[0].Result, "success")
+	}
+	if logs[0].Reason != "visibility policy approved" {
+		t.Fatalf("unexpected reason: got=%q want=%q", logs[0].Reason, "visibility policy approved")
+	}
+	if logs[0].SourceIP != "192.168.10.20" {
+		t.Fatalf("unexpected source ip: got=%q want=%q", logs[0].SourceIP, "192.168.10.20")
 	}
 }
 
@@ -106,7 +124,38 @@ func TestAuditServiceListByActor(t *testing.T) {
 	if len(logs) != 1 {
 		t.Fatalf("unexpected log count for actor filter: got=%d want=1", len(logs))
 	}
-	if logs[0].ActorUserID != userA.ID {
-		t.Fatalf("unexpected actor id in filtered log: got=%d want=%d", logs[0].ActorUserID, userA.ID)
+	if logs[0].ActorUserID == nil || *logs[0].ActorUserID != userA.ID {
+		t.Fatalf("unexpected actor id in filtered log: got=%v want=%d", logs[0].ActorUserID, userA.ID)
+	}
+}
+
+func TestAuditServiceRecordAllowsAnonymousActor(t *testing.T) {
+	db := setupAuditServiceTestDB(t)
+	svc := NewAuditService(db)
+
+	err := svc.Record(context.Background(), RecordAuditInput{
+		Action:     "password_reset_request",
+		TargetType: "password_reset",
+		Result:     "accepted",
+		Reason:     "request accepted without actor",
+		SourceIP:   "203.0.113.20",
+		Summary:    "Accepted password reset request",
+	})
+	if err != nil {
+		t.Fatalf("record anonymous audit failed: %v", err)
+	}
+
+	logs, err := svc.ListRecent(context.Background(), ListAuditInput{Limit: 10})
+	if err != nil {
+		t.Fatalf("list recent logs failed: %v", err)
+	}
+	if len(logs) != 1 {
+		t.Fatalf("unexpected log count: got=%d want=1", len(logs))
+	}
+	if logs[0].ActorUserID != nil {
+		t.Fatalf("expected nil actor user id for anonymous audit, got=%v", *logs[0].ActorUserID)
+	}
+	if logs[0].Result != "accepted" {
+		t.Fatalf("unexpected result: got=%q want=%q", logs[0].Result, "accepted")
 	}
 }

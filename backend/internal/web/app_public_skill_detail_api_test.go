@@ -173,3 +173,33 @@ func TestHandleAPIPublicSkillDetailRequiresAuthenticationWhenMarketplaceIsPrivat
 		t.Fatalf("unexpected authenticated status code: got=%d want=%d", authenticatedRecorder.Code, http.StatusOK)
 	}
 }
+
+func TestHandleAPIPublicSkillDetailHidesSeedRecords(t *testing.T) {
+	app, user, _, _ := setupInteractionAPITestApp(t)
+
+	seedSkill, err := app.skillService.CreateSkill(context.Background(), services.CreateSkillInput{
+		OwnerID:      user.ID,
+		Name:         "Seed Detail Skill",
+		Description:  "Seed detail should not be exposed on public detail routes.",
+		Content:      "seed-detail-content",
+		Visibility:   models.VisibilityPublic,
+		SourceType:   models.SourceTypeManual,
+		RecordOrigin: models.RecordOriginSeed,
+		CategorySlug: "development",
+	})
+	if err != nil {
+		t.Fatalf("failed to create seed skill: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/skills/"+strconv.FormatUint(uint64(seedSkill.ID), 10), nil)
+	req = withURLParams(req, map[string]string{
+		"skillID": strconv.FormatUint(uint64(seedSkill.ID), 10),
+	})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicSkillDetail(recorder, req)
+
+	if recorder.Code != http.StatusNotFound {
+		t.Fatalf("seed skill should be hidden from public detail routes: got=%d want=%d", recorder.Code, http.StatusNotFound)
+	}
+}

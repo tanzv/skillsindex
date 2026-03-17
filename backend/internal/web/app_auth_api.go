@@ -105,14 +105,25 @@ func (a *App) handleAPIAuthLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	issuedIP := clientIPFromRequest(r)
+	if a.loginThrottleState().limited(username, issuedIP) {
+		writeJSON(w, http.StatusTooManyRequests, map[string]any{
+			"error":   "too_many_requests",
+			"message": a.apiMessage(r, "api.auth.too_many_requests", "Too many failed sign-in attempts. Try again later."),
+		})
+		return
+	}
+
 	user, err := a.authService.Authenticate(r.Context(), username, password)
 	if err != nil {
+		a.loginThrottleState().recordFailure(username, issuedIP)
 		writeJSON(w, http.StatusUnauthorized, map[string]any{
 			"error":   "unauthorized",
 			"message": a.apiMessage(r, "api.auth.invalid_credentials", "Invalid username or password"),
 		})
 		return
 	}
+	a.loginThrottleState().recordSuccess(username, issuedIP)
 	if err := a.startUserSession(w, r, user.ID); err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{
 			"error":   "session_start_failed",

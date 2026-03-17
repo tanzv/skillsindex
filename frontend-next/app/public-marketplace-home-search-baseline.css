@@ -1,0 +1,64 @@
+.marketplace-shell.is-landing-route .marketplace-home-hero {
+  min-height: 244px;
+  border: 1px solid var(--marketplace-card-border);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-search-strip {
+  min-height: 0;
+  border: 1px solid var(--marketplace-card-border);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-search-strip {
+  padding: 14px;
+  background:
+    linear-gradient(180deg, rgba(22, 23, 28, 0.98) 0%, rgba(18, 20, 26, 0.98) 100%);
+}
+
+.marketplace-shell.is-light-theme.is-landing-route .marketplace-home-search-shell .marketplace-search-strip {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 1) 100%);
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-search-strip-body {
+  gap: 12px;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-top-recommendations,
+.marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-search-utility-left {
+  flex-wrap: nowrap;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-top-recommendations::-webkit-scrollbar,
+.marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-search-utility-left::-webkit-scrollbar {
+  display: none;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-search-utility-row {
+  flex-wrap: nowrap;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-search-main-row {
+  min-height: 56px;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-search-input {
+  min-height: 56px;
+  padding: 0 14px;
+  border-radius: 12px;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-search-input input {
+  font-size: 13px;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-recommendation-chip,
+.marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-search-utility-pill {
+  white-space: nowrap;
+}

@@ -1,7 +1,9 @@
 import { css } from "@emotion/react";
 
+import { buildMarketplaceHomeTopbarSelector } from "./marketplaceHomeTopbarSelectors";
+
 export const marketplaceHomeWorkspaceUserControlStyles = css`
-  .marketplace-home .marketplace-topbar-left-accessory {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home", "leftAccessory")} {
     min-width: 0;
     display: inline-flex;
     align-items: center;

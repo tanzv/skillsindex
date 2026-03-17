@@ -109,7 +109,7 @@ func (a *App) handleAPIPublicSkillDetail(w http.ResponseWriter, r *http.Request)
 		viewerID = viewer.ID
 	}
 
-	skill, loadErr := a.skillService.GetVisibleSkillByID(r.Context(), skillID, viewerID)
+	skill, loadErr := a.skillService.GetMarketplaceVisibleSkillByID(r.Context(), skillID, viewerID)
 	if loadErr != nil {
 		statusCode := http.StatusInternalServerError
 		errorCode := "detail_query_failed"

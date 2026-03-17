@@ -8,7 +8,6 @@ export type PrototypeRouteFamily =
   | "state"
   | "records-sync"
   | "admin-integrations"
-  | "admin-access"
   | "admin-incidents"
   | "admin-overview";
 
@@ -25,7 +24,6 @@ export type PrototypeRouteKey =
   | "state-permission-denied"
   | "records-sync"
   | "admin-integrations"
-  | "admin-access"
   | "admin-incidents"
   | "admin-overview";
 
@@ -114,10 +112,6 @@ export function resolvePrototypeRoute(pathname: string): PrototypeRouteResolutio
 
   if (matchesPath(normalizedCorePath, "/admin/integrations")) {
     return { family: "admin-integrations", key: "admin-integrations" };
-  }
-
-  if (matchesPath(normalizedCorePath, "/admin/access")) {
-    return { family: "admin-access", key: "admin-access" };
   }
 
   if (matchesPath(normalizedCorePath, "/admin/incidents")) {

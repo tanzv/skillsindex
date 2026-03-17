@@ -328,6 +328,8 @@ test.describe("Marketplace home interactions", () => {
 
   test("closing results route keeps home paging interactions", async ({ page }) => {
     await page.goto("/results?q=odoo&page=2");
+    await expect(page.locator(selectors.resultsPageRoot).first()).toBeVisible();
+    await expect(page.locator(selectors.resultsList)).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page).toHaveURL(/\/\?q=odoo&page=2$/);
     await expect(page.locator(selectors.resultsList)).toBeVisible();
@@ -413,7 +415,7 @@ test.describe("Marketplace home interactions", () => {
     await expect(page.locator(".marketplace-search-utility-right .is-queue")).toHaveCount(0);
   });
 
-  test("topbar console action navigates to workspace route", async ({ page }) => {
+  test("topbar console action enters the protected workspace access flow", async ({ page }) => {
     await page.goto(HOME_PATH);
 
     const consoleAction = page.locator(selectors.topbarSecondaryCta);
@@ -438,7 +440,7 @@ test.describe("Marketplace home interactions", () => {
     expect((rightActionOrder?.consoleLeft || 0) < (rightActionOrder?.authLeft || 0)).toBe(true);
 
     await consoleAction.click();
-    await expect(page).toHaveURL(/\/workspace$/);
+    await expect(page).toHaveURL(/\/login/);
   });
 
   test("default home topbar shows category and download ranking navigation", async ({ page }) => {

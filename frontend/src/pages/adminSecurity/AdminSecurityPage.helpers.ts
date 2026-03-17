@@ -1,5 +1,4 @@
 import type {
-  AccessViewData,
   AdminSecurityRoute,
   ApiKeysViewData,
   MetricItem,
@@ -33,22 +32,6 @@ function asArray<T = unknown>(value: unknown): T[] {
 function asNumber(value: unknown, fallback = 0): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function asBoolean(value: unknown, fallback = false): boolean {
-  if (typeof value === "boolean") {
-    return value;
-  }
-  if (typeof value === "string") {
-    const normalized = value.trim().toLowerCase();
-    if (normalized === "true") {
-      return true;
-    }
-    if (normalized === "false") {
-      return false;
-    }
-  }
-  return fallback;
 }
 
 function asString(value: unknown, fallback = ""): string {
@@ -99,35 +82,6 @@ function normalizeApiKeysPayload(raw: unknown): ApiKeysViewData {
   };
 }
 
-function normalizeAccessPayload(accountsRaw: unknown, registrationRaw: unknown, authProvidersRaw: unknown): AccessViewData {
-  const accountsPayload = asObject(accountsRaw);
-  const registrationPayload = asObject(registrationRaw);
-  const providersPayload = asObject(authProvidersRaw);
-
-  const accounts = asArray<Record<string, unknown>>(readField(accountsPayload, ["items", "Items"])).map((item) => ({
-    id: asNumber(readField(item, ["id", "ID"])),
-    username: asString(readField(item, ["username", "Username"])) || "unknown",
-    role: asString(readField(item, ["role", "Role"])) || "member",
-    status: asString(readField(item, ["status", "Status"])) || "unknown",
-    createdAt: asString(readField(item, ["created_at", "createdAt", "CreatedAt"])),
-    updatedAt: asString(readField(item, ["updated_at", "updatedAt", "UpdatedAt"])),
-    forceLogoutAt: asString(readField(item, ["force_logout_at", "forceLogoutAt", "ForceLogoutAt"]))
-  }));
-
-  return {
-    accounts,
-    accountsTotal: asNumber(readField(accountsPayload, ["total", "Total"]), accounts.length),
-    allowRegistration: asBoolean(
-      readField(registrationPayload, ["allow_registration", "allowRegistration", "AllowRegistration"]),
-      false
-    ),
-    enabledProviders: toStringArray(readField(providersPayload, ["auth_providers", "authProviders", "AuthProviders"])),
-    availableProviders: toStringArray(
-      readField(providersPayload, ["available_auth_providers", "availableAuthProviders", "AvailableAuthProviders"])
-    )
-  };
-}
-
 function normalizeModerationPayload(raw: unknown): ModerationViewData {
   const payload = asObject(raw);
   const items = asArray<Record<string, unknown>>(readField(payload, ["items", "Items"])).map((item) => ({
@@ -151,15 +105,6 @@ export async function fetchSecurityViewData(route: AdminSecurityRoute, fetchJSON
   if (route === "/admin/apikeys") {
     const payload = await fetchJSON("/api/v1/admin/apikeys");
     return normalizeApiKeysPayload(payload);
-  }
-
-  if (route === "/admin/access") {
-    const [accountsPayload, registrationPayload, authProvidersPayload] = await Promise.all([
-      fetchJSON("/api/v1/admin/accounts"),
-      fetchJSON("/api/v1/admin/settings/registration"),
-      fetchJSON("/api/v1/admin/settings/auth-providers")
-    ]);
-    return normalizeAccessPayload(accountsPayload, registrationPayload, authProvidersPayload);
   }
 
   const payload = await fetchJSON("/api/v1/admin/moderation");
@@ -211,10 +156,6 @@ export function isEmptyData(route: AdminSecurityRoute, data: SecurityViewData | 
     return (data as ApiKeysViewData).items.length === 0;
   }
 
-  if (route === "/admin/access") {
-    return (data as AccessViewData).accounts.length === 0;
-  }
-
   return (data as ModerationViewData).items.length === 0;
 }
 
@@ -223,13 +164,6 @@ export function buildRouteCopy(route: AdminSecurityRoute): RouteCopy {
     return {
       title: "API Key Management",
       subtitle: "Track key lifecycle, ownership, and token safety posture."
-    };
-  }
-
-  if (route === "/admin/access") {
-    return {
-      title: "Access Governance",
-      subtitle: "Monitor account status, registration policy, and auth providers."
     };
   }
 
@@ -252,16 +186,6 @@ export function computeMetrics(route: AdminSecurityRoute, data: SecurityViewData
       { label: "Total Keys", value: payload.total },
       { label: "Active", value: activeCount },
       { label: "Revoked or Expired", value: revokedOrExpired }
-    ];
-  }
-
-  if (route === "/admin/access") {
-    const payload = data as AccessViewData;
-    const disabledAccounts = payload.accounts.filter((item) => item.status.toLowerCase() === "disabled").length;
-    return [
-      { label: "Accounts", value: payload.accountsTotal },
-      { label: "Disabled", value: disabledAccounts },
-      { label: "Enabled Auth Providers", value: payload.enabledProviders.length }
     ];
   }
 

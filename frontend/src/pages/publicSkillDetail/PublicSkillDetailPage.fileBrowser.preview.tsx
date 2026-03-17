@@ -19,6 +19,16 @@ interface DocumentMetaEntry {
   value: string;
 }
 
+interface ResolvePreviewPayloadOptions {
+  activePreset: SkillDetailPreviewPanelProps["activePreset"];
+  previewLanguage: string;
+  codePanelTone: SkillDetailViewModel["codePanelTone"];
+  selectedFileName: string;
+  fallbackPreviewContent: string;
+  liveFileContent: string;
+  liveFileLanguage: string;
+}
+
 function normalizePreviewLine(rawLine: string): string {
   return String(rawLine || "").replace(/^\s*\d+\s+/, "").trimEnd();
 }
@@ -238,11 +248,42 @@ export function formatSkillDetailDateLabel(rawValue: string | null | undefined):
   return parsed.toLocaleString();
 }
 
+export function resolvePreviewPayload({
+  activePreset,
+  previewLanguage,
+  codePanelTone,
+  selectedFileName,
+  fallbackPreviewContent,
+  liveFileContent,
+  liveFileLanguage
+}: ResolvePreviewPayloadOptions): {
+  previewContent: string;
+  activeLanguage: string;
+  isSQLPreview: boolean;
+  isDocumentPreview: boolean;
+} {
+  const normalizedFileName = String(selectedFileName || "").toLowerCase();
+  const activeSkillLanguage =
+    normalizedFileName.endsWith(".sql") || codePanelTone === "sql" ? "SQL" : previewLanguage;
+  const resolvedLanguage = String(liveFileLanguage || "").trim() || (activePreset === "skill" ? activeSkillLanguage : "Markdown");
+  const previewContent = String(liveFileContent || "").trim() || fallbackPreviewContent;
+  const isSQLPreview = resolvedLanguage === "SQL";
+
+  return {
+    previewContent,
+    activeLanguage: resolvedLanguage,
+    isSQLPreview,
+    isDocumentPreview: !isSQLPreview
+  };
+}
+
 export function SkillDetailPreviewPanel({
   activePreset,
   activeSkill,
   detailModel,
   selectedFileIndex,
+  selectedFileContent,
+  selectedFileLanguage,
   selectedFileName,
   selectedFilePath,
   text,
@@ -253,13 +294,16 @@ export function SkillDetailPreviewPanel({
   const selectedEntry = detailModel.fileEntries[selectedFileIndex] || detailModel.fileEntries[0];
   const filePathLabel = (text.filePathHint.split(/[:：]/)[0] || "Path").trim();
   const resolvedFilePathHint = `${filePathLabel}: ${selectedFilePath}`;
-  const previewContent = detailModel.presetPreviewContent[activePreset] || detailModel.fileCodePreview;
-  const normalizedFileName = String(selectedEntry?.name || selectedFileName).toLowerCase();
-  const activeSkillLanguage =
-    normalizedFileName.endsWith(".sql") || detailModel.codePanelTone === "sql" ? "SQL" : detailModel.previewLanguage;
-  const activeLanguage = activePreset === "skill" ? activeSkillLanguage : "Markdown";
-  const isSQLPreview = activePreset === "skill" && (detailModel.codePanelTone === "sql" || activeLanguage === "SQL");
-  const isDocumentPreview = !isSQLPreview;
+  const resolvedPreviewPayload = resolvePreviewPayload({
+    activePreset,
+    previewLanguage: detailModel.previewLanguage,
+    codePanelTone: detailModel.codePanelTone,
+    selectedFileName: selectedEntry?.name || selectedFileName,
+    fallbackPreviewContent: detailModel.presetPreviewContent[activePreset] || detailModel.fileCodePreview,
+    liveFileContent: selectedFileContent,
+    liveFileLanguage: selectedFileLanguage
+  });
+  const { previewContent, activeLanguage, isSQLPreview, isDocumentPreview } = resolvedPreviewPayload;
   const localizedLanguageMeta = `${text.metaLanguageLabel}: ${activeLanguage}`;
   const resolvedFileSourceMeta = `${text.fileSourceHint} · ${localizedLanguageMeta}`;
   const rawDocumentBlocks = isDocumentPreview ? resolveDocumentBlocks(previewContent) : [];

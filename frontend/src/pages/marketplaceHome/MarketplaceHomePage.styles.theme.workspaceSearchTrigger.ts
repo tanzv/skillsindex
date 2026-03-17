@@ -1,5 +1,10 @@
 import { css } from "@emotion/react";
 
+import {
+  buildMarketplaceHomeTopbarDescendantSelector,
+  buildMarketplaceHomeTopbarSelector
+} from "./marketplaceHomeTopbarSelectors";
+
 export const marketplaceHomeWorkspaceSearchTriggerStyles = css`
   @keyframes marketplaceSearchTriggerSweep {
     0% {
@@ -15,7 +20,7 @@ export const marketplaceHomeWorkspaceSearchTriggerStyles = css`
     }
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-utility-button.is-search-trigger {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home .workspace-topbar-shell", "utilityButton", ".is-search-trigger")} {
     position: relative;
     inline-size: clamp(182px, 18vw, 248px);
     height: 30px;
@@ -34,13 +39,23 @@ export const marketplaceHomeWorkspaceSearchTriggerStyles = css`
       transform 220ms ease;
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-utility-button.is-search-trigger .marketplace-topbar-action-label {
+  ${buildMarketplaceHomeTopbarDescendantSelector(
+    ".marketplace-home .workspace-topbar-shell",
+    "utilityButton",
+    "actionLabel",
+    { parentSuffix: ".is-search-trigger" }
+  )} {
     display: inline-flex;
     align-items: center;
     gap: 8px;
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-utility-button.is-search-trigger .marketplace-topbar-action-label::before {
+  ${buildMarketplaceHomeTopbarDescendantSelector(
+    ".marketplace-home .workspace-topbar-shell",
+    "utilityButton",
+    "actionLabel",
+    { parentSuffix: ".is-search-trigger", childSuffix: "::before" }
+  )} {
     content: "⌕";
     font-size: 11px;
     opacity: 0.72;
@@ -48,7 +63,7 @@ export const marketplaceHomeWorkspaceSearchTriggerStyles = css`
     transition: opacity 180ms ease;
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-utility-button.is-search-trigger::after {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home .workspace-topbar-shell", "utilityButton", ".is-search-trigger::after")} {
     content: "";
     position: absolute;
     inset: -45% auto -45% -40%;
@@ -64,7 +79,11 @@ export const marketplaceHomeWorkspaceSearchTriggerStyles = css`
     pointer-events: none;
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-utility-button.is-search-trigger:hover:not(:disabled) {
+  ${buildMarketplaceHomeTopbarSelector(
+    ".marketplace-home .workspace-topbar-shell",
+    "utilityButton",
+    ".is-search-trigger:hover:not(:disabled)"
+  )} {
     background: color-mix(in srgb, var(--marketplace-utility-button-hover-background) 84%, #ffffff 16%);
     border-color: color-mix(in srgb, var(--marketplace-focus-ring) 44%, transparent);
     box-shadow:
@@ -73,15 +92,31 @@ export const marketplaceHomeWorkspaceSearchTriggerStyles = css`
     transform: translateY(-1px);
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-utility-button.is-search-trigger:hover:not(:disabled)::after {
+  ${buildMarketplaceHomeTopbarSelector(
+    ".marketplace-home .workspace-topbar-shell",
+    "utilityButton",
+    ".is-search-trigger:hover:not(:disabled)::after"
+  )} {
     animation: marketplaceSearchTriggerSweep 680ms cubic-bezier(0.2, 0.72, 0.24, 1) both;
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-utility-button.is-search-trigger:hover:not(:disabled) .marketplace-topbar-action-label::before {
+  ${buildMarketplaceHomeTopbarDescendantSelector(
+    ".marketplace-home .workspace-topbar-shell",
+    "utilityButton",
+    "actionLabel",
+    {
+      parentSuffix: ".is-search-trigger:hover:not(:disabled)",
+      childSuffix: "::before"
+    }
+  )} {
     opacity: 0.95;
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-utility-button.is-search-trigger:focus-visible {
+  ${buildMarketplaceHomeTopbarSelector(
+    ".marketplace-home .workspace-topbar-shell",
+    "utilityButton",
+    ".is-search-trigger:focus-visible"
+  )} {
     border-color: color-mix(in srgb, var(--marketplace-focus-ring) 62%, transparent);
     box-shadow:
       0 0 0 2px color-mix(in srgb, var(--marketplace-focus-ring) 36%, transparent),
@@ -90,7 +125,11 @@ export const marketplaceHomeWorkspaceSearchTriggerStyles = css`
     transform: translateY(-1px);
   }
 
-  .marketplace-home .workspace-topbar-shell .marketplace-topbar-utility-button.is-search-trigger:focus-visible::after {
+  ${buildMarketplaceHomeTopbarSelector(
+    ".marketplace-home .workspace-topbar-shell",
+    "utilityButton",
+    ".is-search-trigger:focus-visible::after"
+  )} {
     animation: marketplaceSearchTriggerSweep 720ms cubic-bezier(0.2, 0.72, 0.24, 1) both;
   }
 `;

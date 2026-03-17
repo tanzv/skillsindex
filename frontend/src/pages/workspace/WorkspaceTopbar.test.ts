@@ -41,7 +41,8 @@ describe("AppGlobalTopbar", () => {
     );
 
     expect(html).not.toContain("marketplace-topbar-left-accessory");
-    expect(html).toMatch(/marketplace-topbar-light-utility[\s\S]*workspace-user-center-trigger/);
+    expect(html).not.toContain("marketplace-topbar-light-utility");
+    expect(html).toMatch(/workspace-shell-topbar-light-utility[\s\S]*workspace-user-center-trigger/);
   });
 
   it("collapses primary navigation when action count exceeds visible threshold", () => {
@@ -84,7 +85,9 @@ describe("AppGlobalTopbar", () => {
     expect(html).toContain("workspace-topbar-primary-group-label");
     expect(html).toContain(">Global<");
     expect(html).toContain("workspace-topbar-interaction-scope");
+    expect(html).toContain("workspace-shell-topbar");
     expect(html).not.toContain("marketplace-topbar-below-content");
+    expect(html).not.toContain("marketplace-topbar-nav-button");
     expect(html).toContain("workspace-topbar-overflow-wrapper is-collapsed");
     expect(html).toContain('aria-controls="workspace-topbar-overflow-panel"');
     expect(html).toContain('aria-label="Expand app navigation panel"');
@@ -123,6 +126,7 @@ describe("AppGlobalTopbar", () => {
 
     expect(html).toContain("workspace-topbar-overflow-wrapper is-expanded");
     expect(html).toContain('id="workspace-topbar-overflow-panel"');
+    expect(html).toContain("workspace-shell-topbar-overflow-panel");
     expect(html).toContain("workspace-topbar-overflow-group");
     expect(html).toContain("workspace-topbar-overflow-title");
     expect(html).toContain("App Menu");
@@ -246,6 +250,8 @@ describe("AppGlobalTopbar", () => {
     expect(html).toContain("workspace-topbar-toggle-icon-button");
     expect(html).toContain(">2<");
     expect(html).toContain("Market");
+    expect(html).toContain("workspace-shell-topbar-nav-button");
+    expect(html).not.toContain("marketplace-topbar-nav-button");
     expect(html).toContain('aria-hidden="true"');
   });
 
@@ -282,6 +288,7 @@ describe("AppGlobalTopbar", () => {
     expect(html).toContain('\u5e02\u573a\u5165\u53e3');
     expect(html).toContain('\u8bbf\u5ba2\u7528\u6237');
     expect(html).toContain('\u5e94\u7528\u83dc\u5355');
+    expect(html).toContain("workspace-shell-topbar-overflow-panel");
     expect(html).toContain('aria-label="\u6536\u8d77\u5e94\u7528\u5bfc\u822a\u9762\u677f"');
     expect(html).toContain('aria-label="\u5df2\u5c55\u5f00\u7684\u5e94\u7528\u5bfc\u822a\u9762\u677f"');
     expect(html).toContain('title="\u6536\u8d77"');

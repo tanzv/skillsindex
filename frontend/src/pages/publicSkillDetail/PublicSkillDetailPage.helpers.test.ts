@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { publicSkillDetailCopy } from "./PublicSkillDetailPage.copy";
 import {
+  buildEmptySkillDetailViewModel,
   buildPrototypeSkillDetailSkill,
   buildSkillDetailViewModel,
   resolveFileIndexForPreset,
   resolvePresetForFileName,
-  resolveSkillDetailDataMode
+  resolveSkillDetailDataMode,
+  resolveSkillDetailViewSkill
 } from "./PublicSkillDetailPage.helpers";
 
 describe("PublicSkillDetailPage.helpers", () => {
@@ -117,6 +119,29 @@ describe("PublicSkillDetailPage.helpers", () => {
     expect(viewModel.supportsHistory).toBe(false);
     expect(viewModel.hasCompatibilityData).toBe(false);
     expect(viewModel.qualityMetrics).toEqual([{ label: "Quality Score", value: "9.0" }]);
+  });
+
+  it("only falls back to prototype detail data in prototype mode", () => {
+    const liveResolved = resolveSkillDetailViewSkill(null, 902, "live");
+    const prototypeResolved = resolveSkillDetailViewSkill(null, 902, "prototype");
+    const existingSkill = buildPrototypeSkillDetailSkill(451);
+
+    expect(liveResolved).toBeNull();
+    expect(prototypeResolved?.id).toBe(902);
+    expect(resolveSkillDetailViewSkill(existingSkill, 902, "live")).toBe(existingSkill);
+  });
+
+  it("builds a neutral empty detail model for live empty and error states", () => {
+    const viewModel = buildEmptySkillDetailViewModel(publicSkillDetailCopy.en);
+
+    expect(viewModel.titleName).toBe(publicSkillDetailCopy.en.title);
+    expect(viewModel.summaryDescription).toBe("");
+    expect(viewModel.summaryMetrics).toEqual([]);
+    expect(viewModel.qualityMetrics).toEqual([]);
+    expect(viewModel.fileEntries).toEqual([]);
+    expect(viewModel.installSteps).toEqual([]);
+    expect(viewModel.previewLanguage).toBe("");
+    expect(viewModel.repositorySlug).toBe("");
   });
 
   it("normalizes 100-scale quality scores to the 10-scale output", () => {

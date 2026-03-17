@@ -1,0 +1,98 @@
+.marketplace-shell.is-landing-route .marketplace-topbar {
+  min-height: 84px;
+  padding: 18px 0;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-brand {
+  gap: 14px;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-brand-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-brand-copy {
+  max-width: none;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-brand-title {
+  display: block;
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-topbar-actions {
+  gap: 8px;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-auth-cluster {
+  padding: 3px;
+  border: 1px solid var(--marketplace-nav-shell-border);
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  background: var(--marketplace-nav-shell-background);
+}
+
+.marketplace-home-topbar-status,
+.marketplace-home-pill-button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.marketplace-home-topbar-status {
+  background: transparent;
+  color: var(--marketplace-status-text);
+}
+
+.marketplace-home-pill-button {
+  background: var(--marketplace-topbar-button-primary-background);
+  color: var(--marketplace-topbar-button-primary-text);
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-topbar-icon-shell {
+  padding: 4px;
+  border-radius: 11px;
+  background: var(--marketplace-nav-shell-background);
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-topbar-icon-segment + .marketplace-home-topbar-icon-segment {
+  margin-left: 2px;
+  padding-left: 6px;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-icon-button {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}
+
+@media (max-width: 720px) {
+  .marketplace-shell.is-landing-route .marketplace-home-topbar-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .marketplace-shell.is-landing-route .marketplace-home-brand-title {
+    font-size: 22px;
+  }
+
+  .marketplace-shell.is-landing-route .marketplace-topbar {
+    align-items: flex-start;
+  }
+}

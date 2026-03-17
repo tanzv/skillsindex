@@ -1,6 +1,14 @@
 import { PublicMarketplaceResponse } from "../../lib/api";
 import type { AppLocale } from "../../lib/i18n";
 
+export type WorkspaceRoute =
+  | "/workspace"
+  | "/workspace/activity"
+  | "/workspace/queue"
+  | "/workspace/policy"
+  | "/workspace/runbook"
+  | "/workspace/actions";
+
 export type WorkspaceQueueStatus = "pending" | "running" | "risk";
 export type WorkspaceQueueFilter = "all" | WorkspaceQueueStatus;
 

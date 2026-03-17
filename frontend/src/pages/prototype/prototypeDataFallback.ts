@@ -23,6 +23,56 @@ export function resolvePrototypeDataMode(rawMode: string | undefined): Prototype
   return normalized === "live" ? "live" : "prototype";
 }
 
+function canAccessDashboard(sessionUser: SessionUser | null): boolean {
+  if (!sessionUser) {
+    return false;
+  }
+  return ["super_admin", "admin", "member"].includes(String(sessionUser.role || "").trim().toLowerCase());
+}
+
+function normalizePage(rawPage: number | string | undefined): number {
+  const parsed = Number(rawPage || 1);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return 1;
+  }
+  return Math.max(1, Math.floor(parsed));
+}
+
+export function buildEmptyMarketplacePayload(
+  query: MarketplaceQueryParams,
+  sessionUser: SessionUser | null
+): PublicMarketplaceResponse {
+  const page = normalizePage(query.page);
+  return {
+    filters: {
+      q: String(query.q || ""),
+      tags: String(query.tags || ""),
+      category: String(query.category || ""),
+      subcategory: String(query.subcategory || ""),
+      sort: String(query.sort || "recent"),
+      mode: String(query.mode || "keyword")
+    },
+    stats: {
+      total_skills: 0,
+      matching_skills: 0
+    },
+    pagination: {
+      page,
+      page_size: 24,
+      total_items: 0,
+      total_pages: Math.max(1, page),
+      prev_page: page > 1 ? page - 1 : 0,
+      next_page: 0
+    },
+    categories: [],
+    top_tags: [],
+    filter_options: undefined,
+    items: [],
+    session_user: sessionUser,
+    can_access_dashboard: canAccessDashboard(sessionUser)
+  };
+}
+
 function normalizeDelay(delayMs: number | undefined): number {
   if (!Number.isFinite(delayMs)) {
     return 0;
@@ -60,7 +110,7 @@ export async function loadMarketplaceWithFallback(options: MarketplaceFallbackOp
     };
   } catch (error) {
     return {
-      payload: fallbackPayload,
+      payload: buildEmptyMarketplacePayload(options.query, options.sessionUser),
       degraded: true,
       errorMessage: error instanceof Error ? error.message : "Request failed"
     };

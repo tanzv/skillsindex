@@ -1,0 +1,191 @@
+.marketplace-topbar:has(.skill-detail-topbar-nav) {
+  min-height: 76px;
+  padding: 14px 0;
+  gap: 14px;
+}
+
+.marketplace-topbar:has(.skill-detail-topbar-nav) .marketplace-topbar-main,
+.marketplace-topbar:has(.skill-detail-topbar-nav) .marketplace-topbar-right,
+.marketplace-topbar:has(.skill-detail-topbar-nav) .skill-detail-topbar-actions {
+  flex-direction: row;
+  align-items: center;
+}
+
+.marketplace-topbar:has(.skill-detail-topbar-nav) .marketplace-topbar-main {
+  justify-content: space-between;
+}
+
+.marketplace-topbar:has(.skill-detail-topbar-nav) .marketplace-topbar-right,
+.marketplace-topbar:has(.skill-detail-topbar-nav) .skill-detail-topbar-actions {
+  justify-content: flex-start;
+}
+
+.marketplace-topbar:has(.skill-detail-topbar-nav) .marketplace-topbar-right {
+  gap: 10px;
+}
+
+.marketplace-topbar-below:has(.skill-detail-shell-breadcrumb) {
+  padding: 0 0 12px;
+}
+
+.skill-detail-brand {
+  gap: 8px;
+}
+
+.skill-detail-brand-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.skill-detail-brand-copy {
+  gap: 1px;
+}
+
+.skill-detail-brand-copy strong {
+  font-size: 15px;
+  line-height: 1.05;
+}
+
+.skill-detail-brand-copy small {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.skill-detail-topbar-nav,
+.skill-detail-topbar-actions,
+.skill-detail-topbar-actions .marketplace-topbar-switch {
+  gap: 6px;
+}
+
+.skill-detail-topbar-actions {
+  flex-wrap: wrap;
+}
+
+.skill-detail-topbar-nav,
+.skill-detail-topbar-actions .marketplace-topbar-switch {
+  padding: 4px;
+  background: color-mix(in srgb, var(--marketplace-nav-shell-background) 88%, transparent);
+}
+
+.marketplace-topbar:has(.skill-detail-topbar-nav) .skill-detail-topbar-nav,
+.marketplace-topbar:has(.skill-detail-topbar-nav) .marketplace-topbar-switch {
+  width: auto;
+  justify-content: flex-start;
+}
+
+.skill-detail-topbar-nav .marketplace-nav-button,
+.skill-detail-topbar-actions .marketplace-topbar-button,
+.skill-detail-topbar-actions .marketplace-toggle-button {
+  min-height: 34px;
+  padding-inline: 12px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.marketplace-topbar:has(.skill-detail-topbar-nav) .marketplace-nav-button,
+.marketplace-topbar:has(.skill-detail-topbar-nav) .marketplace-topbar-button,
+.marketplace-topbar:has(.skill-detail-topbar-nav) .marketplace-toggle-button {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.skill-detail-shell-breadcrumb {
+  gap: 6px;
+  font-size: 12px;
+}
+
+.skill-detail-shell-breadcrumb-link,
+.skill-detail-shell-breadcrumb-current {
+  min-height: 28px;
+  max-width: min(100%, 280px);
+  padding: 0 12px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.skill-detail-shell-breadcrumb-link {
+  background: color-mix(in srgb, var(--marketplace-section-emphasis-background) 76%, transparent);
+  color: var(--si-color-text-secondary);
+}
+
+.skill-detail-shell-breadcrumb-link:hover {
+  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 78%, transparent);
+  color: var(--marketplace-home-text);
+  text-decoration: none;
+}
+
+.skill-detail-shell-breadcrumb-current {
+  background: color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 18%, transparent);
+  color: var(--marketplace-home-text);
+}
+
+.skill-detail-shell-breadcrumb-current.is-soft {
+  border-color: color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 22%, var(--marketplace-card-border-soft) 78%);
+}
+
+.skill-detail-shell-breadcrumb-separator {
+  color: var(--si-color-text-weak);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.skill-detail-header-card .marketplace-kicker {
+  margin: 0;
+  color: var(--si-color-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.skill-detail-header-copy {
+  gap: 10px;
+}
+
+.skill-detail-header-title {
+  font-size: clamp(30px, 3vw, 40px);
+}
+
+.skill-detail-header-description {
+  max-width: 860px;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.skill-detail-meta-chip,
+.skill-detail-tag-chip,
+.skill-detail-summary-pill {
+  min-height: 28px;
+  padding: 0 11px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}
+
+.skill-detail-meta-chip,
+.skill-detail-summary-pill {
+  background: color-mix(in srgb, var(--marketplace-section-emphasis-background) 78%, transparent);
+}
+
+@media (max-width: 760px) {
+  .skill-detail-shell-breadcrumb-link,
+  .skill-detail-shell-breadcrumb-current {
+    max-width: none;
+  }
+}

@@ -1,6 +1,4 @@
-import type { SessionUser } from "../../lib/api";
 import type { AppLocale } from "../../lib/i18n";
-import type { ThemeMode } from "../../lib/themeModePath";
 import type { SyncPolicyRecord, SyncRunRecord } from "../recordsSyncCenter/RecordsSyncCenterPage.types";
 
 export type SkillOperationsRoute =
@@ -24,12 +22,7 @@ export type SkillOperationsSubmissionAction =
 export interface SkillOperationsPageProps {
   locale: AppLocale;
   route: SkillOperationsRoute;
-  currentPath: string;
   onNavigate: (path: string) => void;
-  sessionUser?: SessionUser | null;
-  onThemeModeChange?: (nextMode: ThemeMode) => void;
-  onLocaleChange?: (nextLocale: AppLocale) => void;
-  onLogout?: () => Promise<void> | void;
 }
 
 export interface SkillInventoryItem {

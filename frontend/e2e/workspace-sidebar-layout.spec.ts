@@ -92,6 +92,28 @@ async function mockRepositoryIngestionData(page: Page): Promise<void> {
     });
   });
 
+  await page.route("**/api/v1/admin/skills", async (route) => {
+    await fulfillJSON(route, 200, {
+      items: [
+        {
+          id: 88,
+          name: "Repo Skill",
+          description: "Repository managed skill",
+          source_type: "repository",
+          visibility: "private",
+          owner_username: "alice",
+          updated_at: "2026-03-11T10:00:00Z"
+        }
+      ]
+    });
+  });
+
+  await page.route("**/api/v1/admin/jobs?limit=40", async (route) => {
+    await fulfillJSON(route, 200, {
+      items: []
+    });
+  });
+
   await page.route("**/api/v1/admin/sync-jobs/9001", async (route) => {
     await fulfillJSON(route, 200, {
       item: {
@@ -149,9 +171,31 @@ async function mockAccountsPageData(page: Page): Promise<void> {
     await route.fulfill(ok({ items: [] }));
   });
 
+  await page.route("**/api/v1/admin/settings/registration", async (route) => {
+    await route.fulfill(
+      ok({
+        allow_registration: true,
+        marketplace_public_access: true
+      })
+    );
+  });
+
+  await page.route("**/api/v1/admin/settings/auth-providers", async (route) => {
+    await route.fulfill(
+      ok({
+        ok: true,
+        auth_providers: ["github", "google"],
+        available_auth_providers: ["github", "google", "wecom", "password"]
+      })
+    );
+  });
+
   await mockExactListRoute(page, "/api/v1/admin/organizations", { items: [] });
   await mockExactListRoute(page, "/api/v1/admin/roles", { items: [] });
   await mockExactListRoute(page, "/api/v1/admin/access-policies", { items: [] });
+  await page.route("**/api/v1/admin/organizations/*/members", async (route) => {
+    await route.fulfill(ok({ items: [] }));
+  });
 
   await page.route("**/api/v1/admin/access/summary**", async (route) => {
     await route.fulfill(
@@ -166,50 +210,44 @@ async function mockAccountsPageData(page: Page): Promise<void> {
   });
 }
 
-async function measureSidebarFrame(page: Page, path: string, options?: { requireSidebar?: boolean }) {
+async function measureBackendShell(page: Page, path: string) {
   await page.goto(path);
 
-  const topbar = page.locator(".workspace-topbar-shell .marketplace-topbar");
-  const utilityFrame = page.locator(".workspace-prototype-utility-frame");
-  const sidebarCard = page.locator(".workspace-prototype-utility-frame aside").first();
-  const contentScroll = page.locator(".workspace-shell-content-scroll");
-  const requireSidebar = options?.requireSidebar !== false;
+  const topbar = page.locator(".backend-topbar");
+  const shellBody = page.locator(".backend-shell-body");
+  const secondaryNav = page.locator(".backend-secondary-nav");
+  const mainPanel = page.locator(".backend-main-panel");
 
   await expect(topbar).toBeVisible();
-  await expect(utilityFrame).toBeVisible();
-  if (requireSidebar) {
-    await expect(sidebarCard).toBeVisible();
-  }
-  await expect(contentScroll).toBeVisible();
+  await expect(shellBody).toBeVisible();
+  await expect(secondaryNav).toBeVisible();
+  await expect(mainPanel).toBeVisible();
+  await expect(page.locator(".workspace-prototype-utility-frame")).toHaveCount(0);
 
   const topbarBox = await topbar.boundingBox();
-  const utilityFrameBox = await utilityFrame.boundingBox();
-  const sidebarCardBox = requireSidebar ? await sidebarCard.boundingBox() : null;
-  const contentScrollBox = await contentScroll.boundingBox();
+  const shellBodyBox = await shellBody.boundingBox();
+  const secondaryNavBox = await secondaryNav.boundingBox();
+  const mainPanelBox = await mainPanel.boundingBox();
 
   expect(topbarBox).not.toBeNull();
-  expect(utilityFrameBox).not.toBeNull();
-  if (requireSidebar) {
-    expect(sidebarCardBox).not.toBeNull();
-  }
-  expect(contentScrollBox).not.toBeNull();
+  expect(shellBodyBox).not.toBeNull();
+  expect(secondaryNavBox).not.toBeNull();
+  expect(mainPanelBox).not.toBeNull();
 
   return {
     topbarBox,
-    utilityFrameBox,
-    sidebarCardBox,
-    contentScrollBox
+    shellBodyBox,
+    secondaryNavBox,
+    mainPanelBox
   };
 }
 
-const adminSecondarySidebarRoutes = [
+const userManagementRoutes = [
   "/admin/accounts/new",
   "/admin/access",
   "/admin/roles",
   "/admin/roles/new",
-  "/admin/ingestion/repository",
-  "/admin/records/sync-jobs",
-  "/admin/records/exports"
+  "/admin/organizations"
 ] as const;
 
 test.describe("workspace sidebar layout", () => {
@@ -220,47 +258,81 @@ test.describe("workspace sidebar layout", () => {
 
     await page.setViewportSize({ width: 1440, height: 1100 });
 
-    const repository = await measureSidebarFrame(page, "/admin/ingestion/repository");
-    const accounts = await measureSidebarFrame(page, "/admin/accounts");
+    const repository = await measureBackendShell(page, "/admin/ingestion/repository");
+    const accounts = await measureBackendShell(page, "/admin/accounts");
 
-    expect(Math.abs((repository.utilityFrameBox?.x || 0) - (accounts.utilityFrameBox?.x || 0))).toBeLessThanOrEqual(1);
-    expect(Math.abs((repository.utilityFrameBox?.width || 0) - (accounts.utilityFrameBox?.width || 0))).toBeLessThanOrEqual(1);
-    expect(Math.abs((repository.sidebarCardBox?.x || 0) - (accounts.sidebarCardBox?.x || 0))).toBeLessThanOrEqual(1);
-    expect(Math.abs((repository.contentScrollBox?.x || 0) - (accounts.contentScrollBox?.x || 0))).toBeLessThanOrEqual(1);
+    expect(Math.abs((repository.shellBodyBox?.x || 0) - (accounts.shellBodyBox?.x || 0))).toBeLessThanOrEqual(1);
+    expect(Math.abs((repository.shellBodyBox?.width || 0) - (accounts.shellBodyBox?.width || 0))).toBeLessThanOrEqual(1);
+    expect(Math.abs((repository.secondaryNavBox?.x || 0) - (accounts.secondaryNavBox?.x || 0))).toBeLessThanOrEqual(1);
+    expect(Math.abs((repository.mainPanelBox?.x || 0) - (accounts.mainPanelBox?.x || 0))).toBeLessThanOrEqual(1);
   });
 
-  test("keeps explicit shell contracts for workspace default and admin secondary layouts", async ({ page }) => {
+  test("keeps explicit backend shell contracts for workspace and admin layouts", async ({ page }) => {
     await mockWorkspaceShell(page);
     await mockRepositoryIngestionData(page);
     await mockAccountsPageData(page);
 
     await page.setViewportSize({ width: 1440, height: 1100 });
 
-    const workspace = await measureSidebarFrame(page, "/workspace", { requireSidebar: false });
-    const accounts = await measureSidebarFrame(page, "/admin/accounts");
+    const workspace = await measureBackendShell(page, "/workspace");
+    const accounts = await measureBackendShell(page, "/admin/accounts");
 
-    expect(Math.abs((workspace.topbarBox?.x || 0) - (workspace.utilityFrameBox?.x || 0))).toBeLessThanOrEqual(1);
-    expect(Math.abs((workspace.topbarBox?.width || 0) - (workspace.utilityFrameBox?.width || 0))).toBeLessThanOrEqual(1);
+    expect(Math.abs((workspace.topbarBox?.x || 0) - (workspace.shellBodyBox?.x || 0))).toBeLessThanOrEqual(12);
+    expect(Math.abs((workspace.topbarBox?.width || 0) - (workspace.shellBodyBox?.width || 0))).toBeLessThanOrEqual(40);
 
-    expect((accounts.utilityFrameBox?.width || 0)).toBeGreaterThan(accounts.topbarBox?.width || 0);
-    expect((accounts.utilityFrameBox?.x || 0)).toBeLessThan(accounts.topbarBox?.x || 0);
+    expect((accounts.shellBodyBox?.width || 0)).toBeGreaterThan(1300);
+    expect((accounts.secondaryNavBox?.width || 0)).toBeGreaterThan(240);
+    expect((accounts.mainPanelBox?.width || 0)).toBeGreaterThan(1000);
   });
 
-  test("keeps every admin secondary-sidebar route on the shared accounts baseline", async ({ page }) => {
+  test("keeps every users secondary route on the shared accounts baseline", async ({ page }) => {
     await mockWorkspaceShell(page);
     await mockRepositoryIngestionData(page);
     await mockAccountsPageData(page);
 
     await page.setViewportSize({ width: 1440, height: 1100 });
 
-    const accounts = await measureSidebarFrame(page, "/admin/accounts");
+    const accounts = await measureBackendShell(page, "/admin/accounts");
 
-    for (const route of adminSecondarySidebarRoutes) {
-      const current = await measureSidebarFrame(page, route);
+    for (const route of userManagementRoutes) {
+      const current = await measureBackendShell(page, route);
 
-      expect(Math.abs((current.utilityFrameBox?.x || 0) - (accounts.utilityFrameBox?.x || 0)), `${route} utility x`).toBeLessThanOrEqual(1);
-      expect(Math.abs((current.utilityFrameBox?.width || 0) - (accounts.utilityFrameBox?.width || 0)), `${route} utility width`).toBeLessThanOrEqual(1);
-      expect(Math.abs((current.sidebarCardBox?.x || 0) - (accounts.sidebarCardBox?.x || 0)), `${route} sidebar x`).toBeLessThanOrEqual(1);
+      expect(Math.abs((current.shellBodyBox?.x || 0) - (accounts.shellBodyBox?.x || 0)), `${route} shell x`).toBeLessThanOrEqual(1);
+      expect(Math.abs((current.shellBodyBox?.width || 0) - (accounts.shellBodyBox?.width || 0)), `${route} shell width`).toBeLessThanOrEqual(1);
+      expect(Math.abs((current.secondaryNavBox?.x || 0) - (accounts.secondaryNavBox?.x || 0)), `${route} sidebar x`).toBeLessThanOrEqual(1);
+      expect(Math.abs((current.mainPanelBox?.x || 0) - (accounts.mainPanelBox?.x || 0)), `${route} main panel x`).toBeLessThanOrEqual(1);
     }
+  });
+
+  test("collapses the backend secondary navigation into an integrated rail", async ({ page }) => {
+    await mockWorkspaceShell(page);
+    await mockRepositoryIngestionData(page);
+    await mockAccountsPageData(page);
+
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    await page.goto("/admin/accounts");
+
+    const shellBody = page.locator(".backend-shell-body");
+    const secondaryNav = page.locator(".backend-secondary-nav");
+    const mainPanel = page.locator(".backend-main-panel");
+    const collapseToggle = page.getByTestId("backend-secondary-collapse-toggle");
+
+    const sidebarWidthBefore = await secondaryNav.evaluate((node) => Math.round(node.getBoundingClientRect().width));
+    const mainPanelXBefore = await mainPanel.evaluate((node) => Math.round(node.getBoundingClientRect().x));
+
+    await collapseToggle.click();
+
+    await expect(shellBody).toHaveClass(/is-sidebar-collapsed/);
+    await expect(secondaryNav).toHaveClass(/is-collapsed/);
+    await expect(collapseToggle).toHaveAttribute("aria-expanded", "false");
+    await expect(secondaryNav.locator(".backend-secondary-item-copy")).toHaveCount(4);
+    await expect(secondaryNav.locator(".backend-secondary-item-copy").first()).not.toBeVisible();
+
+    const sidebarWidthAfter = await secondaryNav.evaluate((node) => Math.round(node.getBoundingClientRect().width));
+    const mainPanelXAfter = await mainPanel.evaluate((node) => Math.round(node.getBoundingClientRect().x));
+
+    expect(sidebarWidthBefore).toBeGreaterThan(240);
+    expect(sidebarWidthAfter).toBeLessThan(100);
+    expect(mainPanelXAfter).toBeLessThan(mainPanelXBefore);
   });
 });

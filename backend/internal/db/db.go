@@ -57,6 +57,12 @@ func Migrate(database *gorm.DB) error {
 	if err := reconcileOAuthGrantIndexes(database); err != nil {
 		return err
 	}
+	if err := reconcileAuditLogSchema(database); err != nil {
+		return err
+	}
+	if err := reconcileSkillRecordOrigins(database); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -73,6 +79,44 @@ func reconcileOAuthGrantIndexes(database *gorm.DB) error {
 	if err := migrator.CreateIndex(&models.OAuthGrant{}, "idx_oauth_provider_external"); err != nil {
 		return fmt.Errorf("failed to create oauth grant index idx_oauth_provider_external: %w", err)
 	}
+	return nil
+}
+
+func reconcileAuditLogSchema(database *gorm.DB) error {
+	if database == nil {
+		return nil
+	}
+	migrator := database.Migrator()
+	if err := migrator.AlterColumn(&models.AuditLog{}, "ActorUserID"); err != nil {
+		return fmt.Errorf("failed to alter audit log actor_user_id column: %w", err)
+	}
+	return nil
+}
+
+func reconcileSkillRecordOrigins(database *gorm.DB) error {
+	if database == nil {
+		return nil
+	}
+
+	if err := database.
+		Model(&models.Skill{}).
+		Where("record_origin = '' OR record_origin IS NULL").
+		Update("record_origin", string(models.RecordOriginImported)).Error; err != nil {
+		return fmt.Errorf("failed to backfill empty skill record origins: %w", err)
+	}
+
+	if err := database.
+		Model(&models.Skill{}).
+		Where("owner_id IN (?)",
+			database.
+				Model(&models.User{}).
+				Select("id").
+				Where("username = ?", "marketbot"),
+		).
+		Update("record_origin", string(models.RecordOriginSeed)).Error; err != nil {
+		return fmt.Errorf("failed to reconcile seed skill origins: %w", err)
+	}
+
 	return nil
 }
 

@@ -2,13 +2,14 @@ import type { ReactNode } from "react";
 import { useMemo } from "react";
 
 import type { TopbarActionItem } from "../pages/marketplaceHome/MarketplaceHomePage.lightTopbar";
-import MarketplaceTopbarBase from "../pages/marketplacePublic/MarketplaceTopbarBase";
 import type { MarketplaceTopbarRightRegistration } from "../pages/marketplacePublic/MarketplaceTopbar.rightRegistry";
 import {
-  renderMarketplaceTopbarActionButton,
-  renderMarketplaceTopbarRightRegistrations,
-  resolveMarketplaceTopbarRightRegistrations
-} from "../pages/marketplacePublic/MarketplaceTopbar.shared";
+  renderAppTopbarActionButton,
+  renderAppTopbarRightRegistrations,
+  resolveAppTopbarRightRegistrations
+} from "./appTopbar.shared";
+import AppTopbarBase from "./AppTopbarBase";
+import { resolveAppTopbarClassNames, type AppTopbarVariant } from "./appTopbarClassNames";
 
 export interface AppShellTopbarProps {
   brandTitle: string;
@@ -30,6 +31,7 @@ export interface AppShellTopbarProps {
   belowContent?: ReactNode;
   primaryNavigationContent?: ReactNode;
   primaryTrailingContent?: ReactNode;
+  variant?: AppTopbarVariant;
 }
 
 export default function AppShellTopbar({
@@ -51,11 +53,13 @@ export default function AppShellTopbar({
   leftAccessoryContent,
   belowContent,
   primaryNavigationContent,
-  primaryTrailingContent
+  primaryTrailingContent,
+  variant = "marketplace"
 }: AppShellTopbarProps) {
+  const classNames = useMemo(() => resolveAppTopbarClassNames(variant), [variant]);
   const resolvedRightRegistrations = useMemo(
     () =>
-      resolveMarketplaceTopbarRightRegistrations({
+      resolveAppTopbarRightRegistrations({
         isLightTheme,
         localeThemeSwitch,
         utilityActions,
@@ -64,9 +68,11 @@ export default function AppShellTopbar({
         onSecondaryCtaClick,
         ctaLabel,
         onCtaClick,
-        rightRegistrations
+        rightRegistrations,
+        classNames
       }),
     [
+      classNames,
       ctaLabel,
       isLightTheme,
       localeThemeSwitch,
@@ -80,12 +86,12 @@ export default function AppShellTopbar({
   );
 
   const rightContent = useMemo(
-    () => renderMarketplaceTopbarRightRegistrations(resolvedRightRegistrations),
+    () => renderAppTopbarRightRegistrations(resolvedRightRegistrations),
     [resolvedRightRegistrations]
   );
 
   return (
-    <MarketplaceTopbarBase
+    <AppTopbarBase
       brandTitle={brandTitle}
       brandSubtitle={brandSubtitle}
       onBrandClick={onBrandClick}
@@ -95,8 +101,9 @@ export default function AppShellTopbar({
       primaryNavigationContent={primaryNavigationContent}
       primaryTrailingContent={primaryTrailingContent}
       primaryActions={primaryActions}
-      renderPrimaryActionButton={(action) => renderMarketplaceTopbarActionButton(action, "primary")}
+      renderPrimaryActionButton={(action) => renderAppTopbarActionButton(action, "primary", classNames)}
       rightContent={rightContent}
+      classNames={classNames}
       shellClassName={shellClassName}
       dataAnimated={dataAnimated}
     />

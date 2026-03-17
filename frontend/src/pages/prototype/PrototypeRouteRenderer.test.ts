@@ -4,11 +4,9 @@ import { describe, expect, it } from "vitest";
 
 import AdminIncidentWorkbenchPage from "../adminWorkbench/AdminIncidentWorkbenchPage";
 import AdminIntegrationWorkbenchPage from "../adminWorkbench/AdminIntegrationWorkbenchPage";
-import AdminSecurityPage from "../adminSecurity/AdminSecurityPage";
 import GovernanceCenterPage from "../governanceCenter/GovernanceCenterPage";
 import LoginPage from "../login/LoginPage";
 import MarketplaceHomePage from "../marketplaceHome/MarketplaceHomePage";
-import OrganizationManagementSubpageShell from "../organizationCenter/OrganizationManagementSubpageShell";
 import PrototypeReplicaPage from "./PrototypeReplicaPage";
 import PublicComparePage from "../publicCompare/PublicComparePage";
 import PublicSkillDetailPage from "../publicSkillDetail/PublicSkillDetailPage";
@@ -206,6 +204,21 @@ describe("renderPrototypeRouteContent", () => {
     expect(element.props.incidentID).toBe("42");
   });
 
+  it("maps incident recovery alias to the incident workbench instead of ops metrics", () => {
+    const element = renderPrototypeRouteContent({
+      ...baseProps,
+      currentPath: "/admin/incidents",
+      entry: {
+        ...baseProps.entry,
+        key: "incident_recovery",
+        primaryRoute: "/admin/incidents"
+      }
+    });
+
+    expect(element.type).toBe(AdminIncidentWorkbenchPage);
+    expect(element.props.mode).toBe("incident_recovery");
+  });
+
   it("falls back for organization management routes it no longer owns", () => {
     const accountsElement = renderPrototypeRouteContent({
       ...baseProps,
@@ -236,21 +249,21 @@ describe("renderPrototypeRouteContent", () => {
     expect(element.props.mode).toBe("incident_management_list");
   });
 
-  it("maps access route to admin access page", () => {
+  it("falls back for legacy route entry it no longer owns", () => {
     const element = renderPrototypeRouteContent({
       ...baseProps,
       currentPath: "/light/admin/access",
       entry: {
         ...baseProps.entry,
-        key: "access_management_light",
+        key: "legacy_access_route",
         primaryRoute: "/light/admin/access"
       }
     });
 
-    expect(element.type).toBe(OrganizationManagementSubpageShell);
-    expect(element.props.activeMenuID).toBe("org-permission");
-    expect(element.props.children.type).toBe(AdminSecurityPage);
-    expect(element.props.children.props.route).toBe("/admin/access");
+    const html = renderToStaticMarkup(React.createElement(React.Fragment, null, element));
+
+    expect(element.type).toBe(PrototypeReplicaPage);
+    expect(html).toContain("Prototype Replica");
   });
 
   it("falls back to prototype replica when mapping is missing", () => {

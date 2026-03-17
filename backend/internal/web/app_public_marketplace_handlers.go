@@ -549,7 +549,7 @@ func (a *App) handleSkillDetail(w http.ResponseWriter, r *http.Request) {
 		viewerID = user.ID
 	}
 
-	skill, err := a.skillService.GetVisibleSkillByID(r.Context(), skillID, viewerID)
+	skill, err := a.skillService.GetMarketplaceVisibleSkillByID(r.Context(), skillID, viewerID)
 	if err != nil {
 		if errors.Is(err, services.ErrSkillNotFound) {
 			http.NotFound(w, r)

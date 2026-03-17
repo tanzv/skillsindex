@@ -6,21 +6,17 @@ import type { PrototypeCatalogEntry } from "../../lib/prototypeCatalog";
 import { extractSkillID } from "../../lib/appPathnameResolver";
 import AdminIncidentWorkbenchPage, { AdminIncidentWorkbenchMode } from "../adminWorkbench/AdminIncidentWorkbenchPage";
 import AdminIntegrationWorkbenchPage, { AdminIntegrationWorkbenchMode } from "../adminWorkbench/AdminIntegrationWorkbenchPage";
-import AdminOpsMetricsPage from "../adminOps/AdminOpsMetricsPage";
 import AdminOverviewPage from "../adminOverview/AdminOverviewPage";
-import AdminSecurityPage from "../adminSecurity/AdminSecurityPage";
 import AdminIntegrationsPage from "../adminWorkbench/AdminIntegrationsPage";
 import GovernanceCenterPage from "../governanceCenter/GovernanceCenterPage";
 import LoginPage from "../login/LoginPage";
 import MarketplaceHomePage from "../marketplaceHome/MarketplaceHomePage";
-import OrganizationManagementSubpageShell from "../organizationCenter/OrganizationManagementSubpageShell";
 import PrototypeReplicaPage from "./PrototypeReplicaPage";
 import PublicComparePage from "../publicCompare/PublicComparePage";
 import PublicSkillDetailPage from "../publicSkillDetail/PublicSkillDetailPage";
 import RecordsSyncCenterPage from "../recordsSyncCenter/RecordsSyncCenterPage";
 import SystemStatePage from "../systemState/SystemStatePage";
 import WorkspaceCenterPage from "../workspace/WorkspaceCenterPage";
-import { resolveOrganizationManagementMenuItemID } from "../workspace/WorkspaceCenterPage.navigation";
 
 export interface PrototypeRouteRenderProps {
   locale: AppLocale;
@@ -43,7 +39,6 @@ export type PrototypeImplementationTarget =
   | "state"
   | "records-sync"
   | "admin-integrations"
-  | "admin-access"
   | "admin-incidents"
   | "admin-overview"
   | "fallback";
@@ -217,28 +212,8 @@ export function renderPrototypeRouteContent(props: PrototypeRouteRenderProps) {
     return <AdminIntegrationsPage />;
   }
 
-  if (target === "admin-access") {
-    return (
-      <OrganizationManagementSubpageShell
-        locale={props.locale}
-        currentPath={props.currentPath}
-        onNavigate={props.onNavigate}
-        sessionUser={props.sessionUser}
-        onThemeModeChange={props.onThemeModeChange}
-        onLocaleChange={props.onLocaleChange}
-        onLogout={props.onLogout}
-        activeMenuID={resolveOrganizationManagementMenuItemID(props.currentPath)}
-        eyebrow="Organization Management"
-        title="Access Management"
-        subtitle="Control access policies with organization-level secondary navigation kept in the workspace shell."
-      >
-        <AdminSecurityPage route="/admin/access" />
-      </OrganizationManagementSubpageShell>
-    );
-  }
-
   if (target === "admin-incidents") {
-    return <AdminOpsMetricsPage />;
+    return <AdminIncidentWorkbenchPage mode="incident_recovery" />;
   }
 
   if (target === "admin-overview") {

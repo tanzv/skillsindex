@@ -4,12 +4,13 @@
 
 本文件收口 `FR-KEY-001~008` 的当前真实实现、scope 模型、生命周期接口与剩余差距。
 
-当前状态：`部分覆盖`
+当前状态：`部分覆盖（Window A 已收口 P0）`
 
 原因：
 
-1. API Key 生命周期、scope 更新与 401/403 分流已经存在
-2. 但最小权限边界仍存在兼容性缺口，尚不能宣称完全闭环
+1. API Key 生命周期、scope 更新与 `401/403` 分流已经存在
+2. Window A 已完成最小权限边界硬化：空 scope、非法 scope、静态兼容 key 在受保护路由上不再宽松放行
+3. 当前剩余差距主要在 scope 覆盖面与治理深度，而不是 P0 绕过风险
 
 ## 2. 当前生命周期接口
 
@@ -160,27 +161,32 @@
 当前 API Key 鉴权流程如下：
 
 1. 读取 query `api_key` 或 `Authorization: Bearer`
-2. 若命中静态配置 `a.apiKeys`，则直接放行
-3. 否则走数据库校验：
+2. 先解析路径是否存在 required scope
+3. 若命中静态配置 `a.apiKeys`：
+   - 无 required scope 时放行
+   - 有 required scope 时返回 `403 api_key_scope_denied`
+4. 否则走数据库校验：
    - `key_hash` 命中
    - `revoked_at IS NULL`
    - `expires_at IS NULL OR expires_at > now`
-4. 数据库校验通过后，更新 `last_used_at`
-5. 若路径要求 scope，则调用 `APIKeyHasScope(...)` 做 scope 判断
-6. 缺 scope 返回 `403 api_key_scope_denied`
-7. 其他失败返回 `401 api_key_invalid`
+5. 数据库校验通过后，更新 `last_used_at`
+6. 若路径要求 scope，则调用 `APIKeyHasScope(...)` 做 scope 判断
+7. 缺 scope 返回 `403 api_key_scope_denied`
+8. 其他失败返回 `401 api_key_invalid`
 
-### 5.2 当前兼容行为与安全风险
+### 5.2 当前兼容行为与当前策略
 
-当前存在两个重要兼容行为：
+Window A 后当前策略如下：
 
-1. 静态配置 key 不参与 scope 校验
-2. 当已存储 key 的 scope 为空或无法被规范化解析时，`APIKeyHasScope(...)` 当前会走“宽松放行”语义
+1. 静态配置 key 仅可访问无 scope 约束的兼容路径，不再可用于受保护公开检索接口
+2. 当已存储 key 的 scope 为空或无法被规范化解析时，`APIKeyHasScope(...)` 按 deny-by-default 处理
+3. `skills.read`、`skills:*` 与 `*` 的显式通配语义仍保留
+4. legacy key 若未显式修正 scope，将在受保护路由上收到 `403 api_key_scope_denied`
 
 这意味着：
 
-1. 老 key 或异常 scope 数据并非严格 deny-by-default
-2. 当前仍存在绕过最小权限模型的实现风险
+1. 受保护公开检索接口已经收口为“鉴权成功但缺 scope 则 403”
+2. 老 key 或异常 scope 数据不会再以兼容方式穿透最小权限边界
 
 ## 6. 当前错误码与审计
 
@@ -223,11 +229,11 @@
 
 ## 7. 当前未闭环差距
 
-### 7.1 P0 安全差距
+### 7.1 Window A 已关闭的 P0 差距
 
-1. 静态 key 兼容路径当前绕过 scope 校验
-2. 空 scope / 非法 scope 当前存在宽松放行兼容行为
-3. scope 命名与旧文档不一致，已完成文档收口，但实现仍需补统一校验与迁移策略
+1. 静态 key 兼容路径不再绕过受保护公开检索的 scope 校验
+2. 空 scope / 非法 scope 不再以兼容方式宽松放行
+3. `401 api_key_invalid` 与 `403 api_key_scope_denied` 的分流已在实现、测试与 OpenAPI 中统一
 
 ### 7.2 P1 功能差距
 
@@ -235,6 +241,7 @@
 2. 当前没有 scope 注册表、版本化或废弃策略
 3. 当前没有按 scope、owner、风险等级的批量撤销接口
 4. 当前没有“强制轮换周期”或泄露事件处置流程
+5. legacy key 的批量补 scope / 回收流程仍需运维治理配套
 
 ## 8. 目标补齐方向
 

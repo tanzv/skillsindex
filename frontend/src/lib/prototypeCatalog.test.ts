@@ -15,4 +15,9 @@ describe("matchPrototypeCatalog", () => {
     expect(matchPrototypeCatalog("/light/admin/permissions/accounts")?.primaryRoute).toBe("/light/admin/accounts");
     expect(matchPrototypeCatalog("/mobile/light/admin/permissions/accounts")?.primaryRoute).toBe("/light/admin/accounts");
   });
+
+  it("does not expose admin access pages as prototype catalog entries", () => {
+    expect(matchPrototypeCatalog("/admin/access")).toBeNull();
+    expect(matchPrototypeCatalog("/light/admin/access")).toBeNull();
+  });
 });

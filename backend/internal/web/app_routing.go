@@ -107,6 +107,10 @@ func (a *App) Router() http.Handler {
 	r.Group(func(publicAPI chi.Router) {
 		publicAPI.Use(a.requireMarketplaceAccess)
 		publicAPI.Get("/api/v1/public/marketplace", a.handleAPIPublicMarketplace)
+		publicAPI.Get("/api/v1/public/skills/compare", a.handleAPIPublicSkillCompare)
+		publicAPI.Get("/api/v1/public/skills/{skillID}/resources", a.handleAPIPublicSkillResources)
+		publicAPI.Get("/api/v1/public/skills/{skillID}/resource-file", a.handleAPIPublicSkillResourceContent)
+		publicAPI.Get("/api/v1/public/skills/{skillID}/versions", a.handleAPIPublicSkillVersions)
 		publicAPI.Get("/api/v1/public/skills/{skillID}", a.handleAPIPublicSkillDetail)
 	})
 
@@ -499,13 +503,20 @@ func (a *App) requireAPIKey(next http.Handler) http.Handler {
 				apiKey = strings.TrimSpace(auth[7:])
 			}
 		}
+		requiredScope := requiredAPIKeyScope(r.URL.Path)
 		if _, ok := a.apiKeys[apiKey]; ok {
+			if requiredScope != "" {
+				writeJSON(w, http.StatusForbidden, map[string]any{
+					"error":   "api_key_scope_denied",
+					"message": "API key does not grant required scope",
+				})
+				return
+			}
 			next.ServeHTTP(w, r)
 			return
 		}
 		if a.apiKeyService != nil {
 			if key, valid, err := a.apiKeyService.Validate(r.Context(), apiKey); err == nil && valid {
-				requiredScope := requiredAPIKeyScope(r.URL.Path)
 				if requiredScope != "" && !services.APIKeyHasScope(key, requiredScope) {
 					writeJSON(w, http.StatusForbidden, map[string]any{
 						"error":   "api_key_scope_denied",
@@ -554,15 +565,34 @@ func clientIPFromRequest(r *http.Request) string {
 	forwardedFor := strings.TrimSpace(r.Header.Get("X-Forwarded-For"))
 	if forwardedFor != "" {
 		first := strings.Split(forwardedFor, ",")[0]
-		return strings.TrimSpace(first)
+		return sanitizeIssuedIP(first)
 	}
 	realIP := strings.TrimSpace(r.Header.Get("X-Real-IP"))
 	if realIP != "" {
-		return realIP
+		return sanitizeIssuedIP(realIP)
 	}
 	host, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr))
 	if err == nil {
-		return strings.TrimSpace(host)
+		return sanitizeIssuedIP(host)
 	}
-	return strings.TrimSpace(r.RemoteAddr)
+	return sanitizeIssuedIP(r.RemoteAddr)
+}
+
+func sanitizeIssuedIP(raw string) string {
+	candidate := strings.TrimSpace(raw)
+	if candidate == "" {
+		return ""
+	}
+	if parsed := net.ParseIP(candidate); parsed != nil {
+		return parsed.String()
+	}
+	host, _, err := net.SplitHostPort(candidate)
+	if err != nil {
+		return candidate
+	}
+	host = strings.TrimSpace(host)
+	if parsed := net.ParseIP(host); parsed != nil {
+		return parsed.String()
+	}
+	return host
 }

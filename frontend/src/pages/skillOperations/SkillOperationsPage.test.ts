@@ -36,18 +36,17 @@ const baseProps = {
 };
 
 describe("SkillOperationsPageContent", () => {
-  it("renders skill operations routes inside the shared workspace shell", () => {
+  it("renders skill operations routes as content-only pages", () => {
     const html = renderToStaticMarkup(
       React.createElement(SkillOperationsPage, {
         locale: "en",
         route: "/admin/ingestion/repository",
-        currentPath: "/admin/ingestion/repository",
         onNavigate: () => undefined
       })
     );
 
-    expect(html).toContain("workspace-prototype-utility-frame");
-    expect(html).toContain("workspace-shell-content-scroll");
+    expect(html).not.toContain("workspace-prototype-utility-frame");
+    expect(html).toContain("Loading skill operations workbench...");
   });
 
   it("renders the manual ingestion workbench", () => {

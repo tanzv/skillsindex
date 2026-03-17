@@ -1,4 +1,4 @@
-export type AdminSecurityRoute = "/admin/apikeys" | "/admin/access" | "/admin/moderation";
+export type AdminSecurityRoute = "/admin/apikeys" | "/admin/moderation";
 
 export interface AdminSecurityPageProps {
   route: AdminSecurityRoute;
@@ -13,16 +13,6 @@ export interface ApiKeyItem {
   expiresAt: string;
   lastUsedAt: string;
   updatedAt: string;
-}
-
-export interface AccountItem {
-  id: number;
-  username: string;
-  role: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  forceLogoutAt: string;
 }
 
 export interface ModerationCaseItem {
@@ -41,20 +31,12 @@ export interface ApiKeysViewData {
   total: number;
 }
 
-export interface AccessViewData {
-  accounts: AccountItem[];
-  accountsTotal: number;
-  allowRegistration: boolean;
-  enabledProviders: string[];
-  availableProviders: string[];
-}
-
 export interface ModerationViewData {
   items: ModerationCaseItem[];
   total: number;
 }
 
-export type SecurityViewData = ApiKeysViewData | AccessViewData | ModerationViewData;
+export type SecurityViewData = ApiKeysViewData | ModerationViewData;
 
 export interface RouteCopy {
   title: string;

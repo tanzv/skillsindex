@@ -2,10 +2,13 @@ package web
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"skillsindex/internal/models"
@@ -15,7 +18,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func setupAPIKeyMiddlewareTestApp(t *testing.T) (*App, uint, *services.APIKeyService) {
+func setupAPIKeyMiddlewareTestApp(t *testing.T) (*App, uint, *services.APIKeyService, *gorm.DB) {
 	t.Helper()
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
@@ -38,11 +41,16 @@ func setupAPIKeyMiddlewareTestApp(t *testing.T) (*App, uint, *services.APIKeySer
 		apiKeyService: svc,
 		apiKeys:       map[string]struct{}{},
 	}
-	return app, user.ID, svc
+	return app, user.ID, svc, db
+}
+
+func hashAPIKeyForMiddlewareTest(raw string) string {
+	sum := sha256.Sum256([]byte(strings.TrimSpace(raw)))
+	return hex.EncodeToString(sum[:])
 }
 
 func TestRequireAPIKeyAllowsMatchingScope(t *testing.T) {
-	app, userID, svc := setupAPIKeyMiddlewareTestApp(t)
+	app, userID, svc, _ := setupAPIKeyMiddlewareTestApp(t)
 	_, token, err := svc.Create(context.Background(), services.CreateAPIKeyInput{
 		UserID: userID,
 		Scopes: []string{services.APIKeyScopeSkillsSearchRead},
@@ -64,7 +72,7 @@ func TestRequireAPIKeyAllowsMatchingScope(t *testing.T) {
 }
 
 func TestRequireAPIKeyRejectsMissingScope(t *testing.T) {
-	app, userID, svc := setupAPIKeyMiddlewareTestApp(t)
+	app, userID, svc, _ := setupAPIKeyMiddlewareTestApp(t)
 	_, token, err := svc.Create(context.Background(), services.CreateAPIKeyInput{
 		UserID: userID,
 		Scopes: []string{services.APIKeyScopeSkillsSearchRead},
@@ -92,8 +100,64 @@ func TestRequireAPIKeyRejectsMissingScope(t *testing.T) {
 	}
 }
 
+func TestRequireAPIKeyRejectsEmptyStoredScopesForProtectedRoute(t *testing.T) {
+	app, userID, _, db := setupAPIKeyMiddlewareTestApp(t)
+	token := "sk_live_empty_scope_case"
+	key := models.APIKey{
+		UserID:  userID,
+		Name:    "Empty Stored Scope Token",
+		Prefix:  token[:16],
+		KeyHash: hashAPIKeyForMiddlewareTest(token),
+		Scopes:  "",
+	}
+	if err := db.Create(&key).Error; err != nil {
+		t.Fatalf("failed to create api key with empty scopes: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/search?api_key="+token, nil)
+	recorder := httptest.NewRecorder()
+	handler := app.requireAPIKey(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+
+	handler.ServeHTTP(recorder, req)
+	if recorder.Code != http.StatusForbidden {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusForbidden)
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(recorder.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("failed to decode response payload: %v", err)
+	}
+	if got, _ := payload["error"].(string); got != "api_key_scope_denied" {
+		t.Fatalf("unexpected error code: %#v", payload["error"])
+	}
+}
+
+func TestRequireAPIKeyRejectsStaticKeyOnProtectedRoute(t *testing.T) {
+	app, _, _, _ := setupAPIKeyMiddlewareTestApp(t)
+	app.apiKeys["static-token"] = struct{}{}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/search?api_key=static-token", nil)
+	recorder := httptest.NewRecorder()
+	handler := app.requireAPIKey(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+
+	handler.ServeHTTP(recorder, req)
+	if recorder.Code != http.StatusForbidden {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusForbidden)
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(recorder.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("failed to decode response payload: %v", err)
+	}
+	if got, _ := payload["error"].(string); got != "api_key_scope_denied" {
+		t.Fatalf("unexpected error code: %#v", payload["error"])
+	}
+}
+
 func TestRequireAPIKeyRejectsInvalidToken(t *testing.T) {
-	app, _, _ := setupAPIKeyMiddlewareTestApp(t)
+	app, _, _, _ := setupAPIKeyMiddlewareTestApp(t)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/search?api_key=invalid", nil)
 	recorder := httptest.NewRecorder()
 	handler := app.requireAPIKey(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

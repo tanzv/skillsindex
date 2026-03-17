@@ -1,6 +1,9 @@
 import { css } from "@emotion/react";
 
 import { shellLayoutContractVars } from "../prototype/pageShellLayoutContract";
+import {
+  buildMarketplaceHomeTopbarSelector
+} from "./marketplaceHomeTopbarSelectors";
 
 export const marketplaceHomeResponsiveStyles = css`
   .si-layout-shell-surface.si-layout-shell-stage-mobile {
@@ -22,7 +25,7 @@ export const marketplaceHomeResponsiveStyles = css`
     gap: 8px;
   }
 
-  .marketplace-home.is-mobile .marketplace-topbar {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home.is-mobile", "topbar")} {
     width: var(${shellLayoutContractVars.topbarWidth});
     height: auto;
     margin: 0 auto;
@@ -32,23 +35,27 @@ export const marketplaceHomeResponsiveStyles = css`
     gap: 8px;
   }
 
-  .marketplace-home.is-mobile .marketplace-topbar-actions {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home.is-mobile", "actions")} {
     width: 100%;
     justify-content: flex-end;
     flex-wrap: wrap;
   }
 
-  .marketplace-home.is-mobile .marketplace-topbar-left-group,
-  .marketplace-home.is-mobile .marketplace-topbar-light-nav,
-  .marketplace-home.is-mobile .marketplace-topbar-light-utility,
-  .marketplace-home.is-mobile .marketplace-topbar-primary-trailing,
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home.is-mobile", "leftGroup")},
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home.is-mobile", "lightNav")},
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home.is-mobile", "lightUtility")},
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home.is-mobile", "primaryTrailing")},
   .marketplace-home.is-mobile .workspace-topbar-primary-inline-toggle,
   .marketplace-home.is-mobile .workspace-topbar-primary-groups-shell {
     width: 100%;
     flex-wrap: wrap;
   }
 
-  .marketplace-home.is-mobile .workspace-topbar-shell .marketplace-topbar-utility-button.is-search-trigger {
+  ${buildMarketplaceHomeTopbarSelector(
+    ".marketplace-home.is-mobile .workspace-topbar-shell",
+    "utilityButton",
+    ".is-search-trigger"
+  )} {
     inline-size: 100%;
   }
 
@@ -106,7 +113,7 @@ export const marketplaceHomeResponsiveStyles = css`
     transform: none;
   }
 
-  .marketplace-home.is-mobile .marketplace-topbar-primary-trailing,
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home.is-mobile", "primaryTrailing")},
   .marketplace-home.is-mobile .workspace-topbar-primary-inline-toggle {
     justify-content: flex-end;
     margin-left: 0;
@@ -128,7 +135,7 @@ export const marketplaceHomeResponsiveStyles = css`
     display: none;
   }
 
-  .marketplace-home.is-mobile .marketplace-topbar-left-accessory {
+  ${buildMarketplaceHomeTopbarSelector(".marketplace-home.is-mobile", "leftAccessory")} {
     width: 100%;
   }
 

@@ -422,7 +422,7 @@ func (s *OpsService) RecordReleaseGateRun(ctx context.Context, actorUserID uint,
 		summary = "release gate run passed"
 	}
 	entry := models.AuditLog{
-		ActorUserID: actorUserID,
+		ActorUserID: auditActorPointer(actorUserID),
 		Action:      opsReleaseGateAction,
 		TargetType:  opsTargetType,
 		Summary:     summary,
@@ -476,7 +476,7 @@ func (s *OpsService) RecordRecoveryDrill(ctx context.Context, actorUserID uint, 
 		summary = fmt.Sprintf("Recovery drill passed (RPO %.2fh, RTO %.2fh)", record.RPOHours, record.RTOHours)
 	}
 	entry := models.AuditLog{
-		ActorUserID: actorUserID,
+		ActorUserID: auditActorPointer(actorUserID),
 		Action:      opsRecoveryDrillAction,
 		TargetType:  opsTargetType,
 		Summary:     summary,
@@ -510,7 +510,7 @@ func (s *OpsService) ListRecoveryDrills(ctx context.Context, limit int) ([]OpsRe
 	for _, item := range logs {
 		record := OpsRecoveryDrillRecord{
 			LoggedAt:    item.CreatedAt.UTC(),
-			ActorUserID: item.ActorUserID,
+			ActorUserID: auditActorValue(item.ActorUserID),
 			Note:        strings.TrimSpace(item.Summary),
 		}
 		var payload struct {

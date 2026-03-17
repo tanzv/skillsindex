@@ -3,6 +3,8 @@
 
 .codex/
 .launch-code/
+.superpowers/
+.superset/
 
 node_modules/
 frontend/node_modules/
@@ -20,6 +22,10 @@ frontend/.tmp-*.mjs
 frontend/home-*.png
 frontend/home_*.png
 frontend/tmp_*.png
+frontend-next/.next/
+frontend-next/test-results/
+frontend-next/playwright-report/
+frontend-next/tmp-screens/
 
 tmp-*.png
 tmp-*.jpg

@@ -39,6 +39,36 @@ func TestRedirectDashboardWithNewKeyDoesNotExposePlaintextInURL(t *testing.T) {
 	}
 }
 
+func TestBuildLoginRedirectPathFromRequestPreservesVariantAndReturnTarget(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/mobile/light/categories/qa?page=2", nil)
+
+	got := buildLoginRedirectPathFromRequest(req)
+
+	want := "/mobile/light/login?redirect=%2Fmobile%2Flight%2Fcategories%2Fqa%3Fpage%3D2"
+	if got != want {
+		t.Fatalf("unexpected login redirect path: got=%s want=%s", got, want)
+	}
+}
+
+func TestNormalizeLocalRedirectTarget(t *testing.T) {
+	cases := []struct {
+		name string
+		raw  string
+		want string
+	}{
+		{name: "safe local path", raw: "/light/skills/11?tab=files", want: "/light/skills/11?tab=files"},
+		{name: "reject empty", raw: "", want: ""},
+		{name: "reject external URL", raw: "https://evil.example", want: ""},
+		{name: "reject protocol relative", raw: "//evil.example", want: ""},
+		{name: "reject login loop", raw: "/mobile/light/login", want: ""},
+	}
+	for _, tc := range cases {
+		if got := normalizeLocalRedirectTarget(tc.raw); got != tc.want {
+			t.Fatalf("%s: unexpected redirect target: got=%s want=%s", tc.name, got, tc.want)
+		}
+	}
+}
+
 func TestAPIKeyFlashCookieLifecycle(t *testing.T) {
 	issueRecorder := httptest.NewRecorder()
 	setAPIKeyFlashCookie(issueRecorder, "sk_live_flash_value", false)

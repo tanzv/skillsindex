@@ -24,6 +24,9 @@ func (a *App) registrationEnabled(ctx context.Context) bool {
 }
 
 func (a *App) startUserSession(w http.ResponseWriter, r *http.Request, userID uint) error {
+	if a.sessionStarter != nil {
+		return a.sessionStarter(w, r, userID)
+	}
 	if a.sessionService == nil {
 		return fmt.Errorf("session service unavailable")
 	}

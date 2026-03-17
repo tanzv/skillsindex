@@ -437,7 +437,7 @@ func APIKeyHasScope(key models.APIKey, requiredScope string) bool {
 	}
 	scopeList := APIKeyScopes(key)
 	if len(scopeList) == 0 {
-		return true
+		return false
 	}
 	set := make(map[string]struct{}, len(scopeList))
 	for _, scope := range scopeList {

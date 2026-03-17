@@ -45,3 +45,10 @@ func normalizeSourceType(v models.SkillSourceType) models.SkillSourceType {
 		return models.SourceTypeManual
 	}
 }
+
+func normalizeRecordOrigin(v models.SkillRecordOrigin) models.SkillRecordOrigin {
+	if v == models.RecordOriginSeed {
+		return models.RecordOriginSeed
+	}
+	return models.RecordOriginImported
+}

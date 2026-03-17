@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { createPublicPageNavigator } from "../publicShared/publicPageNavigation";
-import { buildWorkspaceSidebarNavigation, collapseWorkspaceSidebarGroupsForTopbar } from "./WorkspaceCenterPage.navigation";
+import { buildWorkspaceSidebarNavigation } from "./WorkspaceCenterPage.navigation";
 import { buildWorkspaceTopbarMenuActions } from "./WorkspaceTopbarMenuActions.helpers";
 
 const textFixture = {
@@ -30,9 +30,8 @@ describe("WorkspaceTopbarMenuActions.helpers", () => {
       sectionMode: "workspace-route"
     });
 
-    const topbarGroups = collapseWorkspaceSidebarGroupsForTopbar(sidebarGroups, textFixture.sidebarSectionsTitle);
     const actions = buildWorkspaceTopbarMenuActions({
-      sidebarGroups: topbarGroups,
+      sidebarGroups,
       activeMenuID: "org-role",
       onNavigate,
       fallbackPath: "/workspace"

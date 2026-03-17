@@ -13,7 +13,6 @@ import type { ThemeMode } from "../../lib/themeModePath";
 import MarketplaceHomePageStyles from "../marketplaceHome/MarketplaceHomePage.styles";
 import { getWorkspaceCenterCopy } from "./WorkspaceCenterPage.copy";
 import {
-  collapseWorkspaceSidebarGroupsForTopbar,
   resolveWorkspaceSidebarActiveGroupID,
   resolveWorkspaceSidebarPrimaryGroupEntries,
   type WorkspaceSidebarGroup
@@ -69,7 +68,6 @@ interface WorkspacePrototypePageShellProps {
   sidebarGroups: WorkspaceSidebarGroup[];
   topbarMenuGroups?: WorkspaceSidebarGroup[];
   sidebarTitle?: string;
-  sidebarHint?: string;
   sidebarMeta?: WorkspaceSidebarMenuMetaItem[];
   sidebarMode?: "auto" | "default" | "secondary";
   layoutVariant?: "default" | "full-width";
@@ -101,7 +99,6 @@ export default function WorkspacePrototypePageShell({
   sidebarGroups,
   topbarMenuGroups,
   sidebarTitle,
-  sidebarHint: _sidebarHint,
   sidebarMeta = [],
   sidebarMode = "auto",
   layoutVariant,
@@ -149,12 +146,8 @@ export default function WorkspacePrototypePageShell({
   );
 
   const effectiveTopbarMenuGroups = useMemo(
-    () =>
-      collapseWorkspaceSidebarGroupsForTopbar(
-        topbarMenuGroups && topbarMenuGroups.length > 0 ? topbarMenuGroups : sidebarGroups,
-        text.sidebarSectionsTitle
-      ),
-    [sidebarGroups, text.sidebarSectionsTitle, topbarMenuGroups]
+    () => (topbarMenuGroups && topbarMenuGroups.length > 0 ? topbarMenuGroups : sidebarGroups),
+    [sidebarGroups, topbarMenuGroups]
   );
 
   const topbarPrimaryActions = useMemo(() => {
