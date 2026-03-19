@@ -7,21 +7,12 @@
 .superset/
 
 node_modules/
-frontend/node_modules/
 backend/bin/
 
 dist/
-frontend/dist/
 
-frontend/test-results/
-frontend/playwright-report/
-frontend/.vite/
-frontend/.tmp-*.mjs
 *.tsbuildinfo
 
-frontend/home-*.png
-frontend/home_*.png
-frontend/tmp_*.png
 frontend-next/.next/
 frontend-next/test-results/
 frontend-next/playwright-report/
