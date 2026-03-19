@@ -1,7 +1,10 @@
+import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
+import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
 import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
 import type { MarketplaceSkill, PublicMarketplaceResponse } from "@/src/lib/schemas/public";
 import type { SessionContext } from "@/src/lib/schemas/session";
 
+import { formatWorkspaceMessage, resolveWorkspaceMessages } from "./messages";
 import type { WorkspaceMetric, WorkspaceQueueEntry, WorkspaceQueueStatus, WorkspaceSnapshot } from "./types";
 
 const QUALITY_RISK_THRESHOLD = 8.8;
@@ -31,19 +34,19 @@ function resolveQueueStatus(skill: MarketplaceSkill, index: number): WorkspaceQu
   return index % 2 === 0 ? "running" : "pending";
 }
 
-function mapQueueEntry(skill: MarketplaceSkill, index: number): WorkspaceQueueEntry {
+function mapQueueEntry(skill: MarketplaceSkill, index: number, messages: WorkspaceMessages): WorkspaceQueueEntry {
   return {
     id: toNumber(skill.id),
-    name: skill.name.trim() || "Unnamed skill",
-    category: skill.category.trim() || "general",
-    subcategory: skill.subcategory.trim() || "general",
+    name: skill.name.trim() || messages.unnamedSkill,
+    category: skill.category.trim() || messages.generalCategory,
+    subcategory: skill.subcategory.trim() || messages.generalCategory,
     qualityScore: toNumber(skill.quality_score),
     starCount: toNumber(skill.star_count),
     updatedAt: skill.updated_at || "1970-01-01T00:00:00Z",
     tags: skill.tags.filter((tag) => tag.trim().length > 0),
     owner: resolveOwner(skill),
     status: resolveQueueStatus(skill, index),
-    summary: truncate(skill.description || "No summary available.", 96)
+    summary: truncate(skill.description || messages.noSummaryAvailable, 96)
   };
 }
 
@@ -96,58 +99,79 @@ function buildOwnerCoverage(entries: WorkspaceQueueEntry[]) {
     .slice(0, 4);
 }
 
-function formatDate(value: string): string {
+function formatDate(value: string, locale: PublicLocale, messages: WorkspaceMessages): string {
   const timestamp = Date.parse(value);
   if (!Number.isFinite(timestamp)) {
-    return "n/a";
+    return messages.valueNotAvailable;
   }
-  return new Date(timestamp).toLocaleDateString("en-US", {
+  return new Date(timestamp).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-US", {
     month: "short",
     day: "numeric"
   });
 }
 
-function buildPolicySignals(entries: WorkspaceQueueEntry[], counts: ReturnType<typeof buildQueueCounts>): WorkspaceMetric[] {
+function buildPolicySignals(
+  entries: WorkspaceQueueEntry[],
+  counts: ReturnType<typeof buildQueueCounts>,
+  locale: PublicLocale,
+  messages: WorkspaceMessages
+): WorkspaceMetric[] {
   const uniqueCategories = new Set(entries.map((entry) => entry.category)).size;
   const uniqueOwners = new Set(entries.map((entry) => entry.owner)).size;
 
   return [
     {
-      label: "Coverage Scope",
-      value: `${uniqueCategories} categories / ${uniqueOwners} squads`,
-      detail: "Distinct catalog categories and owners currently represented in this workspace.",
+      label: messages.policyCoverageScopeLabel,
+      value: formatWorkspaceMessage(messages.policyCoverageScopeValueTemplate, {
+        categoryCount: uniqueCategories,
+        ownerCount: uniqueOwners
+      }),
+      detail: messages.policyCoverageScopeDetail,
       tone: "accent"
     },
     {
-      label: "Risk Signals",
-      value: `${counts.risk} items require follow-up`,
-      detail: "Signals that require governance review, ownership confirmation, or execution follow-up.",
+      label: messages.policyRiskSignalsLabel,
+      value: formatWorkspaceMessage(messages.policyRiskSignalsValueTemplate, { count: counts.risk }),
+      detail: messages.policyRiskSignalsDetail,
       tone: counts.risk > 0 ? "warning" : "success"
     },
     {
-      label: "Active Throughput",
-      value: `${counts.running} running / ${counts.pending} pending`,
-      detail: "Execution lanes already in progress compared with backlog still waiting to enter the queue.",
+      label: messages.policyActiveThroughputLabel,
+      value: formatWorkspaceMessage(messages.policyActiveThroughputValueTemplate, {
+        running: counts.running,
+        pending: counts.pending
+      }),
+      detail: messages.policyActiveThroughputDetail,
       tone: counts.running > 0 || counts.pending > 0 ? "accent" : "default"
     },
     {
-      label: "Latest Refresh",
-      value: entries[0] ? formatDate(entries[0].updatedAt) : "n/a",
-      detail: "Most recent catalog update observed in the current workspace snapshot.",
+      label: messages.policyLatestRefreshLabel,
+      value: entries[0] ? formatDate(entries[0].updatedAt, locale, messages) : messages.valueNotAvailable,
+      detail: messages.policyLatestRefreshDetail,
       tone: "default"
     }
   ];
 }
 
-export function formatWorkspaceDate(value: string): string {
-  return formatDate(value);
+export function formatWorkspaceDate(
+  value: string,
+  messageOverridesOrLocale?: Partial<WorkspaceMessages> | PublicLocale,
+  locale: PublicLocale = "en"
+): string {
+  const resolvedLocale = typeof messageOverridesOrLocale === "string" ? messageOverridesOrLocale : locale;
+  const resolvedMessages = typeof messageOverridesOrLocale === "string" ? undefined : messageOverridesOrLocale;
+
+  return formatDate(value, resolvedLocale, resolveWorkspaceMessages(resolvedMessages));
 }
 
 export function buildWorkspaceSnapshot(
   payload: PublicMarketplaceResponse = buildPublicMarketplaceFallback(),
-  session: SessionContext = { user: null, marketplacePublicAccess: false }
+  session: SessionContext = { user: null, marketplacePublicAccess: false },
+  messageOverrides?: Partial<WorkspaceMessages>,
+  locale: PublicLocale = "en"
 ): WorkspaceSnapshot {
-  const queueEntries = sortEntries(payload.items.map(mapQueueEntry));
+  const messages = resolveWorkspaceMessages(messageOverrides);
+  const queueEntries = sortEntries(payload.items.map((skill, index) => mapQueueEntry(skill, index, messages)));
   const queueCounts = buildQueueCounts(queueEntries);
   const healthScore = averageQuality(queueEntries);
   const topTags = payload.top_tags.slice(0, 6);
@@ -166,7 +190,7 @@ export function buildWorkspaceSnapshot(
     ownerCoverage: buildOwnerCoverage(queueEntries),
     spotlightEntry: queueEntries.find((entry) => entry.status === "running") || queueEntries[0] || null,
     runbookEntry: queueEntries.find((entry) => entry.status === "risk") || queueEntries[0] || null,
-    policySignals: buildPolicySignals(queueEntries, queueCounts),
+    policySignals: buildPolicySignals(queueEntries, queueCounts, locale, messages),
     topTags
   };
 }

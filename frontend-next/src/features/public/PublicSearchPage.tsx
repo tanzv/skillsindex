@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-
 import { PublicShellRegistration } from "@/src/components/shared/PublicShellSlots";
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
 import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
 import type { MarketplaceCategory, MarketplaceSubcategory, PublicMarketplaceResponse } from "@/src/lib/schemas/public";
 
 import { MarketplaceDiscoverySidebar } from "./marketplace/MarketplaceDiscoverySidebar";
+import { MarketplaceResultsListSection } from "./marketplace/MarketplaceResultsListSection";
+import { MarketplaceResultsStage } from "./marketplace/MarketplaceResultsStage";
 import { MarketplaceSearchPanel } from "./marketplace/MarketplaceSearchPanel";
 import { MarketplaceSkillCard } from "./marketplace/MarketplaceSkillCard";
 import { MarketplaceTopbarBreadcrumb } from "./marketplace/MarketplaceTopbarBreadcrumb";
@@ -16,6 +17,8 @@ import {
   filterMarketplaceItems,
   resolveMarketplaceCategorySummary
 } from "./marketplace/marketplaceViewModel";
+import { buildPublicSkillBatchWarmupTargets } from "./marketplace/publicSkillBatchWarmup";
+import { usePublicSkillBatchWarmup } from "./marketplace/usePublicSkillBatchWarmup";
 import { useMarketplaceTopbarSlots } from "./marketplace/useMarketplaceTopbarSlots";
 
 interface PublicSearchPageProps {
@@ -48,6 +51,7 @@ export function PublicSearchPage({
     query,
     semanticQuery
   });
+  const skillWarmupTargets = buildPublicSkillBatchWarmupTargets(visibleItems, toPublicPath);
   const summaryMetrics = buildMarketplaceSummaryMetrics(marketplace, messages);
   const resolvedTitle = title || messages.resultsLedgerTitle;
   const resolvedDescription = description || messages.resultsLedgerDescription;
@@ -79,9 +83,11 @@ export function PublicSearchPage({
       }))
     : marketplace.categories.map((category: MarketplaceCategory) => ({
         href: toPublicPath(`/categories/${category.slug}`),
-        label: category.name,
-        count: category.count
+      label: category.name,
+      count: category.count
       }));
+
+  usePublicSkillBatchWarmup(skillWarmupTargets);
 
   return (
     <div className="marketplace-main-column">
@@ -101,12 +107,16 @@ export function PublicSearchPage({
         hiddenFields={activeSubcategory ? [{ name: "subcategory", value: activeSubcategory }] : []}
       />
 
-      <div className="marketplace-results-layout">
-        <div className="marketplace-main-column">
-          <section className="marketplace-section-card">
-            <div className="marketplace-section-header">
-              <h2>{resolvedTitle}</h2>
-              <p>{resolvedDescription}</p>
+      <MarketplaceResultsStage
+        layoutTestId="results-layout"
+        mainTestId="results-main"
+        sideTestId="results-support"
+        mainContent={
+          <MarketplaceResultsListSection
+            title={resolvedTitle}
+            description={resolvedDescription}
+            hasResults={visibleItems.length > 0}
+            headerMeta={
               <div className="marketplace-pill-row">
                 <span className="marketplace-search-utility-pill">
                   {marketplace.pagination.total_items} {messages.statMatchingSkills}
@@ -115,44 +125,44 @@ export function PublicSearchPage({
                   {marketplace.pagination.page} / {marketplace.pagination.total_pages}
                 </span>
               </div>
-            </div>
-
-            <div className="marketplace-list-stack">
-              {visibleItems.length > 0 ? (
-                visibleItems.map((item) => <MarketplaceSkillCard key={item.id} item={item} />)
-              ) : (
-                <div className="marketplace-empty-state">
-                  <h3>{messages.resultsEmptyTitle}</h3>
-                  <p>{messages.resultsEmptyDescription}</p>
-                  <div className="marketplace-pill-row">
-                    <Link href={toPublicPath("/rankings")} className="marketplace-topbar-button is-primary">
-                      {messages.resultsOpenRankings}
-                    </Link>
-                    <Link href={toPublicPath("/categories")} className="marketplace-topbar-button">
-                      {messages.resultsBrowseCategories}
-                    </Link>
-                  </div>
+            }
+            resultsContent={visibleItems.map((item) => (
+              <MarketplaceSkillCard key={item.id} item={item} />
+            ))}
+            emptyContent={
+              <div className="marketplace-empty-state">
+                <h3>{messages.resultsEmptyTitle}</h3>
+                <p>{messages.resultsEmptyDescription}</p>
+                <div className="marketplace-pill-row">
+                  <Link href={toPublicPath("/rankings")} className="marketplace-topbar-button is-primary">
+                    {messages.resultsOpenRankings}
+                  </Link>
+                  <Link href={toPublicPath("/categories")} className="marketplace-topbar-button">
+                    {messages.resultsBrowseCategories}
+                  </Link>
                 </div>
-              )}
-            </div>
-          </section>
-        </div>
-
-        <MarketplaceDiscoverySidebar
-          fallbackLinks={[
-            { href: "/results?q=release", label: "release" },
-            { href: "/results?q=repository", label: "repository" },
-            { href: "/rankings", label: messages.shellRankings }
-          ]}
-          categoryTitle={categorySummary ? messages.resultsCategoryContextTitle : messages.resultsCategoryPivotsTitle}
-          categoryDescription={categorySummary ? categorySummary.description : messages.resultsCategoryPivotsDescription}
-          categoryLinks={categoryLinks.map((item) => ({
-            ...item,
-            isActive: Boolean(activeSubcategory && item.href.includes(`subcategory=${activeSubcategory}`))
-          }))}
-          summaryMetrics={summaryMetrics}
-        />
-      </div>
+              </div>
+            }
+          />
+        }
+        sideContent={
+          <MarketplaceDiscoverySidebar
+            wrapInColumn={false}
+            fallbackLinks={[
+              { href: "/results?q=release", label: "release" },
+              { href: "/results?q=repository", label: "repository" },
+              { href: "/rankings", label: messages.shellRankings }
+            ]}
+            categoryTitle={categorySummary ? messages.resultsCategoryContextTitle : messages.resultsCategoryPivotsTitle}
+            categoryDescription={categorySummary ? categorySummary.description : messages.resultsCategoryPivotsDescription}
+            categoryLinks={categoryLinks.map((item) => ({
+              ...item,
+              isActive: Boolean(activeSubcategory && item.href.includes(`subcategory=${activeSubcategory}`))
+            }))}
+            summaryMetrics={summaryMetrics}
+          />
+        }
+      />
     </div>
   );
 }

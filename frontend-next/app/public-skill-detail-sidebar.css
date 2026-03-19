@@ -14,6 +14,30 @@
   gap: 8px;
 }
 
+.skill-detail-installation-card-header {
+  gap: 4px;
+}
+
+.skill-detail-installation-card-title-block {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.skill-detail-installation-card-header-link {
+  color: var(--si-color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.skill-detail-installation-card-header-link:hover {
+  color: var(--marketplace-link-text);
+  text-decoration: underline;
+}
+
 .skill-detail-install-mode-button {
   min-height: 34px;
   padding: 0 12px;
@@ -34,7 +58,7 @@
     transform 160ms ease;
 }
 
-.skill-detail-install-mode-button.is-active {
+.skill-detail-install-mode-button[data-state="active"] {
   border-color: var(--marketplace-card-border);
   background: var(--marketplace-topbar-button-primary-background);
   color: var(--marketplace-topbar-button-primary-text);
@@ -114,6 +138,12 @@
   color: var(--marketplace-home-text);
 }
 
+.skill-detail-secondary-action.is-primary-tone {
+  border-color: transparent;
+  background: var(--marketplace-topbar-button-primary-background);
+  color: var(--marketplace-topbar-button-primary-text);
+}
+
 .skill-detail-signin-link {
   width: 100%;
 }
@@ -128,134 +158,159 @@
   grid-column: 1 / -1;
 }
 
-.skill-detail-side-fact {
-  padding: 12px 14px;
-  display: grid;
+.skill-detail-installation-card[data-active-tab="resources"] {
   gap: 8px;
+  padding: 14px;
 }
 
-.skill-detail-directory-shell {
-  border: 1px solid var(--marketplace-card-border-soft);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--marketplace-section-background) 82%, transparent);
-  overflow: hidden;
+.skill-detail-installation-card[data-active-tab="resources"] .skill-detail-installation-card-header h3 {
+  font-size: 13px;
+  line-height: 1.25;
 }
 
-.skill-detail-directory-head {
-  padding: 14px 15px;
-  border-bottom: 1px solid var(--marketplace-card-border-soft);
-  display: flex;
+.skill-detail-installation-card[data-active-tab="resources"] .skill-detail-installation-card-header {
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
 }
 
-.skill-detail-directory-head-main {
-  min-width: 0;
-  display: grid;
-  gap: 4px;
-}
-
-.skill-detail-directory-title,
-.skill-detail-directory-meta,
-.skill-detail-directory-current {
-  margin: 0;
-}
-
-.skill-detail-directory-title {
-  color: var(--marketplace-home-text);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-.skill-detail-directory-meta,
-.skill-detail-directory-current {
+.skill-detail-installation-card[data-active-tab="resources"] .skill-detail-installation-card-header p {
   color: var(--si-color-text-secondary);
-  font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.55;
+  font-size: 10px;
+  line-height: 1.45;
 }
 
-.skill-detail-directory-current {
-  max-width: min(50%, 220px);
-  text-align: right;
-  word-break: break-word;
+.skill-detail-installation-card[data-active-tab="resources"] .skill-detail-installation-card-header-link {
+  padding-top: 1px;
+  font-size: 10px;
 }
 
-.skill-detail-directory-tree {
-  padding: 12px;
-  display: grid;
+.skill-detail-install-mode-switch[data-active-tab="resources"] {
   gap: 6px;
 }
 
-.skill-detail-directory-row {
+.skill-detail-install-mode-switch[data-active-tab="resources"] .skill-detail-install-mode-button {
+  min-height: 26px;
+  padding-inline: 9px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.skill-detail-agent-panel[data-active-tab="resources"],
+.skill-detail-human-panel[data-active-tab="resources"] {
+  gap: 10px;
+}
+
+.skill-detail-agent-panel[data-active-tab="resources"] .skill-detail-agent-hint {
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-shell {
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fcfcf8 0%, #f4f6ed 100%);
+}
+
+.skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-head {
+  padding: 9px 11px;
+}
+
+.skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-head h4 {
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-body {
+  padding: 10px 11px;
+  color: #2f5d34;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.skill-detail-install-action-grid[data-active-tab="resources"] {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.skill-detail-install-action-grid[data-active-tab="resources"] .skill-detail-secondary-action {
   width: 100%;
   min-height: 36px;
-  padding: 0 10px 0 calc(10px + (var(--skill-detail-tree-depth, 1) - 1) * 16px);
-  border: 1px solid transparent;
-  border-radius: 12px;
-  display: grid;
-  grid-template-columns: 0 14px 12px minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+.skill-detail-install-action-grid[data-active-tab="resources"] .skill-detail-secondary-action:not(.is-primary-tone) {
   background: transparent;
+}
+
+.marketplace-shell.is-light-theme .skill-detail-installation-card[data-active-tab="resources"] {
+  border-color: #e7e1d6;
+  background: #fffdf9;
+}
+
+.marketplace-shell.is-light-theme .skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-shell {
+  border-color: #e7e1d6;
+}
+
+.marketplace-shell:not(.is-light-theme) .skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-shell {
+  border-color: color-mix(in srgb, var(--marketplace-card-border-soft) 88%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--marketplace-section-background) 94%, #0f1c12 6%) 0%,
+    color-mix(in srgb, var(--marketplace-section-emphasis-background) 82%, #122018 18%) 100%
+  );
+}
+
+.marketplace-shell:not(.is-light-theme) .skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-head {
+  border-bottom-color: color-mix(in srgb, var(--marketplace-card-border-soft) 72%, transparent);
+}
+
+.marketplace-shell:not(.is-light-theme) .skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-head h4 {
   color: var(--marketplace-home-text);
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    transform 160ms ease;
 }
 
-.skill-detail-directory-row:hover {
-  border-color: var(--marketplace-card-border-soft);
-  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 76%, transparent);
-  transform: translateY(-1px);
+.marketplace-shell:not(.is-light-theme) .skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-body {
+  color: #b8dfb9;
 }
 
-.skill-detail-directory-row.is-selected {
-  border-color: var(--marketplace-card-border);
-  background: color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 12%, transparent);
+.marketplace-shell:not(.is-light-theme)
+  .skill-detail-install-action-grid[data-active-tab="resources"]
+  .skill-detail-secondary-action.is-primary-tone {
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
-.skill-detail-directory-row-caret,
-.skill-detail-directory-row-label {
+.marketplace-shell:not(.is-light-theme)
+  .skill-detail-install-action-grid[data-active-tab="resources"]
+  .skill-detail-secondary-action:not(.is-primary-tone) {
+  border-color: color-mix(in srgb, var(--marketplace-card-border-soft) 88%, transparent);
+  background: color-mix(in srgb, var(--marketplace-section-background) 88%, transparent);
+  color: var(--marketplace-home-text);
+}
+
+.marketplace-shell:not(.is-light-theme)
+  .skill-detail-install-action-grid[data-active-tab="resources"]
+  .skill-detail-secondary-action:not(.is-primary-tone):hover {
+  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 88%, transparent);
+  border-color: color-mix(in srgb, var(--marketplace-card-border) 92%, transparent);
+}
+
+.skill-detail-installation-card[data-active-tab="resources"][data-install-audience="human"] .skill-detail-content-head h3 {
   font-size: 12px;
-  line-height: 1.4;
 }
 
-.skill-detail-directory-row-caret {
-  color: var(--si-color-text-secondary);
-  font-family: "JetBrains Mono", monospace;
-  font-weight: 700;
+.skill-detail-installation-card[data-active-tab="resources"][data-install-audience="human"] .skill-detail-content-preview {
+  padding: 12px;
+  font-size: 11px;
+  line-height: 1.55;
 }
 
-.skill-detail-directory-row-icon {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  display: inline-block;
+.skill-detail-installation-card[data-active-tab="resources"][data-install-audience="human"] .skill-detail-install-list {
+  gap: 8px;
 }
 
-.skill-detail-directory-row-icon.is-directory {
-  background: color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 28%, transparent);
-}
-
-.skill-detail-directory-row-icon.is-file {
-  border: 1px solid color-mix(in srgb, var(--marketplace-card-border) 74%, transparent);
-  background: color-mix(in srgb, var(--marketplace-section-emphasis-background) 82%, transparent);
-}
-
-.skill-detail-directory-row-label {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: inherit;
-  font-weight: 600;
+.skill-detail-installation-card[data-active-tab="resources"][data-install-audience="human"] .skill-detail-install-row {
+  padding: 10px 12px;
 }
 
 .skill-detail-comment-input {
@@ -305,14 +360,5 @@
 @media (max-width: 760px) {
   .skill-detail-link-grid {
     grid-template-columns: 1fr;
-  }
-
-  .skill-detail-directory-head {
-    flex-direction: column;
-  }
-
-  .skill-detail-directory-current {
-    max-width: none;
-    text-align: left;
   }
 }

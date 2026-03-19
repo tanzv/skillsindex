@@ -1,8 +1,29 @@
 import { describe, expect, it } from "vitest";
 
-import { accountNavigationItems } from "@/src/lib/routing/accountNavigation";
+import type { AccountShellMessages } from "@/src/lib/i18n/protectedMessages";
+import { buildAccountNavigationItems } from "@/src/lib/routing/accountNavigation";
 import { accountWorkbenchDefinitions, adminWorkbenchDefinitions } from "@/src/features/workbench/definitions";
 import { buildBFFPath, buildPathWithQuery, parseScopes, requiredID } from "@/src/features/workbench/utils";
+
+const accountNavigationItems = buildAccountNavigationItems({
+  brandSubtitleSuffix: "Account",
+  sectionsTitle: "Sections",
+  currentUserTitle: "Current User",
+  marketplaceAccessLine: "Marketplace access",
+  marketplaceAccessPublic: "Public",
+  marketplaceAccessRestricted: "Restricted",
+  unknownUser: "Unknown User",
+  guestRole: "Guest",
+  inactiveStatus: "Inactive",
+  navProfileLabel: "Profile",
+  navProfileNote: "Manage account profile.",
+  navSecurityLabel: "Security",
+  navSecurityNote: "Manage passwords and sessions.",
+  navSessionsLabel: "Sessions",
+  navSessionsNote: "Review active sessions.",
+  navApiCredentialsLabel: "API Credentials",
+  navApiCredentialsNote: "Manage personal API keys."
+} satisfies AccountShellMessages);
 
 describe("workbench configuration", () => {
   it("builds stable query paths and BFF routes", () => {

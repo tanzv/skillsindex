@@ -2,44 +2,23 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
+import { AdminCatalogContent } from "./AdminCatalogContent";
 import {
   buildAdminCatalogViewModel,
   normalizeJobsPayload,
   normalizeSkillsPayload,
   normalizeSyncJobsPayload,
   normalizeSyncPolicyPayload,
+  resolveAdminCatalogRouteMeta,
   type AdminCatalogRoute,
   type RepositorySyncPolicy
 } from "./model";
-import { AdminCatalogContent } from "./AdminCatalogContent";
 
-const routeMeta: Record<AdminCatalogRoute, { title: string; description: string; endpoint: string }> = {
-  "/admin/skills": {
-    title: "Skill Governance",
-    description: "Inspect governed skill inventory with stronger structure than the generic JSON workbench.",
-    endpoint: "/api/bff/admin/skills"
-  },
-  "/admin/jobs": {
-    title: "Asynchronous Jobs",
-    description: "Track active queue pressure, failed runs, and targeted retry or cancel actions.",
-    endpoint: "/api/bff/admin/jobs"
-  },
-  "/admin/sync-jobs": {
-    title: "Repository Sync Jobs",
-    description: "Review sync run throughput, failures, and latest execution timing.",
-    endpoint: "/api/bff/admin/sync-jobs"
-  },
-  "/admin/sync-policy/repository": {
-    title: "Repository Sync Policy",
-    description: "Manage scheduler policy for repository synchronization from a dedicated control surface.",
-    endpoint: "/api/bff/admin/sync-policy/repository"
-  }
-};
-
-function buildPath(route: AdminCatalogRoute, query: Record<string, string>) {
-  const meta = routeMeta[route];
+function buildPath(endpoint: string, query: Record<string, string>) {
   const params = new URLSearchParams();
   Object.entries(query).forEach(([key, value]) => {
     if (value.trim()) {
@@ -47,11 +26,18 @@ function buildPath(route: AdminCatalogRoute, query: Record<string, string>) {
     }
   });
   const suffix = params.toString();
-  return suffix ? `${meta.endpoint}?${suffix}` : meta.endpoint;
+  return suffix ? `${endpoint}?${suffix}` : endpoint;
 }
 
 export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
-  const meta = routeMeta[route];
+  const { locale, messages } = useProtectedI18n();
+  const adminCatalogMessages = messages.adminCatalog;
+  const meta = useMemo(() => resolveAdminCatalogRouteMeta(route, adminCatalogMessages), [adminCatalogMessages, route]);
+  const policyMeta = useMemo(
+    () => resolveAdminCatalogRouteMeta("/admin/sync-policy/repository", adminCatalogMessages),
+    [adminCatalogMessages]
+  );
+
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
@@ -68,33 +54,45 @@ export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
   const normalizedPolicy = useMemo(() => normalizeSyncPolicyPayload(rawPayload), [rawPayload]);
   const viewModel = useMemo(() => {
     if (route === "/admin/skills") {
-      return buildAdminCatalogViewModel(route, normalizeSkillsPayload(rawPayload));
+      return buildAdminCatalogViewModel(route, normalizeSkillsPayload(rawPayload), {
+        locale,
+        messages: adminCatalogMessages
+      });
     }
     if (route === "/admin/jobs") {
-      return buildAdminCatalogViewModel(route, normalizeJobsPayload(rawPayload));
+      return buildAdminCatalogViewModel(route, normalizeJobsPayload(rawPayload), {
+        locale,
+        messages: adminCatalogMessages
+      });
     }
     if (route === "/admin/sync-jobs") {
-      return buildAdminCatalogViewModel(route, normalizeSyncJobsPayload(rawPayload));
+      return buildAdminCatalogViewModel(route, normalizeSyncJobsPayload(rawPayload), {
+        locale,
+        messages: adminCatalogMessages
+      });
     }
-    return buildAdminCatalogViewModel(route, normalizedPolicy);
-  }, [normalizedPolicy, rawPayload, route]);
+    return buildAdminCatalogViewModel(route, normalizedPolicy, {
+      locale,
+      messages: adminCatalogMessages
+    });
+  }, [adminCatalogMessages, locale, normalizedPolicy, rawPayload, route]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const payload = await clientFetchJSON(buildPath(route, query));
+      const payload = await clientFetchJSON(buildPath(meta.endpoint, query));
       setRawPayload(payload);
       if (route === "/admin/sync-policy/repository") {
         setPolicyDraft(normalizeSyncPolicyPayload(payload));
       }
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Request failed");
+      setError(loadError instanceof Error ? loadError.message : adminCatalogMessages.loadError);
       setRawPayload(null);
     } finally {
       setLoading(false);
     }
-  }, [query, route]);
+  }, [adminCatalogMessages.loadError, meta.endpoint, query, route]);
 
   useEffect(() => {
     void loadData();
@@ -106,10 +104,15 @@ export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
     setError("");
     try {
       await clientFetchJSON(`/api/bff/admin/jobs/${jobId}/${action}`, { method: "POST" });
-      setMessage(`Job ${jobId} ${action} requested.`);
+      setMessage(
+        formatProtectedMessage(
+          action === "retry" ? adminCatalogMessages.retryJobSuccess : adminCatalogMessages.cancelJobSuccess,
+          { jobId }
+        )
+      );
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Action failed");
+      setError(actionError instanceof Error ? actionError.message : adminCatalogMessages.actionError);
     } finally {
       setBusyAction("");
     }
@@ -121,10 +124,10 @@ export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
     setError("");
     try {
       await clientFetchJSON(`/api/bff/admin/skills/${skillId}/sync`, { method: "POST" });
-      setMessage("Repository skill updated.");
+      setMessage(adminCatalogMessages.skillSyncSuccess);
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Action failed");
+      setError(actionError instanceof Error ? actionError.message : adminCatalogMessages.actionError);
     } finally {
       setBusyAction("");
     }
@@ -135,7 +138,7 @@ export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
     setMessage("");
     setError("");
     try {
-      await clientFetchJSON(routeMeta["/admin/sync-policy/repository"].endpoint, {
+      await clientFetchJSON(policyMeta.endpoint, {
         method: "POST",
         body: {
           enabled: policyDraft.enabled,
@@ -144,10 +147,10 @@ export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
           batch_size: policyDraft.batchSize
         }
       });
-      setMessage("Policy saved.");
+      setMessage(adminCatalogMessages.policySaveSuccess);
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Action failed");
+      setError(actionError instanceof Error ? actionError.message : adminCatalogMessages.actionError);
     } finally {
       setBusyAction("");
     }

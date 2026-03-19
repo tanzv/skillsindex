@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { PublicLink } from "@/src/components/shared/PublicLink";
 
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
-import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
 import type { MarketplaceSkill } from "@/src/lib/schemas/public";
 
 import {
@@ -27,16 +26,16 @@ function resolveSkillEyebrow(item: MarketplaceSkill): string {
 
 export function MarketplaceCategorySkillCard({ item }: MarketplaceCategorySkillCardProps) {
   const { locale, messages } = usePublicI18n();
-  const { toPublicPath } = usePublicRouteState();
   const chips = buildMarketplaceDeckChips(item, 3);
   const metaSegments = buildMarketplaceMetaSegments(item, messages, locale, 3);
   const eyebrow = resolveSkillEyebrow(item);
 
   return (
-    <Link
-      href={toPublicPath(`/skills/${item.id}`)}
+    <PublicLink
+      href={`/skills/${item.id}`}
       className="marketplace-category-skill-card-link"
       aria-label={item.name}
+      warmOnViewport
     >
       <article className="marketplace-category-skill-card">
         <div className="marketplace-category-skill-card-head">
@@ -71,6 +70,6 @@ export function MarketplaceCategorySkillCard({ item }: MarketplaceCategorySkillC
           ))}
         </div>
       </article>
-    </Link>
+    </PublicLink>
   );
 }

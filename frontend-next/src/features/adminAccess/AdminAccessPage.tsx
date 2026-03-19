@@ -2,19 +2,32 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { ErrorState } from "@/src/components/shared/ErrorState";
-import { PageHeader } from "@/src/components/shared/PageHeader";
+import {
+  AdminEmptyBlock,
+  AdminFilterBar,
+  AdminInsetBlock,
+  AdminMetaChipList,
+  AdminPageScaffold,
+  AdminRecordCard,
+  AdminSectionCard,
+  AdminToggleField
+} from "@/src/components/admin/AdminPrimitives";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveAccountRoleLabel, resolveAccountStatusLabel, resolveAccountUsernameLabel } from "@/src/lib/accountDisplay";
+import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import { formatDateTime } from "../adminGovernance/shared";
 
 import { buildAccessOverview, buildAdminAccessGovernanceData } from "./model";
 
 export function AdminAccessPage() {
+  const { locale, messages } = useProtectedI18n();
+  const commonMessages = messages.adminCommon;
+  const accessMessages = messages.adminAccess;
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
@@ -38,7 +51,22 @@ export function AdminAccessPage() {
       }),
     [rawAccounts, rawAuthProviders, rawRegistration]
   );
-  const overview = useMemo(() => buildAccessOverview(data), [data]);
+  const overview = useMemo(
+    () =>
+      buildAccessOverview(data, {
+        accounts: accessMessages.metricAccounts,
+        disabled: accessMessages.metricDisabled,
+        enabledProviders: accessMessages.metricEnabledProviders,
+        pendingSignOut: accessMessages.metricPendingSignOut
+      }),
+    [
+      accessMessages.metricAccounts,
+      accessMessages.metricDisabled,
+      accessMessages.metricEnabledProviders,
+      accessMessages.metricPendingSignOut,
+      data
+    ]
+  );
 
   const filteredAccounts = useMemo(() => {
     const search = keyword.trim().toLowerCase();
@@ -61,14 +89,14 @@ export function AdminAccessPage() {
       setRawRegistration(registration);
       setRawAuthProviders(authProviders);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load access governance.");
+      setError(loadError instanceof Error ? loadError.message : accessMessages.loadError);
       setRawAccounts(null);
       setRawRegistration(null);
       setRawAuthProviders(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [accessMessages.loadError]);
 
   useEffect(() => {
     void loadData();
@@ -102,10 +130,10 @@ export function AdminAccessPage() {
           }
         })
       ]);
-      setMessage("Access policy updated.");
+      setMessage(accessMessages.saveSuccess);
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to update access policy.");
+      setError(actionError instanceof Error ? actionError.message : accessMessages.saveError);
     } finally {
       setBusyAction("");
     }
@@ -121,121 +149,102 @@ export function AdminAccessPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="Admin"
-        title="Access"
-        description="Inspect account status, registration posture, and enabled authentication providers from a dedicated governance page."
-        actions={<Button onClick={() => void loadData()}>{loading ? "Refreshing..." : "Refresh"}</Button>}
-      />
-
-      {message ? <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">{message}</div> : null}
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {overview.metrics.map((metric) => (
-          <Card key={metric.label}>
-            <CardHeader className="gap-2 p-5">
-              <CardDescription className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{metric.label}</CardDescription>
-              <CardTitle className="text-base">{metric.value}</CardTitle>
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
-
+    <AdminPageScaffold
+      eyebrow={commonMessages.adminEyebrow}
+      title={accessMessages.pageTitle}
+      description={accessMessages.pageDescription}
+      actions={<Button onClick={() => void loadData()}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>}
+      metrics={overview.metrics}
+      error={error}
+      message={message}
+    >
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Directory</CardTitle>
-              <CardDescription>Search by username, role, or status before reviewing account risk signals.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-3">
-                <Input aria-label="Search accounts" value={keyword} placeholder="Search accounts" onChange={(event) => setKeyword(event.target.value)} />
+          <AdminSectionCard title={accessMessages.directoryTitle} description={accessMessages.directoryDescription}>
+              <AdminFilterBar className="md:grid-cols-[1fr_auto]">
+                <Input
+                  aria-label={accessMessages.searchLabel}
+                  value={keyword}
+                  placeholder={accessMessages.searchPlaceholder}
+                  onChange={(event) => setKeyword(event.target.value)}
+                />
                 <Button variant="outline" onClick={() => setKeyword("")}>
-                  Clear
+                  {commonMessages.clear}
                 </Button>
-              </div>
-
-              {error ? <ErrorState description={error} /> : null}
+              </AdminFilterBar>
 
               <div className="space-y-3">
                 {filteredAccounts.map((account) => (
-                  <div key={account.id} data-testid={`admin-access-account-${account.id}`} className="rounded-2xl border border-slate-200 p-4">
+                  <AdminRecordCard key={account.id} data-testid={`admin-access-account-${account.id}`}>
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-semibold text-slate-950">
-                            {account.username} #{account.id}
+                          <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">
+                            {resolveAccountUsernameLabel(account.username, accessMessages)} #{account.id}
                           </span>
-                          <Badge variant={account.status.toLowerCase() === "active" ? "soft" : "outline"}>{account.status}</Badge>
-                          <Badge variant="outline">{account.role}</Badge>
+                          <Badge variant={account.status.toLowerCase() === "active" ? "soft" : "outline"}>
+                            {resolveAccountStatusLabel(account.status, accessMessages)}
+                          </Badge>
+                          <Badge variant="outline">{resolveAccountRoleLabel(account.role, accessMessages)}</Badge>
                         </div>
-                        <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                          <span className="rounded-full bg-slate-100 px-2.5 py-1">created {formatDateTime(account.createdAt)}</span>
-                          <span className="rounded-full bg-slate-100 px-2.5 py-1">updated {formatDateTime(account.updatedAt)}</span>
-                          {account.forceLogoutAt ? (
-                            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-900">
-                              force sign-out {formatDateTime(account.forceLogoutAt)}
-                            </span>
-                          ) : null}
-                        </div>
+                        <AdminMetaChipList
+                          items={[
+                            `${accessMessages.createdPrefix} ${formatDateTime(account.createdAt, locale, accessMessages.notAvailable)}`,
+                            `${accessMessages.updatedPrefix} ${formatDateTime(account.updatedAt, locale, accessMessages.notAvailable)}`,
+                            ...(account.forceLogoutAt
+                              ? [
+                                  `${accessMessages.forceSignOutPrefix} ${formatDateTime(
+                                    account.forceLogoutAt,
+                                    locale,
+                                    accessMessages.notAvailable
+                                  )}`
+                                ]
+                              : [])
+                          ]}
+                        />
                       </div>
                     </div>
-                  </div>
+                  </AdminRecordCard>
                 ))}
 
                 {!filteredAccounts.length && !loading ? (
-                  <div className="rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">No accounts matched the current filter.</div>
+                  <AdminEmptyBlock>{accessMessages.directoryEmpty}</AdminEmptyBlock>
                 ) : null}
               </div>
-            </CardContent>
-          </Card>
+          </AdminSectionCard>
         </div>
 
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Access Policy</CardTitle>
-              <CardDescription>Update registration posture and marketplace exposure from the same page used to inspect account risk.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
-                <input
-                  aria-label="Allow registration"
-                  type="checkbox"
-                  checked={settingsDraft.allowRegistration}
-                  onChange={(event) => setSettingsDraft((current) => ({ ...current, allowRegistration: event.target.checked }))}
-                />
-                <span>Allow registration</span>
-              </label>
-              <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
-                <input
-                  aria-label="Marketplace public access"
-                  type="checkbox"
-                  checked={settingsDraft.marketplacePublicAccess}
-                  onChange={(event) =>
-                    setSettingsDraft((current) => ({ ...current, marketplacePublicAccess: event.target.checked }))
-                  }
-                />
-                <span>Marketplace public access</span>
-              </label>
+          <AdminSectionCard title={accessMessages.policyTitle} description={accessMessages.policyDescription}>
+              <AdminToggleField
+                ariaLabel={accessMessages.allowRegistrationLabel}
+                label={accessMessages.allowRegistrationLabel}
+                checked={settingsDraft.allowRegistration}
+                onChange={(checked) => setSettingsDraft((current) => ({ ...current, allowRegistration: checked }))}
+              />
+              <AdminToggleField
+                ariaLabel={accessMessages.marketplacePublicAccessLabel}
+                label={accessMessages.marketplacePublicAccessLabel}
+                checked={settingsDraft.marketplacePublicAccess}
+                onChange={(checked) => setSettingsDraft((current) => ({ ...current, marketplacePublicAccess: checked }))}
+              />
               <Button onClick={() => void saveAccessSettings()} disabled={Boolean(busyAction)}>
-                {busyAction === "save-settings" ? "Saving..." : "Save Access Policy"}
+                {busyAction === "save-settings" ? accessMessages.savingAction : accessMessages.saveAction}
               </Button>
-            </CardContent>
-          </Card>
+          </AdminSectionCard>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Auth Providers</CardTitle>
-              <CardDescription>Keep sign-in providers visible and aligned with the current access contract.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <AdminSectionCard
+            title={accessMessages.providersTitle}
+            description={accessMessages.providersDescription}
+            contentClassName="space-y-3"
+          >
               {data.availableProviders.map((provider) => (
-                <label key={provider} className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
+                <label
+                  key={provider}
+                  className="flex items-center gap-3 rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] px-4 py-3 text-sm text-[color:var(--ui-text-secondary)]"
+                >
                   <input
-                    aria-label={`Provider ${provider}`}
+                    aria-label={formatProtectedMessage(accessMessages.providerAriaLabel, { provider })}
                     type="checkbox"
                     checked={settingsDraft.enabledProviders.includes(provider)}
                     onChange={() => toggleProvider(provider)}
@@ -243,21 +252,19 @@ export function AdminAccessPage() {
                   <span>{provider}</span>
                 </label>
               ))}
-            </CardContent>
-          </Card>
+          </AdminSectionCard>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Policy Snapshot</CardTitle>
-              <CardDescription>Registration posture and provider availability across the current admin perimeter.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <AdminSectionCard
+            title={accessMessages.snapshotTitle}
+            description={accessMessages.snapshotDescription}
+            contentClassName="space-y-3"
+          >
               <div className="flex flex-wrap gap-2">
                 <Badge variant={data.allowRegistration ? "soft" : "outline"}>
-                  Registration {data.allowRegistration ? "enabled" : "disabled"}
+                  {data.allowRegistration ? accessMessages.registrationEnabled : accessMessages.registrationDisabled}
                 </Badge>
                 <Badge variant={data.marketplacePublicAccess ? "soft" : "outline"}>
-                  Marketplace {data.marketplacePublicAccess ? "public" : "private"}
+                  {data.marketplacePublicAccess ? accessMessages.marketplacePublic : accessMessages.marketplacePrivate}
                 </Badge>
                 {data.enabledProviders.map((provider) => (
                   <Badge key={provider} variant="outline">
@@ -265,31 +272,30 @@ export function AdminAccessPage() {
                   </Badge>
                 ))}
               </div>
-              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                Available providers
-                <div className="mt-1 font-semibold text-slate-950">
-                  {data.availableProviders.length ? data.availableProviders.join(", ") : "n/a"}
+              <AdminInsetBlock>
+                {accessMessages.availableProvidersLabel}
+                <div className="mt-1 font-semibold text-[color:var(--ui-text-primary)]">
+                  {data.availableProviders.length ? data.availableProviders.join(", ") : accessMessages.notAvailable}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </AdminInsetBlock>
+          </AdminSectionCard>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Role Distribution</CardTitle>
-              <CardDescription>Current concentration of roles across the loaded account directory.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <AdminSectionCard
+            title={accessMessages.roleSummaryTitle}
+            description={accessMessages.roleSummaryDescription}
+            contentClassName="space-y-3"
+          >
               {overview.roleSummary.map((item) => (
-                <div key={item.role} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                  <span className="text-sm text-slate-700">{item.role}</span>
-                  <span className="text-sm font-semibold text-slate-950">{item.count}</span>
-                </div>
+                <AdminInsetBlock key={item.role} className="flex items-center justify-between">
+                  <span className="text-sm text-[color:var(--ui-text-secondary)]">
+                    {resolveAccountRoleLabel(item.role, accessMessages)}
+                  </span>
+                  <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">{item.count}</span>
+                </AdminInsetBlock>
               ))}
-            </CardContent>
-          </Card>
+          </AdminSectionCard>
         </div>
       </div>
-    </div>
+    </AdminPageScaffold>
   );
 }

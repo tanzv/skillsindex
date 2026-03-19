@@ -1,0 +1,216 @@
+.skill-detail-resource-browser {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.42fr) minmax(0, 1fr);
+  gap: 14px;
+  width: 100%;
+  max-width: none;
+}
+
+.skill-detail-workbench-card[data-active-tab="resources"] {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  gap: 6px;
+}
+
+.skill-detail-workbench-card[data-active-tab="resources"] .skill-detail-workbench-panel {
+  gap: 0;
+}
+
+.skill-detail-resource-table-shell {
+  width: 100%;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--marketplace-section-emphasis-background);
+}
+
+.skill-detail-resource-preview-stage {
+  min-width: 0;
+}
+
+.skill-detail-resource-table-head,
+.skill-detail-resource-table-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 0.36fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.skill-detail-resource-table-head {
+  min-height: 40px;
+  padding: 0 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 86%, transparent);
+  background: transparent;
+}
+
+.skill-detail-resource-table-heading {
+  color: var(--si-color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+.skill-detail-resource-table-heading.is-size {
+  text-align: right;
+}
+
+.skill-detail-resource-table {
+  display: grid;
+}
+
+.skill-detail-resource-table-row {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 18px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 72%, transparent);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.skill-detail-resource-table-row:last-child {
+  border-bottom: 0;
+}
+
+.skill-detail-resource-table-row:hover {
+  background: color-mix(
+    in srgb,
+    var(--marketplace-resource-link-soft, var(--marketplace-topbar-button-hover-background)) 64%,
+    transparent
+  );
+}
+
+.skill-detail-resource-table-row:focus-visible {
+  outline: 2px solid var(--marketplace-topbar-button-primary-background);
+  outline-offset: -2px;
+}
+
+.skill-detail-resource-table-row.is-selected {
+  background: color-mix(
+    in srgb,
+    var(--marketplace-resource-link-soft, var(--marketplace-topbar-button-hover-background)) 100%,
+    transparent
+  );
+}
+
+.marketplace-shell.is-light-theme .skill-detail-resource-table-row:hover {
+  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 76%, transparent);
+}
+
+.marketplace-shell.is-light-theme .skill-detail-resource-table-row.is-selected {
+  background: color-mix(in srgb, var(--marketplace-resource-link-soft) 100%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--marketplace-card-border-soft) 96%, transparent);
+}
+
+.marketplace-shell:not(.is-light-theme) .skill-detail-resource-table-row:hover {
+  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 92%, transparent);
+}
+
+.marketplace-shell:not(.is-light-theme) .skill-detail-resource-table-row.is-selected {
+  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 100%, #1b1b1b 0%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--marketplace-card-border-soft) 86%, transparent),
+    inset 3px 0 0 color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 82%, transparent);
+}
+
+.marketplace-shell:not(.is-light-theme) .skill-detail-resource-table-row.is-selected .skill-detail-resource-table-file-name,
+.marketplace-shell:not(.is-light-theme) .skill-detail-resource-table-row.is-selected .skill-detail-resource-table-cell.is-size {
+  color: var(--marketplace-home-text);
+}
+
+.skill-detail-resource-table-cell {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skill-detail-resource-table-cell.is-size {
+  justify-content: flex-end;
+  color: var(--si-color-text-secondary);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.skill-detail-resource-table-file-icon {
+  width: 13px;
+  height: 15px;
+  border: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 90%, transparent);
+  border-radius: 3px;
+  position: relative;
+  flex: 0 0 auto;
+  background: transparent;
+}
+
+.skill-detail-resource-table-file-icon::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 4px;
+  height: 4px;
+  border-top: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 90%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 90%, transparent);
+}
+
+.skill-detail-resource-table-file-copy {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.skill-detail-resource-table-file-name,
+.skill-detail-resource-table-file-path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "JetBrains Mono", monospace;
+  line-height: 1.45;
+}
+
+.skill-detail-resource-table-file-name {
+  color: var(--marketplace-resource-link, var(--marketplace-link-text));
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.skill-detail-resource-table-file-path {
+  color: var(--si-color-text-secondary);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.skill-detail-resource-table-row:hover .skill-detail-resource-table-file-name {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.marketplace-shell:not(.is-light-theme) .skill-detail-resource-table-row.is-selected .skill-detail-resource-table-file-name {
+  text-decoration: none;
+}
+
+@media (max-width: 760px) {
+  .skill-detail-resource-browser {
+    grid-template-columns: 1fr;
+  }
+
+  .skill-detail-resource-table-head,
+  .skill-detail-resource-table-row {
+    grid-template-columns: minmax(0, 1fr) 88px;
+    gap: 12px;
+    padding-inline: 16px;
+  }
+}

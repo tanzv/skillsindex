@@ -1,11 +1,38 @@
 import { describe, expect, it } from "vitest";
 
-import { buildCreatePayload, getRecordsFormFields } from "@/src/features/adminOperations/recordsConfig";
+import { buildCreatePayload, getOperationsRecordsRouteMeta, getRecordsFormFields } from "@/src/features/adminOperations/recordsConfig";
+import { createProtectedPageTestMessages } from "./protected-page-test-messages";
+
+const operationsMessages = createProtectedPageTestMessages({
+  adminOperations: {
+    routeRecoveryDrillsTitle: "Recovery Drills",
+    routeRecoveryDrillsDescription: "Track recovery validation runs.",
+    routeBackupPlansTitle: "Backup Plans",
+    routeBackupPlansDescription: "Manage backup plans.",
+    recoveryDrillRpoHoursLabel: "Recovery drill RPO hours",
+    recoveryDrillRpoHoursPlaceholder: "RPO hours",
+    recoveryDrillRtoHoursLabel: "Recovery drill RTO hours",
+    recoveryDrillRtoHoursPlaceholder: "RTO hours",
+    recoveryDrillNoteLabel: "Recovery drill note",
+    recoveryDrillNotePlaceholder: "Recovery drill note",
+    backupPlanKeyLabel: "Backup plan key",
+    backupPlanKeyPlaceholder: "Plan key",
+    backupTypeLabel: "Backup type",
+    backupTypePlaceholder: "Backup type",
+    backupScheduleLabel: "Backup schedule",
+    backupSchedulePlaceholder: "Schedule",
+    backupRetentionDaysLabel: "Backup retention days",
+    backupRetentionDaysPlaceholder: "Retention days",
+    backupPlanEnabledLabel: "Backup plan enabled",
+    backupPlanNoteLabel: "Backup plan note",
+    backupPlanNotePlaceholder: "Backup plan note"
+  }
+}).adminOperations;
 
 describe("admin operations records config", () => {
   it("provides accessible field metadata for mutable routes", () => {
-    const recoveryFields = getRecordsFormFields("/admin/ops/recovery-drills");
-    const backupPlanFields = getRecordsFormFields("/admin/ops/backup/plans");
+    const recoveryFields = getRecordsFormFields("/admin/ops/recovery-drills", operationsMessages);
+    const backupPlanFields = getRecordsFormFields("/admin/ops/backup/plans", operationsMessages);
 
     expect(recoveryFields).toEqual(
       expect.arrayContaining([
@@ -18,6 +45,22 @@ describe("admin operations records config", () => {
         expect.objectContaining({ key: "enabled", label: "Backup plan enabled", inputType: "checkbox" })
       ])
     );
+  });
+
+  it("builds route meta with localized labels and endpoints", () => {
+    expect(getOperationsRecordsRouteMeta("/admin/ops/recovery-drills", operationsMessages)).toEqual({
+      title: "Recovery Drills",
+      description: "Track recovery validation runs.",
+      endpoint: "/api/bff/admin/ops/recovery-drills",
+      createEndpoint: "/api/bff/admin/ops/recovery-drills/run"
+    });
+
+    expect(getOperationsRecordsRouteMeta("/admin/ops/backup/plans", operationsMessages)).toEqual({
+      title: "Backup Plans",
+      description: "Manage backup plans.",
+      endpoint: "/api/bff/admin/ops/backup/plans",
+      createEndpoint: "/api/bff/admin/ops/backup/plans"
+    });
   });
 
   it("builds create payloads with stable defaults", () => {

@@ -8,12 +8,21 @@ import { PublicLink } from "@/src/components/shared/PublicLink";
 
 import { buildMarketplaceCategoryNavigation } from "./marketplaceCategoryNavigation";
 
+interface MarketplaceCategoryRailItem {
+  slug: string;
+  name: string;
+  count: number;
+  href: string;
+  isActive?: boolean;
+}
+
 interface MarketplaceCategoryRailProps {
   categories: MarketplaceCategory[];
   activeCategory?: string;
   title?: string;
   description?: string;
   dataTestId?: string;
+  navigationItems?: MarketplaceCategoryRailItem[];
 }
 
 function normalizeCategoryValue(rawValue: string | undefined): string {
@@ -27,11 +36,17 @@ export function MarketplaceCategoryRail({
   activeCategory,
   title,
   description,
-  dataTestId = "categories-rail"
+  dataTestId = "categories-rail",
+  navigationItems
 }: MarketplaceCategoryRailProps) {
   const { messages } = usePublicI18n();
   const { toPublicPath } = usePublicRouteState();
-  const navigationItems = buildMarketplaceCategoryNavigation(categories);
+  const resolvedNavigationItems: MarketplaceCategoryRailItem[] =
+    navigationItems ||
+    buildMarketplaceCategoryNavigation(categories).map((item) => ({
+      ...item,
+      href: toPublicPath(`/categories/${item.slug}`)
+    }));
   const normalizedActiveCategory = normalizeCategoryValue(activeCategory);
 
   return (
@@ -43,13 +58,13 @@ export function MarketplaceCategoryRail({
         </div>
 
         <div className="marketplace-category-nav-list">
-          {navigationItems.map((item) => {
-            const isActive = item.slug === normalizedActiveCategory;
+          {resolvedNavigationItems.map((item) => {
+            const isActive = item.isActive ?? item.slug === normalizedActiveCategory;
 
             return (
               <PublicLink
                 key={item.slug}
-                href={toPublicPath(`/categories/${item.slug}`)}
+                href={item.href}
                 aria-current={isActive ? "page" : undefined}
                 className={`marketplace-category-nav-item${isActive ? " is-active" : ""}`}
               >

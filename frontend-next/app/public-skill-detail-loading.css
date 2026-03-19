@@ -1,0 +1,88 @@
+.skill-detail-loading-shell,
+.skill-detail-loading-tree,
+.skill-detail-loading-preview,
+.skill-detail-loading-copy,
+.skill-detail-loading-timeline {
+  display: grid;
+  gap: 14px;
+}
+
+.skill-detail-loading-shell {
+  padding: 14px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--marketplace-section-background) 88%, transparent), color-mix(in srgb, var(--marketplace-section-emphasis-background) 80%, transparent));
+}
+
+.skill-detail-loading-resource-shell {
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.skill-detail-loading-preview,
+.skill-detail-loading-tree,
+.skill-detail-loading-timeline {
+  padding: 14px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--marketplace-section-background) 84%, transparent);
+}
+
+.skill-detail-loading-line,
+.skill-detail-loading-dot {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--marketplace-chip-border) 72%, transparent);
+}
+
+.skill-detail-loading-line::after,
+.skill-detail-loading-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  animation: skill-detail-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skill-detail-loading-line {
+  height: 12px;
+  border-radius: 999px;
+}
+
+.skill-detail-loading-line.is-strong {
+  width: min(72%, 220px);
+  height: 14px;
+}
+
+.skill-detail-loading-line.is-short {
+  width: min(42%, 140px);
+}
+
+.skill-detail-loading-timeline-row {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.skill-detail-loading-dot {
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  border-radius: 999px;
+}
+
+@keyframes skill-detail-skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-detail-loading-line::after,
+  .skill-detail-loading-dot::after {
+    animation: none;
+  }
+}

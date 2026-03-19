@@ -1,10 +1,15 @@
-import Link from "next/link";
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
-import type { MarketplaceSkill, PublicMarketplaceResponse, PublicSkillCompareResponse } from "@/src/lib/schemas/public";
+import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
+import type { PublicMarketplaceResponse, PublicSkillCompareResponse } from "@/src/lib/schemas/public";
 
-import { resolveComparedSkills } from "./publicCompareModel";
+import { MarketplaceCompareForm } from "./marketplace/MarketplaceCompareForm";
+import { MarketplaceCompareSelectionList } from "./marketplace/MarketplaceCompareSelectionList";
+import { MarketplaceResultsStage } from "./marketplace/MarketplaceResultsStage";
+import { MarketplaceSupportCard } from "./marketplace/MarketplaceSupportCard";
+import { MarketplaceSupportLinkList } from "./marketplace/MarketplaceSupportLinkList";
 import { resolveMarketplaceSkillCategoryLabel, resolveMarketplaceSkillSubcategoryLabel } from "./marketplace/marketplaceTaxonomy";
+import { resolveComparedSkills } from "./publicCompareModel";
 
 interface PublicComparePageProps {
   marketplace: PublicMarketplaceResponse;
@@ -13,84 +18,116 @@ interface PublicComparePageProps {
   rightSkillId: number;
 }
 
-function SkillCompareCard({ skill, label }: { skill: MarketplaceSkill | null; label: string }) {
-  if (!skill) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{label}</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-slate-500">No skill selected.</CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <CardTitle>{skill.name}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm text-slate-600">
-        <p>{skill.description}</p>
-        <div className="grid gap-2 md:grid-cols-2">
-          <div className="rounded-2xl bg-slate-50 p-3">Category: {`${resolveMarketplaceSkillCategoryLabel(skill)} / ${resolveMarketplaceSkillSubcategoryLabel(skill)}`}</div>
-          <div className="rounded-2xl bg-slate-50 p-3">Source: {skill.source_type || "-"}</div>
-          <div className="rounded-2xl bg-slate-50 p-3">Stars: {skill.star_count}</div>
-          <div className="rounded-2xl bg-slate-50 p-3">Quality: {skill.quality_score}</div>
-        </div>
-        <Link className="text-sm font-semibold text-sky-700" href={`/skills/${skill.id}`}>
-          Open Skill Detail
-        </Link>
-      </CardContent>
-    </Card>
-  );
-}
-
 export function PublicComparePage({ marketplace, comparePayload, leftSkillId, rightSkillId }: PublicComparePageProps) {
+  const { toPublicPath } = usePublicRouteState();
   const { leftSkill, rightSkill } = resolveComparedSkills(marketplace, comparePayload, leftSkillId, rightSkillId);
+  const compareSelections = [leftSkill, rightSkill].flatMap((skill, index) =>
+    skill
+      ? [
+          {
+            key: `${skill.id}-${index}`,
+            label: index === 0 ? "Left skill" : "Right skill",
+            title: skill.name,
+            description: skill.description,
+            metrics: [
+              `${resolveMarketplaceSkillCategoryLabel(skill)} / ${resolveMarketplaceSkillSubcategoryLabel(skill)}`,
+              `Source ${skill.source_type || "-"}`,
+              `${skill.star_count} stars`,
+              `${skill.quality_score.toFixed(1)} quality`
+            ]
+          }
+        ]
+      : []
+  );
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Skill Compare</CardTitle>
-          <CardDescription>Compare two marketplace skills using the same public data contracts exposed by the backend.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action="/compare" className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
-            <select
-              className="flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
-              name="left"
-              defaultValue={String(leftSkill?.id || leftSkillId || "")}
+    <div className="marketplace-main-column">
+      <section className="marketplace-section-card">
+        <div className="marketplace-section-header">
+          <p className="marketplace-kicker">Rankings</p>
+          <h2>Skill Compare</h2>
+          <p>Compare two marketplace skills using the same public data contracts exposed by the backend.</p>
+        </div>
+      </section>
+
+      <MarketplaceResultsStage
+        mainContent={
+          <MarketplaceSupportCard
+            title="Selected skills"
+            description="Review the current comparison pair before opening the ranking ledger or a specific skill detail."
+          >
+            {compareSelections.length > 0 ? (
+              <>
+                <MarketplaceCompareSelectionList items={compareSelections} />
+                <MarketplaceSupportLinkList
+                  items={[leftSkill, rightSkill].flatMap((skill, index) =>
+                    skill
+                      ? [
+                          {
+                            key: `compare-detail-${skill.id}-${index}`,
+                            href: `/skills/${skill.id}`,
+                            label: `Open ${skill.name}`,
+                            meta: "Skill detail"
+                          }
+                        ]
+                      : []
+                  )}
+                />
+              </>
+            ) : (
+              <div className="marketplace-empty-state">
+                <p>No skill selected.</p>
+              </div>
+            )}
+          </MarketplaceSupportCard>
+        }
+        sideContent={
+          <>
+            <MarketplaceSupportCard
+              title="Compare skills"
+              description="Choose any pair from the public marketplace catalog and keep the comparison context in sync."
             >
-              {marketplace.items.map((item) => (
-                <option key={`left-${item.id}`} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className="flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
-              name="right"
-              defaultValue={String(rightSkill?.id || rightSkillId || "")}
+              <MarketplaceCompareForm
+                action={toPublicPath("/compare")}
+                items={marketplace.items.map((item) => ({ id: item.id, name: item.name }))}
+                leftValue={String(leftSkill?.id || leftSkillId || marketplace.items[0]?.id || "")}
+                rightValue={String(rightSkill?.id || rightSkillId || marketplace.items[1]?.id || "")}
+                leftAriaLabel="Left skill"
+                rightAriaLabel="Right skill"
+                submitLabel="Compare"
+              />
+            </MarketplaceSupportCard>
+
+            <MarketplaceSupportCard
+              title="Continue exploring"
+              description="Move between adjacent marketplace views without losing the comparison context."
             >
-              {marketplace.items.map((item) => (
-                <option key={`right-${item.id}`} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-            <button className="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-              Compare
-            </button>
-          </form>
-        </CardContent>
-      </Card>
-      <div className="grid gap-6 xl:grid-cols-2">
-        <SkillCompareCard skill={leftSkill} label="Left Skill" />
-        <SkillCompareCard skill={rightSkill} label="Right Skill" />
-      </div>
+              <MarketplaceSupportLinkList
+                items={[
+                  {
+                    key: "compare-rankings",
+                    href: toPublicPath("/rankings"),
+                    label: "Open rankings",
+                    meta: "Ranking ledger"
+                  },
+                  {
+                    key: "compare-categories",
+                    href: toPublicPath("/categories"),
+                    label: "Browse categories",
+                    meta: "Category hub"
+                  },
+                  {
+                    key: "compare-results",
+                    href: toPublicPath("/results"),
+                    label: "Open results",
+                    meta: "Search ledger"
+                  }
+                ]}
+              />
+            </MarketplaceSupportCard>
+          </>
+        }
+      />
     </div>
   );
 }

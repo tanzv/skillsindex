@@ -1,15 +1,22 @@
 "use client";
 
 import { Globe2, Languages, MoonStar, SunMedium } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { useMemo, type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, type ReactNode } from "react";
 
+import { PublicLink } from "@/src/components/shared/PublicLink";
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
 import { usePublicViewerSession } from "@/src/features/public/PublicViewerSessionProvider";
 import { usePublicLoginTarget } from "@/src/lib/auth/usePublicLoginTarget";
 import { buildPublicPrefix, withPublicPathPrefix } from "@/src/lib/routing/publicCompat";
 import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
 import { cn } from "@/src/lib/utils";
+
+import {
+  buildPublicMarketplaceWarmupTargets,
+  prefetchPublicMarketplaceRoutes,
+  warmPublicMarketplaceRoutes
+} from "./publicRouteWarmup";
 
 type MarketplaceBrandVariant = "landing" | "skill-detail";
 type MarketplaceNavigationVariant = "landing" | "skill-detail";
@@ -22,6 +29,21 @@ interface MarketplacePrimaryNavigationItem {
   isActive: boolean;
   testID: string;
   badgeLabel?: string;
+}
+
+type IdleCapableWindow = Window & {
+  requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
+
+const completedMarketplaceWarmupSignatures = new Set<string>();
+
+function useOptionalRouter() {
+  try {
+    return useRouter();
+  } catch {
+    return null;
+  }
 }
 
 function isHomeTopbarNavActive(corePath: string, prefixes: string[]): boolean {
@@ -116,7 +138,7 @@ function MarketplaceTopbarAnchor({
   dataVariant?: MarketplaceBrandVariant | MarketplaceNavigationVariant | MarketplaceActionsVariant;
 }) {
   return (
-    <a
+    <PublicLink
       href={href}
       className={className}
       aria-current={ariaCurrent}
@@ -126,7 +148,7 @@ function MarketplaceTopbarAnchor({
       data-marketplace-topbar-variant={dataVariant}
     >
       {children}
-    </a>
+    </PublicLink>
   );
 }
 
@@ -219,13 +241,69 @@ function MarketplaceTopbarPrimaryNavigationPrimitive({ variant }: { variant: Mar
 }
 
 function MarketplaceTopbarActionsPrimitive({ variant }: { variant: MarketplaceActionsVariant }) {
+  const router = useOptionalRouter();
   const { messages } = usePublicI18n();
   const { toPublicPath } = usePublicRouteState();
   const { isAuthenticated } = usePublicViewerSession();
   const loginTarget = usePublicLoginTarget();
   const authenticationHref = isAuthenticated ? "/workspace" : loginTarget.as || loginTarget.href;
+  const authenticationWarmupRoute = isAuthenticated ? "/workspace" : toPublicPath("/login");
   const actionsClassName =
     variant === "skill-detail" ? "marketplace-topbar-actions skill-detail-topbar-actions" : "marketplace-topbar-actions marketplace-home-topbar-actions";
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") {
+      return;
+    }
+
+    const warmupTargets = buildPublicMarketplaceWarmupTargets(toPublicPath, authenticationWarmupRoute);
+    if (warmupTargets.length === 0) {
+      return;
+    }
+
+    const warmupSignature = warmupTargets.join("|");
+    if (completedMarketplaceWarmupSignatures.has(warmupSignature)) {
+      return;
+    }
+
+    let canceled = false;
+    let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+    let idleHandle: number | null = null;
+
+    const executeWarmup = () => {
+      if (canceled || completedMarketplaceWarmupSignatures.has(warmupSignature)) {
+        return;
+      }
+
+      completedMarketplaceWarmupSignatures.add(warmupSignature);
+      if (router) {
+        prefetchPublicMarketplaceRoutes(router.prefetch.bind(router), warmupTargets);
+      }
+      void warmPublicMarketplaceRoutes(fetch, warmupTargets);
+    };
+
+    const idleWindow = window as IdleCapableWindow;
+
+    if (typeof idleWindow.requestIdleCallback === "function") {
+      idleHandle = idleWindow.requestIdleCallback(() => {
+        executeWarmup();
+      }, { timeout: 1200 });
+    } else {
+      timeoutHandle = setTimeout(executeWarmup, 500);
+    }
+
+    return () => {
+      canceled = true;
+
+      if (idleHandle !== null && typeof idleWindow.cancelIdleCallback === "function") {
+        idleWindow.cancelIdleCallback(idleHandle);
+      }
+
+      if (timeoutHandle !== null) {
+        clearTimeout(timeoutHandle);
+      }
+    };
+  }, [authenticationWarmupRoute, router, toPublicPath]);
 
   if (variant === "landing") {
     return (

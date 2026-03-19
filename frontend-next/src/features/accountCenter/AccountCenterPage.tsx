@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveAccountRoleLabel, resolveAccountStatusLabel } from "@/src/lib/accountDisplay";
+import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import {
   buildAccountAPIKeyCreateDraft,
@@ -22,6 +26,8 @@ import {
 import { AccountCenterContent } from "./AccountCenterContent";
 
 export function AccountCenterPage({ route }: { route: AccountRoute }) {
+  const { messages } = useProtectedI18n();
+  const accountMessages = messages.accountCenter;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -36,18 +42,62 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
   const [latestCredentialSecret, setLatestCredentialSecret] = useState<AccountAPIKeySecretState | null>(null);
 
   const completeness = useMemo(() => profileCompletenessScore(profilePayload), [profilePayload]);
-  const profileName = profileDraft.displayName || profilePayload?.user.username || "User";
-  const avatarInitials = resolveAvatarInitials(profileName, profilePayload?.user.username || "U");
+  const profileName = profileDraft.displayName || profilePayload?.user.username || accountMessages.valueUserFallback;
+  const avatarInitials = resolveAvatarInitials(profileName, accountMessages.valueUserInitialFallback);
+  const accountDisplayMessages = useMemo(
+    () => ({
+      valueUnknownUser: accountMessages.valueUserFallback,
+      statusLabelActive: accountMessages.accountStatusLabelActive,
+      statusLabelDisabled: accountMessages.accountStatusLabelDisabled,
+      statusLabelUnknown: accountMessages.accountStatusLabelUnknown,
+      roleLabelSuperAdmin: accountMessages.roleLabelSuperAdmin,
+      roleLabelAdmin: accountMessages.roleLabelAdmin,
+      roleLabelAuditor: accountMessages.roleLabelAuditor,
+      roleLabelMember: accountMessages.roleLabelMember,
+      roleLabelViewer: accountMessages.roleLabelViewer,
+      roleLabelUnknown: accountMessages.roleLabelUnknown
+    }),
+    [
+      accountMessages.accountStatusLabelActive,
+      accountMessages.accountStatusLabelDisabled,
+      accountMessages.accountStatusLabelUnknown,
+      accountMessages.roleLabelAdmin,
+      accountMessages.roleLabelAuditor,
+      accountMessages.roleLabelMember,
+      accountMessages.roleLabelSuperAdmin,
+      accountMessages.roleLabelUnknown,
+      accountMessages.roleLabelViewer,
+      accountMessages.valueUserFallback
+    ]
+  );
 
   const metricItems = useMemo(
     () => [
-      { label: "Role", value: profilePayload?.user.role || "n/a" },
-      { label: "Status", value: profilePayload?.user.status || "n/a" },
-      { label: "Sessions", value: String(sessionsPayload?.total || 0) },
-      { label: "Credentials", value: String(credentialsPayload?.total || 0) },
-      { label: "Completeness", value: `${completeness}%` }
+      {
+        label: accountMessages.metricRole,
+        value: resolveAccountRoleLabel(profilePayload?.user.role || "", accountDisplayMessages)
+      },
+      {
+        label: accountMessages.metricStatus,
+        value: resolveAccountStatusLabel(profilePayload?.user.status || "", accountDisplayMessages)
+      },
+      { label: accountMessages.metricSessions, value: String(sessionsPayload?.total || 0) },
+      { label: accountMessages.metricCredentials, value: String(credentialsPayload?.total || 0) },
+      { label: accountMessages.metricCompleteness, value: `${completeness}%` }
     ],
-    [completeness, credentialsPayload?.total, profilePayload?.user.role, profilePayload?.user.status, sessionsPayload?.total]
+    [
+      accountDisplayMessages,
+      accountMessages.metricCompleteness,
+      accountMessages.metricCredentials,
+      accountMessages.metricRole,
+      accountMessages.metricSessions,
+      accountMessages.metricStatus,
+      completeness,
+      credentialsPayload?.total,
+      profilePayload?.user.role,
+      profilePayload?.user.status,
+      sessionsPayload?.total
+    ]
   );
 
   const loadAll = useCallback(async () => {
@@ -66,11 +116,11 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       setCredentialDraft(buildAccountAPIKeyCreateDraft(credentials));
       setCredentialScopeDrafts(buildAccountAPIKeyScopeDrafts(credentials));
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load account center.");
+      setError(loadError instanceof Error ? loadError.message : accountMessages.loadError);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [accountMessages.loadError]);
 
   useEffect(() => {
     void loadAll();
@@ -90,10 +140,10 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
         method: "POST",
         body: sanitizeAccountProfileDraft(profileDraft)
       });
-      setMessage("Profile updated.");
+      setMessage(accountMessages.profileSaveSuccess);
       await loadAll();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to update profile.");
+      setError(actionError instanceof Error ? actionError.message : accountMessages.profileSaveError);
     } finally {
       setSaving(false);
     }
@@ -102,7 +152,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
   async function changePassword() {
     clearFeedback();
     if (!passwordDraft.currentPassword.trim() || !passwordDraft.newPassword.trim()) {
-      setError("Current password and new password are required.");
+      setError(accountMessages.passwordValidationError);
       return;
     }
     setSaving(true);
@@ -116,10 +166,10 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
         }
       });
       setPasswordDraft({ currentPassword: "", newPassword: "", revokeOthers: false });
-      setMessage("Password updated.");
+      setMessage(accountMessages.passwordSaveSuccess);
       await loadAll();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to update password.");
+      setError(actionError instanceof Error ? actionError.message : accountMessages.passwordSaveError);
     } finally {
       setSaving(false);
     }
@@ -130,10 +180,10 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     setSaving(true);
     try {
       await clientFetchJSON(`/api/bff/account/sessions/${encodeURIComponent(sessionId)}/revoke`, { method: "POST" });
-      setMessage(`Session ${sessionId} revoked.`);
+      setMessage(formatProtectedMessage(accountMessages.revokeSessionSuccess, { sessionId }));
       await loadAll();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to revoke session.");
+      setError(actionError instanceof Error ? actionError.message : accountMessages.revokeSessionError);
     } finally {
       setSaving(false);
     }
@@ -144,10 +194,10 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     setSaving(true);
     try {
       await clientFetchJSON("/api/bff/account/sessions/revoke-others", { method: "POST" });
-      setMessage("Other sessions revoked.");
+      setMessage(accountMessages.revokeOtherSessionsSuccess);
       await loadAll();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to revoke other sessions.");
+      setError(actionError instanceof Error ? actionError.message : accountMessages.revokeOtherSessionsError);
     } finally {
       setSaving(false);
     }
@@ -162,10 +212,10 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
         body: sanitizeAccountAPIKeyCreateDraft(credentialDraft)
       });
       setLatestCredentialSecret({ action: "created", name: payload.item.name, plaintextKey: payload.plaintext_key });
-      setMessage("Credential created.");
+      setMessage(accountMessages.credentialCreateSuccess);
       await loadAll();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to create credential.");
+      setError(actionError instanceof Error ? actionError.message : accountMessages.credentialCreateError);
     } finally {
       setSaving(false);
     }
@@ -179,10 +229,10 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
         method: "POST"
       });
       setLatestCredentialSecret({ action: "rotated", name: payload.item.name, plaintextKey: payload.plaintext_key });
-      setMessage(`Credential ${keyId} rotated.`);
+      setMessage(formatProtectedMessage(accountMessages.credentialRotateSuccess, { keyId }));
       await loadAll();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to rotate credential.");
+      setError(actionError instanceof Error ? actionError.message : accountMessages.credentialRotateError);
     } finally {
       setSaving(false);
     }
@@ -193,10 +243,10 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     setSaving(true);
     try {
       await clientFetchJSON(`/api/bff/account/apikeys/${keyId}/revoke`, { method: "POST" });
-      setMessage(`Credential ${keyId} revoked.`);
+      setMessage(formatProtectedMessage(accountMessages.credentialRevokeSuccess, { keyId }));
       await loadAll();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to revoke credential.");
+      setError(actionError instanceof Error ? actionError.message : accountMessages.credentialRevokeError);
     } finally {
       setSaving(false);
     }
@@ -210,10 +260,10 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
         method: "POST",
         body: { scopes: credentialScopeDrafts[keyId] || [] }
       });
-      setMessage(`Scopes updated for credential ${keyId}.`);
+      setMessage(formatProtectedMessage(accountMessages.credentialScopesSaveSuccess, { keyId }));
       await loadAll();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to update credential scopes.");
+      setError(actionError instanceof Error ? actionError.message : accountMessages.credentialScopesSaveError);
     } finally {
       setSaving(false);
     }

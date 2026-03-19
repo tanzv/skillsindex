@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import { AdminAccountsContent } from "./AdminAccountsContent";
 import {
@@ -13,11 +15,15 @@ import {
   normalizeAuthProvidersPayload,
   normalizeAccountStatus,
   normalizeRoleName,
+  resolveRoleTargetUserId,
   normalizeRegistrationPayload,
   sortAccountsByUpdatedAt
 } from "./model";
 
 export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
+  const { messages } = useProtectedI18n();
+  const accountMessages = messages.adminAccounts;
+  const latestLoadRequestRef = useRef(0);
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
@@ -30,6 +36,8 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const [accountEditor, setAccountEditor] = useState({ userId: "", status: "active", newPassword: "" });
   const [roleEditor, setRoleEditor] = useState({ userId: "", role: "member" });
+  const accountEditorRef = useRef(accountEditor);
+  const roleEditorRef = useRef(roleEditor);
   const [settingsDraft, setSettingsDraft] = useState({
     allowRegistration: false,
     marketplacePublicAccess: true,
@@ -39,7 +47,22 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   const accounts = useMemo(() => normalizeAccountsPayload(rawAccounts), [rawAccounts]);
   const registration = useMemo(() => normalizeRegistrationPayload(rawRegistration), [rawRegistration]);
   const authProviders = useMemo(() => normalizeAuthProvidersPayload(rawAuthProviders), [rawAuthProviders]);
-  const overview = useMemo(() => buildAccountsOverview(accounts), [accounts]);
+  const overview = useMemo(
+    () =>
+      buildAccountsOverview(accounts, {
+        totalAccounts: accountMessages.metricTotalAccounts,
+        loadedAccounts: accountMessages.metricLoadedAccounts,
+        activeAccounts: accountMessages.metricActiveAccounts,
+        disabledAccounts: accountMessages.metricDisabledAccounts
+      }),
+    [
+      accountMessages.metricActiveAccounts,
+      accountMessages.metricDisabledAccounts,
+      accountMessages.metricLoadedAccounts,
+      accountMessages.metricTotalAccounts,
+      accounts
+    ]
+  );
   const filteredAccounts = useMemo(
     () => filterAccounts(sortAccountsByUpdatedAt(accounts.items), searchQuery, statusFilter),
     [accounts.items, searchQuery, statusFilter]
@@ -50,6 +73,8 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   );
 
   const loadData = useCallback(async () => {
+    const requestId = latestLoadRequestRef.current + 1;
+    latestLoadRequestRef.current = requestId;
     setLoading(true);
     setError("");
     try {
@@ -58,20 +83,28 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
         clientFetchJSON("/api/bff/admin/settings/registration"),
         clientFetchJSON("/api/bff/admin/settings/auth-providers")
       ]);
+      if (requestId !== latestLoadRequestRef.current) {
+        return;
+      }
       setRawAccounts(accountsPayload);
       setRawRegistration(registrationPayload);
       setRawAuthProviders(authProvidersPayload);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load account governance.");
+      if (requestId !== latestLoadRequestRef.current) {
+        return;
+      }
+      setError(loadError instanceof Error ? loadError.message : accountMessages.loadError);
       setRawAccounts(null);
     } finally {
-      setLoading(false);
+      if (requestId === latestLoadRequestRef.current) {
+        setLoading(false);
+      }
     }
-  }, []);
+  }, [accountMessages.loadError]);
 
   useEffect(() => {
     void loadData();
-  }, [loadData]);
+  }, [loadData, route]);
 
   useEffect(() => {
     setSettingsDraft({
@@ -95,22 +128,48 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       return;
     }
 
-    setAccountEditor((current) => ({
-      ...current,
-      userId: String(selectedAccount.id),
-      status: normalizeAccountStatus(selectedAccount.status) === "disabled" ? "disabled" : "active"
-    }));
-    setRoleEditor((current) => ({
-      ...current,
-      userId: String(selectedAccount.id),
-      role: normalizeRoleName(selectedAccount.role)
-    }));
+    const nextUserId = String(selectedAccount.id);
+    const nextStatus = normalizeAccountStatus(selectedAccount.status) === "disabled" ? "disabled" : "active";
+    const nextRole = normalizeRoleName(selectedAccount.role);
+
+    if (accountEditorRef.current.userId !== nextUserId) {
+      const nextAccountEditor = {
+        ...accountEditorRef.current,
+        userId: nextUserId,
+        status: nextStatus
+      };
+      accountEditorRef.current = nextAccountEditor;
+      setAccountEditor(nextAccountEditor);
+    }
+
+    if (roleEditorRef.current.userId !== nextUserId) {
+      const nextRoleEditor = {
+        ...roleEditorRef.current,
+        userId: nextUserId,
+        role: nextRole
+      };
+      roleEditorRef.current = nextRoleEditor;
+      setRoleEditor(nextRoleEditor);
+    }
   }, [selectedAccount]);
 
+  function updateAccountEditor(patch: Partial<typeof accountEditor>) {
+    const nextAccountEditor = { ...accountEditorRef.current, ...patch };
+    accountEditorRef.current = nextAccountEditor;
+    setAccountEditor(nextAccountEditor);
+  }
+
+  function updateRoleEditor(patch: Partial<typeof roleEditor>) {
+    const nextRoleEditor = { ...roleEditorRef.current, ...patch };
+    roleEditorRef.current = nextRoleEditor;
+    setRoleEditor(nextRoleEditor);
+  }
+
   async function applyAccountStatus() {
-    const userId = Number(accountEditor.userId);
+    const { userId: draftUserId, status } = accountEditorRef.current;
+    const userId = Number(draftUserId);
     if (!Number.isFinite(userId) || userId <= 0) {
-      setError("Valid user ID is required.");
+      setError(accountMessages.invalidUserIdError);
       return;
     }
     setBusyAction("apply-status");
@@ -119,12 +178,12 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     try {
       await clientFetchJSON(`/api/bff/admin/accounts/${userId}/status`, {
         method: "POST",
-        body: { status: accountEditor.status }
+        body: { status }
       });
-      setMessage(`Account ${userId} status updated.`);
+      setMessage(formatProtectedMessage(accountMessages.applyStatusSuccess, { userId }));
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to update account status.");
+      setError(actionError instanceof Error ? actionError.message : accountMessages.applyStatusError);
     } finally {
       setBusyAction("");
     }
@@ -136,19 +195,20 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     setMessage("");
     try {
       await clientFetchJSON(`/api/bff/admin/accounts/${userId}/force-signout`, { method: "POST" });
-      setMessage(`Force sign-out requested for user ${userId}.`);
+      setMessage(formatProtectedMessage(accountMessages.forceSignOutSuccess, { userId }));
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to force sign-out account.");
+      setError(actionError instanceof Error ? actionError.message : accountMessages.forceSignOutError);
     } finally {
       setBusyAction("");
     }
   }
 
   async function resetPassword() {
-    const userId = Number(accountEditor.userId);
-    if (!Number.isFinite(userId) || userId <= 0 || !accountEditor.newPassword.trim()) {
-      setError("Valid user ID and new password are required.");
+    const { userId: draftUserId, newPassword } = accountEditorRef.current;
+    const userId = Number(draftUserId);
+    if (!Number.isFinite(userId) || userId <= 0 || !newPassword.trim()) {
+      setError(accountMessages.invalidPasswordError);
       return;
     }
     setBusyAction("reset-password");
@@ -157,22 +217,22 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     try {
       await clientFetchJSON(`/api/bff/admin/accounts/${userId}/password-reset`, {
         method: "POST",
-        body: { new_password: accountEditor.newPassword }
+        body: { new_password: newPassword }
       });
-      setMessage(`Password rotated for user ${userId}.`);
-      setAccountEditor((current) => ({ ...current, newPassword: "" }));
+      setMessage(formatProtectedMessage(accountMessages.resetPasswordSuccess, { userId }));
+      updateAccountEditor({ newPassword: "" });
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to reset account password.");
+      setError(actionError instanceof Error ? actionError.message : accountMessages.resetPasswordError);
     } finally {
       setBusyAction("");
     }
   }
 
   async function applyRole() {
-    const fallbackUserId = selectedAccount?.id || 0;
-    const userId = fallbackUserId > 0 ? fallbackUserId : Number(roleEditor.userId);
-    if (!Number.isFinite(userId) || userId <= 0) {
-      setError("Valid user ID is required.");
+    const { userId: draftUserId, role } = roleEditor;
+    const userId = resolveRoleTargetUserId(draftUserId, selectedAccount?.id ?? null);
+    if (userId === null) {
+      setError(accountMessages.invalidUserIdError);
       return;
     }
     setBusyAction("apply-role");
@@ -181,12 +241,12 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     try {
       await clientFetchJSON(`/api/bff/admin/users/${userId}/role`, {
         method: "POST",
-        body: { role: roleEditor.role }
+        body: { role }
       });
-      setMessage(`Role updated for user ${userId}.`);
+      setMessage(formatProtectedMessage(accountMessages.applyRoleSuccess, { userId }));
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to update role.");
+      setError(actionError instanceof Error ? actionError.message : accountMessages.applyRoleError);
     } finally {
       setBusyAction("");
     }
@@ -210,10 +270,10 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
           body: { auth_providers: settingsDraft.enabledProviders }
         })
       ]);
-      setMessage("Provisioning policy updated.");
+      setMessage(accountMessages.saveSettingsSuccess);
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to update provisioning policy.");
+      setError(actionError instanceof Error ? actionError.message : accountMessages.saveSettingsError);
     } finally {
       setBusyAction("");
     }
@@ -241,8 +301,8 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       onSelectAccount={(accountId) => setSelectedAccountId(accountId)}
       onSearchQueryChange={setSearchQuery}
       onStatusFilterChange={(value) => setStatusFilter(value as "all" | "active" | "disabled")}
-      onAccountEditorChange={(patch) => setAccountEditor((current) => ({ ...current, ...patch }))}
-      onRoleEditorChange={(patch) => setRoleEditor((current) => ({ ...current, ...patch }))}
+      onAccountEditorChange={updateAccountEditor}
+      onRoleEditorChange={updateRoleEditor}
       onSettingsDraftChange={(patch) => setSettingsDraft((current) => ({ ...current, ...patch }))}
       onToggleProvider={(provider) =>
         setSettingsDraft((current) => ({

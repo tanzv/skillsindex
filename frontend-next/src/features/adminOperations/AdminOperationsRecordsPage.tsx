@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { AdminEmptyBlock, AdminInsetBlock, AdminMessageBanner, AdminMetricGrid, AdminRecordCard } from "@/src/components/admin/AdminPrimitives";
 import { ErrorState } from "@/src/components/shared/ErrorState";
 import { PageHeader } from "@/src/components/shared/PageHeader";
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
+import { Select } from "@/src/components/ui/select";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 
 import {
@@ -29,7 +32,8 @@ import {
   normalizeOpsRecoveryDrillsPayload,
   normalizeOpsReleasesPayload
 } from "./model";
-import { buildCreatePayload, getRecordsFormFields, operationsRecordsRouteMeta, type RecordsDraft, type RecordsRoute } from "./recordsConfig";
+import { buildOpsRecordChips } from "./display";
+import { buildCreatePayload, getOperationsRecordsRouteMeta, getRecordsFormFields, type RecordsDraft, type RecordsRoute } from "./recordsConfig";
 
 type RecordsLedgerRow =
   | OpsRecoveryDrillRecordItem
@@ -39,8 +43,11 @@ type RecordsLedgerRow =
   | OpsBackupRunItem;
 
 export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
-  const meta = operationsRecordsRouteMeta[route];
-  const formFields = useMemo(() => getRecordsFormFields(route), [route]);
+  const { locale, messages } = useProtectedI18n();
+  const commonMessages = messages.adminCommon;
+  const operationsMessages = messages.adminOperations;
+  const meta = useMemo(() => getOperationsRecordsRouteMeta(route, operationsMessages), [operationsMessages, route]);
+  const formFields = useMemo(() => getRecordsFormFields(route, operationsMessages), [operationsMessages, route]);
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
@@ -51,27 +58,30 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
   const view = useMemo(() => {
     if (route === "/admin/ops/audit-export") {
       const rows = normalizeOpsAuditExportPayload(rawPayload);
-      return { metrics: buildAuditExportOverview(rows).metrics, rows: rows.map((row) => JSON.stringify(row)) };
+      return {
+        metrics: buildAuditExportOverview(rows, operationsMessages).metrics,
+        rows: rows.map((row) => JSON.stringify(row))
+      };
     }
     if (route === "/admin/ops/recovery-drills") {
       const payload = normalizeOpsRecoveryDrillsPayload(rawPayload);
-      return { metrics: buildRecoveryDrillsOverview(payload).metrics, rows: payload.items };
+      return { metrics: buildRecoveryDrillsOverview(payload, operationsMessages).metrics, rows: payload.items };
     }
     if (route === "/admin/ops/releases") {
       const payload = normalizeOpsReleasesPayload(rawPayload);
-      return { metrics: buildReleasesOverview(payload).metrics, rows: payload.items };
+      return { metrics: buildReleasesOverview(payload, operationsMessages).metrics, rows: payload.items };
     }
     if (route === "/admin/ops/change-approvals") {
       const payload = normalizeOpsChangeApprovalsPayload(rawPayload);
-      return { metrics: buildChangeApprovalsOverview(payload).metrics, rows: payload.items };
+      return { metrics: buildChangeApprovalsOverview(payload, operationsMessages).metrics, rows: payload.items };
     }
     if (route === "/admin/ops/backup/plans") {
       const payload = normalizeOpsBackupPlansPayload(rawPayload);
-      return { metrics: buildBackupPlansOverview(payload).metrics, rows: payload.items };
+      return { metrics: buildBackupPlansOverview(payload, operationsMessages).metrics, rows: payload.items };
     }
     const payload = normalizeOpsBackupRunsPayload(rawPayload);
-    return { metrics: buildBackupRunsOverview(payload).metrics, rows: payload.items };
-  }, [rawPayload, route]);
+    return { metrics: buildBackupRunsOverview(payload, operationsMessages).metrics, rows: payload.items };
+  }, [operationsMessages, rawPayload, route]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -80,12 +90,12 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
       const payload = await clientFetchJSON(meta.endpoint);
       setRawPayload(payload);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load operations records.");
+      setError(loadError instanceof Error ? loadError.message : operationsMessages.recordsLoadError);
       setRawPayload(null);
     } finally {
       setLoading(false);
     }
-  }, [meta.endpoint]);
+  }, [meta.endpoint, operationsMessages.recordsLoadError]);
 
   useEffect(() => {
     void loadData();
@@ -100,11 +110,11 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
     setMessage("");
     try {
       await clientFetchJSON(meta.createEndpoint, { method: "POST", body: buildCreatePayload(route, draft) });
-      setMessage("Operations record saved.");
+      setMessage(operationsMessages.recordsSaveSuccess);
       setDraft({});
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to save operations record.");
+      setError(actionError instanceof Error ? actionError.message : operationsMessages.recordsSaveError);
     } finally {
       setBusyAction("");
     }
@@ -121,7 +131,7 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
           {(view.rows as string[]).map((row, index) => (
             <div
               key={`audit-${index}`}
-              className="overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 font-mono text-xs text-slate-700"
+              className="overflow-x-auto rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] p-4 font-mono text-xs text-[color:var(--ui-text-secondary)]"
               data-testid={`ops-record-row-${index}`}
             >
               {row}
@@ -134,15 +144,18 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
     return (
       <div className="space-y-3" data-testid="ops-records-rows">
         {(view.rows as RecordsLedgerRow[]).map((row, index) => (
-          <div key={`row-${index}`} className="rounded-2xl border border-slate-200 p-4" data-testid={`ops-record-row-${index}`}>
+          <AdminRecordCard key={`row-${index}`} data-testid={`ops-record-row-${index}`}>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(row).map(([key, value]) => (
-                <span key={`${index}-${key}`} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
-                  {String(key) + ": " + String(value || "n/a")}
+              {buildOpsRecordChips(route, row, locale, operationsMessages).map((chip, chipIndex) => (
+                <span
+                  key={`${index}-${chipIndex}-${chip.label}`}
+                  className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1 text-xs text-[color:var(--ui-text-secondary)]"
+                >
+                  {`${chip.label}: ${chip.value}`}
                 </span>
               ))}
             </div>
-          </div>
+          </AdminRecordCard>
         ))}
       </div>
     );
@@ -152,7 +165,10 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
     return formFields.map((field) => {
       if (field.inputType === "checkbox") {
         return (
-          <label key={field.key} className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700">
+          <label
+            key={field.key}
+            className="flex items-center gap-3 rounded-xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] px-3 py-2 text-sm text-[color:var(--ui-text-secondary)]"
+          >
             <input
               type="checkbox"
               aria-label={field.label}
@@ -162,6 +178,24 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
             />
             <span>{field.label}</span>
           </label>
+        );
+      }
+
+      if (field.inputType === "select") {
+        return (
+          <Select
+            key={field.key}
+            value={draft[field.key] || field.options?.[0]?.value || ""}
+            aria-label={field.label}
+            data-testid={field.testId}
+            onChange={(event) => updateDraftValue(field.key, event.target.value)}
+          >
+            {(field.options || []).map((option) => (
+              <option key={`${field.key}-${option.value}`} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
         );
       }
 
@@ -182,38 +216,27 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Admin"
+        eyebrow={commonMessages.adminEyebrow}
         title={meta.title}
         description={meta.description}
-        actions={<Button onClick={() => void loadData()}>{loading ? "Refreshing..." : "Refresh"}</Button>}
+        actions={<Button onClick={() => void loadData()}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>}
       />
 
       {error ? <ErrorState description={error} /> : null}
-      {message ? (
-        <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900" aria-live="polite" data-testid="ops-records-message">
-          {message}
-        </div>
-      ) : null}
+      {message ? <AdminMessageBanner message={message} /> : null}
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {view.metrics.map((metric) => (
-          <Card key={metric.label} data-testid={`ops-records-metric-${metric.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
-            <CardHeader className="gap-2 p-5">
-              <CardDescription className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{metric.label}</CardDescription>
-              <CardTitle className="text-base">{metric.value}</CardTitle>
-            </CardHeader>
-          </Card>
-        ))}
+      <div data-testid="ops-records-metrics">
+        <AdminMetricGrid metrics={view.metrics} columnsClassName="grid gap-4 md:grid-cols-3" />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <Card>
           <CardHeader>
-            <CardTitle>{meta.title} Ledger</CardTitle>
-            <CardDescription>Structured operational evidence returned by the backend endpoint.</CardDescription>
+            <CardTitle>{`${meta.title} ${operationsMessages.ledgerTitleSuffix}`}</CardTitle>
+            <CardDescription>{operationsMessages.ledgerDescription}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3" data-testid="ops-records-ledger">
-            {view.rows.length ? renderRows() : <div className="rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">No records returned.</div>}
+            {view.rows.length ? renderRows() : <AdminEmptyBlock>{operationsMessages.noRecords}</AdminEmptyBlock>}
           </CardContent>
         </Card>
 
@@ -221,13 +244,13 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
           {meta.createEndpoint ? (
             <Card>
               <CardHeader>
-                <CardTitle>Record Entry</CardTitle>
-                <CardDescription>Create a new record directly from the dedicated operations page.</CardDescription>
+                <CardTitle>{operationsMessages.recordEntryTitle}</CardTitle>
+                <CardDescription>{operationsMessages.recordEntryDescription}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {renderCreatePanel()}
                 <Button onClick={() => void submitCreate()} disabled={Boolean(busyAction)}>
-                  {busyAction === "submit-create" ? "Saving..." : "Save Record"}
+                  {busyAction === "submit-create" ? operationsMessages.savingRecordAction : operationsMessages.saveRecordAction}
                 </Button>
               </CardContent>
             </Card>
@@ -235,11 +258,11 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
 
           <Card>
             <CardHeader>
-              <CardTitle>Endpoint Status</CardTitle>
-              <CardDescription>Quick reminder of the backend resource behind this page.</CardDescription>
+              <CardTitle>{operationsMessages.endpointStatusTitle}</CardTitle>
+              <CardDescription>{operationsMessages.endpointStatusDescription}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-slate-600">
-              <div className="rounded-2xl bg-slate-50 px-4 py-3">{meta.endpoint}</div>
+            <CardContent className="space-y-3 text-sm text-[color:var(--ui-text-secondary)]">
+              <AdminInsetBlock>{meta.endpoint}</AdminInsetBlock>
               {meta.createEndpoint ? <Badge variant="outline">{meta.createEndpoint}</Badge> : null}
             </CardContent>
           </Card>

@@ -1,0 +1,145 @@
+.marketplace-shell[data-marketplace-route-kind="section"] {
+  --marketplace-shell-inline-gutter: clamp(16px, 2vw, 30px);
+  --marketplace-shell-max-width: var(--marketplace-shell-max-width-expanded);
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-topbar {
+  min-height: 92px;
+  padding: 20px 0 18px;
+  gap: 20px;
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-topbar-below {
+  padding-bottom: 18px;
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-topbar-main,
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-topbar-right {
+  gap: 18px;
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-brand {
+  gap: 14px;
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-brand-copy {
+  max-width: none;
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-nav,
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-icon-shell {
+  padding: 6px;
+  border-color: color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
+  background: color-mix(in srgb, var(--marketplace-section-background) 94%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 18px rgba(0, 0, 0, 0.1);
+}
+
+.marketplace-shell.is-light-theme[data-marketplace-route-kind="section"] .marketplace-home-topbar-nav,
+.marketplace-shell.is-light-theme[data-marketplace-route-kind="section"] .marketplace-home-topbar-icon-shell {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions {
+  gap: 10px;
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-nav .marketplace-nav-button,
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions .marketplace-topbar-button {
+  min-height: 40px;
+  padding: 0 18px;
+  border-color: color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
+  background: color-mix(in srgb, var(--marketplace-topbar-button-background) 88%, var(--marketplace-section-background) 12%);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions .marketplace-topbar-button.is-subtle {
+  background: color-mix(in srgb, var(--marketplace-section-emphasis-background) 72%, transparent);
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-nav .marketplace-nav-button:not(.is-active):hover,
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions .marketplace-topbar-button:not(.is-primary):hover,
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-icon-button:not(.is-active):hover {
+  border-color: color-mix(in srgb, var(--marketplace-card-border) 80%, transparent);
+  background: var(--marketplace-section-emphasis-background);
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-nav .marketplace-nav-button.is-active {
+  border-color: color-mix(in srgb, var(--marketplace-nav-button-active-background) 30%, var(--marketplace-card-border-soft) 70%);
+  background: var(--marketplace-nav-button-active-background);
+  color: var(--marketplace-nav-button-active-text);
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions .marketplace-topbar-button.is-primary {
+  border-color: color-mix(
+    in srgb,
+    var(--marketplace-topbar-button-primary-background) 32%,
+    var(--marketplace-card-border-soft) 68%
+  );
+  background: var(--marketplace-topbar-button-primary-background);
+  color: var(--marketplace-topbar-button-primary-text);
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-nav .marketplace-nav-button.is-active,
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions .marketplace-topbar-button.is-primary,
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-icon-button.is-active {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-icon-segment + .marketplace-home-topbar-icon-segment {
+  padding-left: 8px;
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-icon-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+}
+
+.marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-icon-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 980px) {
+  .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-topbar-right,
+  .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions {
+    width: 100%;
+  }
+
+  .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 720px) {
+  .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-nav .marketplace-nav-button,
+  .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions .marketplace-topbar-button {
+    width: 100%;
+  }
+
+  .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions .marketplace-topbar-button {
+    flex: 1 1 calc(50% - 5px);
+  }
+
+  .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-icon-shell {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-icon-segment {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+}

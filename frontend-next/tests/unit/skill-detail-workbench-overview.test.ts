@@ -64,7 +64,62 @@ describe("skill detail workbench overview", () => {
       previewTitle: "README.md",
       previewLanguage: "Markdown",
       previewContent: "# README",
-      previewUpdatedAt: "2026-03-16T12:50:47.641682+08:00"
+      previewUpdatedAt: "2026-03-16T12:50:47.641682+08:00",
+      sections: []
     });
+  });
+
+  it("extracts overview sections from markdown headings and bullet lists", () => {
+    const overview = buildSkillDetailOverviewModel({
+      detail: {
+        skill: {
+          id: 14,
+          name: "Repository Sync Auditor",
+          description: "Review repository sync drift and ownership mappings.",
+          content: [
+            "# Repository Sync Auditor",
+            "",
+            "## What it does",
+            "Keeps repository sync evidence readable for platform owners.",
+            "- Tracks ownership drift across sync runs.",
+            "- Highlights missing repository mappings.",
+            "",
+            "## Outputs",
+            "Produces short operational snapshots.",
+            "- Sync evidence summary",
+            "- Owner mapping exceptions"
+          ].join("\n"),
+          category: "engineering",
+          subcategory: "repository",
+          tags: ["sync"],
+          source_type: "repository",
+          source_url: "https://github.com/skillsindex/repository-sync-auditor",
+          star_count: 163,
+          quality_score: 9.1,
+          install_command: "uvx skillsindex sync-auditor",
+          updated_at: "2026-03-16T12:50:47.641682+08:00"
+        }
+      },
+      resourceContent: null,
+      resources: null,
+      messages: {
+        skillDetailContentTitle: "SKILL.md",
+        skillDetailSelectFile: "Select a file",
+        skillDetailUnknownLanguage: "Unknown"
+      }
+    });
+
+    expect(overview.sections).toEqual([
+      {
+        title: "What it does",
+        description: "Keeps repository sync evidence readable for platform owners.",
+        points: ["Tracks ownership drift across sync runs.", "Highlights missing repository mappings."]
+      },
+      {
+        title: "Outputs",
+        description: "Produces short operational snapshots.",
+        points: ["Sync evidence summary", "Owner mapping exceptions"]
+      }
+    ]);
   });
 });

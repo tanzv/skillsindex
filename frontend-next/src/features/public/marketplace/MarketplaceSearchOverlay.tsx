@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { Search } from "lucide-react";
 
 import { buildMarketplaceRecentSearchLabel, createMarketplaceSearchHref, type MarketplaceRecentSearchEntry } from "./searchHistory";
+import { MarketplaceSupportLinkList } from "./MarketplaceSupportLinkList";
 
 interface MarketplaceSearchOverlayProps {
   action: string;
@@ -118,19 +118,16 @@ export function MarketplaceSearchOverlay({
           </div>
 
           {entries.length > 0 ? (
-            <div className="marketplace-overlay-list">
-              {entries.map((entry) => (
-                <Link
-                  key={`${entry.route}-${entry.query}-${entry.tags || ""}`}
-                  href={createMarketplaceSearchHref(entry.route, entry.query, entry.tags)}
-                  className="marketplace-simple-link-item"
-                  onClick={onClose}
-                >
-                  <span className="marketplace-sidebar-link">{buildMarketplaceRecentSearchLabel(entry)}</span>
-                  <span className="marketplace-meta-text">{entry.route}</span>
-                </Link>
-              ))}
-            </div>
+            <MarketplaceSupportLinkList
+              className="marketplace-overlay-list"
+              items={entries.map((entry) => ({
+                key: `${entry.route}-${entry.query}-${entry.tags || ""}`,
+                href: createMarketplaceSearchHref(entry.route, entry.query, entry.tags),
+                label: buildMarketplaceRecentSearchLabel(entry),
+                meta: entry.route,
+                onClick: onClose
+              }))}
+            />
           ) : (
             <div className="marketplace-empty-state">
               <p>{emptyLabel}</p>

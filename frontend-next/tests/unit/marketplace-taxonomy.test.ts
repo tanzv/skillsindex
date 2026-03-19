@@ -167,4 +167,20 @@ describe("marketplace taxonomy", () => {
       subcategories: [{ slug: "release", name: "Release", count: 1 }]
     });
   });
+
+  it("hydrates zero-count taxonomy categories so the category hub can still render complete navigation", () => {
+    const groupedCategories = buildMarketplacePresentationCategories(rawCategories);
+    const taxonomySummary = resolveMarketplaceCategorySummary(groupedCategories, "design-art", skills);
+
+    expect(taxonomySummary).toMatchObject({
+      slug: "design-art",
+      name: "Design & Art",
+      count: 0
+    });
+    expect(taxonomySummary?.subcategories).toContainEqual({
+      slug: "image-video-generation",
+      name: "Image & Video Generation",
+      count: 0
+    });
+  });
 });

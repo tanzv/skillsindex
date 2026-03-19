@@ -1,3 +1,5 @@
+import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
+import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
 import type { workspaceRouteMeta } from "./workspaceRouteMeta";
 
 export type WorkspaceRoutePath = keyof typeof workspaceRouteMeta;
@@ -23,6 +25,7 @@ export interface WorkspaceSectionItem {
 }
 
 export interface WorkspaceSection {
+  id: string;
   title: string;
   description?: string;
   variant?: "default" | "signal-grid" | "activity-list" | "compact-list" | "code-emphasis" | "session";
@@ -78,10 +81,12 @@ export interface WorkspaceSnapshot {
 }
 
 export interface WorkspacePageModel {
+  locale: PublicLocale;
   route: WorkspaceRoutePath;
   eyebrow: string;
   title: string;
   description: string;
+  messages: WorkspaceMessages;
   snapshot: WorkspaceSnapshot;
   summaryMetrics: WorkspaceMetric[];
   quickActions: WorkspaceAction[];

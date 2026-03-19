@@ -1,7 +1,12 @@
+"use client";
+
 import type { ReactNode } from "react";
 
+import { AdminEmptyBlock, AdminMessageBanner, AdminMetricGrid } from "@/src/components/admin/AdminPrimitives";
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { Badge } from "@/src/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import {
   formatAdminIngestionDate,
@@ -10,9 +15,16 @@ import {
   type RepositoryDraft,
   type SkillInventoryItem
 } from "./model";
+import {
+  resolveIngestionDescription,
+  resolveIngestionOwnerLabel,
+  resolveIngestionSkillName,
+  resolveIngestionSourceTypeLabel,
+  resolveIngestionVisibilityLabel
+} from "./display";
 
 export const textareaClassName =
-  "flex min-h-28 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-offset-white placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-sky-500";
+  "flex min-h-28 w-full rounded-xl border border-[color:var(--ui-control-border)] bg-[color:var(--ui-control-bg)] px-3 py-2 text-sm text-[color:var(--ui-control-text)] shadow-sm outline-none ring-offset-0 placeholder:text-[color:var(--ui-control-placeholder)] focus-visible:border-[color:var(--ui-control-border-strong)] focus-visible:ring-2 focus-visible:ring-[color:var(--ui-focus-ring)]";
 
 export function toneForStatus(status: string): "default" | "soft" | "outline" {
   const normalized = status.toLowerCase();
@@ -28,25 +40,14 @@ export function toneForStatus(status: string): "default" | "soft" | "outline" {
 export function FormField({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="space-y-2">
-      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</span>
+      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--ui-text-muted)]">{label}</span>
       {children}
     </label>
   );
 }
 
 export function IngestionMetricGrid({ metrics }: { metrics: Array<{ label: string; value: string }> }) {
-  return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {metrics.map((metric) => (
-        <Card key={metric.label} className="rounded-2xl">
-          <CardHeader className="gap-2 p-5">
-            <CardDescription className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{metric.label}</CardDescription>
-            <CardTitle className="text-base">{metric.value}</CardTitle>
-          </CardHeader>
-        </Card>
-      ))}
-    </div>
-  );
+  return <AdminMetricGrid metrics={metrics} />;
 }
 
 export function IngestionMessage({ message }: { message: string }) {
@@ -54,7 +55,7 @@ export function IngestionMessage({ message }: { message: string }) {
     return null;
   }
 
-  return <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">{message}</div>;
+  return <AdminMessageBanner message={message} />;
 }
 
 export function SkillInventoryList({
@@ -68,39 +69,57 @@ export function SkillInventoryList({
   items: SkillInventoryItem[];
   emptyText: string;
 }) {
+  const { locale, messages } = useProtectedI18n();
+  const ingestionMessages = messages.adminIngestion;
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <div>
             <CardTitle>{title}</CardTitle>
-            <CardDescription>{description || "Live inventory records returned by the admin catalog endpoint."}</CardDescription>
+            <CardDescription>{description}</CardDescription>
           </div>
-          <Badge variant="outline">{items.length} items</Badge>
+          <Badge variant="outline">{formatProtectedMessage(ingestionMessages.itemsCountTemplate, { count: items.length })}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {items.length ? (
           items.map((item) => (
-            <div key={`${title}-${item.id}`} className="rounded-2xl border border-slate-200 p-4">
+            <div
+              key={`${title}-${item.id}`}
+              className="rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-bg)] p-4"
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-semibold text-slate-950">{item.name}</span>
-                    <Badge variant={item.visibility.toLowerCase() === "public" ? "soft" : "outline"}>{item.visibility}</Badge>
+                    <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">
+                      {resolveIngestionSkillName(item.name, ingestionMessages)}
+                    </span>
+                    <Badge variant={item.visibility.toLowerCase() === "public" ? "soft" : "outline"}>
+                      {resolveIngestionVisibilityLabel(item.visibility, ingestionMessages)}
+                    </Badge>
                   </div>
-                  <p className="text-sm text-slate-600">{item.description}</p>
+                  <p className="text-sm text-[color:var(--ui-text-secondary)]">
+                    {resolveIngestionDescription(item.description, ingestionMessages)}
+                  </p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">{item.sourceType}</span>
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">{item.ownerUsername}</span>
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">{formatAdminIngestionDate(item.updatedAt)}</span>
+                    <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1 text-xs text-[color:var(--ui-text-secondary)]">
+                      {resolveIngestionSourceTypeLabel(item.sourceType, ingestionMessages)}
+                    </span>
+                    <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1 text-xs text-[color:var(--ui-text-secondary)]">
+                      {resolveIngestionOwnerLabel(item.ownerUsername, ingestionMessages)}
+                    </span>
+                    <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1 text-xs text-[color:var(--ui-text-secondary)]">
+                      {formatAdminIngestionDate(item.updatedAt, locale, ingestionMessages.valueNotAvailable)}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <div className="rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">{emptyText}</div>
+          <AdminEmptyBlock>{emptyText}</AdminEmptyBlock>
         )}
       </CardContent>
     </Card>

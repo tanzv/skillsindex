@@ -2,7 +2,12 @@ import { createElement, type AnchorHTMLAttributes, type ReactNode } from "react"
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-import { buildMarketplaceTopbarSlots } from "@/src/features/public/marketplace/marketplaceTopbarSlots";
+import {
+  buildMarketplaceTopbarSlots,
+  resolveMarketplaceShellContentWidth,
+  resolveMarketplaceShellRouteKind,
+  resolveMarketplaceTopbarRoutePreset
+} from "@/src/features/public/marketplace/marketplaceTopbarSlots";
 
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams("")
@@ -92,5 +97,41 @@ describe("marketplaceTopbarSlots", () => {
     expect(skillDetailMarkup).toContain('data-marketplace-topbar-slot="brand"');
     expect(skillDetailMarkup).toContain('data-marketplace-topbar-slot="primary-navigation"');
     expect(skillDetailMarkup).toContain('data-marketplace-topbar-slot="actions"');
+  });
+
+  it("keeps skill detail routes on the shared marketplace topbar variant", () => {
+    const preset = resolveMarketplaceTopbarRoutePreset("/skills/14", {
+      categoryBreadcrumbAriaLabel: "Category breadcrumb",
+      categoryBrowseTitle: "Browse Categories",
+      rankingTitle: "Rankings",
+      resultsLedgerTitle: "Search Results",
+      shellCategories: "Categories",
+      shellHome: "Home",
+      stageCategories: "Categories",
+      stageRankings: "Rankings",
+      stageSkillDetail: "Skill Detail",
+      stageResults: "Results"
+    });
+
+    expect(preset).toEqual({
+      variant: "market",
+      stageLabel: "Skill Detail"
+    });
+  });
+
+  it("classifies marketplace shell routes without relying on descendant selectors", () => {
+    expect(resolveMarketplaceShellRouteKind("/")).toBe("landing");
+    expect(resolveMarketplaceShellRouteKind("/results")).toBe("section");
+    expect(resolveMarketplaceShellRouteKind("/categories/engineering")).toBe("section");
+    expect(resolveMarketplaceShellRouteKind("/skills/14")).toBe("skill-detail");
+    expect(resolveMarketplaceShellRouteKind("/docs")).toBe("narrative");
+    expect(resolveMarketplaceShellRouteKind("/login")).toBe("default");
+  });
+
+  it("expands only detail and narrative marketplace content widths", () => {
+    expect(resolveMarketplaceShellContentWidth("landing")).toBe("default");
+    expect(resolveMarketplaceShellContentWidth("section")).toBe("default");
+    expect(resolveMarketplaceShellContentWidth("skill-detail")).toBe("expanded");
+    expect(resolveMarketplaceShellContentWidth("narrative")).toBe("expanded");
   });
 });

@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { PublicLink } from "@/src/components/shared/PublicLink";
 
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
-import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
 import type { MarketplaceSkill } from "@/src/lib/schemas/public";
 
 import { buildMarketplaceCoverLabel, buildMarketplaceMetaSegments } from "./marketplaceCardViewModel";
@@ -16,13 +15,12 @@ interface MarketplaceSkillCardProps {
 
 export function MarketplaceSkillCard({ item, variant = "result" }: MarketplaceSkillCardProps) {
   const { locale } = usePublicI18n();
-  const { toPublicPath } = usePublicRouteState();
   const isFeatured = variant === "featured";
   const { messages } = usePublicI18n();
   const metaSegments = buildMarketplaceMetaSegments(item, messages, locale);
 
   return (
-    <Link href={toPublicPath(`/skills/${item.id}`)} className="marketplace-skill-link" aria-label={item.name}>
+    <PublicLink href={`/skills/${item.id}`} className="marketplace-skill-link" aria-label={item.name} warmOnViewport>
       <article className={isFeatured ? "marketplace-skill-row is-featured" : "marketplace-skill-row"}>
         <div className="marketplace-skill-layout">
           <div className="marketplace-card-head">
@@ -59,6 +57,6 @@ export function MarketplaceSkillCard({ item, variant = "result" }: MarketplaceSk
           </div>
         </div>
       </article>
-    </Link>
+    </PublicLink>
   );
 }

@@ -6,15 +6,23 @@ import { MarketplaceHomeDeckCard } from "@/src/features/public/marketplace/Marke
 import type { MarketplaceSkill } from "@/src/lib/schemas/public";
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/",
+  usePathname: () => "/light",
   useRouter: () => ({
     refresh: () => {}
   })
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: React.ReactNode }) =>
-    createElement("a", { href, ...props }, children)
+  default: ({
+    href,
+    as,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+    href: string;
+    as?: string;
+    children: React.ReactNode;
+  }) => createElement("a", { href, "data-as": as, ...props }, children)
 }));
 
 vi.mock("@/src/features/public/i18n/PublicI18nProvider", () => ({
@@ -51,6 +59,7 @@ describe("MarketplaceHomeDeckCard", () => {
 
     expect(markup).toContain('aria-label="Recovery Drill Planner"');
     expect(markup).toContain('href="/skills/103"');
+    expect(markup).toContain('data-as="/light/skills/103"');
     expect(markup).toContain("marketplace-home-deck-card");
     expect(markup).toContain("Programming &amp; Development");
     expect(markup).toContain("141 stars");

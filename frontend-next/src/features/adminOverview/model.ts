@@ -1,3 +1,5 @@
+import type { AdminOverviewMessages } from "@/src/lib/i18n/protectedPageMessages";
+
 export interface AdminOverviewSnapshot {
   totalSkills: number;
   publicSkills: number;
@@ -12,6 +14,12 @@ export interface AdminOverviewSnapshot {
 export interface AdminOverviewMetric {
   label: string;
   value: string;
+  description: string;
+}
+
+export interface AdminOverviewQuickLink {
+  href: string;
+  label: string;
   description: string;
 }
 
@@ -41,57 +49,133 @@ export function normalizeAdminOverviewPayload(payload: unknown): AdminOverviewSn
   };
 }
 
-export function buildAdminOverviewMetrics(snapshot: AdminOverviewSnapshot): AdminOverviewMetric[] {
+export function buildAdminOverviewMetrics(
+  snapshot: AdminOverviewSnapshot,
+  messages: Pick<
+    AdminOverviewMessages,
+    | "metricTotalSkillsLabel"
+    | "metricTotalSkillsDescription"
+    | "metricOrganizationsLabel"
+    | "metricOrganizationsDescription"
+    | "metricAccountsLabel"
+    | "metricAccountsDescription"
+    | "metricManageUsersLabel"
+    | "metricManageUsersDescription"
+    | "valueEnabled"
+    | "valueLimited"
+  >
+): AdminOverviewMetric[] {
   return [
     {
-      label: "Total Skills",
+      label: messages.metricTotalSkillsLabel,
       value: String(snapshot.totalSkills),
-      description: "Governed skills visible from the current admin scope."
+      description: messages.metricTotalSkillsDescription
     },
     {
-      label: "Organizations",
+      label: messages.metricOrganizationsLabel,
       value: String(snapshot.organizationCount),
-      description: "Organizations currently participating in the workspace."
+      description: messages.metricOrganizationsDescription
     },
     {
-      label: "Accounts",
+      label: messages.metricAccountsLabel,
       value: String(snapshot.accountCount),
-      description: "Accounts tracked by the current administration posture."
+      description: messages.metricAccountsDescription
     },
     {
-      label: "Manage Users",
-      value: snapshot.canManageUsers ? "Enabled" : "Limited",
-      description: "Whether the session can update account and role assignments."
+      label: messages.metricManageUsersLabel,
+      value: snapshot.canManageUsers ? messages.valueEnabled : messages.valueLimited,
+      description: messages.metricManageUsersDescription
     }
   ];
 }
 
-export function buildAdminOverviewCapabilityItems(snapshot: AdminOverviewSnapshot) {
+export function buildAdminOverviewCapabilityItems(
+  snapshot: AdminOverviewSnapshot,
+  messages: Pick<
+    AdminOverviewMessages,
+    | "capabilityManageUsersLabel"
+    | "capabilityViewAllSkillsLabel"
+    | "capabilityPrivateCoverageLabel"
+    | "capabilitySyncReadyLabel"
+    | "valueEnabled"
+    | "valueUnavailable"
+    | "valueScoped"
+  >
+) {
   return [
-    { label: "Manage Users", value: snapshot.canManageUsers ? "Enabled" : "Unavailable" },
-    { label: "View All Skills", value: snapshot.canViewAllSkills ? "Enabled" : "Scoped" },
-    { label: "Private Coverage", value: `${snapshot.privateSkills}` },
-    { label: "Sync-ready", value: `${snapshot.syncableSkills}` }
+    {
+      label: messages.capabilityManageUsersLabel,
+      value: snapshot.canManageUsers ? messages.valueEnabled : messages.valueUnavailable
+    },
+    {
+      label: messages.capabilityViewAllSkillsLabel,
+      value: snapshot.canViewAllSkills ? messages.valueEnabled : messages.valueScoped
+    },
+    { label: messages.capabilityPrivateCoverageLabel, value: `${snapshot.privateSkills}` },
+    { label: messages.capabilitySyncReadyLabel, value: `${snapshot.syncableSkills}` }
   ];
 }
 
-export function buildAdminOverviewDistribution(snapshot: AdminOverviewSnapshot) {
+export function buildAdminOverviewDistribution(
+  snapshot: AdminOverviewSnapshot,
+  messages: Pick<
+    AdminOverviewMessages,
+    "distributionPublicSkillsLabel" | "distributionPrivateSkillsLabel" | "distributionSyncableSkillsLabel"
+  >
+) {
   const safeTotal = Math.max(snapshot.totalSkills, 1);
   return [
     {
-      label: "Public Skills",
+      label: messages.distributionPublicSkillsLabel,
       value: String(snapshot.publicSkills),
       percent: Math.round((snapshot.publicSkills / safeTotal) * 100)
     },
     {
-      label: "Private Skills",
+      label: messages.distributionPrivateSkillsLabel,
       value: String(snapshot.privateSkills),
       percent: Math.round((snapshot.privateSkills / safeTotal) * 100)
     },
     {
-      label: "Syncable Skills",
+      label: messages.distributionSyncableSkillsLabel,
       value: String(snapshot.syncableSkills),
       percent: Math.round((snapshot.syncableSkills / safeTotal) * 100)
+    }
+  ];
+}
+
+export function buildAdminOverviewQuickLinks(
+  messages: Pick<
+    AdminOverviewMessages,
+    | "quickLinkSkillGovernanceLabel"
+    | "quickLinkSkillGovernanceDescription"
+    | "quickLinkRepositoryIntakeLabel"
+    | "quickLinkRepositoryIntakeDescription"
+    | "quickLinkAccessControlLabel"
+    | "quickLinkAccessControlDescription"
+    | "quickLinkOperationsLabel"
+    | "quickLinkOperationsDescription"
+  >
+): AdminOverviewQuickLink[] {
+  return [
+    {
+      href: "/admin/skills",
+      label: messages.quickLinkSkillGovernanceLabel,
+      description: messages.quickLinkSkillGovernanceDescription
+    },
+    {
+      href: "/admin/ingestion/repository",
+      label: messages.quickLinkRepositoryIntakeLabel,
+      description: messages.quickLinkRepositoryIntakeDescription
+    },
+    {
+      href: "/admin/access",
+      label: messages.quickLinkAccessControlLabel,
+      description: messages.quickLinkAccessControlDescription
+    },
+    {
+      href: "/admin/ops/metrics",
+      label: messages.quickLinkOperationsLabel,
+      description: messages.quickLinkOperationsDescription
     }
   ];
 }

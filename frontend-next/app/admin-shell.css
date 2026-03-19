@@ -1,62 +1,12 @@
 .admin-shell-root {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 28%),
-    radial-gradient(circle at 78% 0%, rgba(59, 130, 246, 0.14), transparent 24%),
-    linear-gradient(180deg, #0d1830 0%, var(--admin-shell-bg-alt) 26%, var(--admin-shell-bg) 100%);
+    radial-gradient(circle at top left, var(--protected-shell-hero-primary), transparent 28%),
+    radial-gradient(circle at 78% 0%, var(--protected-shell-hero-secondary), transparent 24%),
+    linear-gradient(180deg, var(--protected-shell-hero-start) 0%, var(--admin-shell-bg-alt) 26%, var(--admin-shell-bg) 100%);
   color: var(--admin-shell-text);
 }
 
-.admin-shell-frame {
-  width: min(calc(100% - 36px), 1412px);
-  margin: 0 auto;
-}
-
-.admin-shell-header {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  border-bottom: 1px solid rgba(149, 178, 226, 0.12);
-  background: var(--admin-shell-header);
-  backdrop-filter: blur(18px);
-}
-
-.admin-shell-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 0 16px;
-}
-
-.admin-shell-brand {
-  display: grid;
-  gap: 4px;
-}
-
-.admin-shell-brand-link {
-  color: var(--admin-shell-cta);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.admin-shell-brand-title {
-  font-size: 24px;
-  line-height: 1.1;
-  font-weight: 700;
-}
-
-.admin-shell-brand-subtitle {
-  color: var(--admin-shell-text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.admin-shell-header-right,
-.admin-shell-topnav,
-.admin-shell-topnav-link,
 .admin-shell-user-meta,
 .admin-shell-chip,
 .admin-shell-group-link,
@@ -65,8 +15,6 @@
   align-items: center;
 }
 
-.admin-shell-header-right,
-.admin-shell-topnav,
 .admin-shell-user-meta,
 .admin-shell-side-list,
 .admin-shell-group-list,
@@ -75,7 +23,6 @@
   flex-wrap: wrap;
 }
 
-.admin-shell-topnav-link,
 .admin-shell-chip,
 .admin-shell-group-link,
 .admin-shell-side-link {
@@ -91,37 +38,26 @@
     color 120ms ease;
 }
 
-.admin-shell-topnav-link,
 .admin-shell-group-link,
 .admin-shell-side-link {
   color: var(--admin-shell-text-secondary);
-  background: rgba(10, 18, 34, 0.68);
+  background: var(--protected-shell-interactive-bg);
 }
 
-.admin-shell-topnav-link:hover,
 .admin-shell-group-link:hover,
 .admin-shell-side-link:hover {
-  border-color: rgba(148, 181, 236, 0.34);
-  background: rgba(20, 34, 61, 0.88);
+  border-color: var(--protected-shell-interactive-border-hover);
+  background: var(--protected-shell-interactive-bg-hover);
   color: var(--admin-shell-text);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: var(--protected-shell-interactive-shadow-hover);
 }
 
-.admin-shell-topnav-link.is-active,
 .admin-shell-group-link.is-active,
 .admin-shell-side-link.is-active {
-  border-color: rgba(125, 211, 252, 0.28);
-  background: rgba(31, 57, 92, 0.92);
+  border-color: var(--protected-shell-interactive-border-active);
+  background: var(--protected-shell-interactive-bg-active);
   color: var(--admin-shell-text);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 10px 22px rgba(1, 8, 20, 0.18);
-}
-
-.admin-shell-topnav-link,
-.admin-shell-group-link {
-  font-size: 13px;
-  font-weight: 600;
+  box-shadow: var(--protected-shell-interactive-shadow-active);
 }
 
 .admin-shell-group-link,
@@ -135,15 +71,15 @@
 
 .admin-shell-chip {
   border-color: var(--admin-shell-border);
-  background: rgba(16, 29, 53, 0.72);
+  background: var(--protected-shell-chip-bg);
   color: var(--admin-shell-text-secondary);
   font-size: 12px;
   font-weight: 600;
 }
 
 .admin-shell-chip.is-primary {
-  border-color: rgba(125, 211, 252, 0.24);
-  background: rgba(125, 211, 252, 0.14);
+  border-color: var(--protected-shell-chip-accent-border);
+  background: var(--protected-shell-chip-accent-bg);
   color: var(--admin-shell-text);
 }
 
@@ -151,29 +87,11 @@
   font-family: "JetBrains Mono", monospace;
 }
 
-.admin-shell-body {
-  padding: 28px 0 40px;
-}
-
-.admin-shell-grid {
-  display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  gap: 20px;
-  align-items: start;
-}
-
-.admin-shell-sidebar,
 .admin-shell-panel,
 .admin-shell-group-list,
 .admin-shell-panel-list,
 .admin-shell-side-list {
   display: grid;
-}
-
-.admin-shell-sidebar {
-  position: sticky;
-  top: 132px;
-  gap: 14px;
 }
 
 .admin-shell-panel {
@@ -221,41 +139,4 @@
   color: var(--admin-shell-text-muted);
   font-size: 12px;
   line-height: 1.5;
-}
-
-@media (max-width: 1180px) {
-  .admin-shell-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-shell-sidebar {
-    position: static;
-  }
-}
-
-@media (max-width: 780px) {
-  .admin-shell-frame {
-    width: min(calc(100% - 20px), 1412px);
-  }
-
-  .admin-shell-header-row {
-    align-items: start;
-    flex-direction: column;
-  }
-
-  .admin-shell-header-right,
-  .admin-shell-user-meta {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .admin-shell-topnav {
-    width: 100%;
-  }
-
-  .admin-shell-topnav-link,
-  .admin-shell-group-link,
-  .admin-shell-side-link {
-    width: 100%;
-  }
 }

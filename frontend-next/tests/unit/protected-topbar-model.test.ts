@@ -67,7 +67,11 @@ const protectedTopbarTestConfig: ProtectedTopbarConfig = {
   },
   overflowGroupOrder: ["primary", "access"],
   overflowTitle: "Overflow",
-  overflowHint: "Protected topbar test configuration."
+  overflowHint: "Protected topbar test configuration.",
+  overflowMetricLabels: {
+    visible: "Visible",
+    hidden: "Hidden"
+  }
 };
 
 describe("protected topbar model", () => {

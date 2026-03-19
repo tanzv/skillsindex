@@ -63,3 +63,16 @@ test("executes authenticated profile and manual ingestion actions", async ({ pag
   await expect(page.getByText("Manual skill created.")).toBeVisible();
   await expect(page.getByText("Manual Smoke Skill")).toBeVisible();
 });
+
+test("renders shared drawer toggles across protected shells on tablet widths", async ({ page }) => {
+  await page.setViewportSize({ width: 960, height: 1200 });
+  await loginAsAdmin(page, "/admin/overview");
+
+  await expect(page.getByTestId("admin-topbar-menu-trigger")).toBeVisible();
+
+  await page.goto("/workspace");
+  await expect(page.getByTestId("workspace-topbar-menu-trigger")).toBeVisible();
+
+  await page.goto("/account/profile");
+  await expect(page.getByTestId("account-topbar-menu-trigger")).toBeVisible();
+});

@@ -56,8 +56,8 @@ test("covers admin access filtering and catalog read contracts", async ({ page }
   await expect(page.getByText("Recovery Drill Planner")).toBeVisible();
 
   await page.goto("/admin/sync-jobs");
-  await expect(page.getByTestId("admin-catalog-row-71")).toContainText("success");
-  await expect(page.getByTestId("admin-catalog-row-72")).toContainText("failed");
+  await expect(page.getByTestId("admin-catalog-row-71")).toContainText(/success/i);
+  await expect(page.getByTestId("admin-catalog-row-72")).toContainText(/failed/i);
 });
 
 test("filters integrations by selection and search", async ({ page }) => {

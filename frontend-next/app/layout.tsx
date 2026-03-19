@@ -11,7 +11,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "SkillsIndex",
-  description: "Next.js migration workspace for SkillsIndex."
+  description: "Next.js migration workspace for SkillsIndex.",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: ["/icon.svg"]
+  }
 };
 
 interface RootLayoutProps {

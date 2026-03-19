@@ -2,15 +2,15 @@
 
 ## Purpose
 
-This file captures the current `Admin` route inventory and navigation grouping in the existing `frontend/` implementation.
-The new `frontend-next/` application must preserve this operator-facing route map during the admin migration.
+This file captures the current `Admin` route inventory and navigation grouping in the active `frontend-next/` implementation.
+It remains the operator-facing route map for ongoing admin shell and parity work.
 
 ## Source References
 
-- `frontend/src/appNavigationConfig.ts`
-- `frontend/src/app/protectedWorkbenchConfig.ts`
-- `frontend/src/app/AppProtectedRouteView.tsx`
-- `frontend/src/pages/adminWorkbench/AdminWorkbenchTypes.ts`
+- `frontend-next/src/lib/routing/adminNavigation.ts`
+- `frontend-next/src/components/shared/protectedTopbarConfigs.ts`
+- `frontend-next/src/features/admin/renderAdminRoute.tsx`
+- `frontend-next/src/features/admin/adminRouteMeta.ts`
 
 ## First-Level Navigation Sections
 

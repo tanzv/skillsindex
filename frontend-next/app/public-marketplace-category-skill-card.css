@@ -13,11 +13,16 @@
 
 .marketplace-category-skill-card {
   height: 100%;
-  padding: 16px;
-  border: 1px solid var(--marketplace-card-border);
+  padding: 15px;
+  border: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
   border-radius: 18px;
-  background: var(--marketplace-section-background);
-  gap: 12px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--marketplace-section-background) 98%, var(--marketplace-section-emphasis-background) 2%) 0%,
+      color-mix(in srgb, var(--marketplace-section-background) 93%, var(--marketplace-section-emphasis-background) 7%) 100%
+    );
+  gap: 10px;
   transition:
     border-color 180ms ease,
     background-color 180ms ease,
@@ -25,8 +30,13 @@
 }
 
 .marketplace-category-skill-card:hover {
-  border-color: var(--marketplace-card-border-soft);
-  background: var(--marketplace-section-emphasis-background);
+  border-color: var(--marketplace-card-border);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--marketplace-section-background) 94%, var(--marketplace-section-emphasis-background) 6%) 0%,
+      color-mix(in srgb, var(--marketplace-section-background) 84%, var(--marketplace-section-emphasis-background) 16%) 100%
+    );
   transform: translateY(-1px);
 }
 
@@ -37,14 +47,19 @@
 }
 
 .marketplace-category-skill-card-avatar {
-  width: 42px;
-  height: 42px;
-  border: 1px solid var(--marketplace-card-border-soft);
+  width: 40px;
+  height: 40px;
+  border: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
   border-radius: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--marketplace-section-emphasis-background);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--marketplace-section-emphasis-background) 88%, transparent) 0%,
+      color-mix(in srgb, var(--marketplace-section-background) 92%, var(--marketplace-section-emphasis-background) 8%) 100%
+    );
   color: var(--marketplace-home-text);
   font-size: 11px;
   font-weight: 800;
@@ -53,7 +68,7 @@
 }
 
 .marketplace-category-skill-card-identity {
-  gap: 6px;
+  gap: 4px;
 }
 
 .marketplace-category-skill-card-eyebrow,
@@ -78,7 +93,8 @@
 }
 
 .marketplace-category-skill-card-score {
-  padding: 7px 10px;
+  min-height: 30px;
+  padding: 5px 9px;
   border: 1px solid var(--marketplace-chip-border);
   border-radius: 999px;
   display: inline-flex;
@@ -102,7 +118,7 @@
 
 .marketplace-category-skill-card-score small {
   color: var(--marketplace-chip-text);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
 }
 
@@ -112,7 +128,7 @@
   line-height: 1.6;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   overflow: hidden;
 }
 
@@ -124,7 +140,7 @@
 
 .marketplace-category-skill-card-chip-row .marketplace-skill-chip {
   min-height: 24px;
-  padding: 0 10px;
+  padding: 0 9px;
   border: 1px solid var(--marketplace-chip-border);
   background: var(--marketplace-chip-background);
   color: var(--marketplace-chip-text);
@@ -135,7 +151,7 @@
 .marketplace-category-skill-card-foot {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 10px;
+  gap: 6px 10px;
 }
 
 @media (max-width: 820px) {

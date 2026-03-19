@@ -1,0 +1,148 @@
+.workspace-stage-panel,
+.workspace-stage-summary-card,
+.workspace-section-item,
+.admin-overview-stage-panel,
+.admin-overview-summary-card,
+.admin-overview-distribution-item,
+.admin-overview-capability-card,
+.admin-overview-readiness-item,
+.account-center-stage-panel,
+.account-center-summary-card,
+.account-center-session-card,
+.account-center-credential-card,
+.account-center-secret {
+  border-color: var(--protected-shell-border) !important;
+  background: var(--protected-shell-panel-surface) !important;
+  box-shadow: var(--protected-shell-panel-shadow) !important;
+}
+
+.workspace-stage-summary-card.is-accent,
+.workspace-stage-summary-card.is-success,
+.workspace-stage-summary-card.is-warning {
+  border-color: var(--protected-shell-border) !important;
+  background: var(--protected-shell-card-alt) !important;
+}
+
+.workspace-stage-kicker,
+.workspace-stage-summary-label,
+.workspace-section-item-label,
+.admin-overview-kicker,
+.admin-overview-summary-label,
+.admin-overview-section-kicker,
+.account-center-kicker,
+.account-center-summary-label,
+.account-center-section-kicker {
+  color: var(--protected-shell-text-muted) !important;
+}
+
+.workspace-stage-hero h1,
+.workspace-section-title-block h2,
+.workspace-section-title-block h3,
+.workspace-section-item-value,
+.workspace-stage-summary-value,
+.admin-overview-hero h1,
+.admin-overview-panel-title-row h2,
+.admin-overview-panel-title-row h3,
+.admin-overview-summary-value,
+.admin-overview-nav-link strong,
+.account-center-hero h1,
+.account-center-panel-title-row h2,
+.account-center-panel-title-row h3,
+.account-center-summary-value {
+  color: var(--protected-shell-text) !important;
+}
+
+.workspace-stage-description,
+.workspace-stage-summary-detail,
+.workspace-section-description,
+.workspace-section-item-description,
+.workspace-stage-code,
+.admin-overview-description,
+.admin-overview-panel-description,
+.admin-overview-summary-detail,
+.admin-overview-copy,
+.admin-overview-nav-link span,
+.account-center-description,
+.account-center-panel-description,
+.account-center-summary-detail,
+.account-center-surface-copy,
+.account-center-checkbox-row {
+  color: var(--protected-shell-text-secondary) !important;
+}
+
+.workspace-stage-action,
+.admin-overview-action,
+.admin-overview-nav-link,
+.account-center-action,
+.account-center-tab-link,
+.account-center-badge {
+  border-color: var(--protected-shell-border) !important;
+  background: var(--protected-shell-interactive-bg) !important;
+  color: var(--protected-shell-text-secondary) !important;
+  box-shadow: none !important;
+}
+
+.workspace-stage-action:hover,
+.admin-overview-action:hover,
+.admin-overview-nav-link:hover,
+.account-center-action:hover,
+.account-center-tab-link:hover {
+  border-color: var(--protected-shell-interactive-border-hover) !important;
+  background: var(--protected-shell-interactive-bg-hover) !important;
+  color: var(--protected-shell-text) !important;
+}
+
+.workspace-stage-action.is-primary,
+.workspace-stage-action.is-soft,
+.admin-overview-action.is-primary,
+.account-center-action.is-primary,
+.account-center-tab-link.is-active,
+.account-center-badge.is-soft {
+  border-color: var(--protected-shell-accent) !important;
+  background: var(--protected-shell-accent) !important;
+  color: var(--protected-shell-accent-contrast) !important;
+}
+
+.workspace-stage-code,
+.account-center-field,
+.account-center-textarea,
+.account-center-session-card,
+.account-center-credential-card,
+.admin-overview-distribution-item,
+.admin-overview-capability-card,
+.admin-overview-readiness-item {
+  background: var(--protected-shell-card-alt) !important;
+}
+
+.admin-overview-distribution-track {
+  background: color-mix(in srgb, var(--protected-shell-text) 10%, white) !important;
+}
+
+.admin-overview-distribution-fill {
+  background: linear-gradient(90deg, #111111 0%, #525252 100%) !important;
+}
+
+.account-center-field,
+.account-center-textarea {
+  border-color: var(--protected-shell-border) !important;
+  color: var(--protected-shell-text) !important;
+}
+
+.account-center-field::placeholder,
+.account-center-textarea::placeholder {
+  color: var(--protected-shell-text-muted) !important;
+}
+
+.account-center-field:focus,
+.account-center-textarea:focus {
+  border-color: var(--protected-shell-accent) !important;
+}
+
+.account-center-avatar {
+  background: var(--protected-shell-accent) !important;
+  color: var(--protected-shell-accent-contrast) !important;
+}
+
+.account-center-secret {
+  color: var(--protected-shell-text) !important;
+}

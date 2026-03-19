@@ -18,6 +18,8 @@ import {
 import { MarketplaceTopbarBreadcrumb } from "./MarketplaceTopbarBreadcrumb";
 
 export type MarketplaceTopbarSlotVariant = "landing" | "market" | "skill-detail";
+export type MarketplaceShellRouteKind = "landing" | "section" | "skill-detail" | "narrative" | "default";
+export type MarketplaceShellContentWidth = "default" | "expanded";
 
 export interface MarketplaceTopbarSlotsInput {
   belowContent?: ReactNode;
@@ -44,6 +46,36 @@ type MarketplaceStageMessages = Pick<
   | "stageSkillDetail"
   | "stageResults"
 >;
+
+const marketplaceNarrativeRoutes = new Set(["/about", "/docs", "/governance", "/rollout", "/timeline"]);
+
+export function resolveMarketplaceShellRouteKind(corePath: string): MarketplaceShellRouteKind {
+  if (corePath === "/") {
+    return "landing";
+  }
+
+  if (corePath.startsWith("/categories") || corePath === "/rankings" || corePath === "/compare") {
+    return "section";
+  }
+
+  if (corePath === "/results" || corePath === "/search") {
+    return "section";
+  }
+
+  if (corePath.startsWith("/skills/")) {
+    return "skill-detail";
+  }
+
+  if (marketplaceNarrativeRoutes.has(corePath)) {
+    return "narrative";
+  }
+
+  return "default";
+}
+
+export function resolveMarketplaceShellContentWidth(routeKind: MarketplaceShellRouteKind): MarketplaceShellContentWidth {
+  return routeKind === "skill-detail" || routeKind === "narrative" ? "expanded" : "default";
+}
 
 function formatRouteSegmentLabel(segment: string): string {
   return String(segment || "")
@@ -174,7 +206,7 @@ export function resolveMarketplaceTopbarRoutePreset(
 
   if (corePath.startsWith("/skills/")) {
     return {
-      variant: "skill-detail",
+      variant: "market",
       stageLabel: messages.stageSkillDetail
     };
   }

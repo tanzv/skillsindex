@@ -44,9 +44,9 @@ test("executes recovery, release, and change approval record actions", async ({ 
 
   await page.goto("/admin/ops/releases");
   await page.getByLabel("Release version").fill(`v9.${suffix}`);
-  await page.getByLabel("Release environment").fill("staging");
+  await page.getByLabel("Release environment").selectOption("staging");
   await page.getByLabel("Release change ticket").fill(`CHG-${suffix}`);
-  await page.getByLabel("Release status").fill("success");
+  await page.getByLabel("Release status").selectOption("success");
   await page.getByLabel("Release note").fill(`Release note ${suffix}`);
   await page.getByRole("button", { name: "Save Record" }).click();
   await expect(page.getByText("Operations record saved.")).toBeVisible();
@@ -55,7 +55,7 @@ test("executes recovery, release, and change approval record actions", async ({ 
   await page.goto("/admin/ops/change-approvals");
   await page.getByLabel("Change approval ticket ID").fill(`APP-${suffix}`);
   await page.getByLabel("Change approval reviewer").fill("ops-reviewer");
-  await page.getByLabel("Change approval status").fill("approved");
+  await page.getByLabel("Change approval status").selectOption("approved");
   await page.getByLabel("Change approval note").fill(`Approval note ${suffix}`);
   await page.getByRole("button", { name: "Save Record" }).click();
   await expect(page.getByText("Operations record saved.")).toBeVisible();
@@ -67,7 +67,7 @@ test("executes backup plan and backup run record actions", async ({ page }) => {
   await loginAsAdmin(page, "/admin/ops/backup/plans");
 
   await page.getByLabel("Backup plan key").fill(`archive-${suffix}`);
-  await page.getByLabel("Backup type").fill("snapshot");
+  await page.getByLabel("Backup type").selectOption("snapshot");
   await page.getByLabel("Backup schedule").fill("0 3 * * 0");
   await page.getByLabel("Backup retention days").fill("45");
   await page.getByLabel("Backup plan enabled").check();
@@ -78,7 +78,7 @@ test("executes backup plan and backup run record actions", async ({ page }) => {
 
   await page.goto("/admin/ops/backup/runs");
   await page.getByLabel("Backup run plan key").fill(`archive-${suffix}`);
-  await page.getByLabel("Backup run status").fill("success");
+  await page.getByLabel("Backup run status").selectOption("success");
   await page.getByLabel("Backup run size MB").fill("512");
   await page.getByLabel("Backup run duration minutes").fill("18");
   await page.getByLabel("Backup run note").fill(`Run note ${suffix}`);

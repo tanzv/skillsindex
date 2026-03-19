@@ -1,0 +1,275 @@
+.protected-topbar-account-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(372px, calc(100vw - 24px));
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity 160ms ease, transform 160ms ease, visibility 160ms ease;
+  z-index: 52;
+}
+
+.protected-topbar-account-menu.is-expanded {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.protected-topbar-account-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--protected-topbar-account-card-border);
+  border-radius: 22px;
+  background: var(--protected-topbar-account-card-bg);
+  box-shadow: var(--protected-topbar-account-card-shadow);
+}
+
+.protected-topbar-account-summary,
+.protected-topbar-account-actions,
+.protected-topbar-preference-row,
+.protected-topbar-segmented-control {
+  display: grid;
+  gap: 10px;
+}
+
+.protected-topbar-account-summary {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--protected-topbar-account-section-border);
+  border-radius: 16px;
+  background: var(--protected-topbar-account-section-bg);
+}
+
+.protected-topbar-account-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.protected-topbar-account-copy strong,
+.protected-topbar-account-copy small,
+.protected-topbar-account-summary-kicker {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.protected-topbar-account-summary-kicker {
+  color: var(--protected-shell-text-muted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.protected-topbar-account-copy strong {
+  color: var(--protected-shell-text);
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.protected-topbar-account-copy small {
+  color: var(--protected-shell-text-secondary);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.protected-topbar-account-summary-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.protected-topbar-account-summary-pill {
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--protected-topbar-account-section-count-bg);
+  color: var(--protected-topbar-account-section-count-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+}
+
+.protected-topbar-account-section {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--protected-topbar-account-section-border);
+  border-radius: 16px;
+  background: var(--protected-topbar-account-section-bg);
+}
+
+.protected-topbar-account-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.protected-topbar-account-section-title,
+.protected-topbar-preference-label {
+  margin: 0;
+  color: var(--protected-shell-text-muted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.protected-topbar-account-section-count {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--protected-topbar-account-section-count-bg);
+  color: var(--protected-topbar-account-section-count-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.protected-topbar-account-link,
+.protected-topbar-account-logout {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  line-height: 1.2;
+}
+
+.protected-topbar-account-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.protected-topbar-account-link-icon-shell {
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  background: var(--protected-topbar-account-link-icon-bg);
+  color: var(--protected-topbar-account-link-icon-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.protected-topbar-account-link-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  flex: 1 1 auto;
+}
+
+.protected-topbar-account-link-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.protected-topbar-account-link-arrow {
+  width: 14px;
+  height: 14px;
+  color: var(--protected-shell-text-muted);
+  flex: 0 0 auto;
+}
+
+.protected-topbar-account-link-icon,
+.protected-topbar-segmented-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.protected-topbar-preference-row {
+  gap: 8px;
+}
+
+.protected-topbar-segmented-control {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.protected-topbar-segmented-button {
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.protected-topbar-overflow .workspace-shell-topbar-overflow-panel {
+  border: 1px solid var(--protected-topbar-overflow-panel-border);
+  border-radius: 24px;
+  background: var(--protected-topbar-overflow-panel-bg);
+  box-shadow: var(--protected-topbar-overflow-panel-shadow);
+}
+
+.protected-topbar-overflow .workspace-topbar-overflow-title,
+.protected-topbar-overflow .workspace-topbar-overflow-group-title {
+  color: var(--protected-shell-text);
+}
+
+.protected-topbar-overflow .workspace-shell-topbar-action-note,
+.protected-topbar-overflow .workspace-topbar-overflow-summary-pill-label {
+  color: var(--protected-shell-text-secondary);
+}
+
+.protected-topbar-overflow .workspace-topbar-overflow-summary-pill,
+.protected-topbar-overflow .workspace-topbar-overflow-group,
+.protected-topbar-overflow .workspace-topbar-overflow-group-actions .workspace-shell-topbar-nav-button {
+  border-color: var(--protected-topbar-account-section-border);
+  background: var(--protected-topbar-account-section-bg);
+  box-shadow: none;
+}
+
+.protected-topbar-overflow .workspace-topbar-overflow-summary-pill {
+  background: var(--protected-topbar-overflow-pill-bg);
+}
+
+.protected-topbar-overflow .workspace-topbar-overflow-group.is-active {
+  border-color: var(--protected-topbar-control-border-active);
+}
+
+.protected-topbar-overflow .workspace-topbar-overflow-group-count {
+  background: var(--protected-topbar-overflow-count-bg);
+  color: var(--protected-topbar-overflow-count-text);
+}
+
+@media (max-width: 780px) {
+  .protected-topbar-account-menu {
+    right: 0;
+    width: min(320px, calc(100vw - 20px));
+  }
+
+  .protected-topbar-account-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .protected-topbar-segmented-control {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,65 @@
+.marketplace-shell.is-light-theme:has(.skill-detail-page) {
+  --marketplace-shell-inline-gutter: 24px;
+  --marketplace-home-background: #f6f3ee;
+  --marketplace-home-text: #1f1a14;
+  --marketplace-topbar-background: #fffdf9;
+  --marketplace-topbar-background-alt: #f8f5ef;
+  --marketplace-topbar-border: #e7e1d6;
+  --marketplace-status-background: rgba(31, 26, 20, 0.04);
+  --marketplace-status-border: #ece6dc;
+  --marketplace-status-text: #746d63;
+  --marketplace-brand-dot-background: #18120d;
+  --marketplace-brand-dot-text: #fffdf9;
+  --marketplace-brand-title: #1f1a14;
+  --marketplace-brand-subtitle: #746d63;
+  --marketplace-nav-shell-background: rgba(255, 253, 249, 0.94);
+  --marketplace-nav-shell-border: #e7e1d6;
+  --marketplace-nav-button-border: #e7e1d6;
+  --marketplace-nav-button-text: #3b342b;
+  --marketplace-nav-button-hover-background: #f2ece2;
+  --marketplace-nav-button-hover-border: #ddd4c8;
+  --marketplace-nav-button-active-background: #18120d;
+  --marketplace-nav-button-active-text: #fffdf9;
+  --marketplace-topbar-button-background: #fffdf9;
+  --marketplace-topbar-button-border: #e7e1d6;
+  --marketplace-topbar-button-text: #3b342b;
+  --marketplace-topbar-button-hover-background: #f2ece2;
+  --marketplace-topbar-button-primary-background: #18120d;
+  --marketplace-topbar-button-primary-text: #fffdf9;
+  --marketplace-toggle-background: #fffdf9;
+  --marketplace-toggle-border: #e7e1d6;
+  --marketplace-toggle-text: #746d63;
+  --marketplace-toggle-active-background: #18120d;
+  --marketplace-toggle-active-text: #fffdf9;
+  --marketplace-section-background: #fffdf9;
+  --marketplace-section-alt-background: #fffdf9;
+  --marketplace-section-emphasis-background: #f5f1ea;
+  --marketplace-card-border: #ddd4c8;
+  --marketplace-card-border-soft: #ece6dc;
+  --marketplace-chip-background: #f5f1ea;
+  --marketplace-chip-border: #e7e1d6;
+  --marketplace-chip-text: #746d63;
+  --marketplace-link-text: #1f1a14;
+  --marketplace-resource-link: #0072f5;
+  --marketplace-resource-link-soft: rgba(0, 114, 245, 0.08);
+  --marketplace-shadow-soft: none;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .marketplace-topbar {
+  min-height: 56px;
+  padding: 8px 0;
+  gap: 12px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .marketplace-topbar-shell {
+  backdrop-filter: blur(14px);
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .marketplace-shell-content {
+  padding-top: 8px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .marketplace-section-card,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .marketplace-panel-glow {
+  box-shadow: none;
+}

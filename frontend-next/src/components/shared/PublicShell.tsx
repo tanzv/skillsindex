@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -11,6 +11,8 @@ import { useResolvedPublicPathname } from "@/src/lib/routing/useResolvedPublicPa
 import { cn } from "@/src/lib/utils";
 import {
   buildMarketplaceTopbarSlots,
+  resolveMarketplaceShellContentWidth,
+  resolveMarketplaceShellRouteKind,
   resolveMarketplaceTopbarRoutePreset
 } from "@/src/features/public/marketplace/marketplaceTopbarSlots";
 
@@ -34,8 +36,9 @@ export function PublicShell({ children }: PublicShellProps) {
   const { locale, messages, setLocale } = usePublicI18n();
   const { isAuthenticated } = usePublicViewerSession();
   const [slots, setSlots] = useState<PublicTopbarSlots | null>(null);
-  const shellRef = useRef<HTMLDivElement | null>(null);
   const searchSuffix = buildSearchSuffix(searchParams);
+  const routeKind = useMemo(() => resolveMarketplaceShellRouteKind(corePath), [corePath]);
+  const contentWidth = useMemo(() => resolveMarketplaceShellContentWidth(routeKind), [routeKind]);
   const topbarModel = useMemo(
     () =>
       buildPublicTopbarModel({
@@ -88,26 +91,16 @@ export function PublicShell({ children }: PublicShellProps) {
     return slots ? { ...routeSlots, ...slots } : routeSlots;
   }, [routePreset, slots]);
 
-  useEffect(() => {
-    const shellNode = shellRef.current;
-    if (!shellNode) {
-      return;
-    }
-
-    const browserRouteState = splitPublicPathPrefix(window.location.pathname || resolvedPathname);
-    shellNode.classList.toggle("is-light-theme", browserRouteState.isLightTheme);
-    shellNode.classList.toggle("is-mobile-layout", browserRouteState.isMobileLayout);
-  }, [resolvedPathname]);
-
   return (
     <div
-      ref={shellRef}
       className={cn(
         "marketplace-shell",
         corePath === "/" && "is-landing-route",
         isLightTheme && "is-light-theme",
         isMobileLayout && "is-mobile-layout"
       )}
+      data-marketplace-route-kind={routeKind}
+      data-marketplace-content-width={contentWidth}
     >
       <PublicTopbar
         brandTitle={messages.shellBrandTitle}

@@ -1,5 +1,8 @@
+import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
+
 import type { SessionContext } from "@/src/lib/schemas/session";
 
+import { formatWorkspaceMessage } from "./messages";
 import type { WorkspaceAction, WorkspaceMetric, WorkspaceSnapshot } from "./types";
 
 function resolveHealthTone(score: number): WorkspaceMetric["tone"] {
@@ -14,68 +17,75 @@ function resolveHealthTone(score: number): WorkspaceMetric["tone"] {
   return "warning";
 }
 
-export function buildSummaryMetrics(snapshot: WorkspaceSnapshot, session: SessionContext): WorkspaceMetric[] {
+export function buildSummaryMetrics(
+  snapshot: WorkspaceSnapshot,
+  session: SessionContext,
+  messages: WorkspaceMessages
+): WorkspaceMetric[] {
   const activeRuns = snapshot.queueCounts.pending + snapshot.queueCounts.running;
 
   return [
     {
-      label: "Installed Skills",
+      label: messages.metricInstalledSkillsLabel,
       value: String(snapshot.metrics.installedSkills),
-      detail: `${snapshot.queueCounts.all} tracked skills are currently mounted in the workspace catalog.`,
+      detail: formatWorkspaceMessage(messages.metricInstalledSkillsDetailTemplate, { count: snapshot.queueCounts.all }),
       tone: "accent"
     },
     {
-      label: "Active Runs",
+      label: messages.metricActiveRunsLabel,
       value: String(activeRuns),
-      detail: `${snapshot.queueCounts.running} running and ${snapshot.queueCounts.pending} pending execution lanes.`,
+      detail: formatWorkspaceMessage(messages.metricActiveRunsDetailTemplate, {
+        running: snapshot.queueCounts.running,
+        pending: snapshot.queueCounts.pending
+      }),
       tone: activeRuns > 0 ? "accent" : "default"
     },
     {
-      label: "Health Score",
+      label: messages.metricHealthScoreLabel,
       value: snapshot.metrics.healthScore.toFixed(1),
-      detail: "Average quality score across the current workspace portfolio.",
+      detail: messages.metricHealthScoreDetail,
       tone: resolveHealthTone(snapshot.metrics.healthScore)
     },
     {
-      label: "Alerts",
+      label: messages.metricAlertsLabel,
       value: String(snapshot.metrics.alerts),
       detail:
         snapshot.queueCounts.risk > 0
-          ? `${snapshot.queueCounts.risk} queue items require explicit operator follow-up.`
-          : "No at-risk queue items were detected in this snapshot.",
+          ? formatWorkspaceMessage(messages.metricAlertsDetailTemplate, { count: snapshot.queueCounts.risk })
+          : messages.metricAlertsDetailEmpty,
       tone: snapshot.metrics.alerts > 0 ? "warning" : "success"
     },
     {
-      label: "Marketplace Access",
-      value: session.marketplacePublicAccess ? "Public" : "Restricted",
+      label: messages.metricMarketplaceAccessLabel,
+      value: session.marketplacePublicAccess ? messages.valuePublic : messages.valueRestricted,
       detail: session.marketplacePublicAccess
-        ? "Public discovery remains enabled for this authenticated session."
-        : "Public discovery is restricted for this authenticated session.",
+        ? messages.metricMarketplaceAccessDetailPublic
+        : messages.metricMarketplaceAccessDetailRestricted,
       tone: session.marketplacePublicAccess ? "success" : "warning"
     }
   ];
 }
 
-export function buildCommonQuickActions(): WorkspaceAction[] {
+export function buildCommonQuickActions(messages: WorkspaceMessages): WorkspaceAction[] {
   return [
-    { label: "Review Queue", href: "/workspace/queue", variant: "default" },
-    { label: "Open Policy", href: "/workspace/policy", variant: "outline" },
-    { label: "Open Sync Jobs", href: "/admin/sync-jobs", variant: "soft" },
-    { label: "Open Marketplace", href: "/", variant: "ghost" }
+    { label: messages.quickActionReviewQueue, href: "/workspace/queue", variant: "default" },
+    { label: messages.quickActionOpenPolicy, href: "/workspace/policy", variant: "outline" },
+    { label: messages.quickActionOpenSyncJobs, href: "/admin/sync-jobs", variant: "soft" },
+    { label: messages.quickActionOpenMarketplace, href: "/", variant: "ghost" }
   ];
 }
 
-export function buildOverviewQuickActions(snapshot: WorkspaceSnapshot): WorkspaceAction[] {
+export function buildOverviewQuickActions(snapshot: WorkspaceSnapshot, messages: WorkspaceMessages): WorkspaceAction[] {
   const spotlight = snapshot.spotlightEntry;
 
   return [
-    { label: "Review Queue", href: "/workspace/queue", variant: "default" },
-    { label: "Open Runbook", href: "/workspace/runbook", variant: "outline" },
+    { label: messages.quickActionReviewQueue, href: "/workspace/queue", variant: "default" },
+    { label: messages.quickActionOpenRunbook, href: "/workspace/runbook", variant: "outline" },
     {
-      label: "Inspect Focus Skill",
+      label: messages.quickActionInspectFocusSkill,
       href: spotlight ? `/skills/${spotlight.id}` : "/",
       variant: "soft"
     },
-    { label: "Admin Overview", href: "/admin/overview", variant: "ghost" }
+    { label: messages.quickActionAdminOverview, href: "/admin/overview", variant: "ghost" }
   ];
 }

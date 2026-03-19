@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { buildWorkspacePageModel, buildWorkspaceSnapshot } from "@/src/features/workspace/model";
 import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
+import { createProtectedPageTestMessages } from "./protected-page-test-messages";
 
 describe("workspace model", () => {
   it("builds a stable workspace snapshot from marketplace fallback data", () => {
@@ -113,5 +114,47 @@ describe("workspace model", () => {
     expect(checklistSection?.variant).toBe("compact-list");
     expect(checklistSection?.items.length).toBeGreaterThan(0);
     expect(model.summaryMetrics.some((metric) => metric.label === "Marketplace Access")).toBe(true);
+  });
+
+  it("applies injected workspace messages to the page model", () => {
+    const testMessages = createProtectedPageTestMessages({
+      workspace: {
+        pageEyebrow: "workspace_page_eyebrow_custom",
+        routeOverviewTitle: "workspace_route_overview_title_custom",
+        metricMarketplaceAccessLabel: "workspace_metric_marketplace_access_label_custom",
+        valueRestricted: "workspace_value_restricted_custom",
+        metricMarketplaceAccessDetailRestricted: "workspace_metric_marketplace_access_detail_restricted_custom",
+        ownerCoverageValueTemplate: "{items} coverage_custom · {risk} risk_custom"
+      }
+    });
+
+    const model = buildWorkspacePageModel(
+      "/workspace",
+      {
+        user: {
+          id: 20,
+          username: "workspace-operator",
+          displayName: "Workspace Operator",
+          role: "admin",
+          status: "active"
+        },
+        marketplacePublicAccess: false
+      },
+      buildPublicMarketplaceFallback(),
+      testMessages.workspace
+    );
+
+    expect(model.eyebrow).toBe("workspace_page_eyebrow_custom");
+    expect(model.title).toBe("workspace_route_overview_title_custom");
+    expect(model.summaryMetrics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "workspace_metric_marketplace_access_label_custom",
+          value: "workspace_value_restricted_custom",
+          detail: "workspace_metric_marketplace_access_detail_restricted_custom"
+        })
+      ])
+    );
+    expect(model.railSections.find((section) => section.id === "owner-coverage")?.items[0]?.value).toContain("coverage_custom");
   });
 });

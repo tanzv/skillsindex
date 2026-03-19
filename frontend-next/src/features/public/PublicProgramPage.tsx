@@ -9,9 +9,12 @@ import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
 import type { PublicMarketplaceResponse } from "@/src/lib/schemas/public";
 
 import { PublicNarrativeStage } from "./PublicNarrativeStage";
+import { MarketplaceCompareSelectionList } from "./marketplace/MarketplaceCompareSelectionList";
 import type { PublicProgramPageKey } from "./publicProgramModel";
 import { resolvePublicProgramDescriptor } from "./publicProgramModel";
 import { MarketplaceSkillCard } from "./marketplace/MarketplaceSkillCard";
+import { MarketplaceSupportLinkList } from "./marketplace/MarketplaceSupportLinkList";
+import { createMarketplaceSearchHref } from "./marketplace/searchHistory";
 import {
   formatCompactMarketplaceNumber,
   resolveFeaturedMarketplaceItems,
@@ -103,20 +106,14 @@ export function PublicProgramPage({ pageKey, marketplace }: PublicProgramPagePro
         description:
           pageKey === "governance" ? messages.rankingCategoryLeadersDescription : messages.resultsCategoryPivotsDescription,
         content: (
-          <div className="marketplace-simple-link-list">
-            {topCategories.map((category) => (
-              <Link
-                key={category.slug}
-                href={toPublicPath(`/categories/${category.slug}`)}
-                className="marketplace-simple-link-item"
-              >
-                <span className="marketplace-sidebar-link">{category.name}</span>
-                <span className="marketplace-meta-text">
-                  {category.count} {messages.skillCountSuffix}
-                </span>
-              </Link>
-            ))}
-          </div>
+          <MarketplaceSupportLinkList
+            items={topCategories.map((category) => ({
+              key: category.slug,
+              href: toPublicPath(`/categories/${category.slug}`),
+              label: category.name,
+              meta: `${category.count} ${messages.skillCountSuffix}`
+            }))}
+          />
         ),
         testId: `public-program-${pageKey}-categories`
       }
@@ -146,24 +143,34 @@ export function PublicProgramPage({ pageKey, marketplace }: PublicProgramPagePro
         title: messages.programContinueTitle,
         description: messages.landingContinueDescription,
         content: (
-          <div className="marketplace-simple-link-list">
-            <Link href={toPublicPath("/")} className="marketplace-simple-link-item">
-              <span className="marketplace-sidebar-link">{messages.shellHome}</span>
-              <span className="marketplace-meta-text">{messages.stageLanding}</span>
-            </Link>
-            <Link href={toPublicPath("/categories")} className="marketplace-simple-link-item">
-              <span className="marketplace-sidebar-link">{messages.landingContinueCategories}</span>
-              <span className="marketplace-meta-text">{messages.shellCategories}</span>
-            </Link>
-            <Link href={toPublicPath("/rankings")} className="marketplace-simple-link-item">
-              <span className="marketplace-sidebar-link">{messages.landingContinueRankings}</span>
-              <span className="marketplace-meta-text">{messages.shellRankings}</span>
-            </Link>
-            <Link href="/workspace" className="marketplace-simple-link-item">
-              <span className="marketplace-sidebar-link">{messages.shellWorkspace}</span>
-              <span className="marketplace-meta-text">{messages.stageAccess}</span>
-            </Link>
-          </div>
+          <MarketplaceSupportLinkList
+            items={[
+              {
+                key: `${pageKey}-home`,
+                href: toPublicPath("/"),
+                label: messages.shellHome,
+                meta: messages.stageLanding
+              },
+              {
+                key: `${pageKey}-categories`,
+                href: toPublicPath("/categories"),
+                label: messages.landingContinueCategories,
+                meta: messages.shellCategories
+              },
+              {
+                key: `${pageKey}-rankings`,
+                href: toPublicPath("/rankings"),
+                label: messages.landingContinueRankings,
+                meta: messages.shellRankings
+              },
+              {
+                key: `${pageKey}-workspace`,
+                href: "/workspace",
+                label: messages.shellWorkspace,
+                meta: messages.stageAccess
+              }
+            ]}
+          />
         ),
         testId: `public-program-${pageKey}-continue`
       },
@@ -173,22 +180,29 @@ export function PublicProgramPage({ pageKey, marketplace }: PublicProgramPagePro
         description: pageKey === "timeline" ? messages.timelineDescription : messages.resultsDiscoveryNotesDescription,
         content: (
           <div className="marketplace-list-stack">
-            {topTags.map((tag) => (
-              <div key={tag.name} className="marketplace-compare-card">
-                <div className="marketplace-simple-link-item">
-                  <span className="marketplace-sidebar-link">{tag.name}</span>
-                  <span className="marketplace-meta-text">
-                    {tag.count} {messages.skillCountSuffix}
-                  </span>
-                </div>
-              </div>
-            ))}
+            <MarketplaceSupportLinkList
+              items={topTags.map((tag) => ({
+                key: tag.name,
+                href: createMarketplaceSearchHref(toPublicPath("/results"), "", tag.name),
+                label: tag.name,
+                meta: `${tag.count} ${messages.skillCountSuffix}`
+              }))}
+            />
             {leadingSkill ? (
-              <div className="marketplace-compare-card">
-                <p className="marketplace-kicker">{messages.skillUpdatedPrefix}</p>
-                <h3 className="marketplace-skill-name">{leadingSkill.name}</h3>
-                <p className="marketplace-skill-description">{formatPublicDate(leadingSkill.updated_at, locale)}</p>
-              </div>
+              <MarketplaceCompareSelectionList
+                items={[
+                  {
+                    key: `${pageKey}-leading-skill`,
+                    label: messages.skillUpdatedPrefix,
+                    title: leadingSkill.name,
+                    description: formatPublicDate(leadingSkill.updated_at, locale),
+                    metrics: [
+                      `${formatCompactMarketplaceNumber(leadingSkill.star_count)} ${messages.skillStarsSuffix}`,
+                      `${leadingSkill.quality_score.toFixed(1)} ${messages.skillQualitySuffix}`
+                    ]
+                  }
+                ]}
+              />
             ) : null}
           </div>
         ),
@@ -209,6 +223,8 @@ export function PublicProgramPage({ pageKey, marketplace }: PublicProgramPagePro
       messages.shellRankings,
       messages.shellWorkspace,
       messages.skillCountSuffix,
+      messages.skillQualitySuffix,
+      messages.skillStarsSuffix,
       messages.skillUpdatedPrefix,
       messages.stageAccess,
       messages.stageLanding,

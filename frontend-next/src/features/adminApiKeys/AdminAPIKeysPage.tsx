@@ -2,15 +2,20 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { AdminEmptyBlock, AdminMessageBanner, AdminMetaChipList } from "@/src/components/admin/AdminPrimitives";
 import { ErrorState } from "@/src/components/shared/ErrorState";
 import { PageHeader } from "@/src/components/shared/PageHeader";
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
+import { Select } from "@/src/components/ui/select";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveApiKeyStatusLabel, resolveApiKeyStatusTone } from "@/src/lib/apiKeyDisplay";
+import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
-import { buildKeyMeta, buildAdminAPIKeyOverview, normalizeAdminAPIKeysPayload } from "./model";
+import { buildAdminAPIKeyOverview, buildKeyMeta, normalizeAdminAPIKeysPayload } from "./model";
 
 function buildPath(filters: { owner: string; status: string }) {
   const params = new URLSearchParams();
@@ -25,6 +30,9 @@ function buildPath(filters: { owner: string; status: string }) {
 }
 
 export function AdminAPIKeysPage() {
+  const { locale, messages } = useProtectedI18n();
+  const commonMessages = messages.adminCommon;
+  const apiKeyMessages = messages.adminApiKeys;
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
@@ -42,7 +50,24 @@ export function AdminAPIKeysPage() {
   const [plaintextSecret, setPlaintextSecret] = useState("");
 
   const payload = useMemo(() => normalizeAdminAPIKeysPayload(rawPayload), [rawPayload]);
-  const overview = useMemo(() => buildAdminAPIKeyOverview(payload), [payload]);
+  const overview = useMemo(
+    () =>
+      buildAdminAPIKeyOverview(payload, {
+        metricTotalKeys: apiKeyMessages.metricTotalKeys,
+        metricActiveKeys: apiKeyMessages.metricActiveKeys,
+        metricRevokedKeys: apiKeyMessages.metricRevokedKeys,
+        metricExpiredKeys: apiKeyMessages.metricExpiredKeys,
+        ownerUnknown: apiKeyMessages.ownerUnknown
+      }),
+    [
+      apiKeyMessages.metricActiveKeys,
+      apiKeyMessages.metricExpiredKeys,
+      apiKeyMessages.metricRevokedKeys,
+      apiKeyMessages.metricTotalKeys,
+      apiKeyMessages.ownerUnknown,
+      payload
+    ]
+  );
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -58,12 +83,12 @@ export function AdminAPIKeysPage() {
         }, {})
       );
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load admin api keys.");
+      setError(loadError instanceof Error ? loadError.message : apiKeyMessages.loadError);
       setRawPayload(null);
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [apiKeyMessages.loadError, filters]);
 
   useEffect(() => {
     void loadData();
@@ -92,7 +117,7 @@ export function AdminAPIKeysPage() {
             .filter(Boolean)
         }
       });
-      setMessage("API key created.");
+      setMessage(apiKeyMessages.createSuccess);
       setPlaintextSecret(payload.plaintext_key || "");
       setCreateDraft({
         name: "",
@@ -103,7 +128,7 @@ export function AdminAPIKeysPage() {
       });
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to create api key.");
+      setError(actionError instanceof Error ? actionError.message : apiKeyMessages.createError);
     } finally {
       setBusyAction("");
     }
@@ -114,10 +139,10 @@ export function AdminAPIKeysPage() {
     setBusyAction(`revoke-${keyId}`);
     try {
       await clientFetchJSON(`/api/bff/admin/apikeys/${keyId}/revoke`, { method: "POST" });
-      setMessage(`API key ${keyId} revoked.`);
+      setMessage(formatProtectedMessage(apiKeyMessages.revokeSuccess, { keyId }));
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to revoke api key.");
+      setError(actionError instanceof Error ? actionError.message : apiKeyMessages.revokeError);
     } finally {
       setBusyAction("");
     }
@@ -128,11 +153,11 @@ export function AdminAPIKeysPage() {
     setBusyAction(`rotate-${keyId}`);
     try {
       const payload = await clientFetchJSON<{ plaintext_key?: string }>(`/api/bff/admin/apikeys/${keyId}/rotate`, { method: "POST" });
-      setMessage(`API key ${keyId} rotated.`);
+      setMessage(formatProtectedMessage(apiKeyMessages.rotateSuccess, { keyId }));
       setPlaintextSecret(payload.plaintext_key || "");
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to rotate api key.");
+      setError(actionError instanceof Error ? actionError.message : apiKeyMessages.rotateError);
     } finally {
       setBusyAction("");
     }
@@ -151,10 +176,10 @@ export function AdminAPIKeysPage() {
             .filter(Boolean)
         }
       });
-      setMessage(`Scopes updated for API key ${keyId}.`);
+      setMessage(formatProtectedMessage(apiKeyMessages.updateScopesSuccess, { keyId }));
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to update api key scopes.");
+      setError(actionError instanceof Error ? actionError.message : apiKeyMessages.updateScopesError);
     } finally {
       setBusyAction("");
     }
@@ -163,17 +188,19 @@ export function AdminAPIKeysPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Admin"
-        title="API Keys"
-        description="Create, rotate, revoke, and re-scope admin API keys from a dedicated credential governance page."
-        actions={<Button onClick={() => void loadData()}>{loading ? "Refreshing..." : "Refresh"}</Button>}
+        eyebrow={commonMessages.adminEyebrow}
+        title={apiKeyMessages.pageTitle}
+        description={apiKeyMessages.pageDescription}
+        actions={<Button onClick={() => void loadData()}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>}
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {overview.metrics.map((metric) => (
           <Card key={metric.label}>
             <CardHeader className="gap-2 p-5">
-              <CardDescription className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{metric.label}</CardDescription>
+              <CardDescription className="text-[11px] uppercase tracking-[0.16em] text-[color:var(--ui-text-muted)]">
+                {metric.label}
+              </CardDescription>
               <CardTitle className="text-base">{metric.value}</CardTitle>
             </CardHeader>
           </Card>
@@ -181,66 +208,87 @@ export function AdminAPIKeysPage() {
       </div>
 
       {error ? <ErrorState description={error} /> : null}
-      {message ? <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">{message}</div> : null}
+      {message ? <AdminMessageBanner message={message} /> : null}
       {plaintextSecret ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">One-time token: {plaintextSecret}</div>
+        <div className="rounded-2xl border border-[color:var(--ui-success-border)] bg-[color:var(--ui-success-bg)] px-4 py-3 text-sm text-[color:var(--ui-success-text)]">
+          {formatProtectedMessage(apiKeyMessages.plaintextSecretTemplate, { plaintextSecret })}
+        </div>
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Key Inventory</CardTitle>
-              <CardDescription>Filter by owner or lifecycle status before operating on a credential.</CardDescription>
+              <CardTitle>{apiKeyMessages.inventoryTitle}</CardTitle>
+              <CardDescription>{apiKeyMessages.inventoryDescription}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-3 md:grid-cols-[1fr_180px_auto]">
-                <Input value={filters.owner} placeholder="Owner username or ID" onChange={(event) => setFilters((current) => ({ ...current, owner: event.target.value }))} />
-                <select className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900" value={filters.status} onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}>
-                  <option value="all">all</option>
-                  <option value="active">active</option>
-                  <option value="revoked">revoked</option>
-                  <option value="expired">expired</option>
-                </select>
+                <Input
+                  aria-label={apiKeyMessages.filterOwnerAriaLabel}
+                  value={filters.owner}
+                  placeholder={apiKeyMessages.filterOwnerPlaceholder}
+                  onChange={(event) => setFilters((current) => ({ ...current, owner: event.target.value }))}
+                />
+                <Select
+                  aria-label={apiKeyMessages.filterStatusAriaLabel}
+                  value={filters.status}
+                  onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
+                >
+                  <option value="all">{apiKeyMessages.filterStatusOptionAll}</option>
+                  <option value="active">{apiKeyMessages.filterStatusOptionActive}</option>
+                  <option value="revoked">{apiKeyMessages.filterStatusOptionRevoked}</option>
+                  <option value="expired">{apiKeyMessages.filterStatusOptionExpired}</option>
+                </Select>
                 <Button variant="outline" onClick={() => setFilters({ owner: "", status: "all" })}>
-                  Clear
+                  {commonMessages.clear}
                 </Button>
               </div>
 
               <div className="space-y-3">
                 {payload.items.map((item) => (
-                  <div key={item.id} data-testid={`admin-apikey-card-${item.id}`} className="rounded-2xl border border-slate-200 p-4">
+                  <div
+                    key={item.id}
+                    data-testid={`admin-apikey-card-${item.id}`}
+                    className="rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-bg)] p-4"
+                  >
                     <div className="space-y-4">
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="space-y-2">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-sm font-semibold text-slate-950">{item.name}</span>
-                            <Badge variant={item.status.toLowerCase() === "active" ? "soft" : "outline"}>{item.status}</Badge>
-                            <Badge variant="outline">{item.ownerUsername}</Badge>
+                            <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">
+                              {item.name || apiKeyMessages.unnamedKey}
+                            </span>
+                            <Badge variant={resolveApiKeyStatusTone(item.status)}>
+                              {resolveApiKeyStatusLabel(item.status, apiKeyMessages)}
+                            </Badge>
+                            <Badge variant="outline">{item.ownerUsername || apiKeyMessages.ownerUnknown}</Badge>
                           </div>
-                          <div className="text-sm text-slate-600">{item.purpose || "No purpose"}</div>
-                          <div className="flex flex-wrap gap-2">
-                            {buildKeyMeta(item).map((meta) => (
-                              <span key={`${item.id}-${meta}`} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-500">
-                                {meta}
-                              </span>
-                            ))}
-                          </div>
+                          <div className="text-sm text-[color:var(--ui-text-secondary)]">{item.purpose || apiKeyMessages.noPurpose}</div>
+                          <AdminMetaChipList
+                            items={buildKeyMeta(item, locale, {
+                              valueNotAvailable: apiKeyMessages.valueNotAvailable,
+                              metaPrefixTemplate: apiKeyMessages.metaPrefixTemplate,
+                              metaCreatedTemplate: apiKeyMessages.metaCreatedTemplate,
+                              metaUpdatedTemplate: apiKeyMessages.metaUpdatedTemplate,
+                              metaLastUsedTemplate: apiKeyMessages.metaLastUsedTemplate
+                            })}
+                          />
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <Button size="sm" variant="outline" onClick={() => void rotateKey(item.id)} disabled={Boolean(busyAction)}>
-                            {busyAction === `rotate-${item.id}` ? "Rotating..." : "Rotate"}
+                            {busyAction === `rotate-${item.id}` ? apiKeyMessages.rotatingAction : apiKeyMessages.rotateAction}
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => void revokeKey(item.id)} disabled={Boolean(busyAction)}>
-                            {busyAction === `revoke-${item.id}` ? "Revoking..." : "Revoke"}
+                            {busyAction === `revoke-${item.id}` ? apiKeyMessages.revokingAction : apiKeyMessages.revokeAction}
                           </Button>
                         </div>
                       </div>
 
                       <Input
-                        aria-label="API key scopes"
+                        aria-label={apiKeyMessages.scopeInputAriaLabel}
                         value={scopeDrafts[item.id] || ""}
-                        placeholder="Comma-separated scopes"
+                        placeholder={apiKeyMessages.scopeInputPlaceholder}
                         onChange={(event) =>
                           setScopeDrafts((current) => ({
                             ...current,
@@ -249,14 +297,14 @@ export function AdminAPIKeysPage() {
                         }
                       />
                       <Button size="sm" onClick={() => void updateScopes(item.id)} disabled={Boolean(busyAction)}>
-                        {busyAction === `scopes-${item.id}` ? "Saving..." : "Apply Scopes"}
+                        {busyAction === `scopes-${item.id}` ? apiKeyMessages.savingScopesAction : apiKeyMessages.applyScopesAction}
                       </Button>
                     </div>
                   </div>
                 ))}
 
                 {!payload.items.length && !loading ? (
-                  <div className="rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">No API keys matched the current filter.</div>
+                  <AdminEmptyBlock>{apiKeyMessages.inventoryEmpty}</AdminEmptyBlock>
                 ) : null}
               </div>
             </CardContent>
@@ -266,31 +314,59 @@ export function AdminAPIKeysPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Create API Key</CardTitle>
-              <CardDescription>Create a new admin API key for the current or target owner.</CardDescription>
+              <CardTitle>{apiKeyMessages.createTitle}</CardTitle>
+              <CardDescription>{apiKeyMessages.createDescription}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Input aria-label="Create key name" value={createDraft.name} placeholder="Key name" onChange={(event) => setCreateDraft((current) => ({ ...current, name: event.target.value }))} />
-              <Input aria-label="Create key purpose" value={createDraft.purpose} placeholder="Purpose" onChange={(event) => setCreateDraft((current) => ({ ...current, purpose: event.target.value }))} />
-              <Input aria-label="Create key owner user ID" value={createDraft.ownerUserId} placeholder="Owner user ID" onChange={(event) => setCreateDraft((current) => ({ ...current, ownerUserId: event.target.value }))} />
-              <Input aria-label="Create key expires in days" value={createDraft.expiresInDays} placeholder="Expires in days" onChange={(event) => setCreateDraft((current) => ({ ...current, expiresInDays: event.target.value }))} />
-              <Input aria-label="Create key scopes" value={createDraft.scopes} placeholder="Comma-separated scopes" onChange={(event) => setCreateDraft((current) => ({ ...current, scopes: event.target.value }))} />
+              <Input
+                aria-label={apiKeyMessages.createNameAriaLabel}
+                value={createDraft.name}
+                placeholder={apiKeyMessages.createNamePlaceholder}
+                onChange={(event) => setCreateDraft((current) => ({ ...current, name: event.target.value }))}
+              />
+              <Input
+                aria-label={apiKeyMessages.createPurposeAriaLabel}
+                value={createDraft.purpose}
+                placeholder={apiKeyMessages.createPurposePlaceholder}
+                onChange={(event) => setCreateDraft((current) => ({ ...current, purpose: event.target.value }))}
+              />
+              <Input
+                aria-label={apiKeyMessages.createOwnerUserIdAriaLabel}
+                value={createDraft.ownerUserId}
+                placeholder={apiKeyMessages.createOwnerUserIdPlaceholder}
+                onChange={(event) => setCreateDraft((current) => ({ ...current, ownerUserId: event.target.value }))}
+              />
+              <Input
+                aria-label={apiKeyMessages.createExpiresInDaysAriaLabel}
+                value={createDraft.expiresInDays}
+                placeholder={apiKeyMessages.createExpiresInDaysPlaceholder}
+                onChange={(event) => setCreateDraft((current) => ({ ...current, expiresInDays: event.target.value }))}
+              />
+              <Input
+                aria-label={apiKeyMessages.createScopesAriaLabel}
+                value={createDraft.scopes}
+                placeholder={apiKeyMessages.createScopesPlaceholder}
+                onChange={(event) => setCreateDraft((current) => ({ ...current, scopes: event.target.value }))}
+              />
               <Button onClick={() => void createKey()} disabled={Boolean(busyAction)}>
-                {busyAction === "create-key" ? "Creating..." : "Create Key"}
+                {busyAction === "create-key" ? apiKeyMessages.creatingAction : apiKeyMessages.createAction}
               </Button>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Owner Summary</CardTitle>
-              <CardDescription>Top key owners across the currently loaded inventory.</CardDescription>
+              <CardTitle>{apiKeyMessages.ownerSummaryTitle}</CardTitle>
+              <CardDescription>{apiKeyMessages.ownerSummaryDescription}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {overview.ownerSummary.map((item) => (
-                <div key={item.owner} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                  <span className="text-sm text-slate-700">{item.owner}</span>
-                  <span className="text-sm font-semibold text-slate-950">{item.count}</span>
+                <div
+                  key={item.owner}
+                  className="flex items-center justify-between rounded-2xl bg-[color:var(--ui-card-muted-bg)] px-4 py-3"
+                >
+                  <span className="text-sm text-[color:var(--ui-text-secondary)]">{item.owner}</span>
+                  <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">{item.count}</span>
                 </div>
               ))}
             </CardContent>

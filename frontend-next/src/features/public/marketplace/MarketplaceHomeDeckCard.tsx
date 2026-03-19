@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { PublicLink } from "@/src/components/shared/PublicLink";
 
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
-import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
 import type { MarketplaceSkill } from "@/src/lib/schemas/public";
 
 import { buildMarketplaceCoverLabel, buildMarketplaceDeckChips, buildMarketplaceMetaSegments } from "./marketplaceCardViewModel";
@@ -16,12 +15,16 @@ const homeDeckBadgeLabel = "HD";
 
 export function MarketplaceHomeDeckCard({ item }: MarketplaceHomeDeckCardProps) {
   const { locale, messages } = usePublicI18n();
-  const { toPublicPath } = usePublicRouteState();
   const chips = buildMarketplaceDeckChips(item);
   const metaSegments = buildMarketplaceMetaSegments(item, messages, locale, 3);
 
   return (
-    <Link href={toPublicPath(`/skills/${item.id}`)} className="marketplace-skill-link marketplace-home-deck-link" aria-label={item.name}>
+    <PublicLink
+      href={`/skills/${item.id}`}
+      className="marketplace-skill-link marketplace-home-deck-link"
+      aria-label={item.name}
+      warmOnViewport
+    >
       <article className="marketplace-skill-row marketplace-home-deck-card">
         <div className="marketplace-card-head">
           <span className="marketplace-card-cover" aria-hidden="true">
@@ -53,6 +56,6 @@ export function MarketplaceHomeDeckCard({ item }: MarketplaceHomeDeckCardProps) 
           </div>
         </div>
       </article>
-    </Link>
+    </PublicLink>
   );
 }

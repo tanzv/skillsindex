@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { AdminEmptyBlock, AdminInsetBlock, AdminMessageBanner, AdminMetricGrid, AdminRecordCard } from "@/src/components/admin/AdminPrimitives";
 import { ErrorState } from "@/src/components/shared/ErrorState";
 import { PageHeader } from "@/src/components/shared/PageHeader";
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -14,60 +16,107 @@ import {
   buildOpsAlertsOverview,
   buildOpsMetricCards,
   buildOpsReleaseGatesOverview,
+  type OpsAlertItem,
+  type OpsReleaseGateSnapshot,
+  type OpsMetricItem,
   normalizeOpsAlertsPayload,
   normalizeOpsMetricsPayload,
   normalizeOpsReleaseGatesPayload
 } from "./model";
+import {
+  resolveAlertCodeLabel,
+  resolveOpsAlertMessage,
+  resolveOpsReleaseGateMessage,
+  resolveOpsSeverityLabel,
+  resolveReleaseGateBadgeLabel,
+  resolveReleaseGateCodeLabel
+} from "./display";
 
 type OperationsDashboardRoute = Extract<
   AdminOperationsRoute,
   "/admin/ops/metrics" | "/admin/ops/alerts" | "/admin/ops/release-gates"
 >;
 
-const routeMeta: Record<OperationsDashboardRoute, { title: string; description: string; endpoint: string; runEndpoint?: string }> = {
-  "/admin/ops/metrics": {
-    title: "Operations Metrics",
-    description: "Track reliability, queue, moderation, and integration pressure from a structured operating baseline.",
-    endpoint: "/api/bff/admin/ops/metrics"
-  },
-  "/admin/ops/alerts": {
-    title: "Operations Alerts",
-    description: "Review derived operational alerts and concentrate on currently triggered or critical signals.",
-    endpoint: "/api/bff/admin/ops/alerts"
-  },
-  "/admin/ops/release-gates": {
-    title: "Release Gates",
-    description: "Inspect current release readiness checks and run a fresh evaluation on demand.",
-    endpoint: "/api/bff/admin/ops/release-gates",
-    runEndpoint: "/api/bff/admin/ops/release-gates/run"
+function resolveDashboardRouteMeta(
+  route: OperationsDashboardRoute,
+  messages: ReturnType<typeof useProtectedI18n>["messages"]["adminOperations"]
+) {
+  switch (route) {
+    case "/admin/ops/alerts":
+      return {
+        title: messages.routeAlertsTitle,
+        description: messages.routeAlertsDescription,
+        endpoint: "/api/bff/admin/ops/alerts"
+      };
+    case "/admin/ops/release-gates":
+      return {
+        title: messages.routeReleaseGatesTitle,
+        description: messages.routeReleaseGatesDescription,
+        endpoint: "/api/bff/admin/ops/release-gates",
+        runEndpoint: "/api/bff/admin/ops/release-gates/run"
+      };
+    case "/admin/ops/metrics":
+    default:
+      return {
+        title: messages.routeMetricsTitle,
+        description: messages.routeMetricsDescription,
+        endpoint: "/api/bff/admin/ops/metrics"
+      };
   }
-};
+}
 
 function severityClasses(severity: string) {
   const normalized = severity.toLowerCase();
   if (normalized === "critical" || normalized === "high" || normalized === "blocked") {
-    return "bg-rose-100 text-rose-900";
+    return "border-[color:var(--ui-danger-border)] bg-[color:var(--ui-danger-bg)] text-[color:var(--ui-danger-text)]";
   }
   if (normalized === "warning") {
-    return "bg-amber-100 text-amber-900";
+    return "border-[color:var(--ui-warning-border)] bg-[color:var(--ui-warning-bg)] text-[color:var(--ui-warning-text)]";
   }
   if (normalized === "passed" || normalized === "active" || normalized === "normal") {
-    return "bg-sky-100 text-sky-900";
+    return "border-[color:var(--ui-success-border)] bg-[color:var(--ui-success-bg)] text-[color:var(--ui-success-text)]";
   }
-  return "bg-slate-100 text-slate-700";
+  return "border-[color:var(--ui-control-border)] bg-[color:var(--ui-control-bg)] text-[color:var(--ui-text-secondary)]";
+}
+
+function formatMetricSeverity(
+  severity: OpsMetricItem["openIncidents"] extends never ? never : "normal" | "warning" | "critical",
+  messages: ReturnType<typeof useProtectedI18n>["messages"]["adminOperations"]
+) {
+  switch (severity) {
+    case "critical":
+      return messages.severityCritical;
+    case "warning":
+      return messages.severityWarning;
+    case "normal":
+    default:
+      return messages.severityNormal;
+  }
 }
 
 export function AdminOperationsPage({ route }: { route: OperationsDashboardRoute }) {
-  const meta = routeMeta[route];
+  const { locale, messages } = useProtectedI18n();
+  const commonMessages = messages.adminCommon;
+  const operationsMessages = messages.adminOperations;
+  const meta = useMemo(() => resolveDashboardRouteMeta(route, operationsMessages), [operationsMessages, route]);
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [rawPayload, setRawPayload] = useState<unknown>(null);
 
-  const metricsPayload = useMemo(() => (route === "/admin/ops/metrics" ? normalizeOpsMetricsPayload(rawPayload) : null), [rawPayload, route]);
-  const alertPayload = useMemo(() => (route === "/admin/ops/alerts" ? normalizeOpsAlertsPayload(rawPayload) : null), [rawPayload, route]);
-  const releaseGatePayload = useMemo(() => (route === "/admin/ops/release-gates" ? normalizeOpsReleaseGatesPayload(rawPayload) : null), [rawPayload, route]);
+  const metricsPayload = useMemo<OpsMetricItem | null>(
+    () => (route === "/admin/ops/metrics" ? normalizeOpsMetricsPayload(rawPayload) : null),
+    [rawPayload, route]
+  );
+  const alertPayload = useMemo<{ total: number; items: OpsAlertItem[] } | null>(
+    () => (route === "/admin/ops/alerts" ? normalizeOpsAlertsPayload(rawPayload) : null),
+    [rawPayload, route]
+  );
+  const releaseGatePayload = useMemo<OpsReleaseGateSnapshot | null>(
+    () => (route === "/admin/ops/release-gates" ? normalizeOpsReleaseGatesPayload(rawPayload) : null),
+    [rawPayload, route]
+  );
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -76,12 +125,12 @@ export function AdminOperationsPage({ route }: { route: OperationsDashboardRoute
       const payload = await clientFetchJSON(meta.endpoint);
       setRawPayload(payload);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load operations data.");
+      setError(loadError instanceof Error ? loadError.message : operationsMessages.dashboardLoadError);
       setRawPayload(null);
     } finally {
       setLoading(false);
     }
-  }, [meta.endpoint]);
+  }, [meta.endpoint, operationsMessages.dashboardLoadError]);
 
   useEffect(() => {
     void loadData();
@@ -97,38 +146,68 @@ export function AdminOperationsPage({ route }: { route: OperationsDashboardRoute
     try {
       const payload = await clientFetchJSON(meta.runEndpoint, { method: "POST" });
       setRawPayload(payload);
-      setMessage("Release gates executed.");
+      setMessage(operationsMessages.releaseGatesRunSuccess);
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to execute release gates.");
+      setError(actionError instanceof Error ? actionError.message : operationsMessages.releaseGatesRunError);
     } finally {
       setBusyAction("");
     }
   }
 
-  const metricCards = metricsPayload ? buildOpsMetricCards(metricsPayload) : [];
-  const alertOverview = alertPayload ? buildOpsAlertsOverview(alertPayload) : null;
-  const releaseOverview = releaseGatePayload ? buildOpsReleaseGatesOverview(releaseGatePayload) : null;
+  const metricCards = metricsPayload
+    ? buildOpsMetricCards(metricsPayload, {
+        metricOpenIncidentsLabel: operationsMessages.metricOpenIncidentsLabel,
+        metricOpenIncidentsDescription: operationsMessages.metricOpenIncidentsDescription,
+        metricPendingModerationLabel: operationsMessages.metricPendingModerationLabel,
+        metricPendingModerationDescription: operationsMessages.metricPendingModerationDescription,
+        metricUnresolvedJobsLabel: operationsMessages.metricUnresolvedJobsLabel,
+        metricUnresolvedJobsDescription: operationsMessages.metricUnresolvedJobsDescription,
+        metricFailedSyncRunsLabel: operationsMessages.metricFailedSyncRunsLabel,
+        metricFailedSyncRunsDescription: operationsMessages.metricFailedSyncRunsDescription,
+        metricDisabledAccountsLabel: operationsMessages.metricDisabledAccountsLabel,
+        metricDisabledAccountsDescription: operationsMessages.metricDisabledAccountsDescription,
+        metricStaleIntegrationsLabel: operationsMessages.metricStaleIntegrationsLabel,
+        metricStaleIntegrationsDescription: operationsMessages.metricStaleIntegrationsDescription
+      })
+    : [];
+  const alertOverview = alertPayload
+    ? buildOpsAlertsOverview(alertPayload, {
+        alertsMetricTotalLabel: operationsMessages.alertsMetricTotalLabel,
+        alertsMetricTriggeredLabel: operationsMessages.alertsMetricTriggeredLabel,
+        alertsMetricCriticalLabel: operationsMessages.alertsMetricCriticalLabel
+      })
+    : null;
+  const releaseOverview = releaseGatePayload
+    ? buildOpsReleaseGatesOverview(releaseGatePayload, locale, {
+        releaseGatesMetricChecksLabel: operationsMessages.releaseGatesMetricChecksLabel,
+        releaseGatesMetricPassedLabel: operationsMessages.releaseGatesMetricPassedLabel,
+        releaseGatesMetricBlockedLabel: operationsMessages.releaseGatesMetricBlockedLabel,
+        valueNotAvailable: operationsMessages.valueNotAvailable,
+        statePassed: operationsMessages.statePassed,
+        stateBlocked: operationsMessages.stateBlocked
+      })
+    : null;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Admin"
+        eyebrow={commonMessages.adminEyebrow}
         title={meta.title}
         description={meta.description}
         actions={
           <>
             {meta.runEndpoint ? (
               <Button variant="outline" onClick={() => void runReleaseGates()} disabled={Boolean(busyAction)}>
-                {busyAction === "run-release-gates" ? "Running..." : "Run Gates"}
+                {busyAction === "run-release-gates" ? operationsMessages.runningGatesAction : operationsMessages.runGatesAction}
               </Button>
             ) : null}
-            <Button onClick={() => void loadData()}>{loading ? "Refreshing..." : "Refresh"}</Button>
+            <Button onClick={() => void loadData()}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>
           </>
         }
       />
 
       {error ? <ErrorState description={error} /> : null}
-      {message ? <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">{message}</div> : null}
+      {message ? <AdminMessageBanner message={message} /> : null}
 
       {route === "/admin/ops/metrics" ? (
         <>
@@ -137,13 +216,15 @@ export function AdminOperationsPage({ route }: { route: OperationsDashboardRoute
               <Card key={metric.label}>
                 <CardHeader className="gap-2 p-5">
                   <div className="flex items-center justify-between gap-3">
-                    <CardDescription className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{metric.label}</CardDescription>
-                    <Badge className={severityClasses(metric.severity)}>{metric.severity}</Badge>
+                    <CardDescription className="text-[11px] uppercase tracking-[0.16em] text-[color:var(--ui-text-muted)]">{metric.label}</CardDescription>
+                    <Badge variant="outline" className={severityClasses(metric.severity)}>
+                      {formatMetricSeverity(metric.severity, operationsMessages)}
+                    </Badge>
                   </div>
                   <CardTitle className="text-2xl">{metric.value}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-slate-600">{metric.description}</p>
+                  <p className="text-sm text-[color:var(--ui-text-secondary)]">{metric.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -152,22 +233,28 @@ export function AdminOperationsPage({ route }: { route: OperationsDashboardRoute
           <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
             <Card>
               <CardHeader>
-                <CardTitle>Telemetry Context</CardTitle>
-                <CardDescription>Secondary baseline data that explains current operating pressure.</CardDescription>
+                <CardTitle>{operationsMessages.telemetryContextTitle}</CardTitle>
+                <CardDescription>{operationsMessages.telemetryContextDescription}</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3 md:grid-cols-3">
-                <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <div className="text-xs uppercase tracking-[0.16em] text-slate-400">Audit Logs 24h</div>
-                  <div className="mt-2 text-lg font-semibold text-slate-950">{metricsPayload?.totalAuditLogs24h || 0}</div>
-                </div>
-                <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <div className="text-xs uppercase tracking-[0.16em] text-slate-400">Sync Runs 24h</div>
-                  <div className="mt-2 text-lg font-semibold text-slate-950">{metricsPayload?.totalSyncRuns24h || 0}</div>
-                </div>
-                <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <div className="text-xs uppercase tracking-[0.16em] text-slate-400">Retention Days</div>
-                  <div className="mt-2 text-lg font-semibold text-slate-950">{metricsPayload?.retentionDays || 0}</div>
-                </div>
+                <AdminInsetBlock>
+                  <div className="text-xs uppercase tracking-[0.16em] text-[color:var(--ui-text-muted)]">
+                    {operationsMessages.telemetryAuditLogs24hLabel}
+                  </div>
+                  <div className="mt-2 text-lg font-semibold text-[color:var(--ui-text-primary)]">{metricsPayload?.totalAuditLogs24h || 0}</div>
+                </AdminInsetBlock>
+                <AdminInsetBlock>
+                  <div className="text-xs uppercase tracking-[0.16em] text-[color:var(--ui-text-muted)]">
+                    {operationsMessages.telemetrySyncRuns24hLabel}
+                  </div>
+                  <div className="mt-2 text-lg font-semibold text-[color:var(--ui-text-primary)]">{metricsPayload?.totalSyncRuns24h || 0}</div>
+                </AdminInsetBlock>
+                <AdminInsetBlock>
+                  <div className="text-xs uppercase tracking-[0.16em] text-[color:var(--ui-text-muted)]">
+                    {operationsMessages.telemetryRetentionDaysLabel}
+                  </div>
+                  <div className="mt-2 text-lg font-semibold text-[color:var(--ui-text-primary)]">{metricsPayload?.retentionDays || 0}</div>
+                </AdminInsetBlock>
               </CardContent>
             </Card>
           </div>
@@ -176,40 +263,39 @@ export function AdminOperationsPage({ route }: { route: OperationsDashboardRoute
 
       {route === "/admin/ops/alerts" ? (
         <>
-          <div className="grid gap-4 md:grid-cols-3">
-            {alertOverview?.metrics.map((metric) => (
-              <Card key={metric.label}>
-                <CardHeader className="gap-2 p-5">
-                  <CardDescription className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{metric.label}</CardDescription>
-                  <CardTitle className="text-base">{metric.value}</CardTitle>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
+          <AdminMetricGrid metrics={alertOverview?.metrics || []} columnsClassName="grid gap-4 md:grid-cols-3" />
 
           <Card>
             <CardHeader>
-              <CardTitle>Alert Queue</CardTitle>
-              <CardDescription>Derived alerts from reliability, moderation, and platform trust thresholds.</CardDescription>
+              <CardTitle>{operationsMessages.alertQueueTitle}</CardTitle>
+              <CardDescription>{operationsMessages.alertQueueDescription}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {alertPayload?.items.map((alert) => (
-                <div key={alert.code} className="rounded-2xl border border-slate-200 p-4">
+                <AdminRecordCard key={alert.code}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-semibold text-slate-950">{alert.code}</span>
-                        <Badge className={severityClasses(alert.severity)}>{alert.severity}</Badge>
-                        {alert.triggered ? <Badge variant="outline">triggered</Badge> : <Badge variant="outline">standby</Badge>}
+                        <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">
+                          {resolveAlertCodeLabel(alert, operationsMessages)}
+                        </span>
+                        <Badge variant="outline" className={severityClasses(alert.severity)}>
+                          {resolveOpsSeverityLabel(alert.severity, operationsMessages)}
+                        </Badge>
+                        {alert.triggered ? (
+                          <Badge variant="outline">{operationsMessages.alertTriggeredBadge}</Badge>
+                        ) : (
+                          <Badge variant="outline">{operationsMessages.alertStandbyBadge}</Badge>
+                        )}
                       </div>
-                      <div className="text-sm text-slate-600">{alert.message}</div>
+                      <div className="text-sm text-[color:var(--ui-text-secondary)]">
+                        {resolveOpsAlertMessage(alert.message, operationsMessages)}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </AdminRecordCard>
               ))}
-              {!alertPayload?.items.length && !loading ? (
-                <div className="rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">No operations alerts are currently active.</div>
-              ) : null}
+              {!alertPayload?.items.length && !loading ? <AdminEmptyBlock>{operationsMessages.alertsEmpty}</AdminEmptyBlock> : null}
             </CardContent>
           </Card>
         </>
@@ -217,59 +303,58 @@ export function AdminOperationsPage({ route }: { route: OperationsDashboardRoute
 
       {route === "/admin/ops/release-gates" ? (
         <>
-          <div className="grid gap-4 md:grid-cols-3">
-            {releaseOverview?.metrics.map((metric) => (
-              <Card key={metric.label}>
-                <CardHeader className="gap-2 p-5">
-                  <CardDescription className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{metric.label}</CardDescription>
-                  <CardTitle className="text-base">{metric.value}</CardTitle>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
+          <AdminMetricGrid metrics={releaseOverview?.metrics || []} columnsClassName="grid gap-4 md:grid-cols-3" />
 
           <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
             <Card>
               <CardHeader>
-                <CardTitle>Gate Checks</CardTitle>
-                <CardDescription>Current release readiness checks and their latest evaluation results.</CardDescription>
+                <CardTitle>{operationsMessages.gateChecksTitle}</CardTitle>
+                <CardDescription>{operationsMessages.gateChecksDescription}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {releaseGatePayload?.checks.map((check) => (
-                  <div key={check.code} className="rounded-2xl border border-slate-200 p-4">
+                  <AdminRecordCard key={check.code}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-semibold text-slate-950">{check.code}</span>
-                          <Badge className={severityClasses(check.passed ? "passed" : check.severity)}>{check.passed ? "passed" : check.severity}</Badge>
+                          <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">
+                            {resolveReleaseGateCodeLabel(check, operationsMessages)}
+                          </span>
+                          <Badge variant="outline" className={severityClasses(check.passed ? "passed" : check.severity)}>
+                            {resolveReleaseGateBadgeLabel(check, operationsMessages)}
+                          </Badge>
                         </div>
-                        <div className="text-sm text-slate-600">{check.message}</div>
+                        <div className="text-sm text-[color:var(--ui-text-secondary)]">
+                          {resolveOpsReleaseGateMessage(check.message, operationsMessages)}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </AdminRecordCard>
                 ))}
                 {!releaseGatePayload?.checks.length && !loading ? (
-                  <div className="rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">No release gate checks were returned by the backend.</div>
+                  <AdminEmptyBlock>{operationsMessages.releaseGatesEmpty}</AdminEmptyBlock>
                 ) : null}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Snapshot Summary</CardTitle>
-                <CardDescription>Overall release posture and latest evaluation timestamp.</CardDescription>
+                <CardTitle>{operationsMessages.snapshotSummaryTitle}</CardTitle>
+                <CardDescription>{operationsMessages.snapshotSummaryDescription}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600">
-                <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <div className="font-semibold text-slate-950">Overall state</div>
+              <CardContent className="space-y-3 text-sm text-[color:var(--ui-text-secondary)]">
+                <AdminInsetBlock>
+                  <div className="font-semibold text-[color:var(--ui-text-primary)]">{operationsMessages.overallStateLabel}</div>
                   <div className="mt-1">
-                    <Badge className={severityClasses(releaseOverview?.overallState || "blocked")}>{releaseOverview?.overallState || "blocked"}</Badge>
+                    <Badge variant="outline" className={severityClasses(releaseOverview?.overallState || operationsMessages.stateBlocked)}>
+                      {releaseOverview?.overallState || operationsMessages.stateBlocked}
+                    </Badge>
                   </div>
-                </div>
-                <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <div className="font-semibold text-slate-950">Generated at</div>
-                  <div className="mt-1">{releaseOverview?.generatedAt || "n/a"}</div>
-                </div>
+                </AdminInsetBlock>
+                <AdminInsetBlock>
+                  <div className="font-semibold text-[color:var(--ui-text-primary)]">{operationsMessages.generatedAtLabel}</div>
+                  <div className="mt-1">{releaseOverview?.generatedAt || operationsMessages.valueNotAvailable}</div>
+                </AdminInsetBlock>
               </CardContent>
             </Card>
           </div>

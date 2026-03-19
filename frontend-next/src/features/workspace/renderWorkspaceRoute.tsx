@@ -1,8 +1,8 @@
 import type { SessionContext } from "@/src/lib/schemas/session";
 
-import { buildWorkspacePageModel } from "./model";
-import { WorkspaceRoutePage } from "./WorkspaceRoutePage";
+import { WorkspaceRouteScene } from "./WorkspaceRouteScene";
+import type { WorkspaceRoutePath } from "./types";
 
 export function renderWorkspaceRoute(pathname: string, session: SessionContext) {
-  return <WorkspaceRoutePage model={buildWorkspacePageModel(pathname, session)} />;
+  return <WorkspaceRouteScene pathname={pathname as WorkspaceRoutePath} session={session} />;
 }

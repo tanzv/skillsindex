@@ -1,0 +1,131 @@
+:root {
+  --si-color-canvas: #101010;
+  --si-color-surface: #171717;
+  --si-color-surface-alt: #1a1a1a;
+  --si-color-panel: #111111;
+  --si-color-field: #171717;
+  --si-color-muted-surface: #242424;
+  --si-color-border: #2b2b2b;
+  --si-color-border-soft: #3a3a3a;
+  --si-color-text-primary: #e5e5e5;
+  --si-color-text-secondary: #a3a3a3;
+  --si-color-text-weak: #8f8f8f;
+  --si-color-text-inverse: #111111;
+  --si-color-accent: #d6d6d6;
+  --si-color-accent-contrast: #111111;
+  --si-color-overlay-mask: rgba(3, 8, 16, 0.74);
+  --si-shadow-overlay: 0 24px 40px rgba(0, 0, 0, 0.34);
+}
+
+.marketplace-shell {
+  --marketplace-shell-inline-gutter: 16px;
+  --marketplace-shell-max-width: 1412px;
+  --marketplace-shell-max-width-expanded: 1800px;
+  --marketplace-content-max-width: var(--marketplace-shell-max-width);
+  --marketplace-topbar-inline-gutter: clamp(16px, 2vw, 30px);
+  --marketplace-topbar-max-width: var(--marketplace-shell-max-width-expanded);
+  --marketplace-home-background: var(--si-color-canvas);
+  --marketplace-home-text: var(--si-color-text-primary);
+  --marketplace-topbar-background: var(--si-color-surface);
+  --marketplace-topbar-background-alt: #121212;
+  --marketplace-topbar-border: rgba(255, 255, 255, 0.08);
+  --marketplace-status-background: rgba(255, 255, 255, 0.05);
+  --marketplace-status-border: rgba(255, 255, 255, 0.08);
+  --marketplace-status-text: var(--si-color-text-secondary);
+  --marketplace-brand-dot-background: var(--si-color-muted-surface);
+  --marketplace-brand-dot-text: var(--si-color-text-primary);
+  --marketplace-brand-title: var(--si-color-text-primary);
+  --marketplace-brand-subtitle: var(--si-color-text-secondary);
+  --marketplace-nav-shell-background: rgba(255, 255, 255, 0.04);
+  --marketplace-nav-shell-border: rgba(255, 255, 255, 0.06);
+  --marketplace-nav-button-border: rgba(255, 255, 255, 0.1);
+  --marketplace-nav-button-text: #e4e4e7;
+  --marketplace-nav-button-hover-background: rgba(255, 255, 255, 0.08);
+  --marketplace-nav-button-hover-border: rgba(255, 255, 255, 0.18);
+  --marketplace-nav-button-active-background: #f5f5f5;
+  --marketplace-nav-button-active-text: #111111;
+  --marketplace-topbar-button-background: rgba(255, 255, 255, 0.04);
+  --marketplace-topbar-button-border: rgba(255, 255, 255, 0.08);
+  --marketplace-topbar-button-text: var(--si-color-text-primary);
+  --marketplace-topbar-button-hover-background: rgba(255, 255, 255, 0.1);
+  --marketplace-topbar-button-primary-background: var(--si-color-accent);
+  --marketplace-topbar-button-primary-text: var(--si-color-accent-contrast);
+  --marketplace-toggle-background: rgba(255, 255, 255, 0.04);
+  --marketplace-toggle-border: rgba(255, 255, 255, 0.08);
+  --marketplace-toggle-text: var(--si-color-text-secondary);
+  --marketplace-toggle-active-background: var(--si-color-accent);
+  --marketplace-toggle-active-text: var(--si-color-accent-contrast);
+  --marketplace-section-background: var(--si-color-surface);
+  --marketplace-section-alt-background: var(--si-color-panel);
+  --marketplace-section-emphasis-background: var(--si-color-surface-alt);
+  --marketplace-card-border: var(--si-color-border);
+  --marketplace-card-border-soft: var(--si-color-border-soft);
+  --marketplace-chip-background: rgba(255, 255, 255, 0.04);
+  --marketplace-chip-border: rgba(255, 255, 255, 0.08);
+  --marketplace-chip-text: var(--si-color-text-secondary);
+  --marketplace-search-background: var(--si-color-surface);
+  --marketplace-search-field-background: var(--si-color-field);
+  --marketplace-search-field-border: var(--si-color-border);
+  --marketplace-search-button-background: var(--si-color-accent);
+  --marketplace-search-button-text: var(--si-color-accent-contrast);
+  --marketplace-link-text: var(--si-color-text-primary);
+  --marketplace-overlay-background: var(--si-color-overlay-mask);
+  --marketplace-shadow-soft:
+    0 18px 34px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  min-height: 100vh;
+  background: var(--marketplace-home-background);
+  color: var(--marketplace-home-text);
+}
+
+.marketplace-shell.is-light-theme {
+  --marketplace-home-background: #eef1f5;
+  --marketplace-home-text: #111111;
+  --marketplace-topbar-background: #ffffff;
+  --marketplace-topbar-background-alt: #f5f5f5;
+  --marketplace-topbar-border: #d4d4d4;
+  --marketplace-status-background: rgba(17, 17, 17, 0.04);
+  --marketplace-status-border: #d4d4d4;
+  --marketplace-status-text: #555555;
+  --marketplace-brand-dot-background: #111111;
+  --marketplace-brand-dot-text: #f5f5f5;
+  --marketplace-brand-title: #111111;
+  --marketplace-brand-subtitle: #555555;
+  --marketplace-nav-shell-background: rgba(255, 255, 255, 0.9);
+  --marketplace-nav-shell-border: #d4d4d4;
+  --marketplace-nav-button-border: #d4d4d4;
+  --marketplace-nav-button-text: #27272a;
+  --marketplace-nav-button-hover-background: #efefef;
+  --marketplace-nav-button-hover-border: #d4d4d4;
+  --marketplace-nav-button-active-background: #111111;
+  --marketplace-nav-button-active-text: #ffffff;
+  --marketplace-topbar-button-background: #ffffff;
+  --marketplace-topbar-button-border: #d4d4d4;
+  --marketplace-topbar-button-text: #27272a;
+  --marketplace-topbar-button-hover-background: #f5f5f5;
+  --marketplace-topbar-button-primary-background: #111111;
+  --marketplace-topbar-button-primary-text: #ffffff;
+  --marketplace-toggle-background: #ffffff;
+  --marketplace-toggle-border: #d4d4d4;
+  --marketplace-toggle-text: #555555;
+  --marketplace-toggle-active-background: #111111;
+  --marketplace-toggle-active-text: #ffffff;
+  --marketplace-section-background: #ffffff;
+  --marketplace-section-alt-background: #ffffff;
+  --marketplace-section-emphasis-background: #f3f4f6;
+  --marketplace-card-border: #d4d4d4;
+  --marketplace-card-border-soft: #e5e5e5;
+  --marketplace-chip-background: #f5f5f5;
+  --marketplace-chip-border: #d4d4d4;
+  --marketplace-chip-text: #555555;
+  --marketplace-search-background: #ffffff;
+  --marketplace-search-field-background: #ffffff;
+  --marketplace-search-field-border: #d4d4d4;
+  --marketplace-search-button-background: #111111;
+  --marketplace-search-button-text: #ffffff;
+  --marketplace-link-text: #111111;
+  --marketplace-overlay-background: rgba(15, 23, 42, 0.34);
+  --marketplace-shadow-soft:
+    0 18px 34px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}

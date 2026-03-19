@@ -92,7 +92,7 @@ test("executes account security and credential management actions", async ({ pag
 
   await credentialCard.getByRole("button", { name: "Revoke" }).click();
   await expect(page.getByText(/Credential \d+ revoked\./)).toBeVisible();
-  await expect(credentialCard).toContainText("revoked");
+  await expect(credentialCard).toContainText(/revoked/i);
 });
 
 test("executes admin governance actions and renders additional admin routes", async ({ page }) => {
@@ -101,6 +101,14 @@ test("executes admin governance actions and renders additional admin routes", as
   await expect(page.getByTestId("admin-topbar")).toBeVisible();
   await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Marketplace", exact: true })).toBeVisible();
   await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Users", exact: true })).toHaveAttribute("aria-current", "page");
+  await page.getByTestId("admin-topbar-account-trigger").click();
+  const accountCenterMenu = page.getByTestId("admin-topbar-account-menu");
+  await expect(accountCenterMenu).toBeVisible();
+  await expect(accountCenterMenu.getByRole("link", { name: "Access" })).toBeVisible();
+  await expect(accountCenterMenu.getByRole("link", { name: "Roles" })).toBeVisible();
+  await expect(accountCenterMenu.getByRole("link", { name: "Integrations" })).toBeVisible();
+  await page.getByTestId("admin-topbar-account-trigger").click();
+  await expect(accountCenterMenu).not.toBeVisible();
   await expect(page.getByRole("heading", { name: "Account Provisioning", level: 1 })).toBeVisible();
   await expect(page.getByText("Registration enabled · Marketplace public")).toBeVisible();
   const allowRegistrationCheckbox = page.getByLabel("Allow registration");
@@ -122,7 +130,7 @@ test("executes admin governance actions and renders additional admin routes", as
   await page.getByLabel("Target account status").selectOption("disabled");
   await page.getByRole("button", { name: "Apply Status" }).click();
   await expect(page.getByText("Account 2 status updated.")).toBeVisible();
-  await expect(page.getByTestId("admin-account-card-2")).toContainText("disabled");
+  await expect(page.getByTestId("admin-account-card-2")).toContainText(/disabled/i);
 
   await page.getByRole("button", { name: "Force Sign-out" }).click();
   await expect(page.getByText("Force sign-out requested for user 2.")).toBeVisible();
@@ -138,7 +146,7 @@ test("executes admin governance actions and renders additional admin routes", as
   await page.getByLabel("Target role").selectOption("auditor");
   await page.getByRole("button", { name: "Apply Role" }).click();
   await expect(page.getByText("Role updated for user 2.")).toBeVisible();
-  await expect(page.getByTestId("admin-account-card-2")).toContainText("auditor");
+  await expect(page.getByTestId("admin-account-card-2")).toContainText(/auditor/i);
 
   await page.goto("/admin/records/imports");
   await expect(page.getByRole("heading", { name: "Import Records", level: 1 })).toBeVisible();
@@ -159,4 +167,88 @@ test("executes admin governance actions and renders additional admin routes", as
   await expect(page.getByRole("heading", { name: "Gate Checks", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Run Gates" }).click();
   await expect(page.getByText("Release gates executed.")).toBeVisible();
+});
+
+test("opens the workspace navigation drawer on tablet widths", async ({ page }) => {
+  await page.setViewportSize({ width: 960, height: 1200 });
+  await loginAsAdmin(page, "/workspace");
+
+  const toggle = page.getByTestId("workspace-topbar-menu-trigger");
+  await expect(toggle).toBeVisible();
+  await toggle.click();
+
+  const drawer = page.getByTestId("workspace-side-nav-drawer");
+  await expect(drawer).toBeVisible();
+  await drawer.getByRole("link", { name: /Queue/i }).click();
+  await page.waitForURL("**/workspace/queue");
+  await expect(page.getByRole("heading", { name: "Queue Execution", level: 1 })).toBeVisible();
+});
+
+test("keeps the protected navigation on the header leading side and the account menu on the trailing side", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await loginAsAdmin(page, "/admin/overview");
+
+  const headerRow = page.getByTestId("admin-topbar-header-row");
+  const navRow = page.getByTestId("admin-topbar-nav-row");
+  const utilityRow = page.getByTestId("admin-topbar-utility");
+  const accountTrigger = page.getByTestId("admin-topbar-account-trigger");
+
+  await expect(headerRow).toBeVisible();
+  await expect(navRow).toBeVisible();
+  await expect(utilityRow).toBeVisible();
+  await expect(accountTrigger).toBeVisible();
+
+  const headerBox = await headerRow.boundingBox();
+  const navBox = await navRow.boundingBox();
+  const accountBox = await accountTrigger.boundingBox();
+
+  expect(headerBox).not.toBeNull();
+  expect(navBox).not.toBeNull();
+  expect(accountBox).not.toBeNull();
+
+  if (!headerBox || !navBox || !accountBox) {
+    return;
+  }
+
+  expect(navBox.y).toBeGreaterThanOrEqual(headerBox.y - 2);
+  expect(navBox.y + navBox.height).toBeLessThanOrEqual(headerBox.y + headerBox.height + 2);
+  expect(navBox.width).toBeGreaterThan(280);
+  expect(accountBox.x).toBeGreaterThan(navBox.x + navBox.width);
+  await expect(utilityRow.getByRole("link", { name: "Marketplace" })).toBeVisible();
+});
+
+test("uses the right account avatar as the protected personal center trigger", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await loginAsAdmin(page, "/workspace");
+
+  const shell = page.getByTestId("workspace-shell");
+  const trigger = page.getByTestId("workspace-topbar-account-trigger");
+  const menu = page.getByTestId("workspace-topbar-account-menu");
+  const navRow = page.getByTestId("workspace-topbar-nav-row");
+
+  await expect(trigger).toBeVisible();
+  const triggerBox = await trigger.boundingBox();
+  const navBox = await navRow.boundingBox();
+
+  expect(triggerBox).not.toBeNull();
+  expect(navBox).not.toBeNull();
+
+  if (!triggerBox || !navBox) {
+    return;
+  }
+
+  expect(triggerBox.x).toBeGreaterThan(navBox.x + navBox.width);
+  expect(triggerBox.width).toBeGreaterThan(150);
+  await trigger.click();
+  await expect(menu).toBeVisible();
+  await expect(menu.getByRole("link", { name: "Profile" })).toBeVisible();
+  await expect(menu.getByRole("link", { name: "Security" })).toBeVisible();
+  await expect(menu.getByRole("link", { name: "Sessions" })).toBeVisible();
+  await expect(menu.getByRole("link", { name: "API Credentials" })).toBeVisible();
+
+  await page.getByTestId("workspace-topbar-theme-dark").click();
+  await expect(shell).toHaveAttribute("data-protected-theme", "dark");
+
+  await page.getByTestId("workspace-topbar-theme-light").click();
+  await expect(shell).toHaveAttribute("data-protected-theme", "light");
 });

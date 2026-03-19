@@ -1,0 +1,194 @@
+.workspace-topbar-overflow-wrapper {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  width: min(1120px, calc(100vw - 48px));
+  max-width: 100%;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity 170ms ease, transform 170ms ease, visibility 170ms ease;
+}
+
+.workspace-topbar-overflow-wrapper.is-expanded {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.workspace-shell-topbar-overflow-panel,
+.workspace-topbar-overflow-header,
+.workspace-topbar-overflow-title-block,
+.workspace-topbar-overflow-summary,
+.workspace-topbar-overflow-groups,
+.workspace-topbar-overflow-group,
+.workspace-topbar-overflow-group-actions {
+  display: grid;
+  gap: 14px;
+}
+
+.workspace-shell-topbar-overflow-panel {
+  width: 100%;
+  padding: 18px;
+  border: 1px solid var(--protected-topbar-overflow-panel-border);
+  border-radius: 24px;
+  background: var(--protected-topbar-overflow-panel-bg);
+  box-shadow: var(--protected-topbar-overflow-panel-shadow);
+}
+
+.workspace-topbar-overflow-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.workspace-topbar-overflow-title,
+.workspace-topbar-overflow-group-title {
+  margin: 0;
+  color: var(--workspace-shell-text);
+}
+
+.workspace-topbar-overflow-title {
+  font-size: 16px;
+  line-height: 1.15;
+}
+
+.workspace-topbar-overflow-summary {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.workspace-topbar-overflow-summary-pill {
+  min-height: 30px;
+  padding: 0 6px 0 10px;
+  border: 1px solid var(--protected-topbar-overflow-pill-border);
+  border-radius: 999px;
+  background: var(--protected-topbar-overflow-pill-bg);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.workspace-topbar-overflow-summary-pill.is-active {
+  background: var(--protected-topbar-overflow-pill-bg-active);
+}
+
+.workspace-topbar-overflow-summary-pill-label,
+.workspace-topbar-overflow-summary-pill-count {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workspace-topbar-overflow-summary-pill-label {
+  color: var(--protected-topbar-overflow-pill-text);
+}
+
+.workspace-topbar-overflow-summary-pill-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--protected-topbar-overflow-count-bg);
+  color: var(--protected-topbar-overflow-count-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.workspace-topbar-overflow-groups {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.workspace-topbar-overflow-group {
+  padding: 14px;
+  border: 1px solid var(--protected-topbar-overflow-panel-border);
+  border-radius: 18px;
+  background: var(--protected-topbar-overflow-group-bg);
+}
+
+.workspace-topbar-overflow-group.is-active {
+  border-color: var(--protected-topbar-control-border-active);
+  background: var(--protected-topbar-overflow-group-bg-active);
+}
+
+.workspace-topbar-overflow-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.workspace-topbar-overflow-group-title {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.workspace-topbar-overflow-group-count {
+  min-width: 26px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--protected-topbar-overflow-count-bg);
+  color: var(--protected-topbar-overflow-count-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.workspace-topbar-overflow-group-actions .workspace-shell-topbar-nav-button {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  justify-content: flex-start;
+  border-radius: 14px;
+  border-color: var(--protected-topbar-overflow-panel-border);
+  background: var(--protected-topbar-overflow-group-bg);
+}
+
+.workspace-shell-topbar-action-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.workspace-shell-topbar-action-label {
+  color: inherit;
+}
+
+.workspace-shell-topbar-action-note {
+  color: var(--workspace-shell-text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+@media (max-width: 1180px) {
+  .workspace-topbar-overflow-wrapper {
+    width: 100%;
+  }
+}
+
+@media (max-width: 780px) {
+  .workspace-topbar-overflow-header {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-topbar-overflow-summary {
+    justify-content: flex-start;
+  }
+
+  .workspace-topbar-overflow-groups {
+    grid-template-columns: 1fr;
+  }
+}

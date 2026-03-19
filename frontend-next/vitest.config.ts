@@ -5,11 +5,12 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, ".")
+      "@": path.resolve(__dirname, "."),
+      "server-only": path.resolve(__dirname, "tests/unit/stubs/server-only.ts")
     }
   },
   test: {
     environment: "node",
-    include: ["tests/unit/**/*.test.ts"]
+    include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx"]
   }
 });

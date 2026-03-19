@@ -1,15 +1,19 @@
-import { ErrorState } from "@/src/components/shared/ErrorState";
-import { PageHeader } from "@/src/components/shared/PageHeader";
+"use client";
+
+import { AdminPageScaffold } from "@/src/components/admin/AdminPrimitives";
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { Button } from "@/src/components/ui/button";
 
 import type { AdminIngestionRoute } from "./model";
+import type {
+  ImportsIngestionViewProps,
+  ManualIngestionViewProps,
+  RepositoryIngestionViewProps
+} from "./AdminIngestionViewProps";
 import {
   ImportsIngestionView,
-  type ImportsIngestionViewProps,
   ManualIngestionView,
-  type ManualIngestionViewProps,
-  RepositoryIngestionView,
-  type RepositoryIngestionViewProps
+  RepositoryIngestionView
 } from "./AdminIngestionViews";
 import { IngestionMessage, IngestionMetricGrid } from "./shared";
 
@@ -40,22 +44,22 @@ export function AdminIngestionContent({
   repositoryView,
   importsView
 }: AdminIngestionContentProps) {
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="Admin"
-        title={title}
-        description={description}
-        actions={<Button onClick={onRefresh}>{loading ? "Refreshing..." : "Refresh"}</Button>}
-      />
+  const { messages } = useProtectedI18n();
+  const commonMessages = messages.adminCommon;
 
-      {error ? <ErrorState description={error} /> : null}
+  return (
+    <AdminPageScaffold
+      eyebrow={commonMessages.adminEyebrow}
+      title={title}
+      description={description}
+      actions={<Button onClick={onRefresh}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>}
+      error={error}
+    >
       <IngestionMessage message={message} />
       <IngestionMetricGrid metrics={metrics} />
-
       {route === "/admin/ingestion/manual" ? <ManualIngestionView {...manualView} /> : null}
       {route === "/admin/ingestion/repository" ? <RepositoryIngestionView {...repositoryView} /> : null}
       {route === "/admin/records/imports" ? <ImportsIngestionView {...importsView} /> : null}
-    </div>
+    </AdminPageScaffold>
   );
 }

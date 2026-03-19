@@ -1,0 +1,96 @@
+.marketplace-support-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.marketplace-support-card-copy {
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.marketplace-support-card-action {
+  flex: 0 0 auto;
+}
+
+.marketplace-simple-link-list {
+  gap: 12px;
+}
+
+.marketplace-simple-link-item {
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 14px;
+  background: var(--marketplace-section-emphasis-background);
+}
+
+.marketplace-simple-link-item:hover {
+  border-color: var(--marketplace-card-border);
+}
+
+.marketplace-simple-link-item.is-active {
+  border-color: var(--marketplace-card-border);
+  background: var(--marketplace-topbar-button-hover-background);
+}
+
+.marketplace-sidebar-link {
+  color: var(--marketplace-link-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.marketplace-compare-form {
+  display: grid;
+  gap: 12px;
+}
+
+.marketplace-compare-form select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--marketplace-search-field-border);
+  border-radius: 12px;
+  background: var(--marketplace-search-field-background);
+  color: var(--marketplace-home-text);
+  outline: none;
+}
+
+.marketplace-compare-card {
+  padding: 14px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 14px;
+  background: var(--marketplace-section-emphasis-background);
+}
+
+.marketplace-compare-metrics,
+.marketplace-support-summary-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.marketplace-support-summary-head {
+  justify-content: space-between;
+}
+
+@media (max-width: 720px) {
+  .marketplace-support-card-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .marketplace-simple-link-item,
+  .marketplace-support-summary-head {
+    align-items: flex-start;
+  }
+
+  .marketplace-support-card-action {
+    width: 100%;
+  }
+}

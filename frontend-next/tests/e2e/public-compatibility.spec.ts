@@ -63,6 +63,14 @@ test("renders the docs compatibility route", async ({ page }) => {
   await expect(mainContent.getByRole("link", { name: "Admin" })).toBeVisible();
 });
 
+test("keeps the docs compatibility route visible when semantic tags are present in the URL", async ({ page }) => {
+  await page.goto("/docs?tags=ops");
+
+  await expect(page.getByTestId("public-docs-stage")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Migration Overview" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Quick Links" })).toBeVisible();
+});
+
 test("renders the governance compatibility route", async ({ page }) => {
   await page.goto("/governance");
 

@@ -7,6 +7,8 @@ import { splitPublicPathPrefix, withPublicPathPrefix } from "@/src/lib/routing/p
 import { useResolvedPublicPathname } from "@/src/lib/routing/useResolvedPublicPathname";
 
 import { buildMarketplaceRecentSearchLabel, createMarketplaceSearchHref } from "./searchHistory";
+import { MarketplaceSupportCard } from "./MarketplaceSupportCard";
+import { MarketplaceSupportLinkList } from "./MarketplaceSupportLinkList";
 import { useMarketplaceRecentSearches } from "./useMarketplaceRecentSearches";
 
 interface MarketplaceRecentSearchesCardProps {
@@ -31,33 +33,27 @@ export function MarketplaceRecentSearchesCard({
   const { entries, clearEntries } = useMarketplaceRecentSearches();
 
   return (
-    <section className="marketplace-section-card">
-      <div className="marketplace-section-header">
-        <div className="marketplace-search-overlay-head">
-          <div className="marketplace-section-header">
-            <h3>{title || messages.searchRecentTitle}</h3>
-            <p>{description || messages.searchRecentDescription}</p>
-          </div>
-          {entries.length > 0 ? (
-            <button type="button" className="marketplace-topbar-button is-subtle" onClick={clearEntries}>
-              {messages.searchRecentClear}
-            </button>
-          ) : null}
-        </div>
-      </div>
-
+    <MarketplaceSupportCard
+      title={title || messages.searchRecentTitle}
+      description={description || messages.searchRecentDescription}
+      headerAction={
+        entries.length > 0 ? (
+          <button type="button" className="marketplace-topbar-button is-subtle" onClick={clearEntries}>
+            {messages.searchRecentClear}
+          </button>
+        ) : undefined
+      }
+    >
       <div className="marketplace-list-stack">
         {entries.length > 0 ? (
-          entries.map((entry) => (
-            <Link
-              key={`${entry.route}-${entry.query}-${entry.tags || ""}`}
-              href={createMarketplaceSearchHref(entry.route, entry.query, entry.tags)}
-              className="marketplace-simple-link-item"
-            >
-              <span className="marketplace-sidebar-link">{buildMarketplaceRecentSearchLabel(entry)}</span>
-              <span className="marketplace-meta-text">{entry.route}</span>
-            </Link>
-          ))
+          <MarketplaceSupportLinkList
+            items={entries.map((entry) => ({
+              key: `${entry.route}-${entry.query}-${entry.tags || ""}`,
+              href: createMarketplaceSearchHref(entry.route, entry.query, entry.tags),
+              label: buildMarketplaceRecentSearchLabel(entry),
+              meta: entry.route
+            }))}
+          />
         ) : (
           <div className="marketplace-empty-state">
             <p>{emptyHint || messages.searchRecentEmpty}</p>
@@ -73,6 +69,6 @@ export function MarketplaceRecentSearchesCard({
           </div>
         )}
       </div>
-    </section>
+    </MarketplaceSupportCard>
   );
 }

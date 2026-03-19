@@ -1,3 +1,5 @@
+import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
+
 export type AccountRoute = "/account/profile" | "/account/security" | "/account/sessions" | "/account/api-credentials";
 export type AccountSection = "profile" | "security" | "sessions" | "credentials";
 export type AccountRevokeMode = "keep" | "revoke";
@@ -92,7 +94,7 @@ export const accountRouteBySection: Record<AccountSection, AccountRoute> = {
   credentials: "/account/api-credentials"
 };
 
-export function formatAccountDate(value: string | null | undefined, fallback = "n/a"): string {
+export function formatAccountDate(value: string | null | undefined, locale: PublicLocale = "en", fallback = "n/a"): string {
   if (!value) {
     return fallback;
   }
@@ -100,7 +102,7 @@ export function formatAccountDate(value: string | null | undefined, fallback = "
   if (!Number.isFinite(timestamp)) {
     return fallback;
   }
-  return new Date(timestamp).toLocaleString("en-US", {
+  return new Date(timestamp).toLocaleString(locale === "zh" ? "zh-CN" : "en-US", {
     month: "short",
     day: "numeric",
     hour: "2-digit",

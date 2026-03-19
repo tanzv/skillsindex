@@ -1,0 +1,218 @@
+.marketplace-home-stage .marketplace-home-hero {
+  width: 100%;
+  min-height: 252px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #0b0d12;
+  padding: 18px 20px;
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.marketplace-shell.is-light-theme .marketplace-home-stage .marketplace-home-hero {
+  border-color: #d9dde7;
+  background: #ffffff;
+}
+
+.marketplace-home-stage .marketplace-top-stats-left {
+  min-width: 0;
+  flex: 0 0 48%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.marketplace-home-stage .marketplace-top-stats-overline,
+.marketplace-home-stage .marketplace-top-stats-main,
+.marketplace-home-stage .marketplace-top-stats-promo,
+.marketplace-home-stage .marketplace-top-stats-chart-note {
+  margin: 0;
+}
+
+.marketplace-home-stage .marketplace-top-stats-overline {
+  color: #a9abb2;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.marketplace-home-stage .marketplace-top-stats-main {
+  color: #f2f2f3;
+  font-size: clamp(24px, 2.24vw, 42px);
+  font-weight: 700;
+  line-height: 1.02;
+  display: grid;
+  gap: 4px;
+}
+
+.marketplace-shell.is-light-theme .marketplace-home-stage .marketplace-top-stats-main {
+  color: #101828;
+}
+
+.marketplace-home-stage .marketplace-top-stats-main-line {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.marketplace-home-stage .marketplace-top-stats-main-line.is-metric {
+  font-family: "JetBrains Mono", monospace;
+  font-size: clamp(24px, 2.52vw, 42px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.marketplace-home-stage .marketplace-top-stats-promo {
+  color: #9aa0ab;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.marketplace-home-stage .marketplace-top-stats-metrics {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.marketplace-home-stage .marketplace-top-stats-metric {
+  min-height: 52px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 7px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.marketplace-shell.is-light-theme .marketplace-home-stage .marketplace-top-stats-metric {
+  background: #f5f7fb;
+}
+
+.marketplace-home-stage .marketplace-top-stats-metric-label {
+  color: #9ea5b1;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.marketplace-home-stage .marketplace-top-stats-metric-value {
+  color: #f2f4f8;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.marketplace-shell.is-light-theme .marketplace-home-stage .marketplace-top-stats-metric-value {
+  color: #111827;
+}
+
+.marketplace-home-stage .marketplace-top-stats-trend {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.marketplace-home-stage .marketplace-top-stats-trend-chart {
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.marketplace-shell.is-light-theme .marketplace-home-stage .marketplace-top-stats-trend-chart {
+  background: #f5f7fb;
+}
+
+.marketplace-home-stage .marketplace-top-stats-plot-wrap {
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  gap: 10px;
+}
+
+.marketplace-home-stage .marketplace-top-stats-y-ticks {
+  width: 26px;
+  min-width: 26px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-top: 4px;
+}
+
+.marketplace-home-stage .marketplace-top-stats-plot {
+  min-width: 0;
+  flex: 1;
+  height: 100%;
+  display: block;
+  border-left: 1px solid #8a8f98;
+  border-bottom: 1px solid #8a8f98;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.marketplace-home-stage .marketplace-top-stats-trend-area {
+  fill: url("#marketplaceTopTrendArea");
+}
+
+.marketplace-home-stage .marketplace-top-stats-trend-line {
+  fill: none;
+  stroke: #f0f2f5;
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.marketplace-shell.is-light-theme .marketplace-home-stage .marketplace-top-stats-trend-line {
+  stroke: #111827;
+}
+
+.marketplace-home-stage .marketplace-top-stats-x-labels {
+  width: 100%;
+  height: 14px;
+  padding-left: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.marketplace-home-stage .marketplace-top-stats-axis-label {
+  color: #a0a4ad;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.marketplace-home-stage .marketplace-top-stats-chart-note {
+  color: #959ca8;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+@media (max-width: 720px) {
+  .marketplace-home-stage .marketplace-home-hero {
+    min-height: auto;
+    flex-direction: column;
+  }
+}

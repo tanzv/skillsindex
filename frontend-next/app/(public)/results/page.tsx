@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
 import { PublicSearchPage } from "@/src/features/public/PublicSearchPage";
+import { buildMarketplaceSemanticListingRequestQuery } from "@/src/features/public/marketplace/marketplaceRequestQuery";
 import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
 import { fetchMarketplace } from "@/src/lib/api/public";
 
@@ -12,11 +13,12 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
   const resolvedSearchParams = await searchParams;
   const query = typeof resolvedSearchParams.q === "string" ? resolvedSearchParams.q : "";
   const semanticQuery = typeof resolvedSearchParams.tags === "string" ? resolvedSearchParams.tags : "";
-  let marketplace = buildPublicMarketplaceFallback(resolvedSearchParams);
+  const requestQuery = buildMarketplaceSemanticListingRequestQuery(resolvedSearchParams);
+  let marketplace = buildPublicMarketplaceFallback(requestQuery);
 
   try {
     const requestHeaders = new Headers(await headers());
-    marketplace = await fetchMarketplace(requestHeaders, resolvedSearchParams);
+    marketplace = await fetchMarketplace(requestHeaders, requestQuery);
   } catch {}
 
   return (

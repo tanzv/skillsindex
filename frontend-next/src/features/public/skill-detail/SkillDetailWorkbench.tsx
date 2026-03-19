@@ -1,5 +1,7 @@
-import Link from "next/link";
-import { useState } from "react";
+import type { ReactNode } from "react";
+
+import { TabsContent } from "@/src/components/ui/tabs";
+import { PublicLink } from "@/src/components/shared/PublicLink";
 
 import type { PublicMarketplaceMessages } from "@/src/lib/i18n/publicMessages";
 import { formatPublicDate, type PublicLocale } from "@/src/lib/i18n/publicLocale";
@@ -10,10 +12,17 @@ import type {
 } from "@/src/lib/schemas/public";
 
 import type { PublicSkillDetailModel } from "../publicSkillDetailModel";
-import { buildSkillDetailOverviewModel } from "./skillDetailWorkbenchOverview";
+import { SkillDetailOverviewPanel } from "./SkillDetailOverviewPanel";
+import { SkillDetailPreviewStage } from "./SkillDetailPreviewStage";
 import { SkillDetailResourceTree } from "./SkillDetailResourceTree";
-
-export type SkillDetailWorkspaceTab = "overview" | "installation" | "skill" | "resources" | "related" | "history";
+import { buildSkillDetailOverviewModel } from "./skillDetailWorkbenchOverview";
+import {
+  buildSkillDetailWorkspaceCopy,
+  skillDetailWorkspacePanelIdByKey,
+  skillDetailWorkspaceTabIdByKey,
+  type SkillDetailWorkspaceTab
+} from "./skillDetailWorkspaceConfig";
+export type { SkillDetailWorkspaceTab } from "./skillDetailWorkspaceConfig";
 
 interface SkillDetailWorkbenchProps {
   activeTab: SkillDetailWorkspaceTab;
@@ -24,10 +33,13 @@ interface SkillDetailWorkbenchProps {
     | "rankingOpenSkillLabel"
     | "skillDetailContentTitle"
     | "skillDetailOverviewDescription"
+    | "skillDetailOverviewFactsTitle"
+    | "skillDetailOverviewMetricsTitle"
     | "skillDetailOverviewTitle"
     | "skillDetailInstallDescription"
     | "skillDetailInstallTitle"
     | "skillDetailNoInstall"
+    | "skillDetailNoComments"
     | "skillDetailNotAvailable"
     | "skillDetailNoResources"
     | "skillDetailNoVersions"
@@ -35,8 +47,8 @@ interface SkillDetailWorkbenchProps {
     | "skillDetailRelatedTitle"
     | "skillDetailResourcesDescription"
     | "skillDetailResourcesTitle"
-    | "skillDetailResourceDetailsToggle"
-    | "skillDetailResourceTreeTitle"
+    | "skillDetailMetricsComments"
+    | "skillDetailMetricsRatings"
     | "skillDetailSelectFile"
     | "skillDetailUnknownLanguage"
     | "skillDetailUpdatedBadgePrefix"
@@ -45,16 +57,15 @@ interface SkillDetailWorkbenchProps {
   >;
   model: PublicSkillDetailModel;
   onOpenFile: (fileName: string) => void;
-  onTabChange: (nextTab: SkillDetailWorkspaceTab) => void;
   resourceContent: PublicSkillResourceContentResponse | null;
+  resourcesPending?: boolean;
   resources: PublicSkillResourcesResponse | null;
   selectedFileName: string;
-  toPublicPath: (route: string) => string;
+  versionsPending?: boolean;
 }
 
-const workspaceTabs: SkillDetailWorkspaceTab[] = ["overview", "installation", "skill", "resources", "related", "history"];
-
 interface SkillDetailDocumentPreviewProps {
+  className?: string;
   content: string;
   language: string;
   locale: PublicLocale;
@@ -64,6 +75,7 @@ interface SkillDetailDocumentPreviewProps {
 }
 
 function SkillDetailDocumentPreview({
+  className,
   content,
   language,
   locale,
@@ -72,20 +84,82 @@ function SkillDetailDocumentPreview({
   updatedBadgePrefix
 }: SkillDetailDocumentPreviewProps) {
   return (
-    <div className="skill-detail-preview-panel">
-      <div className="skill-detail-preview-head">
-        <div>
-          <div className="skill-detail-preview-title">{title}</div>
-          <div className="skill-detail-preview-meta">{language}</div>
-        </div>
-        {updatedAt ? (
-          <span className="skill-detail-preview-badge">
-            {updatedBadgePrefix} {formatPublicDate(updatedAt, locale)}
-          </span>
-        ) : null}
-      </div>
-
+    <SkillDetailPreviewStage
+      badge={updatedAt ? `${updatedBadgePrefix} ${formatPublicDate(updatedAt, locale)}` : undefined}
+      className={className}
+      meta={language}
+      title={title}
+    >
       <pre className="skill-detail-preview-content">{content}</pre>
+    </SkillDetailPreviewStage>
+  );
+}
+
+function SkillWorkbenchPanel({
+  activeTab,
+  children,
+  tab
+}: {
+  activeTab: SkillDetailWorkspaceTab;
+  children: ReactNode;
+  tab: SkillDetailWorkspaceTab;
+}) {
+  return (
+    <TabsContent
+      value={tab}
+      activeValue={activeTab}
+      panelId={skillDetailWorkspacePanelIdByKey[tab]}
+      labelledBy={skillDetailWorkspaceTabIdByKey[tab]}
+      className="skill-detail-workbench-panel"
+    >
+      {children}
+    </TabsContent>
+  );
+}
+
+function SkillDetailResourceLoadingSkeleton() {
+  return (
+    <div className="skill-detail-loading-shell skill-detail-loading-resource-shell" aria-hidden="true">
+      <div className="skill-detail-loading-tree">
+        <span className="skill-detail-loading-line is-strong" />
+        <span className="skill-detail-loading-line" />
+        <span className="skill-detail-loading-line is-short" />
+        <span className="skill-detail-loading-line" />
+      </div>
+      <div className="skill-detail-loading-preview">
+        <span className="skill-detail-loading-line is-strong" />
+        <span className="skill-detail-loading-line" />
+        <span className="skill-detail-loading-line" />
+        <span className="skill-detail-loading-line is-short" />
+      </div>
+    </div>
+  );
+}
+
+function SkillDetailHistoryLoadingSkeleton() {
+  return (
+    <div className="skill-detail-loading-shell skill-detail-loading-timeline" aria-hidden="true">
+      <div className="skill-detail-loading-timeline-row">
+        <span className="skill-detail-loading-dot" />
+        <div className="skill-detail-loading-copy">
+          <span className="skill-detail-loading-line is-strong" />
+          <span className="skill-detail-loading-line" />
+        </div>
+      </div>
+      <div className="skill-detail-loading-timeline-row">
+        <span className="skill-detail-loading-dot" />
+        <div className="skill-detail-loading-copy">
+          <span className="skill-detail-loading-line is-strong" />
+          <span className="skill-detail-loading-line is-short" />
+        </div>
+      </div>
+      <div className="skill-detail-loading-timeline-row">
+        <span className="skill-detail-loading-dot" />
+        <div className="skill-detail-loading-copy">
+          <span className="skill-detail-loading-line" />
+          <span className="skill-detail-loading-line" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -97,15 +171,15 @@ export function SkillDetailWorkbench({
   messages,
   model,
   onOpenFile,
-  onTabChange,
   resourceContent,
+  resourcesPending = false,
   resources,
   selectedFileName,
-  toPublicPath
+  versionsPending = false
 }: SkillDetailWorkbenchProps) {
-  const selectedFile = resources?.files.find((file) => file.name === selectedFileName) || resources?.files[0] || null;
+  const selectedFile = resources?.files.find((file) => file.name === selectedFileName) || null;
+  const fallbackFile = selectedFile || resources?.files[0] || null;
   const installMetadataRows = model.installationSteps.slice(1);
-  const [resourceDetailsOpen, setResourceDetailsOpen] = useState(false);
   const overviewModel = buildSkillDetailOverviewModel({
     detail,
     resourceContent,
@@ -116,220 +190,93 @@ export function SkillDetailWorkbench({
       skillDetailUnknownLanguage: messages.skillDetailUnknownLanguage
     }
   });
-
-  const headerByTab = {
-    overview: {
-      title: messages.skillDetailOverviewTitle,
-      description: messages.skillDetailOverviewDescription
-    },
-    installation: {
-      title: messages.skillDetailInstallTitle,
-      description: messages.skillDetailInstallDescription
-    },
-    skill: {
-      title: messages.skillDetailContentTitle,
-      description: ""
-    },
-    resources: {
-      title: messages.skillDetailResourcesTitle,
-      description: messages.skillDetailResourcesDescription
-    },
-    history: {
-      title: messages.skillDetailVersionsTitle,
-      description: messages.skillDetailVersionsDescription
-    },
-    related: {
-      title: messages.skillDetailRelatedTitle,
-      description: messages.skillDetailRelatedDescription
-    }
-  } satisfies Record<SkillDetailWorkspaceTab, { title: string; description: string }>;
-
-  const tabLabelByKey = {
-    overview: "skill-detail-tab-overview",
-    installation: "skill-detail-tab-installation",
-    skill: "skill-detail-tab-skill",
-    resources: "skill-detail-tab-resources",
-    history: "skill-detail-tab-history",
-    related: "skill-detail-tab-related"
-  } satisfies Record<SkillDetailWorkspaceTab, string>;
-
-  const panelIdByKey = {
-    overview: "skill-detail-panel-overview",
-    installation: "skill-detail-panel-installation",
-    skill: "skill-detail-panel-skill",
-    resources: "skill-detail-panel-resources",
-    history: "skill-detail-panel-history",
-    related: "skill-detail-panel-related"
-  } satisfies Record<SkillDetailWorkspaceTab, string>;
+  const resourceTableTitle = "Name";
+  const headerByTab = buildSkillDetailWorkspaceCopy(messages);
+  const selectedFileDisplayName =
+    selectedFile?.display_name || selectedFileName.split("/").filter(Boolean).pop() || selectedFileName;
 
   return (
     <section
       className="marketplace-section-card skill-detail-workbench-card"
+      data-active-tab={activeTab}
       data-testid="skill-detail-resource-workbench"
     >
-      <div className="skill-detail-workbench-head">
-        <div className="marketplace-section-header">
-          <h2>{headerByTab[activeTab].title}</h2>
-          {headerByTab[activeTab].description ? <p>{headerByTab[activeTab].description}</p> : null}
-        </div>
+      <SkillWorkbenchPanel activeTab={activeTab} tab="overview">
+        <SkillDetailOverviewPanel
+          detail={detail}
+          locale={locale}
+          messages={messages}
+          model={model}
+          overviewModel={overviewModel}
+        />
+      </SkillWorkbenchPanel>
 
-        <div className="skill-detail-tab-list" role="tablist" aria-label={headerByTab[activeTab].title}>
-          {workspaceTabs.map((tab) => (
-            <button
-              key={tab}
-              id={tabLabelByKey[tab]}
-              type="button"
-              role="tab"
-              className={`skill-detail-tab-button${activeTab === tab ? " is-active" : ""}`}
-              aria-selected={activeTab === tab}
-              aria-controls={panelIdByKey[tab]}
-              tabIndex={activeTab === tab ? 0 : -1}
-              onClick={() => onTabChange(tab)}
-            >
-              {headerByTab[tab].title}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {activeTab === "overview" ? (
-        <div
-          id={panelIdByKey.overview}
-          className="skill-detail-workbench-panel"
-          role="tabpanel"
-          aria-labelledby={tabLabelByKey.overview}
+      <SkillWorkbenchPanel activeTab={activeTab} tab="installation">
+        <SkillDetailPreviewStage
+          className="skill-detail-install-command-panel"
+          meta={headerByTab.installation.description}
+          title={model.installationSteps[0]?.label || headerByTab.installation.title}
         >
-          <div className="skill-detail-overview-shell">
-            <section className="skill-detail-preview-panel skill-detail-overview-card" aria-label={messages.skillDetailOverviewTitle}>
-              <div className="skill-detail-preview-head">
-                <div>
-                  <div className="skill-detail-preview-title">{messages.skillDetailOverviewTitle}</div>
-                  <div className="skill-detail-preview-meta">{messages.skillDetailOverviewDescription}</div>
+          <pre className="skill-detail-content-preview">{detail.skill.install_command || model.installationSteps[0]?.value}</pre>
+        </SkillDetailPreviewStage>
+
+        {installMetadataRows.length > 0 ? (
+          <div className="skill-detail-install-list">
+            {installMetadataRows.map((item) => (
+              <div key={`${item.label}-${item.value}`} className="skill-detail-install-row">
+                <div className="skill-detail-install-row-copy">
+                  <span className="skill-detail-install-label">{item.label}</span>
+                  {item.description ? <p className="skill-detail-install-help">{item.description}</p> : null}
                 </div>
+                <span className="skill-detail-install-value">{item.value}</span>
               </div>
+            ))}
+          </div>
+        ) : null}
+      </SkillWorkbenchPanel>
 
-              <div className="skill-detail-overview-summary">
-                <p className="skill-detail-panel-copy">{overviewModel.summary}</p>
-              </div>
-            </section>
+      <SkillWorkbenchPanel activeTab={activeTab} tab="skill">
+        <SkillDetailDocumentPreview
+          content={resourceContent?.content || detail.skill.content || messages.skillDetailSelectFile}
+          language={resourceContent?.language || fallbackFile?.language || messages.skillDetailUnknownLanguage}
+          locale={locale}
+          title={selectedFileDisplayName || resourceContent?.display_name || fallbackFile?.display_name || messages.skillDetailContentTitle}
+          updatedAt={resourceContent?.updated_at}
+          updatedBadgePrefix={messages.skillDetailUpdatedBadgePrefix}
+        />
+      </SkillWorkbenchPanel>
 
+      <SkillWorkbenchPanel activeTab={activeTab} tab="resources">
+        {resourcesPending ? (
+          <SkillDetailResourceLoadingSkeleton />
+        ) : resources?.files.length ? (
+          <div className="skill-detail-resource-browser">
+            <SkillDetailResourceTree
+              resources={resources}
+              selectedFileName={selectedFileName}
+              onOpenFile={onOpenFile}
+              title={resourceTableTitle}
+            />
             <SkillDetailDocumentPreview
-              content={overviewModel.previewContent}
-              language={overviewModel.previewLanguage}
+              className="skill-detail-resource-preview-stage"
+              content={resourceContent?.content || detail.skill.content || messages.skillDetailSelectFile}
+              language={resourceContent?.language || fallbackFile?.language || messages.skillDetailUnknownLanguage}
               locale={locale}
-              title={overviewModel.previewTitle}
-              updatedAt={overviewModel.previewUpdatedAt}
+              title={selectedFileDisplayName || fallbackFile?.display_name || headerByTab.resources.title}
+              updatedAt={resourceContent?.updated_at}
               updatedBadgePrefix={messages.skillDetailUpdatedBadgePrefix}
             />
           </div>
-        </div>
-      ) : null}
+        ) : (
+          <p className="skill-detail-empty-state">{messages.skillDetailNoResources}</p>
+        )}
+      </SkillWorkbenchPanel>
 
-      {activeTab === "installation" ? (
-        <div
-          id={panelIdByKey.installation}
-          className="skill-detail-workbench-panel"
-          role="tabpanel"
-          aria-labelledby={tabLabelByKey.installation}
-        >
-          <div className="skill-detail-content-panel skill-detail-install-command-panel">
-            <div className="skill-detail-content-head">
-              <h3>{model.installationSteps[0]?.label || messages.skillDetailInstallTitle}</h3>
-            </div>
-            <pre className="skill-detail-content-preview">{detail.skill.install_command || model.installationSteps[0]?.value}</pre>
-          </div>
-
-          {installMetadataRows.length > 0 ? (
-            <div className="skill-detail-install-list">
-              {installMetadataRows.map((item) => (
-                <div key={`${item.label}-${item.value}`} className="skill-detail-install-row">
-                  <div className="skill-detail-install-row-copy">
-                    <span className="skill-detail-install-label">{item.label}</span>
-                    {item.description ? <p className="skill-detail-install-help">{item.description}</p> : null}
-                  </div>
-                  <span className="skill-detail-install-value">{item.value}</span>
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
-      {activeTab === "skill" ? (
-        <div
-          id={panelIdByKey.skill}
-          className="skill-detail-workbench-panel"
-          role="tabpanel"
-          aria-labelledby={tabLabelByKey.skill}
-        >
-          <SkillDetailDocumentPreview
-            content={resourceContent?.content || detail.skill.content || messages.skillDetailSelectFile}
-            language={resourceContent?.language || selectedFile?.language || messages.skillDetailUnknownLanguage}
-            locale={locale}
-            title={resourceContent?.display_name || selectedFile?.display_name || messages.skillDetailContentTitle}
-            updatedAt={resourceContent?.updated_at}
-            updatedBadgePrefix={messages.skillDetailUpdatedBadgePrefix}
-          />
-        </div>
-      ) : null}
-
-      {activeTab === "resources" ? (
-        <div
-          id={panelIdByKey.resources}
-          className="skill-detail-workbench-panel"
-          role="tabpanel"
-          aria-labelledby={tabLabelByKey.resources}
-        >
-          {resources?.files.length ? (
-            <div className="skill-detail-resource-browser">
-              <div className="skill-detail-resource-browser-head">
-                <div className="marketplace-section-header">
-                  <h3>{messages.skillDetailResourceTreeTitle}</h3>
-                  <p>{messages.skillDetailResourcesDescription}</p>
-                </div>
-
-                <button
-                  type="button"
-                  className={`skill-detail-resource-details-toggle${resourceDetailsOpen ? " is-active" : ""}`}
-                  onClick={() => setResourceDetailsOpen((current) => !current)}
-                >
-                  {messages.skillDetailResourceDetailsToggle}
-                </button>
-              </div>
-
-              {resourceDetailsOpen ? (
-                <div className="skill-detail-resource-facts">
-                  {model.resourceInsights.map((item) => (
-                    <div key={`${item.label}-${item.value}`} className="skill-detail-resource-fact">
-                      <span className="skill-detail-resource-fact-label">{item.label}</span>
-                      <span className="skill-detail-resource-fact-value">{item.value}</span>
-                      {item.description ? <p className="skill-detail-resource-fact-description">{item.description}</p> : null}
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-
-              <SkillDetailResourceTree
-                resources={resources}
-                selectedFileName={selectedFileName}
-                onOpenFile={onOpenFile}
-                title={messages.skillDetailResourceTreeTitle}
-              />
-            </div>
-          ) : (
-            <p className="skill-detail-empty-state">{messages.skillDetailNoResources}</p>
-          )}
-        </div>
-      ) : null}
-
-      {activeTab === "history" ? (
-        <div
-          id={panelIdByKey.history}
-          className="skill-detail-workbench-panel"
-          role="tabpanel"
-          aria-labelledby={tabLabelByKey.history}
-        >
-          {model.versionHighlights.length > 0 ? (
+      <SkillWorkbenchPanel activeTab={activeTab} tab="history">
+        {versionsPending ? (
+          <SkillDetailHistoryLoadingSkeleton />
+        ) : model.versionHighlights.length > 0 ? (
+          <SkillDetailPreviewStage meta={headerByTab.history.description} title={headerByTab.history.title}>
             <div className="skill-detail-timeline">
               {model.versionHighlights.map((item) => (
                 <div key={`${item.label}-${item.value}`} className="skill-detail-timeline-item">
@@ -342,33 +289,28 @@ export function SkillDetailWorkbench({
                 </div>
               ))}
             </div>
-          ) : (
-            <p className="skill-detail-empty-state">{messages.skillDetailNoVersions}</p>
-          )}
-        </div>
-      ) : null}
+          </SkillDetailPreviewStage>
+        ) : (
+          <p className="skill-detail-empty-state">{messages.skillDetailNoVersions}</p>
+        )}
+      </SkillWorkbenchPanel>
 
-      {activeTab === "related" ? (
-        <div
-          id={panelIdByKey.related}
-          className="skill-detail-workbench-panel"
-          role="tabpanel"
-          aria-labelledby={tabLabelByKey.related}
-        >
+      <SkillWorkbenchPanel activeTab={activeTab} tab="related">
+        <SkillDetailPreviewStage meta={headerByTab.related.description} title={headerByTab.related.title}>
           <div className="skill-detail-related-list">
             {model.relatedSkills.map((skill) => (
-              <Link key={skill.id} href={toPublicPath(`/skills/${skill.id}`)} className="skill-detail-related-card">
+              <PublicLink key={skill.id} href={`/skills/${skill.id}`} className="skill-detail-related-card">
                 <div className="skill-detail-related-head">
                   <strong>{skill.name}</strong>
                   <span>{skill.qualityScore}</span>
                 </div>
                 <span className="skill-detail-related-meta">{skill.category}</span>
                 <span className="skill-detail-related-link">{messages.rankingOpenSkillLabel}</span>
-              </Link>
+              </PublicLink>
             ))}
           </div>
-        </div>
-      ) : null}
+        </SkillDetailPreviewStage>
+      </SkillWorkbenchPanel>
     </section>
   );
 }

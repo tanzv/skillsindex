@@ -14,6 +14,17 @@ describe("public marketplace fallback", () => {
     expect(payload.items[0]?.name).toBe("Cloud Rollout Runbook");
   });
 
+  it("keeps the operations release route populated for the local fallback when semantic tags are present", () => {
+    const payload = buildPublicMarketplaceFallback({
+      category: "operations",
+      subcategory: "release",
+      tags: "ops"
+    });
+
+    expect(payload.items).toHaveLength(1);
+    expect(payload.items[0]?.name).toBe("Cloud Rollout Runbook");
+  });
+
   it("matches keyword and semantic filters together for the results route", () => {
     const payload = buildPublicMarketplaceFallback({
       q: "nextjs",

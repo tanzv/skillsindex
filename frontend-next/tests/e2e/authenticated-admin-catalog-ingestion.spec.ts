@@ -52,11 +52,11 @@ test("executes admin catalog job and sync policy actions", async ({ page }) => {
   await expect(failedJob).toContainText("archive parse failed");
   await failedJob.getByRole("button", { name: "Retry" }).click();
   await expect(page.getByText("Job 81 retry requested.")).toBeVisible();
-  await expect(failedJob).toContainText("pending");
+  await expect(failedJob).toContainText(/pending/i);
 
   await runningJob.getByRole("button", { name: "Cancel" }).click();
   await expect(page.getByText("Job 82 cancel requested.")).toBeVisible();
-  await expect(runningJob).toContainText("canceled");
+  await expect(runningJob).toContainText(/canceled/i);
   await expect(failedJob).toBeVisible();
 
   await page.goto("/admin/sync-policy/repository");
@@ -84,7 +84,7 @@ test("executes repository intake and import source actions", async ({ page }) =>
   await page.getByLabel("Repository Branch").fill("release");
   await page.getByLabel("Repository Path").fill("skills/catalog");
   await page.getByLabel("Tags").first().fill(`release repo-${suffix}`);
-  await page.getByLabel("Visibility").first().fill("public");
+  await page.getByLabel("Visibility").first().selectOption("public");
   await page.getByLabel("Install Command").first().fill("uvx skillsindex install repository-intake");
   await page.getByRole("button", { name: "Start Repository Intake" }).click();
   await expect(page.getByText("Repository ingestion requested.")).toBeVisible();
@@ -103,7 +103,7 @@ test("executes repository intake and import source actions", async ({ page }) =>
     buffer: Buffer.from("mock archive payload")
   });
   await page.getByLabel("Tags").first().fill(`archive-${suffix}`);
-  await page.getByLabel("Visibility").first().fill("private");
+  await page.getByLabel("Visibility").first().selectOption("private");
   await page.getByLabel("Install Command").first().fill("npx skillsindex import archive-intake");
   await page.getByRole("button", { name: "Import Archive" }).click();
   await expect(page.getByText("Archive import submitted.")).toBeVisible();
@@ -112,7 +112,7 @@ test("executes repository intake and import source actions", async ({ page }) =>
   await page.getByLabel("SkillMP ID").fill(`skillmp-${suffix}`);
   await page.getByLabel("SkillMP Token").fill("skillmp-token");
   await page.getByLabel("Tags").nth(1).fill(`skillmp-${suffix}`);
-  await page.getByLabel("Visibility").nth(1).fill("public");
+  await page.getByLabel("Visibility").nth(1).selectOption("public");
   await page.getByLabel("Install Command").nth(1).fill("npx skillsindex import skillmp-governance");
   await page.getByRole("button", { name: "Import SkillMP" }).click();
   await expect(page.getByText("SkillMP import submitted.")).toBeVisible();

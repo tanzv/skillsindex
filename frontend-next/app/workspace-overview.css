@@ -156,6 +156,21 @@
   gap: 10px;
 }
 
+.workspace-section-card.is-current-session,
+.workspace-section-card.is-execution-spotlight {
+  position: relative;
+  overflow: hidden;
+}
+
+.workspace-section-card.is-current-session::before,
+.workspace-section-card.is-execution-spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, rgba(94, 234, 212, 0.9) 0%, rgba(56, 189, 248, 0.72) 100%);
+}
+
 .workspace-section-badge {
   padding: 4px 10px;
   border-radius: 999px;
@@ -170,6 +185,11 @@
 }
 
 .workspace-section-list.is-signal-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.workspace-section-card.is-current-session .workspace-section-list,
+.workspace-section-card.is-execution-spotlight .workspace-section-list {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -202,6 +222,38 @@
 
 .workspace-section-item.is-session {
   background: linear-gradient(180deg, rgba(31, 59, 98, 0.44) 0%, rgba(9, 20, 39, 0.26) 100%);
+}
+
+.workspace-section-card.is-current-session .workspace-section-item.is-session {
+  gap: 6px;
+  background: linear-gradient(180deg, rgba(20, 38, 72, 0.54) 0%, rgba(8, 18, 35, 0.26) 100%);
+}
+
+.workspace-section-card.is-current-session .workspace-section-item.is-session .workspace-section-item-row {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.workspace-section-card.is-current-session .workspace-section-item-description {
+  display: none;
+}
+
+.workspace-section-card.is-current-session .workspace-section-item-value.is-session,
+.workspace-section-card.is-execution-spotlight .workspace-section-item-value {
+  max-width: none;
+  text-align: left;
+}
+
+.workspace-section-card.is-execution-spotlight .workspace-section-description {
+  max-width: 72ch;
+}
+
+.workspace-section-card.is-execution-spotlight .workspace-section-item {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(7, 15, 30, 0.22) 100%);
+}
+
+.workspace-section-card.is-execution-spotlight .workspace-stage-action-row {
+  padding-top: 2px;
 }
 
 .workspace-section-item-value {
@@ -238,7 +290,9 @@
 @media (max-width: 1180px) {
   .workspace-stage-grid,
   .workspace-overview-grid,
-  .workspace-section-list.is-signal-grid {
+  .workspace-section-list.is-signal-grid,
+  .workspace-section-card.is-current-session .workspace-section-list,
+  .workspace-section-card.is-execution-spotlight .workspace-section-list {
     grid-template-columns: 1fr;
   }
 }

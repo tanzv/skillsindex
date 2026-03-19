@@ -51,6 +51,10 @@ export interface ProtectedTopbarConfig {
   overflowGroupOrder: string[];
   overflowTitle: string;
   overflowHint: string;
+  overflowMetricLabels: {
+    visible: string;
+    hidden: string;
+  };
 }
 
 export interface ProtectedTopbarModel {
@@ -258,8 +262,8 @@ export function buildProtectedTopbarModel(
       title: config.overflowTitle,
       hint: config.overflowHint,
       metrics: [
-        { id: "visible", label: "Visible", value: String(visibleEntries.length) },
-        { id: "hidden", label: "Hidden", value: String(hiddenEntries.length) }
+        { id: "visible", label: config.overflowMetricLabels.visible, value: String(visibleEntries.length) },
+        { id: "hidden", label: config.overflowMetricLabels.hidden, value: String(hiddenEntries.length) }
       ],
       groups: buildOverflowGroups(hiddenEntries, config)
     }

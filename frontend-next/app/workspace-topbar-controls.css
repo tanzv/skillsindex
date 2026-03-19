@@ -1,0 +1,240 @@
+.workspace-shell-topbar-nav-button,
+.workspace-topbar-toggle-icon-button,
+.workspace-topbar-overflow-metric {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.workspace-shell-topbar-nav-button {
+  position: relative;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: var(--protected-topbar-control-text);
+  background: var(--protected-shell-interactive-bg);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.workspace-shell-topbar-nav-button::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 5px;
+  height: 2px;
+  border-radius: 999px;
+  background: transparent;
+  opacity: 0;
+  transition: opacity 160ms ease, background-color 160ms ease;
+}
+
+.workspace-shell-topbar-nav-button:hover,
+.workspace-topbar-toggle-icon-button:hover {
+  border-color: var(--protected-shell-interactive-border-hover);
+  background: var(--protected-topbar-control-bg-hover);
+  color: var(--protected-topbar-control-text-strong);
+  box-shadow: var(--protected-topbar-control-shadow-hover);
+  transform: none;
+}
+
+.workspace-shell-topbar-nav-button.is-active {
+  border-color: var(--protected-topbar-control-border-active);
+  background: var(--protected-topbar-control-bg-active);
+  color: var(--protected-topbar-control-text-active);
+  box-shadow: var(--protected-topbar-control-shadow-active);
+}
+
+.workspace-shell-topbar-nav-button.is-active::after {
+  background: var(--protected-topbar-control-indicator);
+  opacity: 1;
+}
+
+.workspace-shell-topbar-status {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--protected-topbar-status-border);
+  border-radius: 999px;
+  background: var(--protected-topbar-status-bg);
+  color: var(--protected-topbar-status-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: var(--protected-topbar-status-shadow);
+}
+
+.workspace-topbar-user-trigger {
+  min-height: 40px;
+  gap: 10px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--protected-topbar-user-border);
+  border-radius: 999px;
+  background: var(--protected-topbar-user-bg);
+  color: var(--workspace-shell-text);
+  box-shadow: var(--protected-topbar-user-shadow);
+}
+
+.workspace-topbar-user-trigger:hover {
+  border-color: var(--protected-topbar-user-border-hover);
+  background: var(--protected-topbar-user-bg-hover);
+}
+
+.workspace-topbar-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--protected-topbar-avatar-bg);
+  color: var(--protected-topbar-avatar-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 800;
+  box-shadow: var(--protected-topbar-avatar-shadow);
+}
+
+.workspace-topbar-user-meta {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.workspace-topbar-user-meta strong,
+.workspace-topbar-user-meta small {
+  max-width: 148px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-topbar-user-meta strong {
+  color: var(--workspace-shell-text);
+  font-size: 11px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.workspace-topbar-user-meta small {
+  color: var(--workspace-shell-text-secondary);
+  font-size: 9px;
+  line-height: 1.1;
+  font-weight: 600;
+}
+
+.workspace-topbar-user-chip {
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--protected-topbar-user-chip-bg);
+  color: var(--protected-topbar-user-chip-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+}
+
+.workspace-topbar-user-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--protected-topbar-user-icon);
+}
+
+.workspace-topbar-primary-inline-toggle {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.workspace-topbar-toggle-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  gap: 0;
+  padding-inline: 10px;
+  border-color: var(--protected-shell-border);
+  background: var(--protected-shell-interactive-bg);
+  box-shadow: none;
+  color: var(--protected-topbar-toggle-text);
+  cursor: pointer;
+}
+
+.workspace-topbar-toggle-icon-button.is-expanded {
+  border-color: var(--protected-topbar-control-border-active);
+  background: var(--protected-topbar-control-bg-active);
+  color: var(--protected-topbar-control-text-active);
+  box-shadow: var(--protected-topbar-control-shadow-active);
+}
+
+.workspace-topbar-toggle-button-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.workspace-topbar-toggle-glyph-shell {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.workspace-topbar-toggle-panel-icon,
+.workspace-topbar-toggle-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.workspace-topbar-toggle-icon {
+  width: 13px;
+  height: 13px;
+  transition: transform 160ms ease;
+}
+
+.workspace-topbar-toggle-icon-button.is-expanded .workspace-topbar-toggle-icon {
+  transform: rotate(180deg);
+}
+
+.workspace-topbar-toggle-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--protected-topbar-toggle-badge-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.workspace-topbar-toggle-badge-count {
+  color: var(--protected-topbar-control-text-active);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  font-weight: 700;
+}

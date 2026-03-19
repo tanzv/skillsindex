@@ -108,11 +108,16 @@ function renderSectionItem(item: WorkspaceSectionItem, variant?: WorkspaceSectio
 }
 
 export function WorkspaceSectionCard({ section }: { section: WorkspaceSection }) {
-  const sectionSlug = slugify(section.title);
+  const sectionSlug = slugify(section.id || section.title);
 
   return (
     <section
-      className={cn("workspace-stage-panel", "workspace-section-card", resolveSectionVariantClassName(section.variant))}
+      className={cn(
+        "workspace-stage-panel",
+        "workspace-section-card",
+        resolveSectionVariantClassName(section.variant),
+        sectionSlug && `is-${sectionSlug}`
+      )}
       data-testid={`workspace-section-${sectionSlug}`}
     >
       <div className="workspace-section-header">
@@ -133,7 +138,7 @@ export function WorkspaceSectionCard({ section }: { section: WorkspaceSection })
 
       <div className={cn("workspace-section-list", resolveSectionVariantClassName(section.variant))}>
         {section.items.map((item) => (
-          <div key={`${section.title}-${item.label}`} className="workspace-section-list-entry">
+          <div key={`${section.id}-${item.label}`} className="workspace-section-list-entry">
             {renderSectionItem(item, section.variant)}
           </div>
         ))}
@@ -145,7 +150,7 @@ export function WorkspaceSectionCard({ section }: { section: WorkspaceSection })
         <div className="workspace-stage-action-row">
           {section.actions.map((action) => (
             <Link
-              key={`${section.title}-${action.href}`}
+              key={`${section.id}-${action.href}`}
               href={action.href}
               className={cn("workspace-stage-action", resolveActionVariantClassName(action.variant))}
             >
@@ -163,12 +168,12 @@ export function WorkspaceOverviewGrid({ model }: { model: WorkspacePageModel }) 
     <div className="workspace-stage-grid workspace-overview-grid" data-testid="workspace-overview-grid">
       <div className="workspace-stage-column workspace-overview-primary" data-testid="workspace-overview-primary">
         {model.primarySections.map((section) => (
-          <WorkspaceSectionCard key={section.title} section={section} />
+          <WorkspaceSectionCard key={section.id} section={section} />
         ))}
       </div>
       <div className="workspace-stage-column workspace-overview-rail" data-testid="workspace-overview-rail">
         {model.railSections.map((section) => (
-          <WorkspaceSectionCard key={section.title} section={section} />
+          <WorkspaceSectionCard key={section.id} section={section} />
         ))}
       </div>
     </div>

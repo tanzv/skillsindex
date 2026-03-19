@@ -1,0 +1,17 @@
+.marketplace-control-group {
+  display: grid;
+  gap: 14px;
+}
+
+.marketplace-control-group.is-inline {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .marketplace-control-group.is-inline {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+}

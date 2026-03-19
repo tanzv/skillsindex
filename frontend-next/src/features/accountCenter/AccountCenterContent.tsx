@@ -1,16 +1,22 @@
+"use client";
+
 import Link from "next/link";
+
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
+import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import { AccountRouteSections } from "./AccountCenterSections";
 import {
   accountRouteBySection,
   accountSectionByRoute,
+  formatAccountDate,
   type AccountAPIKeyCreateDraft,
   type AccountAPIKeySecretState,
   type AccountAPIKeysPayload,
   type AccountProfileDraft,
   type AccountRoute,
-  type AccountSessionsPayload,
-  formatAccountDate
+  type AccountSection,
+  type AccountSessionsPayload
 } from "./model";
 
 interface AccountCenterContentProps {
@@ -47,50 +53,99 @@ interface AccountCenterContentProps {
   onApplyCredentialScopes: (keyId: number) => void;
 }
 
-const accountRouteMeta: Record<AccountRoute, { description: string; kicker: string }> = {
-  "/account/profile": {
-    description: "Review your public identity, session hygiene, and personal credentials from the prototype-aligned account workbench.",
-    kicker: "Profile Workspace"
-  },
-  "/account/security": {
-    description: "Manage password rotation, revoke stale sessions, and keep the signed-in operator posture tight.",
-    kicker: "Security Workspace"
-  },
-  "/account/sessions": {
-    description: "Inspect active sessions, expiration windows, and per-device access context.",
-    kicker: "Sessions Workspace"
-  },
-  "/account/api-credentials": {
-    description: "Create, rotate, scope, and revoke personal API credentials without leaving the account workbench.",
-    kicker: "Credentials Workspace"
+function resolveRouteMeta(route: AccountRoute, messages: ReturnType<typeof useProtectedI18n>["messages"]["accountCenter"]) {
+  switch (route) {
+    case "/account/security":
+      return {
+        kicker: messages.routeSecurityKicker,
+        description: messages.routeSecurityDescription
+      };
+    case "/account/sessions":
+      return {
+        kicker: messages.routeSessionsKicker,
+        description: messages.routeSessionsDescription
+      };
+    case "/account/api-credentials":
+      return {
+        kicker: messages.routeCredentialsKicker,
+        description: messages.routeCredentialsDescription
+      };
+    case "/account/profile":
+    default:
+      return {
+        kicker: messages.routeProfileKicker,
+        description: messages.routeProfileDescription
+      };
   }
-};
+}
 
-const accountRouteActionLinks: Record<AccountRoute, Array<{ href: string; label: string }>> = {
-  "/account/profile": [
-    { href: "/", label: "Open Marketplace" },
-    { href: "/admin/overview", label: "Open Admin" }
-  ],
-  "/account/security": [
-    { href: "/account/sessions", label: "Review Sessions" },
-    { href: "/admin/overview", label: "Open Admin" }
-  ],
-  "/account/sessions": [
-    { href: "/account/security", label: "Open Security" },
-    { href: "/admin/overview", label: "Open Admin" }
-  ],
-  "/account/api-credentials": [
-    { href: "/", label: "Open Marketplace" },
-    { href: "/account/profile", label: "Open Profile" }
-  ]
-};
+function resolveRouteActions(route: AccountRoute, messages: ReturnType<typeof useProtectedI18n>["messages"]["accountCenter"]) {
+  switch (route) {
+    case "/account/security":
+      return [
+        { href: "/account/sessions", label: messages.routeActionReviewSessions },
+        { href: "/admin/overview", label: messages.routeActionOpenAdmin }
+      ];
+    case "/account/sessions":
+      return [
+        { href: "/account/security", label: messages.routeActionOpenSecurity },
+        { href: "/admin/overview", label: messages.routeActionOpenAdmin }
+      ];
+    case "/account/api-credentials":
+      return [
+        { href: "/", label: messages.routeActionOpenMarketplace },
+        { href: "/account/profile", label: messages.routeActionOpenProfile }
+      ];
+    case "/account/profile":
+    default:
+      return [
+        { href: "/", label: messages.routeActionOpenMarketplace },
+        { href: "/admin/overview", label: messages.routeActionOpenAdmin }
+      ];
+  }
+}
 
-const accountRouteSignalDescriptions: Record<AccountRoute, string> = {
-  "/account/profile": "Use the profile route for identity edits, public metadata, and personal presentation.",
-  "/account/security": "Use the security route for password posture and session-revocation decisions.",
-  "/account/sessions": "Use the sessions route to inspect device access and revoke suspicious browsers.",
-  "/account/api-credentials": "Use the credentials route to issue, scope, rotate, and revoke personal API keys."
-};
+function resolveRouteSignal(route: AccountRoute, messages: ReturnType<typeof useProtectedI18n>["messages"]["accountCenter"]) {
+  switch (route) {
+    case "/account/security":
+      return messages.routeSignalSecurity;
+    case "/account/sessions":
+      return messages.routeSignalSessions;
+    case "/account/api-credentials":
+      return messages.routeSignalCredentials;
+    case "/account/profile":
+    default:
+      return messages.routeSignalProfile;
+  }
+}
+
+function resolveSectionLabel(section: AccountSection, messages: ReturnType<typeof useProtectedI18n>["messages"]["accountCenter"]) {
+  switch (section) {
+    case "security":
+      return messages.sectionSecurity;
+    case "sessions":
+      return messages.sectionSessions;
+    case "credentials":
+      return messages.sectionCredentials;
+    case "profile":
+    default:
+      return messages.sectionProfile;
+  }
+}
+
+function resolveSectionRouteHint(section: AccountSection, messages: ReturnType<typeof useProtectedI18n>["messages"]["accountCenter"]) {
+  switch (section) {
+    case "security":
+      return messages.routeHintSecurity;
+    case "sessions":
+      return messages.routeHintSessions;
+    case "credentials":
+      return messages.routeHintCredentials;
+    case "profile":
+    default:
+      return messages.routeHintProfile;
+  }
+}
 
 export function AccountCenterContent({
   route,
@@ -121,16 +176,30 @@ export function AccountCenterContent({
   onRevokeCredential,
   onApplyCredentialScopes
 }: AccountCenterContentProps) {
-  const routeMeta = accountRouteMeta[route];
-  const routeActions = accountRouteActionLinks[route];
+  const { locale, messages } = useProtectedI18n();
+  const accountMessages = messages.accountCenter;
+  const routeMeta = resolveRouteMeta(route, accountMessages);
+  const routeActions = resolveRouteActions(route, accountMessages);
   const activeSection = accountSectionByRoute[route];
+  const activeSectionLabel = resolveSectionLabel(activeSection, accountMessages);
+  const latestCredentialSecretMessage = latestCredentialSecret
+    ? formatProtectedMessage(
+        latestCredentialSecret.action === "created"
+          ? accountMessages.latestSecretCreatedTemplate
+          : accountMessages.latestSecretRotatedTemplate,
+        {
+          name: latestCredentialSecret.name,
+          plaintextKey: latestCredentialSecret.plaintextKey
+        }
+      )
+    : "";
 
   return (
     <div className="account-center-stage">
       <section className="account-center-stage-panel account-center-hero">
         <div className="account-center-panel-title-row">
           <p className="account-center-kicker">{routeMeta.kicker}</p>
-          <h1>Account Center</h1>
+          <h1>{accountMessages.pageTitle}</h1>
           <p className="account-center-description">{routeMeta.description}</p>
         </div>
 
@@ -139,14 +208,14 @@ export function AccountCenterContent({
             <div key={metric.label} className="account-center-summary-card">
               <div className="account-center-summary-label">{metric.label}</div>
               <div className="account-center-summary-value">{metric.value}</div>
-              <div className="account-center-summary-detail">Live account snapshot</div>
+              <div className="account-center-summary-detail">{accountMessages.metricLiveSnapshotDetail}</div>
             </div>
           ))}
         </div>
 
         <div className="account-center-hero-actions">
           <button type="button" className="account-center-action is-primary" onClick={onRefresh} disabled={loading || saving}>
-            {loading ? "Refreshing..." : "Refresh"}
+            {loading ? accountMessages.refreshingAction : accountMessages.refreshAction}
           </button>
           {routeActions.map((action) => (
             <Link key={action.href} href={action.href} className="account-center-action">
@@ -159,11 +228,7 @@ export function AccountCenterContent({
       <div className="account-center-feedback-stack">
         {error ? <div className="account-center-message is-error">{error}</div> : null}
         {message ? <div className="account-center-message is-success">{message}</div> : null}
-        {latestCredentialSecret ? (
-          <div className="account-center-secret">
-            {latestCredentialSecret.action} credential <strong>{latestCredentialSecret.name}</strong>: {latestCredentialSecret.plaintextKey}
-          </div>
-        ) : null}
+        {latestCredentialSecretMessage ? <div className="account-center-secret">{latestCredentialSecretMessage}</div> : null}
       </div>
 
       <div className="account-center-stage-grid">
@@ -197,18 +262,16 @@ export function AccountCenterContent({
         <aside className="account-center-right">
           <section className="account-center-stage-panel account-center-section-stack">
             <div className="account-center-panel-title-row">
-              <p className="account-center-section-kicker">Navigation</p>
-              <h2>Section Links</h2>
-              <p className="account-center-panel-description">
-                Open the dedicated account subsection routes while keeping one shared shell and summary layer.
-              </p>
+              <p className="account-center-section-kicker">{accountMessages.navigationKicker}</p>
+              <h2>{accountMessages.navigationTitle}</h2>
+              <p className="account-center-panel-description">{accountMessages.navigationDescription}</p>
             </div>
 
             <div className="account-center-links">
               {Object.entries(accountRouteBySection).map(([section, href]) => (
                 <Link key={href} href={href} className={`account-center-tab-link ${route === href ? "is-active" : ""}`}>
-                  <span>{section}</span>
-                  <span>{href.replace("/account/", "")}</span>
+                  <span>{resolveSectionLabel(section as AccountSection, accountMessages)}</span>
+                  <span>{resolveSectionRouteHint(section as AccountSection, accountMessages)}</span>
                 </Link>
               ))}
             </div>
@@ -216,48 +279,58 @@ export function AccountCenterContent({
 
           <section className="account-center-stage-panel account-center-section-stack">
             <div className="account-center-panel-title-row">
-              <p className="account-center-section-kicker">Signals</p>
-              <h2>Route Signals</h2>
+              <p className="account-center-section-kicker">{accountMessages.signalsKicker}</p>
+              <h2>{accountMessages.signalsTitle}</h2>
             </div>
-            <p className="account-center-surface-copy">Current section: {activeSection}</p>
-            <p className="account-center-surface-copy">Avatar initials: {avatarInitials}</p>
-            <p className="account-center-surface-copy">Sessions: {sessionsPayload?.total || 0}</p>
-            <p className="account-center-surface-copy">Credentials: {credentialsPayload?.total || 0}</p>
-            <p className="account-center-surface-copy">Route focus: {routeMeta.kicker}</p>
-            <p className="account-center-surface-copy">{accountRouteSignalDescriptions[route]}</p>
+            <p className="account-center-surface-copy">
+              {formatProtectedMessage(accountMessages.signalCurrentSectionTemplate, { section: activeSectionLabel })}
+            </p>
+            <p className="account-center-surface-copy">
+              {formatProtectedMessage(accountMessages.signalAvatarInitialsTemplate, { initials: avatarInitials })}
+            </p>
+            <p className="account-center-surface-copy">
+              {formatProtectedMessage(accountMessages.signalSessionsTemplate, { count: sessionsPayload?.total || 0 })}
+            </p>
+            <p className="account-center-surface-copy">
+              {formatProtectedMessage(accountMessages.signalCredentialsTemplate, { count: credentialsPayload?.total || 0 })}
+            </p>
+            <p className="account-center-surface-copy">
+              {formatProtectedMessage(accountMessages.signalRouteFocusTemplate, { value: routeMeta.kicker })}
+            </p>
+            <p className="account-center-surface-copy">{resolveRouteSignal(route, accountMessages)}</p>
           </section>
 
           <section className="account-center-stage-panel account-center-section-stack">
             <div className="account-center-panel-title-row">
-              <p className="account-center-section-kicker">Quick Actions</p>
-              <h2>Action Shortcuts</h2>
+              <p className="account-center-section-kicker">{accountMessages.quickActionsKicker}</p>
+              <h2>{accountMessages.quickActionsTitle}</h2>
             </div>
             <div className="account-center-action-row">
               <Link href="/" className="account-center-action">
-                Open Marketplace
+                {accountMessages.quickActionMarketplace}
               </Link>
               <Link href="/admin/overview" className="account-center-action">
-                Open Admin
+                {accountMessages.quickActionAdmin}
               </Link>
               <Link href="/account/sessions" className="account-center-action">
-                Sessions
+                {accountMessages.quickActionSessions}
               </Link>
               <Link href="/account/api-credentials" className="account-center-action">
-                API Credentials
+                {accountMessages.quickActionApiCredentials}
               </Link>
             </div>
           </section>
 
           <section className="account-center-stage-panel account-center-section-stack account-center-side-panel-highlight">
             <div className="account-center-panel-title-row">
-              <p className="account-center-section-kicker">Security</p>
-              <h2>Safety Notes</h2>
+              <p className="account-center-section-kicker">{accountMessages.safetyKicker}</p>
+              <h2>{accountMessages.safetyTitle}</h2>
             </div>
+            <p className="account-center-surface-copy">{accountMessages.safetyNotePrimary}</p>
             <p className="account-center-surface-copy">
-              Rotate stale credentials, revoke unknown devices, and keep profile data current before opening admin workflows.
-            </p>
-            <p className="account-center-surface-copy">
-              Current session expires: {formatAccountDate(sessionsPayload?.session_expires_at || null)}
+              {formatProtectedMessage(accountMessages.safetyCurrentSessionExpiresTemplate, {
+                value: formatAccountDate(sessionsPayload?.session_expires_at || null, locale, accountMessages.valueNotAvailable)
+              })}
             </p>
           </section>
         </aside>

@@ -1,3 +1,5 @@
+import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
+
 export function asObject(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 }
@@ -29,12 +31,12 @@ export function asBoolean(value: unknown): boolean {
   return false;
 }
 
-export function formatDateTime(value: string): string {
+export function formatDateTime(value: string, locale: PublicLocale = "en", fallback = "n/a"): string {
   const parsed = Date.parse(value);
   if (!Number.isFinite(parsed)) {
-    return "n/a";
+    return fallback;
   }
-  return new Date(parsed).toLocaleString("en-US", {
+  return new Date(parsed).toLocaleString(locale === "zh" ? "zh-CN" : "en-US", {
     month: "short",
     day: "numeric",
     hour: "2-digit",

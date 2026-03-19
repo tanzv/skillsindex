@@ -8,6 +8,7 @@ import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
 import type { PublicMarketplaceResponse } from "@/src/lib/schemas/public";
 
 import { PublicNarrativeStage } from "./PublicNarrativeStage";
+import { MarketplaceSupportLinkList } from "./marketplace/MarketplaceSupportLinkList";
 
 interface PublicDocsPageProps {
   marketplace: PublicMarketplaceResponse;
@@ -77,20 +78,14 @@ export function PublicDocsPage({ marketplace }: PublicDocsPageProps) {
         title: messages.resultsDiscoveryNotesTitle,
         description: messages.resultsDiscoveryNotesDescription,
         content: (
-          <div className="marketplace-simple-link-list">
-            {marketplace.categories.slice(0, 4).map((category) => (
-              <PublicLink
-                key={category.slug}
-                href={toPublicPath(`/categories/${category.slug}`)}
-                className="marketplace-simple-link-item"
-              >
-                <span className="marketplace-sidebar-link">{category.name}</span>
-                <span className="marketplace-meta-text">
-                  {category.count} {messages.skillCountSuffix}
-                </span>
-              </PublicLink>
-            ))}
-          </div>
+          <MarketplaceSupportLinkList
+            items={marketplace.categories.slice(0, 4).map((category) => ({
+              key: category.slug,
+              href: toPublicPath(`/categories/${category.slug}`),
+              label: category.name,
+              meta: `${category.count} ${messages.skillCountSuffix}`
+            }))}
+          />
         ),
         testId: "public-docs-snapshot"
       }
@@ -115,20 +110,28 @@ export function PublicDocsPage({ marketplace }: PublicDocsPageProps) {
         key: "docs-quick-links",
         title: messages.docsQuickLinksTitle,
         content: (
-          <div className="marketplace-simple-link-list">
-            <PublicLink className="marketplace-simple-link-item" href={toPublicPath("/")}>
-              <span className="marketplace-sidebar-link">{messages.docsQuickLinkMarketplace}</span>
-              <span className="marketplace-meta-text">{messages.stageLanding}</span>
-            </PublicLink>
-            <PublicLink className="marketplace-simple-link-item" href="/workspace">
-              <span className="marketplace-sidebar-link">{messages.docsQuickLinkWorkspace}</span>
-              <span className="marketplace-meta-text">{messages.stageAccess}</span>
-            </PublicLink>
-            <PublicLink className="marketplace-simple-link-item" href="/admin/overview">
-              <span className="marketplace-sidebar-link">{messages.docsQuickLinkAdmin}</span>
-              <span className="marketplace-meta-text">{messages.governanceTitle}</span>
-            </PublicLink>
-          </div>
+          <MarketplaceSupportLinkList
+            items={[
+              {
+                key: "docs-marketplace",
+                href: toPublicPath("/"),
+                label: messages.docsQuickLinkMarketplace,
+                meta: messages.stageLanding
+              },
+              {
+                key: "docs-workspace",
+                href: "/workspace",
+                label: messages.docsQuickLinkWorkspace,
+                meta: messages.stageAccess
+              },
+              {
+                key: "docs-admin",
+                href: "/admin/overview",
+                label: messages.docsQuickLinkAdmin,
+                meta: messages.governanceTitle
+              }
+            ]}
+          />
         ),
         testId: "public-docs-quick-links"
       },

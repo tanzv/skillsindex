@@ -5,9 +5,18 @@ interface AdminDataPageProps {
   description: string;
   endpoint: string;
   payload: Record<string, unknown>;
+  messages: {
+    responsePayloadTitle: string;
+    recordTitleTemplate: string;
+    objectValueLabel: string;
+  };
 }
 
-export function AdminDataPage({ title, description, endpoint, payload }: AdminDataPageProps) {
+function formatRecordTitle(template: string, index: number) {
+  return template.replaceAll("{index}", String(index));
+}
+
+export function AdminDataPage({ title, description, endpoint, payload, messages }: AdminDataPageProps) {
   const primaryItems = Array.isArray(payload.items) ? payload.items : [];
   const secondaryPairs = Object.entries(payload).filter(([key]) => key !== "items");
 
@@ -22,7 +31,7 @@ export function AdminDataPage({ title, description, endpoint, payload }: AdminDa
           <span className="rounded-full bg-slate-100 px-3 py-1 font-medium">{endpoint}</span>
           {secondaryPairs.slice(0, 4).map(([key, value]) => (
             <span key={key} className="rounded-full bg-sky-50 px-3 py-1 font-medium text-sky-700">
-              {key}: {typeof value === "object" ? "object" : String(value)}
+              {key}: {typeof value === "object" ? messages.objectValueLabel : String(value)}
             </span>
           ))}
         </CardContent>
@@ -33,7 +42,7 @@ export function AdminDataPage({ title, description, endpoint, payload }: AdminDa
           {primaryItems.slice(0, 20).map((item, index) => (
             <Card key={`item-${index}`}>
               <CardHeader>
-                <CardTitle className="text-lg">Record {index + 1}</CardTitle>
+                <CardTitle className="text-lg">{formatRecordTitle(messages.recordTitleTemplate, index + 1)}</CardTitle>
               </CardHeader>
               <CardContent>
                 <pre className="overflow-auto rounded-2xl bg-slate-950 p-4 text-xs leading-6 text-slate-100">
@@ -46,7 +55,7 @@ export function AdminDataPage({ title, description, endpoint, payload }: AdminDa
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Response Payload</CardTitle>
+            <CardTitle>{messages.responsePayloadTitle}</CardTitle>
           </CardHeader>
           <CardContent>
             <pre className="overflow-auto rounded-2xl bg-slate-950 p-4 text-xs leading-6 text-slate-100">

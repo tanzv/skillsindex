@@ -1,0 +1,348 @@
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-page {
+  gap: 12px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-shell-breadcrumb {
+  margin-bottom: -4px;
+  gap: 4px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-shell-breadcrumb-link,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-shell-breadcrumb-current {
+  min-height: 24px;
+  padding-inline: 10px;
+  border-color: #ece6dc;
+  background: rgba(255, 253, 249, 0.84);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-shell-breadcrumb-current {
+  background: #f3eee6;
+  color: #4d463d;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-card {
+  padding: 0;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-layout {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-copy {
+  gap: 6px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-identity {
+  gap: 10px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-avatar-monogram {
+  font-size: 16px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-identity-copy {
+  gap: 5px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-title-row {
+  gap: 8px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .marketplace-kicker,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-tag-strip {
+  display: none;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-title {
+  color: #1f1a14;
+  font-size: clamp(22px, 2.2vw, 30px);
+  letter-spacing: -0.025em;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-quality-badge {
+  min-height: 22px;
+  padding-inline: 8px;
+  border-color: #e7e1d6;
+  background: #fbf8f2;
+  color: #1f1a14;
+  font-size: 10px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-support-row {
+  gap: 6px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-support-pill,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-support-meta {
+  min-height: 22px;
+  padding-inline: 8px;
+  border-color: #e7e1d6;
+  font-size: 10px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-support-pill {
+  background: #1f1a14;
+  color: #fffdf9;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-support-meta {
+  background: #fbf8f2;
+  color: #625a50;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-header-description {
+  color: #5f584f;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-meta-strip {
+  gap: 5px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-meta-chip {
+  min-height: 22px;
+  padding-inline: 8px;
+  border-color: #e7e1d6;
+  background: #fbf8f2;
+  color: #625a50;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-top-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-top-summary-card {
+  min-height: auto;
+  padding: 4px 9px;
+  border-color: #e7e1d6;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fffdf9;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-top-summary-label {
+  color: #8f8578;
+  font-size: 9px;
+  letter-spacing: 0;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-top-summary-value {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-workspace {
+  grid-template-columns: minmax(0, 1fr) 288px;
+  gap: 14px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-workbench-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  gap: 8px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-workbench-panel {
+  gap: 12px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-tab-list {
+  width: 100%;
+  gap: 18px;
+  border-bottom: 1px solid #efeae2;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-tab-button {
+  min-height: 36px;
+  padding: 0 0 1px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #8f8578;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-tab-button:hover {
+  background: transparent;
+  color: #3b342b;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-tab-button[data-state="active"] {
+  background: transparent;
+  color: #1f1a14;
+  box-shadow: inset 0 -2px 0 #1f1a14;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-context-title {
+  color: #1f1a14;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-context-summary-chip,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-installation-card-context-chip {
+  border-color: #e7e1d6;
+  background: #fffdf9;
+  color: #5f584f;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-context-status-label {
+  color: #8f8578;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-context-status-value {
+  color: #2f2922;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-card .skill-detail-preview-head,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-card .skill-detail-preview-stage-head {
+  display: none;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-card {
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(245, 241, 234, 0.9) 0%, rgba(250, 247, 241, 0.82) 100%);
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-card .skill-detail-overview-summary {
+  padding: 18px 18px 20px;
+  gap: 14px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-card .skill-detail-overview-summary-strip {
+  gap: 6px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-card .skill-detail-panel-copy {
+  color: #5f584f;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-story-grid {
+  gap: 14px;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-section-head {
+  border-bottom-color: #efe7dc;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-story-card,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-score-card,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-comments-card,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-related-card {
+  border-radius: 18px;
+  background: rgba(255, 253, 249, 0.92);
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-inline-fact {
+  border-color: #efe7dc;
+  background: #fffdf9;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-inline-fact-label {
+  color: #8f8578;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-inline-fact-value {
+  color: #2f2922;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-score-main {
+  border-color: #efe7dc;
+  background: linear-gradient(180deg, rgba(245, 241, 234, 0.92) 0%, rgba(255, 253, 249, 0.98) 100%);
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-score-value {
+  color: #1f1a14;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-score-support-row {
+  border-bottom-color: #efe7dc;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-score-support-label,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-score-meta {
+  color: #8f8578;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-score-support-value {
+  color: #2f2922;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-star-row {
+  color: #d9d1c5;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-star.is-filled,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-story-list li::before {
+  color: #d8a248;
+  background: #d8a248;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-comment-avatar {
+  border-color: #efe7dc;
+  background: #fffdf9;
+  color: #2f2922;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-section,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-preview-panel:not(.skill-detail-overview-card),
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-preview-stage:not(.skill-detail-overview-card) {
+  border-radius: 18px;
+  background: rgba(255, 253, 249, 0.9);
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-document-card {
+  background: transparent;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-document-stage {
+  background: rgba(255, 253, 249, 0.96);
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-document-card .skill-detail-preview-head,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-document-stage .skill-detail-preview-stage-head {
+  border-bottom-color: #efe7dc;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-document-stage .skill-detail-preview-content {
+  color: #3b342b;
+  font-family: "Noto Sans SC", "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-comments-card .skill-detail-comment-item,
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-related-card .skill-detail-related-card {
+  border-color: #efe7dc;
+  background: #fffdf9;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-overview-story-list li {
+  color: #3b342b;
+}
+
+.marketplace-shell.is-light-theme:has(.skill-detail-page) .skill-detail-preview-content {
+  padding: 16px 18px 18px;
+}

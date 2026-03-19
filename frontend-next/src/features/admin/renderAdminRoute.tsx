@@ -4,6 +4,9 @@ import { ErrorState } from "@/src/components/shared/ErrorState";
 import { PageHeader } from "@/src/components/shared/PageHeader";
 import { Button } from "@/src/components/ui/button";
 import { fetchAdminCollection } from "@/src/lib/api/admin";
+import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
+import { loadProtectedMessages } from "@/src/lib/i18n/protectedMessages.server";
+import { resolveServerLocale } from "@/src/lib/i18n/serverLocale";
 
 import { AdminAccessPage } from "../adminAccess/AdminAccessPage";
 import { AdminAccountsPage } from "../adminAccounts/AdminAccountsPage";
@@ -20,7 +23,7 @@ import { AdminWorkbenchPage } from "../workbench/AdminWorkbenchPage";
 import { adminWorkbenchDefinitions } from "../workbench/definitions";
 
 import { AdminDataPage } from "./AdminDataPage";
-import { adminRouteMeta } from "./adminRouteMeta";
+import { buildAdminRouteMeta } from "./adminRouteMeta";
 
 export async function renderAdminRoute(pathname: string) {
   if (pathname === "/admin/overview") {
@@ -97,10 +100,18 @@ export async function renderAdminRoute(pathname: string) {
     return <AdminWorkbenchPage route={pathname} />;
   }
 
-  const meta = adminRouteMeta[pathname];
+  const locale = await resolveServerLocale();
+  const protectedMessages = await loadProtectedMessages(locale);
+  const routeMessages = protectedMessages.adminRoute;
+  const meta = buildAdminRouteMeta(protectedMessages.adminNavigation)[pathname];
 
   if (!meta) {
-    return <ErrorState title="Unknown admin route" description={`No route metadata registered for ${pathname}.`} />;
+    return (
+      <ErrorState
+        title={routeMessages.unknownRouteTitle}
+        description={formatProtectedMessage(routeMessages.unknownRouteDescriptionTemplate, { pathname })}
+      />
+    );
   }
 
   try {
@@ -110,25 +121,35 @@ export async function renderAdminRoute(pathname: string) {
     return (
       <div className="space-y-6">
         <PageHeader
-          eyebrow="Admin"
+          eyebrow={routeMessages.eyebrow}
           title={meta.title}
           description={meta.description}
           actions={
             <Button asChild variant="outline">
               <a href={meta.endpoint} target="_blank" rel="noreferrer">
-                Open Endpoint
+                {routeMessages.openEndpointAction}
               </a>
             </Button>
           }
         />
-        <AdminDataPage title={meta.title} description={meta.description} endpoint={meta.endpoint} payload={payload} />
+        <AdminDataPage
+          title={meta.title}
+          description={meta.description}
+          endpoint={meta.endpoint}
+          payload={payload}
+          messages={{
+            responsePayloadTitle: routeMessages.responsePayloadTitle,
+            recordTitleTemplate: routeMessages.recordTitleTemplate,
+            objectValueLabel: routeMessages.objectValueLabel
+          }}
+        />
       </div>
     );
   } catch (error) {
     return (
       <div className="space-y-6">
-        <PageHeader eyebrow="Admin" title={meta.title} description={meta.description} />
-        <ErrorState description={error instanceof Error ? error.message : "Failed to load admin route data."} />
+        <PageHeader eyebrow={routeMessages.eyebrow} title={meta.title} description={meta.description} />
+        <ErrorState description={error instanceof Error ? error.message : routeMessages.loadFailureDescription} />
       </div>
     );
   }

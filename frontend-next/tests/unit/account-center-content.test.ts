@@ -3,12 +3,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { AccountCenterContent } from "@/src/features/accountCenter/AccountCenterContent";
+import { ProtectedI18nProvider } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import type {
   AccountAPIKeysPayload,
   AccountProfilePayload,
   AccountRoute,
   AccountSessionsPayload
 } from "@/src/features/accountCenter/model";
+import { createProtectedPageTestMessages } from "./protected-page-test-messages";
 
 const profilePayload: AccountProfilePayload = {
   user: {
@@ -70,53 +72,169 @@ const credentialsPayload: AccountAPIKeysPayload = {
 
 function renderAccountRoute(route: AccountRoute) {
   return renderToStaticMarkup(
-    createElement(AccountCenterContent, {
-      route,
-      loading: false,
-      saving: false,
-      error: "",
-      message: "",
-      metricItems: [
-        { label: "Role", value: "super_admin" },
-        { label: "Status", value: "active" }
-      ],
-      avatarInitials: "AO",
-      profileDraft: {
-        displayName: profilePayload.profile.display_name,
-        avatarURL: profilePayload.profile.avatar_url,
-        bio: profilePayload.profile.bio
+    createElement(
+      ProtectedI18nProvider,
+      {
+        locale: "en",
+        messages: createProtectedPageTestMessages({
+          accountCenter: {
+            pageTitle: "Account Center",
+            metricLiveSnapshotDetail: "Live account snapshot",
+            refreshAction: "Refresh",
+            refreshingAction: "Refreshing...",
+            routeProfileKicker: "Profile Workspace",
+            routeProfileDescription: "Profile route description",
+            routeSecurityKicker: "Security Workspace",
+            routeSecurityDescription: "Security route description",
+            routeSessionsKicker: "Sessions Workspace",
+            routeSessionsDescription: "Sessions route description",
+            routeCredentialsKicker: "Credentials Workspace",
+            routeCredentialsDescription: "Credentials route description",
+            navigationKicker: "Navigation",
+            navigationTitle: "Section Links",
+            navigationDescription: "Navigation description",
+            sectionProfile: "Profile",
+            sectionSecurity: "Security",
+            sectionSessions: "Sessions",
+            sectionCredentials: "Credentials",
+            routeHintProfile: "profile lane",
+            routeHintSecurity: "security lane",
+            routeHintSessions: "sessions lane",
+            routeHintCredentials: "credentials lane",
+            signalsKicker: "Signals",
+            signalsTitle: "Route Signals",
+            signalCurrentSectionTemplate: "Current section: {section}",
+            signalAvatarInitialsTemplate: "Avatar initials: {initials}",
+            signalSessionsTemplate: "Sessions: {count}",
+            signalCredentialsTemplate: "Credentials: {count}",
+            signalRouteFocusTemplate: "Route focus: {value}",
+            routeSignalProfile: "Profile signal",
+            routeSignalSecurity: "Security signal",
+            routeSignalSessions: "Sessions signal",
+            routeSignalCredentials: "Credentials signal",
+            quickActionsKicker: "Quick Actions",
+            quickActionsTitle: "Action Shortcuts",
+            quickActionMarketplace: "Open Marketplace",
+            quickActionAdmin: "Open Admin",
+            quickActionSessions: "Sessions",
+            quickActionApiCredentials: "API Credentials",
+            safetyKicker: "Security",
+            safetyTitle: "Safety Notes",
+            safetyNotePrimary: "Rotate stale credentials.",
+            safetyCurrentSessionExpiresTemplate: "Current session expires: {value}",
+            latestSecretCreatedTemplate: "Created credential {name}: {plaintextKey}",
+            latestSecretRotatedTemplate: "Rotated credential {name}: {plaintextKey}",
+            profileSectionTitle: "Profile",
+            profileSectionDescription: "Edit public identity fields.",
+            profileDisplayNamePlaceholder: "Display name",
+            profileAvatarUrlPlaceholder: "Avatar URL",
+            profileBioPlaceholder: "Bio",
+            profileSaveAction: "Save Profile",
+            securitySectionTitle: "Session Security",
+            securitySectionDescription: "Rotate your password and review active sessions.",
+            currentPasswordPlaceholder: "Current password",
+            newPasswordPlaceholder: "New password",
+            revokeOthersCheckboxLabel: "Revoke other sessions after password change",
+            changePasswordAction: "Change Password",
+            revokeOtherSessionsAction: "Revoke Other Sessions",
+            securitySnapshotTitle: "Security Snapshot",
+            securitySnapshotDescription: "Security snapshot description",
+            currentSessionTitle: "Current Session",
+            currentSessionIssuedTemplate: "issued {value}",
+            currentSessionExpiresTemplate: "expires {value}",
+            otherActiveSessionsTitle: "Other Active Sessions",
+            otherActiveSessionsTemplate: "{count} additional sessions remain active outside the current browser.",
+            sessionsSectionTitle: "Session Inventory",
+            sessionsSectionDescription: "Device-level access context.",
+            unknownDeviceLabel: "Unknown device",
+            sessionStateCurrent: "current",
+            sessionStateActive: "active",
+            sessionLastSeenTemplate: "last seen {value}",
+            sessionExpiresTemplate: "expires {value}",
+            revokeSessionAction: "Revoke",
+            credentialsFactoryTitle: "Credential Factory",
+            credentialsFactoryDescription: "Create a personal API credential and set initial scopes.",
+            credentialNamePlaceholder: "Credential name",
+            credentialPurposePlaceholder: "Purpose",
+            credentialExpiresInDaysPlaceholder: "Expires in days",
+            credentialScopesPlaceholder: "Scopes separated by commas",
+            createCredentialAction: "Create Credential",
+            credentialsInventoryTitle: "Credential Inventory",
+            credentialsInventoryDescription: "Rotate, revoke, or change scopes.",
+            credentialNoPurpose: "No purpose",
+            credentialCreatedTemplate: "created {value}",
+            credentialLastUsedTemplate: "last used {value}",
+            rotateCredentialAction: "Rotate",
+            revokeCredentialAction: "Revoke",
+            updateScopesPlaceholder: "Update scopes",
+            applyScopesAction: "Apply Scopes",
+            roleLabelSuperAdmin: "Super Admin",
+            roleLabelAdmin: "Admin",
+            roleLabelAuditor: "Auditor",
+            roleLabelMember: "Member",
+            roleLabelViewer: "Viewer",
+            roleLabelUnknown: "Unknown Role",
+            accountStatusLabelActive: "Account Active",
+            accountStatusLabelDisabled: "Account Disabled",
+            accountStatusLabelUnknown: "Unknown Account Status",
+            statusLabelActive: "Credential Active",
+            statusLabelRevoked: "Credential Revoked",
+            statusLabelExpired: "Credential Expired",
+            statusLabelUnknown: "Unknown Credential Status",
+            valueNotAvailable: "n/a",
+            valueUserFallback: "User",
+            valueUserInitialFallback: "U"
+          }
+        })
       },
-      sessionsPayload,
-      credentialsPayload,
-      credentialDraft: {
-        name: "",
-        purpose: "",
-        expiresInDays: 90,
-        scopes: ["skills.search.read"]
-      },
-      credentialScopeDrafts: {
-        1: ["skills.search.read"]
-      },
-      latestCredentialSecret: null,
-      passwordDraft: {
-        currentPassword: "",
-        newPassword: "",
-        revokeOthers: false
-      },
-      onRefresh: () => undefined,
-      onProfileDraftChange: () => undefined,
-      onPasswordDraftChange: () => undefined,
-      onCredentialDraftChange: () => undefined,
-      onCredentialScopeDraftChange: () => undefined,
-      onSaveProfile: () => undefined,
-      onChangePassword: () => undefined,
-      onRevokeOtherSessions: () => undefined,
-      onRevokeSession: () => undefined,
-      onCreateCredential: () => undefined,
-      onRotateCredential: () => undefined,
-      onRevokeCredential: () => undefined,
-      onApplyCredentialScopes: () => undefined
-    })
+      createElement(AccountCenterContent, {
+        route,
+        loading: false,
+        saving: false,
+        error: "",
+        message: "",
+        metricItems: [
+          { label: "Role", value: "super_admin" },
+          { label: "Status", value: "active" }
+        ],
+        avatarInitials: "AO",
+        profileDraft: {
+          displayName: profilePayload.profile.display_name,
+          avatarURL: profilePayload.profile.avatar_url,
+          bio: profilePayload.profile.bio
+        },
+        sessionsPayload,
+        credentialsPayload,
+        credentialDraft: {
+          name: "",
+          purpose: "",
+          expiresInDays: 90,
+          scopes: ["skills.search.read"]
+        },
+        credentialScopeDrafts: {
+          1: ["skills.search.read"]
+        },
+        latestCredentialSecret: null,
+        passwordDraft: {
+          currentPassword: "",
+          newPassword: "",
+          revokeOthers: false
+        },
+        onRefresh: () => undefined,
+        onProfileDraftChange: () => undefined,
+        onPasswordDraftChange: () => undefined,
+        onCredentialDraftChange: () => undefined,
+        onCredentialScopeDraftChange: () => undefined,
+        onSaveProfile: () => undefined,
+        onChangePassword: () => undefined,
+        onRevokeOtherSessions: () => undefined,
+        onRevokeSession: () => undefined,
+        onCreateCredential: () => undefined,
+        onRotateCredential: () => undefined,
+        onRevokeCredential: () => undefined,
+        onApplyCredentialScopes: () => undefined
+      })
+    )
   );
 }
 
@@ -147,6 +265,8 @@ describe("account center content", () => {
     expect(markup).toContain("Credential Factory");
     expect(markup).toContain("Credential Inventory");
     expect(markup).toContain("Apply Scopes");
+    expect(markup).toContain("Credential Active");
+    expect(markup).toContain("credentials lane");
     expect(markup).not.toContain("Change Password");
   });
 });

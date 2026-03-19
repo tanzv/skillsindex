@@ -2,6 +2,7 @@ import "server-only";
 
 import { headers } from "next/headers";
 
+import { buildPublicSnapshotMarketplaceRequestQuery } from "@/src/features/public/marketplace/marketplaceRequestQuery";
 import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
 import type { PublicMarketplaceResponse } from "@/src/lib/schemas/public";
 
@@ -13,10 +14,11 @@ export async function loadPublicMarketplaceSnapshot(
   requestHeaders: Headers,
   searchParams?: PublicSnapshotSearchParams
 ): Promise<PublicMarketplaceResponse> {
-  let marketplace = buildPublicMarketplaceFallback(searchParams);
+  const requestQuery = buildPublicSnapshotMarketplaceRequestQuery(searchParams || {});
+  let marketplace = buildPublicMarketplaceFallback(requestQuery);
 
   try {
-    marketplace = await fetchMarketplace(requestHeaders, searchParams);
+    marketplace = await fetchMarketplace(requestHeaders, requestQuery);
   } catch {}
 
   return marketplace;

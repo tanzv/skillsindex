@@ -1,17 +1,23 @@
+import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
+
 import type { NavigationLink } from "./adminNavigation";
 
-export const workspaceNavigationItems: NavigationLink[] = [
-  { href: "/workspace", label: "Overview", description: "Dashboard command deck and operator signals" },
-  { href: "/workspace/activity", label: "Activity", description: "Recent execution, ownership, and catalog movement" },
-  { href: "/workspace/queue", label: "Queue", description: "Pending, active, and at-risk execution lanes" },
-  { href: "/workspace/policy", label: "Policy", description: "Governance posture and review pressure" },
-  { href: "/workspace/runbook", label: "Runbook", description: "Response scripts and escalation checklists" },
-  { href: "/workspace/actions", label: "Actions", description: "Operator shortcuts across connected surfaces" }
-];
+export function buildWorkspaceNavigationItems(messages: WorkspaceMessages): NavigationLink[] {
+  return [
+    { href: "/workspace", label: messages.navOverviewLabel, description: messages.navOverviewDescription },
+    { href: "/workspace/activity", label: messages.navActivityLabel, description: messages.navActivityDescription },
+    { href: "/workspace/queue", label: messages.navQueueLabel, description: messages.navQueueDescription },
+    { href: "/workspace/policy", label: messages.navPolicyLabel, description: messages.navPolicyDescription },
+    { href: "/workspace/runbook", label: messages.navRunbookLabel, description: messages.navRunbookDescription },
+    { href: "/workspace/actions", label: messages.navActionsLabel, description: messages.navActionsDescription }
+  ];
+}
 
-export const workspaceRelatedLinks: NavigationLink[] = [
-  { href: "/", label: "Marketplace", description: "Return to the public discovery deck" },
-  { href: "/admin/overview", label: "Admin", description: "Open governed operations and catalog controls" },
-  { href: "/account/profile", label: "Account", description: "Review operator profile and credentials" },
-  { href: "/governance", label: "Governance", description: "Inspect public-facing governance guidance" }
-];
+export function buildWorkspaceRelatedLinks(messages: WorkspaceMessages): NavigationLink[] {
+  return [
+    { href: "/", label: messages.relatedMarketplaceLabel, description: messages.relatedMarketplaceDescription },
+    { href: "/admin/overview", label: messages.relatedAdminLabel, description: messages.relatedAdminDescription },
+    { href: "/account/profile", label: messages.relatedAccountLabel, description: messages.relatedAccountDescription },
+    { href: "/governance", label: messages.relatedGovernanceLabel, description: messages.relatedGovernanceDescription }
+  ];
+}

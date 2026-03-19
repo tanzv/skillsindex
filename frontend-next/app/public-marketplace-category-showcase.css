@@ -1,0 +1,85 @@
+.marketplace-category-showcase-stream,
+.marketplace-category-showcase-card,
+.marketplace-category-showcase-head,
+.marketplace-category-showcase-header,
+.marketplace-category-showcase-grid {
+  display: grid;
+}
+
+.marketplace-category-showcase-stream {
+  gap: 14px;
+}
+
+.marketplace-category-showcase-card {
+  gap: 14px;
+  padding: 16px;
+  border-color: color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--marketplace-section-background) 98%, var(--marketplace-section-emphasis-background) 2%) 0%,
+      color-mix(in srgb, var(--marketplace-section-background) 93%, var(--marketplace-section-emphasis-background) 7%) 100%
+    );
+  box-shadow: none;
+}
+
+.marketplace-category-showcase-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.marketplace-category-showcase-header {
+  gap: 10px;
+}
+
+.marketplace-category-showcase-meta {
+  gap: 6px;
+}
+
+.marketplace-category-showcase-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.marketplace-category-showcase-pill-row {
+  gap: 6px;
+}
+
+.marketplace-category-showcase-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.marketplace-category-showcase-actions .marketplace-topbar-button {
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.marketplace-category-showcase-actions .marketplace-topbar-button.is-primary {
+  border-color: var(--marketplace-topbar-button-border);
+  background: var(--marketplace-topbar-button-background);
+  color: var(--marketplace-topbar-button-text);
+}
+
+.marketplace-category-showcase-actions .marketplace-topbar-button.is-primary:hover {
+  background: var(--marketplace-topbar-button-hover-background);
+}
+
+@media (max-width: 1180px) {
+  .marketplace-category-showcase-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .marketplace-category-showcase-head,
+  .marketplace-category-showcase-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .marketplace-category-showcase-actions {
+    justify-content: flex-start;
+  }
+}

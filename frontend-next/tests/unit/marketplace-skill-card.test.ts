@@ -6,15 +6,23 @@ import { MarketplaceSkillCard } from "@/src/features/public/marketplace/Marketpl
 import type { MarketplaceSkill } from "@/src/lib/schemas/public";
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/categories/operations",
+  usePathname: () => "/light/categories/operations",
   useRouter: () => ({
     refresh: () => {}
   })
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: React.ReactNode }) =>
-    createElement("a", { href, ...props }, children)
+  default: ({
+    href,
+    as,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+    href: string;
+    as?: string;
+    children: React.ReactNode;
+  }) => createElement("a", { href, "data-as": as, ...props }, children)
 }));
 
 const marketplaceSkill: MarketplaceSkill = {
@@ -39,5 +47,6 @@ describe("MarketplaceSkillCard", () => {
 
     expect(markup).toContain('aria-label="Recovery Drill Planner"');
     expect(markup).toContain('href="/skills/103"');
+    expect(markup).toContain('data-as="/light/skills/103"');
   });
 });

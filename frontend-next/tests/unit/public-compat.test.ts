@@ -64,6 +64,11 @@ describe("public compatibility helpers", () => {
       as: "/light/results?q=release"
     });
 
+    expect(buildPublicLinkTarget("/light", "/light/skills/103")).toEqual({
+      href: "/skills/103",
+      as: "/light/skills/103"
+    });
+
     expect(buildPublicLinkTarget("/light", "/categories/operations")).toEqual({
       href: "/categories/operations",
       as: "/light/categories/operations"

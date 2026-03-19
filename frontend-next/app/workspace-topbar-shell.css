@@ -1,0 +1,102 @@
+.workspace-shell-topbar-brand {
+  flex: 0 0 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--protected-topbar-brand-border);
+  border-radius: 18px;
+  background: var(--protected-topbar-brand-bg);
+  box-shadow: var(--protected-topbar-brand-shadow);
+}
+
+.workspace-shell-topbar-brand-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: var(--protected-topbar-brand-dot-bg);
+  box-shadow: var(--protected-topbar-brand-dot-shadow);
+}
+
+.workspace-shell-topbar-brand-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.workspace-shell-topbar-brand-copy strong {
+  color: var(--workspace-shell-text);
+  font-size: 14px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.workspace-shell-topbar-brand-copy small {
+  color: var(--workspace-shell-text-secondary);
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.workspace-topbar-primary-groups-shell {
+  width: 100%;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 18px;
+  border: 1px solid var(--protected-topbar-nav-shell-border);
+  background: var(--protected-topbar-nav-shell-bg);
+  box-shadow: var(--protected-topbar-nav-shell-shadow);
+}
+
+.workspace-topbar-primary-group {
+  position: relative;
+  min-width: 0;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 3px;
+}
+
+.workspace-topbar-primary-group + .workspace-topbar-primary-group {
+  margin-left: 6px;
+  padding-left: 12px;
+}
+
+.workspace-topbar-primary-group + .workspace-topbar-primary-group::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  width: 1px;
+  border-radius: 999px;
+  background: var(--protected-topbar-group-divider);
+}
+
+.workspace-topbar-primary-group-label {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--protected-topbar-group-label);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workspace-topbar-primary-group-label::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--protected-topbar-group-label-dot);
+  box-shadow: var(--protected-topbar-group-label-dot-shadow);
+}

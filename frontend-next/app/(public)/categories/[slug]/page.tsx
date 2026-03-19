@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
 import { PublicCategoryPage } from "../../../../src/features/public/PublicCategoryPage";
+import { buildCategoryDetailMarketplaceRequestQuery } from "@/src/features/public/marketplace/marketplaceRequestQuery";
 import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
 import { fetchMarketplace } from "@/src/lib/api/public";
 
@@ -19,7 +20,7 @@ export default async function CategoryDetailPage({ params, searchParams }: Categ
   const activeSubcategory = typeof resolvedSearchParams.subcategory === "string" ? resolvedSearchParams.subcategory : "";
   const sort = typeof resolvedSearchParams.sort === "string" ? resolvedSearchParams.sort : "relevance";
   const mode = typeof resolvedSearchParams.mode === "string" ? resolvedSearchParams.mode : "hybrid";
-  const requestQuery = { ...resolvedSearchParams, category: slug };
+  const requestQuery = buildCategoryDetailMarketplaceRequestQuery(slug, resolvedSearchParams);
   let marketplace = buildPublicMarketplaceFallback(requestQuery);
 
   try {

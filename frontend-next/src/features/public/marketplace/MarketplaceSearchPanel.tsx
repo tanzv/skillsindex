@@ -1,6 +1,5 @@
 "use client";
 
-import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
@@ -8,6 +7,7 @@ import { splitPublicPathPrefix, withPublicPathPrefix } from "@/src/lib/routing/p
 import { useResolvedPublicPathname } from "@/src/lib/routing/useResolvedPublicPathname";
 
 import { MarketplaceSearchOverlay } from "./MarketplaceSearchOverlay";
+import { MarketplaceSearchForm } from "./MarketplaceSearchForm";
 import { MarketplaceSearchStrip } from "./MarketplaceSearchStrip";
 import { createMarketplaceSearchHref } from "./searchHistory";
 import { useMarketplaceRecentSearches } from "./useMarketplaceRecentSearches";
@@ -95,9 +95,20 @@ export function MarketplaceSearchPanel({
         recommendationLabel={messages.searchRecommendedLabel}
         suggestions={suggestionLinks}
         formContent={
-          <form
+          <MarketplaceSearchForm
             action={resolvedAction}
-            className="marketplace-search-form"
+            query={query}
+            semanticQuery={semanticQuery}
+            placeholder={resolvedPlaceholder}
+            semanticPlaceholder={resolvedSemanticPlaceholder}
+            submitLabel={resolvedSubmitLabel}
+            queryAriaLabel={messages.searchButton}
+            semanticAriaLabel={messages.searchSemanticLabel}
+            hiddenFields={hiddenFields}
+            showSemanticField={showSemanticField}
+            showSubmitAction={showSubmitAction}
+            readOnlyQuery={readOnlyQuery}
+            onReadOnlyInteract={() => setIsOverlayOpen(true)}
             onSubmit={(event) => {
               if (readOnlyQuery) {
                 event.preventDefault();
@@ -108,36 +119,7 @@ export function MarketplaceSearchPanel({
               const formData = new FormData(event.currentTarget);
               addEntry(resolvedAction, String(formData.get("q") || ""), String(formData.get("tags") || ""));
             }}
-          >
-            <div className="marketplace-search-main-row">
-              <label className="marketplace-search-input is-query">
-                <Search size={18} aria-hidden="true" />
-                <input
-                  name="q"
-                  defaultValue={query}
-                  placeholder={resolvedPlaceholder}
-                  aria-label={messages.searchButton}
-                  readOnly={readOnlyQuery}
-                  onClick={readOnlyQuery ? () => setIsOverlayOpen(true) : undefined}
-                  onFocus={readOnlyQuery ? () => setIsOverlayOpen(true) : undefined}
-                />
-              </label>
-              {showSemanticField ? (
-                <label className="marketplace-search-input is-semantic">
-                  <input
-                    name="tags"
-                    defaultValue={semanticQuery}
-                    placeholder={resolvedSemanticPlaceholder}
-                    aria-label={messages.searchSemanticLabel}
-                  />
-                </label>
-              ) : null}
-              {hiddenFields.map((item) => (
-                <input key={`${item.name}-${item.value}`} type="hidden" name={item.name} value={item.value} />
-              ))}
-              {showSubmitAction ? <button className="marketplace-search-submit">{resolvedSubmitLabel}</button> : null}
-            </div>
-          </form>
+          />
         }
         utilityContent={
           <div className="marketplace-search-utility-row" aria-label={messages.searchUtilityAriaLabel}>

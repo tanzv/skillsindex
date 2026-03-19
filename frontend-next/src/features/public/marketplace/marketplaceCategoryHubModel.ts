@@ -1,9 +1,10 @@
 import type { MarketplaceCategory, MarketplaceSkill, MarketplaceSubcategory } from "@/src/lib/schemas/public";
 
 import { filterMarketplaceItemsByCategory, resolveFeaturedMarketplaceItems, resolveLatestMarketplaceItems } from "./marketplaceViewModel";
-import { buildMarketplaceCategoryNavigation } from "./marketplaceCategoryNavigation";
+import { buildMarketplaceCategoryCatalog } from "./marketplaceCategoryCatalog";
 
 export type MarketplaceCategoryHubSectionSlug = "most-installed" | "popular" | "featured" | "recently-updated";
+export type MarketplaceCategoryHubAudience = "agent" | "human";
 
 export interface MarketplaceCategoryHubNavigationItem {
   slug: string;
@@ -24,6 +25,7 @@ export interface MarketplaceCategoryHubSpotlight {
   count: number;
   anchorId: string;
   subcategories: MarketplaceSubcategory[];
+  featuredSkills: MarketplaceSkill[];
   previewSkills: MarketplaceSkill[];
 }
 
@@ -61,66 +63,104 @@ function sortByPopularity(left: MarketplaceSkill, right: MarketplaceSkill): numb
   return Date.parse(right.updated_at || "") - Date.parse(left.updated_at || "");
 }
 
+function sortByAgentReadiness(left: MarketplaceSkill, right: MarketplaceSkill): number {
+  if (left.source_type !== right.source_type) {
+    if (left.source_type === "repository") {
+      return -1;
+    }
+
+    if (right.source_type === "repository") {
+      return 1;
+    }
+  }
+
+  return sortByStars(left, right);
+}
+
+function sortByHumanReadiness(left: MarketplaceSkill, right: MarketplaceSkill): number {
+  if (left.source_type !== right.source_type) {
+    if (left.source_type === "manual") {
+      return -1;
+    }
+
+    if (right.source_type === "manual") {
+      return 1;
+    }
+  }
+
+  return sortByPopularity(left, right);
+}
+
 function takeTopMarketplaceItems(items: MarketplaceSkill[], limit: number, comparator: (left: MarketplaceSkill, right: MarketplaceSkill) => number) {
   return [...items].sort(comparator).slice(0, limit);
+}
+
+function mergeSpotlightSubcategories(category: MarketplaceCategory, limit: number): MarketplaceSubcategory[] {
+  return [...category.subcategories]
+    .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
+    .slice(0, limit);
+}
+
+function buildAudienceSkillSections(
+  items: MarketplaceSkill[],
+  sectionLimit: number,
+  audience: MarketplaceCategoryHubAudience
+): MarketplaceCategoryHubSkillSection[] {
+  const sectionsBySlug: Record<MarketplaceCategoryHubSectionSlug, MarketplaceSkill[]> = {
+    "most-installed": takeTopMarketplaceItems(items, sectionLimit, sortByAgentReadiness),
+    popular: takeTopMarketplaceItems(items, sectionLimit, sortByPopularity),
+    featured:
+      audience === "human"
+        ? takeTopMarketplaceItems(items, sectionLimit, sortByHumanReadiness)
+        : resolveFeaturedMarketplaceItems(items, sectionLimit),
+    "recently-updated": resolveLatestMarketplaceItems(items, sectionLimit)
+  };
+  const orderedSlugs: MarketplaceCategoryHubSectionSlug[] =
+    audience === "human"
+      ? ["featured", "popular", "recently-updated", "most-installed"]
+      : ["most-installed", "popular", "featured", "recently-updated"];
+
+  return orderedSlugs.map((slug) => ({
+    slug,
+    items: sectionsBySlug[slug]
+  }));
+}
+
+export function buildMarketplaceCategoryHubNavigationItems(
+  categories: MarketplaceCategory[]
+): MarketplaceCategoryHubNavigationItem[] {
+  return buildMarketplaceCategoryCatalog(categories).map((category) => ({
+    slug: category.slug,
+    name: category.name,
+    count: category.count,
+    anchorId: buildCategorySpotlightAnchorId(category.slug)
+  }));
 }
 
 export function buildMarketplaceCategoryHubModel(
   categories: MarketplaceCategory[],
   items: MarketplaceSkill[],
-  sectionLimit = 6
+  sectionLimit = 6,
+  audience: MarketplaceCategoryHubAudience = "agent"
 ): MarketplaceCategoryHubModel {
-  const orderedCategories = buildMarketplaceCategoryNavigation(categories);
-  const categoriesBySlug = new Map(categories.map((category) => [category.slug, category]));
-  const navigationItems = orderedCategories.map((category) => ({
-    ...category,
-    anchorId: buildCategorySpotlightAnchorId(category.slug)
-  }));
+  const catalogCategories = buildMarketplaceCategoryCatalog(categories);
+  const navigationItems = buildMarketplaceCategoryHubNavigationItems(categories);
+  const spotlightComparator = audience === "human" ? sortByHumanReadiness : sortByAgentReadiness;
+  const skillSections = buildAudienceSkillSections(items, sectionLimit, audience);
 
-  const skillSections: MarketplaceCategoryHubSkillSection[] = [
-    {
-      slug: "most-installed",
-      items: takeTopMarketplaceItems(items, sectionLimit, sortByStars)
-    },
-    {
-      slug: "popular",
-      items: takeTopMarketplaceItems(items, sectionLimit, sortByPopularity)
-    },
-    {
-      slug: "featured",
-      items: resolveFeaturedMarketplaceItems(items, sectionLimit)
-    },
-    {
-      slug: "recently-updated",
-      items: resolveLatestMarketplaceItems(items, sectionLimit)
-    }
-  ];
-
-  const categorySpotlights = orderedCategories.map((category) => {
-    const categorySummary = categoriesBySlug.get(category.slug);
-
-    if (!categorySummary) {
-      return {
-        slug: category.slug,
-        name: category.name,
-        description: "",
-        count: category.count,
-        anchorId: buildCategorySpotlightAnchorId(category.slug),
-        subcategories: [],
-        previewSkills: []
-      };
-    }
-
-    const categoryItems = takeTopMarketplaceItems(filterMarketplaceItemsByCategory(items, category.slug), 1, sortByStars);
+  const categorySpotlights = catalogCategories.map((category) => {
+    const categoryItems = filterMarketplaceItemsByCategory(items, category.slug);
+    const featuredSkills = takeTopMarketplaceItems(categoryItems, 4, spotlightComparator);
 
     return {
       slug: category.slug,
-      name: categorySummary.name,
-      description: categorySummary.description,
-      count: categorySummary.count,
+      name: category.name,
+      description: category.description,
+      count: category.count,
       anchorId: buildCategorySpotlightAnchorId(category.slug),
-      subcategories: categorySummary.subcategories.slice(0, 4),
-      previewSkills: categoryItems
+      subcategories: mergeSpotlightSubcategories(category, 4),
+      featuredSkills,
+      previewSkills: featuredSkills.slice(0, 1)
     };
   });
 

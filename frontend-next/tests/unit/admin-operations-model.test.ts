@@ -8,6 +8,33 @@ import {
   normalizeOpsMetricsPayload,
   normalizeOpsReleaseGatesPayload
 } from "@/src/features/adminOperations/model";
+import { createProtectedPageTestMessages } from "./protected-page-test-messages";
+
+const operationsMessages = createProtectedPageTestMessages({
+  adminOperations: {
+    metricOpenIncidentsLabel: "Open Incidents",
+    metricOpenIncidentsDescription: "Open incidents in the current perimeter",
+    metricPendingModerationLabel: "Pending Moderation",
+    metricPendingModerationDescription: "Pending moderation cases",
+    metricUnresolvedJobsLabel: "Unresolved Jobs",
+    metricUnresolvedJobsDescription: "Jobs that still need operator action",
+    metricFailedSyncRunsLabel: "Failed Sync Runs",
+    metricFailedSyncRunsDescription: "Failed sync runs in the last 24h",
+    metricDisabledAccountsLabel: "Disabled Accounts",
+    metricDisabledAccountsDescription: "Disabled accounts in scope",
+    metricStaleIntegrationsLabel: "Stale Integrations",
+    metricStaleIntegrationsDescription: "Integrations beyond freshness threshold",
+    alertsMetricTotalLabel: "Total",
+    alertsMetricTriggeredLabel: "Triggered",
+    alertsMetricCriticalLabel: "Critical",
+    releaseGatesMetricChecksLabel: "Gate Checks",
+    releaseGatesMetricPassedLabel: "Passed",
+    releaseGatesMetricBlockedLabel: "Blocked",
+    statePassed: "Passed",
+    stateBlocked: "Blocked",
+    valueNotAvailable: "n/a"
+  }
+}).adminOperations;
 
 describe("admin operations model", () => {
   it("builds metric card severities from ops metrics snapshot", () => {
@@ -25,7 +52,7 @@ describe("admin operations model", () => {
       }
     });
 
-    const cards = buildOpsMetricCards(payload);
+    const cards = buildOpsMetricCards(payload, operationsMessages);
 
     expect(cards).toEqual(
       expect.arrayContaining([
@@ -46,7 +73,7 @@ describe("admin operations model", () => {
       ]
     });
 
-    const overview = buildOpsAlertsOverview(payload);
+    const overview = buildOpsAlertsOverview(payload, operationsMessages);
 
     expect(overview.metrics).toEqual(
       expect.arrayContaining([
@@ -68,7 +95,7 @@ describe("admin operations model", () => {
       }
     });
 
-    const overview = buildOpsReleaseGatesOverview(payload);
+    const overview = buildOpsReleaseGatesOverview(payload, "en", operationsMessages);
 
     expect(overview.metrics).toEqual(
       expect.arrayContaining([
@@ -76,6 +103,7 @@ describe("admin operations model", () => {
         expect.objectContaining({ label: "Blocked", value: "1" })
       ])
     );
-    expect(overview.overallState).toBe("blocked");
+    expect(overview.generatedAt).not.toBe("n/a");
+    expect(overview.overallState).toBe("Blocked");
   });
 });

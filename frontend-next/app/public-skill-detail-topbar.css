@@ -24,8 +24,68 @@
   gap: 10px;
 }
 
-.marketplace-topbar-below:has(.skill-detail-shell-breadcrumb) {
+.marketplace-topbar-below:has(.skill-detail-shell-breadcrumb),
+.marketplace-topbar-below:has(.skill-detail-context-bar) {
   padding: 0 0 12px;
+}
+
+.skill-detail-context-bar {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.skill-detail-context-bar-top {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.skill-detail-context-bar-leading {
+  min-width: 0;
+  gap: 8px;
+}
+
+.skill-detail-context-summary {
+  gap: 8px;
+}
+
+.skill-detail-context-breadcrumb {
+  margin-bottom: 0;
+}
+
+.skill-detail-context-bar-tabs {
+  width: 100%;
+}
+
+.skill-detail-context-tab-list {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.skill-detail-context-bar-status {
+  min-width: 0;
+  justify-items: end;
+  gap: 6px;
+}
+
+.skill-detail-context-status-label {
+  color: var(--si-color-text-secondary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.skill-detail-context-status-value {
+  max-width: min(100%, 220px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--marketplace-home-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .skill-detail-brand {
@@ -184,6 +244,16 @@
 }
 
 @media (max-width: 760px) {
+  .skill-detail-context-bar-top {
+    grid-template-columns: 1fr;
+  }
+
+  .skill-detail-context-tab-list,
+  .skill-detail-context-bar-status {
+    justify-content: flex-start;
+    justify-items: start;
+  }
+
   .skill-detail-shell-breadcrumb-link,
   .skill-detail-shell-breadcrumb-current {
     max-width: none;

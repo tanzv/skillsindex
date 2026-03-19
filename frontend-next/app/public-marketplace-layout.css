@@ -114,7 +114,6 @@
 
 .marketplace-skill-chip-row,
 .marketplace-skill-row-foot,
-.marketplace-compare-metrics,
 .marketplace-sidebar-chip-row {
   display: flex;
   align-items: center;
@@ -140,10 +139,6 @@
 
 .marketplace-skill-row-foot span.is-primary {
   color: var(--marketplace-home-text);
-}
-
-.marketplace-simple-link-list {
-  gap: 12px;
 }
 
 .marketplace-breadcrumb,
@@ -209,26 +204,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.marketplace-simple-link-item {
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 1px solid var(--marketplace-card-border-soft);
-  border-radius: 14px;
-  background: var(--marketplace-section-emphasis-background);
-}
-
-.marketplace-simple-link-item:hover {
-  border-color: var(--marketplace-card-border);
-}
-
-.marketplace-simple-link-item.is-active {
-  border-color: var(--marketplace-card-border);
-  background: var(--marketplace-topbar-button-hover-background);
-}
-
-.marketplace-sidebar-link,
 .marketplace-text-link {
   color: var(--marketplace-link-text);
   font-size: 13px;
@@ -289,29 +264,6 @@
   width: 100%;
 }
 
-.marketplace-compare-form {
-  display: grid;
-  gap: 12px;
-}
-
-.marketplace-compare-form select {
-  width: 100%;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--marketplace-search-field-border);
-  border-radius: 12px;
-  background: var(--marketplace-search-field-background);
-  color: var(--marketplace-home-text);
-  outline: none;
-}
-
-.marketplace-compare-card {
-  padding: 14px;
-  border: 1px solid var(--marketplace-card-border-soft);
-  border-radius: 14px;
-  background: var(--marketplace-section-emphasis-background);
-}
-
 .marketplace-scroll::-webkit-scrollbar {
   width: 10px;
 }
@@ -341,7 +293,8 @@
   }
 
   .marketplace-topbar-right {
-    justify-content: flex-start;
+    width: 100%;
+    justify-content: flex-end;
   }
 }
 
@@ -354,7 +307,8 @@
   .marketplace-search-main-row,
   .marketplace-search-row,
   .marketplace-topbar-main,
-  .marketplace-topbar-actions {
+  .marketplace-topbar-actions,
+  .marketplace-topbar-right {
     flex-direction: column;
     align-items: stretch;
   }
@@ -371,6 +325,10 @@
   .marketplace-toggle-button,
   .marketplace-search-submit {
     width: 100%;
+  }
+
+  .marketplace-topbar-right {
+    gap: 12px;
   }
 
   .marketplace-search-input.is-semantic {

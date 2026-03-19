@@ -4,12 +4,15 @@ import { useMemo } from "react";
 
 import { PublicShellRegistration } from "@/src/components/shared/PublicShellSlots";
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
+import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
 import type { PublicMarketplaceResponse } from "@/src/lib/schemas/public";
 
 import { MarketplaceHomeHero } from "./marketplace/MarketplaceHomeHero";
 import { MarketplaceSearchPanel } from "./marketplace/MarketplaceSearchPanel";
 import { MarketplaceHomeVirtualFeed } from "./marketplace/MarketplaceHomeVirtualFeed";
 import { resolveFeaturedMarketplaceItems, resolveLatestMarketplaceItems } from "./marketplace/marketplaceViewModel";
+import { buildPublicSkillBatchWarmupTargets } from "./marketplace/publicSkillBatchWarmup";
+import { usePublicSkillBatchWarmup } from "./marketplace/usePublicSkillBatchWarmup";
 import { useMarketplaceTopbarSlots } from "./marketplace/useMarketplaceTopbarSlots";
 
 interface PublicLandingProps {
@@ -18,6 +21,7 @@ interface PublicLandingProps {
 
 export function PublicLanding({ marketplace }: PublicLandingProps) {
   const { messages } = usePublicI18n();
+  const { toPublicPath } = usePublicRouteState();
   const featuredItems = resolveFeaturedMarketplaceItems(marketplace.items, 3);
   const featuredItemIds = useMemo(() => new Set(featuredItems.map((item) => item.id)), [featuredItems]);
   const latestItems = useMemo(() => {
@@ -26,7 +30,10 @@ export function PublicLanding({ marketplace }: PublicLandingProps) {
   }, [featuredItemIds, featuredItems, marketplace.items]);
   const featuredChips = marketplace.top_tags.slice(0, 3).map((tag) => tag.name);
   const latestChips = marketplace.categories.slice(0, 4).map((category) => category.name);
+  const skillWarmupTargets = buildPublicSkillBatchWarmupTargets([...featuredItems, ...latestItems], toPublicPath);
   const shellSlots = useMarketplaceTopbarSlots({ variant: "landing" });
+
+  usePublicSkillBatchWarmup(skillWarmupTargets);
 
   return (
     <div className="marketplace-main-column marketplace-home-stage">

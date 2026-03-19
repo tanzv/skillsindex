@@ -8,6 +8,8 @@ import {
   normalizeSyncPolicyPayload
 } from "@/src/features/adminCatalog/model";
 
+import { createProtectedPageTestMessages } from "./protected-page-test-messages";
+
 describe("admin catalog model", () => {
   it("builds skill inventory metrics and rows", () => {
     const payload = normalizeSkillsPayload({
@@ -145,5 +147,105 @@ describe("admin catalog model", () => {
       ])
     );
     expect(model.table?.rows[0]?.summary).toContain("11 synced");
+  });
+
+  it("localizes catalog display labels and fallbacks with injected page messages", () => {
+    const messages = createProtectedPageTestMessages({
+      adminCatalog: {
+        valueUnnamedSkill: "catalog_name_custom",
+        valueGeneralCategory: "catalog_category_custom",
+        valueUnknownOwner: "catalog_owner_custom",
+        sourceTypeRepository: "catalog_repository_custom",
+        visibilityPrivate: "catalog_private_custom",
+        statusFailed: "catalog_status_failed_custom",
+        statusSuccess: "catalog_status_success_custom",
+        triggerSchedule: "catalog_trigger_schedule_custom",
+        scopeRepository: "catalog_scope_repository_custom",
+        jobTypeRepositorySync: "catalog_job_repo_sync_custom"
+      }
+    }).adminCatalog;
+
+    const skillsModel = buildAdminCatalogViewModel(
+      "/admin/skills",
+      normalizeSkillsPayload({
+        total: 1,
+        items: [
+          {
+            id: 8,
+            name: "",
+            category: "",
+            source_type: "repository",
+            visibility: "private",
+            owner_username: "",
+            star_count: 0,
+            quality_score: 0,
+            updated_at: ""
+          }
+        ]
+      }),
+      { messages }
+    );
+    const jobsModel = buildAdminCatalogViewModel(
+      "/admin/jobs",
+      normalizeJobsPayload({
+        total: 1,
+        items: [
+          {
+            id: 9,
+            job_type: "repo_sync",
+            status: "failed",
+            owner_user_id: 7,
+            actor_user_id: 8,
+            target_skill_id: 108,
+            attempt: 1,
+            max_attempts: 3,
+            created_at: "",
+            updated_at: ""
+          }
+        ]
+      }),
+      { messages }
+    );
+    const syncRunsModel = buildAdminCatalogViewModel(
+      "/admin/sync-jobs",
+      normalizeSyncJobsPayload({
+        total: 1,
+        items: [
+          {
+            id: 10,
+            trigger: "schedule",
+            scope: "repository",
+            status: "success",
+            candidates: 2,
+            synced: 2,
+            failed: 0,
+            duration_ms: 1000,
+            started_at: "",
+            finished_at: ""
+          }
+        ]
+      }),
+      { messages }
+    );
+
+    expect(skillsModel.table?.rows[0]).toEqual(
+      expect.objectContaining({
+        name: "catalog_name_custom",
+        summary: "catalog_category_custom · catalog_repository_custom · catalog_owner_custom",
+        statusLabel: "catalog_private_custom"
+      })
+    );
+    expect(jobsModel.table?.rows[0]).toEqual(
+      expect.objectContaining({
+        name: "catalog_job_repo_sync_custom #9",
+        statusLabel: "catalog_status_failed_custom"
+      })
+    );
+    expect(syncRunsModel.table?.rows[0]).toEqual(
+      expect.objectContaining({
+        name: "catalog_trigger_schedule_custom · catalog_scope_repository_custom",
+        statusLabel: "catalog_status_success_custom"
+      })
+    );
   });
 });

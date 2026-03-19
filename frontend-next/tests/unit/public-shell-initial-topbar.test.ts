@@ -75,6 +75,8 @@ describe("PublicShell initial topbar rendering", () => {
   it("renders marketplace landing controls on the first render for the homepage", () => {
     const markup = renderToStaticMarkup(createElement(PublicShell, null, createElement("div", null, "home")));
 
+    expect(markup).toContain('data-marketplace-route-kind="landing"');
+    expect(markup).toContain('data-marketplace-content-width="default"');
     expect(markup).toContain('data-testid="landing-topbar-nav-categories"');
     expect(markup).toContain('data-testid="landing-topbar-nav-rankings"');
     expect(markup).toContain('data-testid="topbar-theme-switch-dark"');
@@ -87,6 +89,7 @@ describe("PublicShell initial topbar rendering", () => {
 
     const markup = renderToStaticMarkup(createElement(PublicShell, null, createElement("div", null, "results")));
 
+    expect(markup).toContain('data-marketplace-route-kind="section"');
     expect(markup).toContain("Results");
     expect(markup).toContain('data-testid="landing-topbar-nav-categories"');
     expect(markup).toContain('data-testid="search-shell-breadcrumb"');
@@ -101,8 +104,19 @@ describe("PublicShell initial topbar rendering", () => {
 
     const markup = renderToStaticMarkup(createElement(PublicShell, null, createElement("div", null, "docs")));
 
+    expect(markup).toContain('data-marketplace-route-kind="narrative"');
+    expect(markup).toContain('data-marketplace-content-width="expanded"');
     expect(markup).toContain(">Docs<");
     expect(markup).toContain(">ZH<");
     expect(markup).not.toContain('data-testid="landing-topbar-nav-categories"');
+  });
+
+  it("marks skill detail routes as expanded marketplace detail surfaces", () => {
+    mockResolvedPathname.mockReturnValue("/skills/14");
+
+    const markup = renderToStaticMarkup(createElement(PublicShell, null, createElement("div", null, "skill detail")));
+
+    expect(markup).toContain('data-marketplace-route-kind="skill-detail"');
+    expect(markup).toContain('data-marketplace-content-width="expanded"');
   });
 });

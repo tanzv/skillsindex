@@ -1,31 +1,38 @@
+import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
+import { workspaceMessageFallbacks } from "@/src/lib/i18n/protectedPageMessages.workspace";
+
 export interface WorkspaceRouteMeta {
   title: string;
   description: string;
 }
 
-export const workspaceRouteMeta: Record<string, WorkspaceRouteMeta> = {
-  "/workspace": {
-    title: "Workspace Overview",
-    description: "Operational summary with the current signed-in session and the new shell baseline."
-  },
-  "/workspace/activity": {
-    title: "Activity Feed",
-    description: "Recent execution, governance, and marketplace interaction signals."
-  },
-  "/workspace/queue": {
-    title: "Queue Execution",
-    description: "Execution queue visibility for pending, active, and blocked runs."
-  },
-  "/workspace/policy": {
-    title: "Policy Summary",
-    description: "Current governance posture, registration policy, and access-related context."
-  },
-  "/workspace/runbook": {
-    title: "Runbook Preview",
-    description: "Operational runbooks and response procedures available to signed-in users."
-  },
-  "/workspace/actions": {
-    title: "Quick Actions",
-    description: "Action shortcuts that bridge discovery, execution, and governance."
-  }
-};
+export function buildWorkspaceRouteMeta(messages: WorkspaceMessages): Record<string, WorkspaceRouteMeta> {
+  return {
+    "/workspace": {
+      title: messages.routeOverviewTitle,
+      description: messages.routeOverviewDescription
+    },
+    "/workspace/activity": {
+      title: messages.routeActivityTitle,
+      description: messages.routeActivityDescription
+    },
+    "/workspace/queue": {
+      title: messages.routeQueueTitle,
+      description: messages.routeQueueDescription
+    },
+    "/workspace/policy": {
+      title: messages.routePolicyTitle,
+      description: messages.routePolicyDescription
+    },
+    "/workspace/runbook": {
+      title: messages.routeRunbookTitle,
+      description: messages.routeRunbookDescription
+    },
+    "/workspace/actions": {
+      title: messages.routeActionsTitle,
+      description: messages.routeActionsDescription
+    }
+  };
+}
+
+export const workspaceRouteMeta = buildWorkspaceRouteMeta(workspaceMessageFallbacks);

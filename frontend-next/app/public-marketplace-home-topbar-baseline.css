@@ -1,6 +1,26 @@
+.marketplace-shell.is-landing-route {
+  --marketplace-shell-inline-gutter: clamp(16px, 2vw, 30px);
+  --marketplace-shell-max-width: var(--marketplace-shell-max-width-expanded);
+}
+
 .marketplace-shell.is-landing-route .marketplace-topbar {
   min-height: 84px;
   padding: 18px 0;
+  gap: 20px;
+}
+
+.marketplace-shell.is-landing-route .marketplace-topbar-main {
+  flex: 1 1 auto;
+}
+
+.marketplace-shell.is-landing-route .marketplace-topbar-right {
+  margin-left: auto;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+
+.marketplace-shell.is-landing-route .marketplace-topbar-main {
+  row-gap: 10px;
 }
 
 .marketplace-shell.is-landing-route .marketplace-home-brand {
@@ -30,6 +50,7 @@
 
 .marketplace-shell.is-landing-route .marketplace-home-topbar-actions {
   gap: 8px;
+  justify-content: flex-end;
 }
 
 .marketplace-shell.is-landing-route .marketplace-home-auth-cluster {
@@ -38,6 +59,7 @@
   border-radius: 12px;
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   background: var(--marketplace-nav-shell-background);
 }
 
@@ -53,6 +75,11 @@
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
+}
+
+.marketplace-shell.is-landing-route .marketplace-home-topbar-status,
+.marketplace-shell.is-landing-route .marketplace-home-pill-button {
+  min-width: 0;
 }
 
 .marketplace-home-topbar-status {
@@ -85,7 +112,10 @@
 @media (max-width: 720px) {
   .marketplace-shell.is-landing-route .marketplace-home-topbar-actions {
     width: 100%;
-    justify-content: flex-end;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+    justify-content: stretch;
   }
 
   .marketplace-shell.is-landing-route .marketplace-home-brand-title {
@@ -94,5 +124,37 @@
 
   .marketplace-shell.is-landing-route .marketplace-topbar {
     align-items: flex-start;
+  }
+
+  .marketplace-shell.is-landing-route .marketplace-home-topbar-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .marketplace-shell.is-landing-route .marketplace-home-topbar-nav .marketplace-nav-button {
+    width: 100%;
+  }
+
+  .marketplace-shell.is-landing-route .marketplace-home-auth-cluster {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .marketplace-shell.is-landing-route .marketplace-home-topbar-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .marketplace-shell.is-landing-route .marketplace-home-topbar-icon-shell {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .marketplace-shell.is-landing-route .marketplace-home-topbar-icon-segment {
+    flex: 1 1 0;
+    justify-content: center;
   }
 }

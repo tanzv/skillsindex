@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
 import { PublicRankingPage } from "@/src/features/public/PublicRankingPage";
+import { buildRankingMarketplaceRequestQuery } from "@/src/features/public/marketplace/marketplaceRequestQuery";
 import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
 import { fetchMarketplace, fetchSkillCompare } from "@/src/lib/api/public";
 
@@ -14,12 +15,13 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
   const sortKey = requestedSort === "quality" ? "quality" : "stars";
   const leftSkillId = Number(Array.isArray(resolvedSearchParams.left) ? resolvedSearchParams.left[0] : resolvedSearchParams.left || 0);
   const rightSkillId = Number(Array.isArray(resolvedSearchParams.right) ? resolvedSearchParams.right[0] : resolvedSearchParams.right || 0);
-  let marketplace = buildPublicMarketplaceFallback({ ...resolvedSearchParams, sort: sortKey });
+  const requestQuery = buildRankingMarketplaceRequestQuery(resolvedSearchParams, sortKey);
+  let marketplace = buildPublicMarketplaceFallback(requestQuery);
   let comparePayload = null;
 
   try {
     const requestHeaders = new Headers(await headers());
-    marketplace = await fetchMarketplace(requestHeaders, { ...resolvedSearchParams, sort: sortKey, page: "1" });
+    marketplace = await fetchMarketplace(requestHeaders, requestQuery);
 
     if (
       Number.isInteger(leftSkillId) &&

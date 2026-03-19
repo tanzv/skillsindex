@@ -1,3 +1,5 @@
+import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
+
 import { asArray, asBoolean, asNumber, asObject, asString, formatDateTime } from "../adminGovernance/shared";
 
 export type AdminAccountsRoute = "/admin/accounts" | "/admin/accounts/new" | "/admin/roles" | "/admin/roles/new";
@@ -33,24 +35,20 @@ export interface AccountsOverview {
   roleSummary: Array<{ role: string; count: number }>;
 }
 
-export const adminAccountRouteMeta: Record<AdminAccountsRoute, { title: string; description: string }> = {
-  "/admin/accounts": {
-    title: "Accounts",
-    description: "Inspect account inventory, update access state, force sign-out, and rotate credentials from a dedicated governance page."
-  },
-  "/admin/accounts/new": {
-    title: "Account Provisioning",
-    description: "Control registration posture and enabled login providers while monitoring recent account inventory."
-  },
-  "/admin/roles": {
-    title: "Roles",
-    description: "Review role distribution across the account directory and apply targeted role changes."
-  },
-  "/admin/roles/new": {
-    title: "Role Configuration",
-    description: "Stage targeted role changes while keeping directory-wide role distribution visible."
-  }
-};
+interface AccountsMetricLabels {
+  totalAccounts: string;
+  loadedAccounts: string;
+  activeAccounts: string;
+  disabledAccounts: string;
+}
+
+interface AccountTableMetaLabels {
+  notAvailable: string;
+  createdPrefix: string;
+  updatedPrefix: string;
+  forceSignOutPrefix: string;
+  noPendingSignOut: string;
+}
 
 export function normalizeAccountsPayload(payload: unknown): AdminAccountsPayload {
   const record = asObject(payload);
@@ -109,6 +107,16 @@ export function normalizeRoleName(value: string): string {
   return asString(value).toLowerCase() || "member";
 }
 
+export function resolveRoleTargetUserId(roleEditorUserId: string, selectedAccountId: number | null): number | null {
+  const explicitUserId = asString(roleEditorUserId).trim();
+  if (explicitUserId) {
+    const parsedUserId = Number(explicitUserId);
+    return Number.isFinite(parsedUserId) && parsedUserId > 0 ? parsedUserId : null;
+  }
+
+  return Number.isFinite(selectedAccountId) && selectedAccountId !== null && selectedAccountId > 0 ? selectedAccountId : null;
+}
+
 export function sortAccountsByUpdatedAt<TAccount extends AdminAccountItem>(accounts: TAccount[]): TAccount[] {
   return [...accounts].sort((left, right) => {
     const leftTime = Date.parse(left.updatedAt);
@@ -143,24 +151,44 @@ export function buildRoleSummary(accounts: AdminAccountItem[]): Array<{ role: st
     .sort((left, right) => right.count - left.count || left.role.localeCompare(right.role));
 }
 
-export function buildAccountsOverview(accounts: AdminAccountsPayload): AccountsOverview {
+export function buildAccountsOverview(
+  accounts: AdminAccountsPayload,
+  labels: AccountsMetricLabels = {
+    totalAccounts: "Total Accounts",
+    loadedAccounts: "Loaded Accounts",
+    activeAccounts: "Active Accounts",
+    disabledAccounts: "Disabled Accounts"
+  }
+): AccountsOverview {
   const disabledCount = accounts.items.filter((account) => normalizeAccountStatus(account.status) === "disabled").length;
   const activeCount = accounts.items.filter((account) => normalizeAccountStatus(account.status) === "active").length;
   return {
     metrics: [
-      { label: "Total Accounts", value: String(accounts.total) },
-      { label: "Loaded Accounts", value: String(accounts.items.length) },
-      { label: "Active Accounts", value: String(activeCount) },
-      { label: "Disabled Accounts", value: String(disabledCount) }
+      { label: labels.totalAccounts, value: String(accounts.total) },
+      { label: labels.loadedAccounts, value: String(accounts.items.length) },
+      { label: labels.activeAccounts, value: String(activeCount) },
+      { label: labels.disabledAccounts, value: String(disabledCount) }
     ],
     roleSummary: buildRoleSummary(accounts.items)
   };
 }
 
-export function buildAccountTableMeta(account: AdminAccountItem): string[] {
+export function buildAccountTableMeta(
+  account: AdminAccountItem,
+  locale: PublicLocale = "en",
+  labels: AccountTableMetaLabels = {
+    notAvailable: "n/a",
+    createdPrefix: "created",
+    updatedPrefix: "updated",
+    forceSignOutPrefix: "force sign-out",
+    noPendingSignOut: "no pending sign-out"
+  }
+): string[] {
   return [
-    `created ${formatDateTime(account.createdAt)}`,
-    `updated ${formatDateTime(account.updatedAt)}`,
-    account.forceLogoutAt ? `force sign-out ${formatDateTime(account.forceLogoutAt)}` : "no pending sign-out"
+    `${labels.createdPrefix} ${formatDateTime(account.createdAt, locale, labels.notAvailable)}`,
+    `${labels.updatedPrefix} ${formatDateTime(account.updatedAt, locale, labels.notAvailable)}`,
+    account.forceLogoutAt
+      ? `${labels.forceSignOutPrefix} ${formatDateTime(account.forceLogoutAt, locale, labels.notAvailable)}`
+      : labels.noPendingSignOut
   ];
 }

@@ -14,6 +14,15 @@ function createConnectionRefusedError(): TypeError {
   return error;
 }
 
+function createHTMLResponse(status: number): Response {
+  return new Response("<!DOCTYPE html><html><body>Not Found</body></html>", {
+    status,
+    headers: {
+      "content-type": "text/html; charset=utf-8"
+    }
+  });
+}
+
 describe("backend request targets", () => {
   it("adds the default local backend as a fallback for alternate loopback targets", () => {
     expect(resolveBackendRequestTargets("http://127.0.0.1:3301")).toEqual([
@@ -56,6 +65,68 @@ describe("backend request targets", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
     expect(fetchImpl.mock.calls[0]?.[0]).toBe("http://127.0.0.1:3301/api/v1/auth/csrf");
     expect(fetchImpl.mock.calls[1]?.[0]).toBe(`${defaultBackendBaseURL}/api/v1/auth/csrf`);
+  });
+
+  it("retries once against the default local backend when an alternate loopback target returns html", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(createHTMLResponse(404))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json"
+          }
+        })
+      );
+
+    const response = await fetchBackend(
+      "/api/v1/public/marketplace",
+      {
+        method: "GET",
+        headers: new Headers({
+          accept: "application/json"
+        })
+      },
+      {
+        backendBaseURL: "http://127.0.0.1:3301",
+        fetchImpl
+      }
+    );
+
+    expect(response.ok).toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe("http://127.0.0.1:3301/api/v1/public/marketplace");
+    expect(fetchImpl.mock.calls[1]?.[0]).toBe(`${defaultBackendBaseURL}/api/v1/public/marketplace`);
+  });
+
+  it("keeps json error responses from alternate loopback backends without retrying", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: "not_found" }), {
+        status: 404,
+        headers: {
+          "content-type": "application/json"
+        }
+      })
+    );
+
+    const response = await fetchBackend(
+      "/api/v1/public/marketplace",
+      {
+        method: "GET",
+        headers: new Headers({
+          accept: "application/json"
+        })
+      },
+      {
+        backendBaseURL: "http://127.0.0.1:3301",
+        fetchImpl
+      }
+    );
+
+    expect(response.status).toBe(404);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe("http://127.0.0.1:3301/api/v1/public/marketplace");
   });
 
   it("does not retry remote backends when the primary target is unavailable", async () => {

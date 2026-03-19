@@ -1,14 +1,27 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { cn } from "@/src/lib/utils";
+
+type ProtectedThemePreference = "light" | "dark";
+
+const protectedThemeStorageKey = "skillsindex.protected.theme";
+
+interface ProtectedConsoleShellHeaderControls {
+  isSidebarOpen: boolean;
+  openSidebar: () => void;
+  closeSidebar: () => void;
+  toggleSidebar: () => void;
+  theme: ProtectedThemePreference;
+  setTheme: (nextTheme: ProtectedThemePreference) => void;
+}
 
 interface ProtectedConsoleShellProps {
   scope: "admin-shell" | "workspace-shell" | "account-shell";
   shellTestId: string;
   sideNavTestId: string;
-  header: ReactNode;
+  renderHeader: (controls: ProtectedConsoleShellHeaderControls) => ReactNode;
   sidebar: ReactNode;
   children: ReactNode;
   mainClassName?: string;
@@ -18,28 +31,100 @@ export function ProtectedConsoleShell({
   scope,
   shellTestId,
   sideNavTestId,
-  header,
+  renderHeader,
   sidebar,
   children,
   mainClassName
 }: ProtectedConsoleShellProps) {
   const frameClassName = `${scope}-frame`;
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [theme, setTheme] = useState<ProtectedThemePreference>(() => {
+    if (typeof window === "undefined") {
+      return "light";
+    }
+
+    const storedTheme = window.localStorage.getItem(protectedThemeStorageKey);
+    return storedTheme === "dark" || storedTheme === "light" ? storedTheme : "light";
+  });
+  const drawerNavTestId = `${sideNavTestId}-drawer`;
+  const drawerPanelId = `${shellTestId}-drawer-panel`;
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(protectedThemeStorageKey, theme);
+  }, [theme]);
+
+  useEffect(() => {
+    if (!isSidebarOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSidebarOpen]);
+
+  const headerControls: ProtectedConsoleShellHeaderControls = {
+    isSidebarOpen,
+    openSidebar: () => setIsSidebarOpen(true),
+    closeSidebar: () => setIsSidebarOpen(false),
+    toggleSidebar: () => setIsSidebarOpen((previousValue) => !previousValue),
+    theme,
+    setTheme
+  };
 
   return (
-    <div className={cn("protected-shell-root", `${scope}-root`)} data-testid={shellTestId}>
-      <header className={`${scope}-header`}>
-        <div className={cn(frameClassName, `${scope}-header-row`)}>{header}</div>
+    <div
+      className={cn("protected-shell-root", "protected-console-root", `${scope}-root`)}
+      data-testid={shellTestId}
+      data-protected-theme={theme}
+    >
+      <header className={cn(`${scope}-header`, "protected-console-header")}>
+        <div className={cn(frameClassName, "protected-console-frame", `${scope}-header-row`, "protected-console-header-row")}>
+          {renderHeader(headerControls)}
+        </div>
       </header>
 
-      <div className={`${scope}-body`}>
-        <div className={cn(frameClassName, `${scope}-grid`)}>
-          <aside className={`${scope}-sidebar`} data-testid={sideNavTestId}>
+      <div className={cn(`${scope}-body`, "protected-console-body")}>
+        <div className={cn(frameClassName, "protected-console-frame", `${scope}-grid`, "protected-console-grid")}>
+          <aside className={cn(`${scope}-sidebar`, "protected-console-sidebar", "protected-console-sidebar-desktop")} data-testid={sideNavTestId}>
             {sidebar}
           </aside>
 
-          <main className={mainClassName}>{children}</main>
+          <main className={cn("protected-console-main", mainClassName)}>{children}</main>
         </div>
       </div>
+
+      <button
+        type="button"
+        className={cn("protected-console-drawer-backdrop", isSidebarOpen && "is-open")}
+        aria-hidden={!isSidebarOpen}
+        data-testid={`${shellTestId}-drawer-backdrop`}
+        onClick={headerControls.closeSidebar}
+      />
+
+      <aside
+        id={drawerPanelId}
+        className={cn(`${scope}-sidebar`, "protected-console-sidebar", "protected-console-sidebar-drawer", isSidebarOpen && "is-open")}
+        data-testid={drawerNavTestId}
+        aria-hidden={!isSidebarOpen}
+      >
+        {isSidebarOpen ? sidebar : null}
+      </aside>
     </div>
   );
 }

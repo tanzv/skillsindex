@@ -24,6 +24,13 @@ export interface AccessOverview {
   roleSummary: Array<{ role: string; count: number }>;
 }
 
+interface AccessMetricLabels {
+  accounts: string;
+  disabled: string;
+  enabledProviders: string;
+  pendingSignOut: string;
+}
+
 function toStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.map((item) => asString(item)).filter(Boolean);
@@ -68,7 +75,15 @@ export function buildAdminAccessGovernanceData(payloads: {
   };
 }
 
-export function buildAccessOverview(data: AdminAccessGovernanceData): AccessOverview {
+export function buildAccessOverview(
+  data: AdminAccessGovernanceData,
+  labels: AccessMetricLabels = {
+    accounts: "Accounts",
+    disabled: "Disabled",
+    enabledProviders: "Enabled Providers",
+    pendingSignOut: "Pending Sign-out"
+  }
+): AccessOverview {
   const disabledAccounts = data.accounts.filter((item) => item.status.toLowerCase() === "disabled").length;
   const forceLogoutPending = data.accounts.filter((item) => item.forceLogoutAt).length;
   const roleMap = data.accounts.reduce<Map<string, number>>((accumulator, item) => {
@@ -79,10 +94,10 @@ export function buildAccessOverview(data: AdminAccessGovernanceData): AccessOver
 
   return {
     metrics: [
-      { label: "Accounts", value: String(data.accountsTotal) },
-      { label: "Disabled", value: String(disabledAccounts) },
-      { label: "Enabled Providers", value: String(data.enabledProviders.length) },
-      { label: "Pending Sign-out", value: String(forceLogoutPending) }
+      { label: labels.accounts, value: String(data.accountsTotal) },
+      { label: labels.disabled, value: String(disabledAccounts) },
+      { label: labels.enabledProviders, value: String(data.enabledProviders.length) },
+      { label: labels.pendingSignOut, value: String(forceLogoutPending) }
     ],
     roleSummary: Array.from(roleMap.entries())
       .map(([role, count]) => ({ role, count }))

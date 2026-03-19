@@ -47,7 +47,7 @@ test("executes admin api key lifecycle actions", async ({ page }) => {
 
   await apiKeyCard.getByRole("button", { name: "Revoke" }).click();
   await expect(page.getByText(/API key \d+ revoked\./)).toBeVisible();
-  await expect(apiKeyCard).toContainText("revoked");
+  await expect(apiKeyCard).toContainText(/revoked/i);
 });
 
 test("executes organization membership actions", async ({ page }) => {
@@ -68,7 +68,7 @@ test("executes organization membership actions", async ({ page }) => {
   await memberCard.getByLabel("Member role").selectOption("viewer");
   await memberCard.getByRole("button", { name: "Apply Role" }).click();
   await expect(page.getByText("Role updated for user 3.")).toBeVisible();
-  await expect(memberCard).toContainText("org viewer");
+  await expect(memberCard).toContainText(/org viewer/i);
 
   await memberCard.getByRole("button", { name: "Remove" }).click();
   await expect(page.getByText("User 3 removed.")).toBeVisible();

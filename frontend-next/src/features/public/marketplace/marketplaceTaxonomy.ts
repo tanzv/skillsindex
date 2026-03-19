@@ -10,6 +10,10 @@ import {
   taxonomySubcategoryLookup
 } from "./marketplaceTaxonomyDefinitions";
 import {
+  buildLegacyMarketplaceCategorySummary,
+  buildMarketplaceTaxonomyCategorySummary
+} from "./marketplaceCategoryCatalog";
+import {
   buildMarketplaceKeywordSet,
   hasMarketplaceKeywordMatch,
   humanizeMarketplaceSlug,
@@ -94,47 +98,6 @@ function resolveMarketplaceClassification(input: MarketplaceClassificationInput)
   };
 }
 
-function buildLegacyCategoryBuckets(items: MarketplaceSkill[], rawCategorySlug: string): MarketplaceCategory | null {
-  const normalizedCategory = normalizeMarketplaceSlug(rawCategorySlug);
-  if (!normalizedCategory) {
-    return null;
-  }
-
-  const matchedItems = items.filter((item) => normalizeMarketplaceSlug(item.category) === normalizedCategory);
-  if (matchedItems.length === 0) {
-    return null;
-  }
-
-  const subcategoryCounter = new Map<string, { name: string; count: number }>();
-
-  for (const item of matchedItems) {
-    const subcategorySlug = normalizeMarketplaceSlug(item.subcategory) || "general";
-    const currentEntry = subcategoryCounter.get(subcategorySlug);
-
-    if (currentEntry) {
-      currentEntry.count += 1;
-      continue;
-    }
-
-    subcategoryCounter.set(subcategorySlug, {
-      name: humanizeMarketplaceSlug(item.subcategory, "General"),
-      count: 1
-    });
-  }
-
-  const subcategories = [...subcategoryCounter.entries()]
-    .map(([slug, entry]) => ({ slug, name: entry.name, count: entry.count }))
-    .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name));
-
-  return {
-    slug: normalizedCategory,
-    name: humanizeMarketplaceSlug(normalizedCategory),
-    description: `Legacy category route for ${humanizeMarketplaceSlug(normalizedCategory)}.`,
-    count: matchedItems.length,
-    subcategories
-  };
-}
-
 export function resolveMarketplaceCategorySummary(
   categories: MarketplaceCategory[],
   activeCategory: string | undefined,
@@ -146,11 +109,17 @@ export function resolveMarketplaceCategorySummary(
   }
 
   const groupedCategory = categories.find((category) => normalizeMarketplaceSlug(category.slug) === normalizedCategory) || null;
+  const taxonomyCategory = taxonomyCategoryLookup.get(normalizedCategory);
+
+  if (taxonomyCategory) {
+    return buildMarketplaceTaxonomyCategorySummary(taxonomyCategory, groupedCategory);
+  }
+
   if (groupedCategory) {
     return groupedCategory;
   }
 
-  return buildLegacyCategoryBuckets(items, normalizedCategory);
+  return buildLegacyMarketplaceCategorySummary(items, normalizedCategory);
 }
 
 export function resolveMarketplaceSkillCategoryLabel(item: MarketplaceSkill): string {

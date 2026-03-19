@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import { AdminIngestionContent } from "./AdminIngestionContent";
 import {
-  adminIngestionRouteMeta,
   type AdminIngestionRoute,
   buildAdminIngestionMetrics,
   createImportsDraft,
@@ -16,6 +17,7 @@ import {
   normalizeImportJobsPayload,
   normalizeRepositorySyncPolicyPayload,
   normalizeSkillInventoryPayload,
+  resolveAdminIngestionRouteMeta,
   normalizeSyncRunsPayload,
   type RepositorySyncPolicy,
   type SkillInventoryItem
@@ -31,7 +33,9 @@ interface ActionConfig {
 }
 
 export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
-  const meta = adminIngestionRouteMeta[route];
+  const { messages } = useProtectedI18n();
+  const ingestionMessages = messages.adminIngestion;
+  const meta = useMemo(() => resolveAdminIngestionRouteMeta(route, ingestionMessages), [ingestionMessages, route]);
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
@@ -84,11 +88,11 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
       setSyncRuns([]);
       setRepositoryPolicy(createRepositorySyncPolicy());
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load ingestion data.");
+      setError(loadError instanceof Error ? loadError.message : ingestionMessages.loadError);
     } finally {
       setLoading(false);
     }
-  }, [route]);
+  }, [ingestionMessages.loadError, route]);
 
   useEffect(() => {
     void loadData();
@@ -101,8 +105,10 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
         importJobs,
         syncRuns,
         policy: repositoryPolicy
+      }, {
+        messages: ingestionMessages
       }),
-    [importJobs, repositoryPolicy, route, skills, syncRuns]
+    [importJobs, ingestionMessages, repositoryPolicy, route, skills, syncRuns]
   );
 
   const executeAction = useCallback(
@@ -128,8 +134,8 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
   async function submitManual() {
     await executeAction({
       actionKey: "manual",
-      successMessage: "Manual skill created.",
-      failureMessage: "Failed to create manual skill.",
+      successMessage: ingestionMessages.manualCreateSuccess,
+      failureMessage: ingestionMessages.manualCreateError,
       request: () => clientFetchJSON("/api/bff/admin/ingestion/manual", { method: "POST", body: buildManualPayload(manualDraft) }),
       afterSuccess: () => setManualDraft(createManualDraft())
     });
@@ -138,8 +144,8 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
   async function submitRepository() {
     await executeAction({
       actionKey: "repository",
-      successMessage: "Repository ingestion requested.",
-      failureMessage: "Failed to start repository intake.",
+      successMessage: ingestionMessages.repositorySubmitSuccess,
+      failureMessage: ingestionMessages.repositorySubmitError,
       request: () => clientFetchJSON("/api/bff/admin/ingestion/repository", { method: "POST", body: buildRepositoryPayload(repositoryDraft) }),
       afterSuccess: () => setRepositoryDraft(createRepositoryDraft())
     });
@@ -148,8 +154,8 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
   async function saveRepositoryPolicy() {
     await executeAction({
       actionKey: "policy",
-      successMessage: "Repository sync policy saved.",
-      failureMessage: "Failed to save repository sync policy.",
+      successMessage: ingestionMessages.policySaveSuccess,
+      failureMessage: ingestionMessages.policySaveError,
       request: () =>
         clientFetchJSON("/api/bff/admin/sync-policy/repository", {
           method: "POST",
@@ -165,14 +171,14 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
 
   async function submitArchive() {
     if (!archiveFile) {
-      setError("Select an archive before submitting.");
+      setError(ingestionMessages.archiveRequiredError);
       return;
     }
 
     await executeAction({
       actionKey: "archive",
-      successMessage: "Archive import submitted.",
-      failureMessage: "Failed to submit archive import.",
+      successMessage: ingestionMessages.archiveSubmitSuccess,
+      failureMessage: ingestionMessages.archiveSubmitError,
       request: async () => {
         const formData = new FormData();
         formData.set("archive", archiveFile);
@@ -196,8 +202,8 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
   async function submitSkillMP() {
     await executeAction({
       actionKey: "skillmp",
-      successMessage: "SkillMP import submitted.",
-      failureMessage: "Failed to submit SkillMP import.",
+      successMessage: ingestionMessages.skillmpSubmitSuccess,
+      failureMessage: ingestionMessages.skillmpSubmitError,
       request: () => clientFetchJSON("/api/bff/admin/ingestion/skillmp", { method: "POST", body: buildSkillMPPayload(importsDraft) }),
       afterSuccess: () =>
         setImportsDraft((current) => ({
@@ -215,8 +221,11 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
   async function runJobAction(jobId: number, action: "retry" | "cancel") {
     await executeAction({
       actionKey: `${action}-${jobId}`,
-      successMessage: `Import job ${jobId} ${action} requested.`,
-      failureMessage: "Failed to operate import job.",
+      successMessage: formatProtectedMessage(
+        action === "retry" ? ingestionMessages.retryImportJobSuccess : ingestionMessages.cancelImportJobSuccess,
+        { jobId }
+      ),
+      failureMessage: ingestionMessages.importJobActionError,
       request: () => clientFetchJSON(`/api/bff/admin/jobs/${jobId}/${action}`, { method: "POST" })
     });
   }

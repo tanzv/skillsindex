@@ -1,4 +1,5 @@
 const serverBackendBaseURLEnvName = "SKILLSINDEX_SERVER_API_BASE_URL";
+const htmlContentTypePattern = /\btext\/html\b/i;
 
 export const defaultBackendBaseURL = "http://localhost:8080";
 
@@ -36,6 +37,15 @@ function isRetryableConnectionError(error: unknown): boolean {
   return code === "ECONNREFUSED";
 }
 
+function shouldRetryAgainstDefaultBackendResponse(primaryBaseURL: string, response: Response): boolean {
+  if (!shouldRetryAgainstDefaultBackend(primaryBaseURL)) {
+    return false;
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  return htmlContentTypePattern.test(contentType);
+}
+
 export function buildBackendURL(path: string, baseURL: string): string {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   return `${baseURL}${normalizedPath}`;
@@ -68,7 +78,14 @@ export async function fetchBackend(path: string, init: RequestInit, options: Fet
     const target = targets[index];
 
     try {
-      return await fetchImpl(buildBackendURL(path, target), init);
+      const response = await fetchImpl(buildBackendURL(path, target), init);
+      const hasFallbackTarget = index < targets.length - 1;
+
+      if (hasFallbackTarget && shouldRetryAgainstDefaultBackendResponse(target, response)) {
+        continue;
+      }
+
+      return response;
     } catch (error) {
       lastError = error;
 

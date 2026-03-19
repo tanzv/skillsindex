@@ -1,3 +1,6 @@
+import { protectedTopbarMessageFallbacks } from "@/src/lib/i18n/protectedMessages";
+import { workspaceMessageFallbacks, type WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
+
 import {
   buildProtectedTopbarEntries,
   buildProtectedTopbarModel,
@@ -6,7 +9,7 @@ import {
   type ProtectedTopbarEntry,
   type ProtectedTopbarModel
 } from "./protectedTopbarModel";
-import { workspaceProtectedTopbarConfig } from "./protectedTopbarConfigs";
+import { buildWorkspaceProtectedTopbarConfig } from "./protectedTopbarConfigs";
 
 export type WorkspaceTopbarEntry = ProtectedTopbarEntry;
 export type WorkspaceTopbarModel = ProtectedTopbarModel;
@@ -19,10 +22,18 @@ export function resolveWorkspaceResponsivePrimaryVisibleCount(shellWidth: number
   return resolveProtectedResponsivePrimaryVisibleCount(shellWidth);
 }
 
-export function buildWorkspaceTopbarEntries(pathname: string): WorkspaceTopbarEntry[] {
-  return buildProtectedTopbarEntries(pathname, workspaceProtectedTopbarConfig);
+export function buildWorkspaceTopbarEntries(pathname: string, messages: WorkspaceMessages = workspaceMessageFallbacks): WorkspaceTopbarEntry[] {
+  return buildProtectedTopbarEntries(pathname, buildWorkspaceProtectedTopbarConfig(messages, protectedTopbarMessageFallbacks));
 }
 
-export function buildWorkspaceTopbarModel(pathname: string, maxVisibleCount?: number): WorkspaceTopbarModel {
-  return buildProtectedTopbarModel(pathname, workspaceProtectedTopbarConfig, maxVisibleCount);
+export function buildWorkspaceTopbarModel(
+  pathname: string,
+  maxVisibleCount?: number,
+  messages: WorkspaceMessages = workspaceMessageFallbacks
+): WorkspaceTopbarModel {
+  return buildProtectedTopbarModel(
+    pathname,
+    buildWorkspaceProtectedTopbarConfig(messages, protectedTopbarMessageFallbacks),
+    maxVisibleCount
+  );
 }

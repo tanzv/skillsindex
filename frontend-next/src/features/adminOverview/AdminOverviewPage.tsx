@@ -3,23 +3,22 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import {
   buildAdminOverviewCapabilityItems,
   buildAdminOverviewDistribution,
   buildAdminOverviewMetrics,
+  buildAdminOverviewQuickLinks,
   normalizeAdminOverviewPayload
 } from "./model";
 
-const quickLinks = [
-  { href: "/admin/skills", label: "Skill Governance", description: "Inspect the governed catalog and recent quality posture." },
-  { href: "/admin/ingestion/repository", label: "Repository Intake", description: "Onboard repository-backed skills and review scheduler pressure." },
-  { href: "/admin/access", label: "Access Control", description: "Review registration, providers, and account enforcement." },
-  { href: "/admin/ops/metrics", label: "Operations", description: "Track incident pressure, alerts, and release readiness." }
-] as const;
-
 export function AdminOverviewPage() {
+  const { messages } = useProtectedI18n();
+  const commonMessages = messages.adminCommon;
+  const overviewMessages = messages.adminOverview;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [snapshot, setSnapshot] = useState(() => normalizeAdminOverviewPayload(null));
@@ -31,29 +30,76 @@ export function AdminOverviewPage() {
       const payload = await clientFetchJSON("/api/bff/admin/overview");
       setSnapshot(normalizeAdminOverviewPayload(payload));
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load admin overview.");
+      setError(loadError instanceof Error ? loadError.message : overviewMessages.loadError);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [overviewMessages.loadError]);
 
   useEffect(() => {
     void loadData();
   }, [loadData]);
 
-  const metrics = useMemo(() => buildAdminOverviewMetrics(snapshot), [snapshot]);
-  const capabilities = useMemo(() => buildAdminOverviewCapabilityItems(snapshot), [snapshot]);
-  const distribution = useMemo(() => buildAdminOverviewDistribution(snapshot), [snapshot]);
+  const metrics = useMemo(
+    () =>
+      buildAdminOverviewMetrics(snapshot, {
+        metricTotalSkillsLabel: overviewMessages.metricTotalSkillsLabel,
+        metricTotalSkillsDescription: overviewMessages.metricTotalSkillsDescription,
+        metricOrganizationsLabel: overviewMessages.metricOrganizationsLabel,
+        metricOrganizationsDescription: overviewMessages.metricOrganizationsDescription,
+        metricAccountsLabel: overviewMessages.metricAccountsLabel,
+        metricAccountsDescription: overviewMessages.metricAccountsDescription,
+        metricManageUsersLabel: overviewMessages.metricManageUsersLabel,
+        metricManageUsersDescription: overviewMessages.metricManageUsersDescription,
+        valueEnabled: overviewMessages.valueEnabled,
+        valueLimited: overviewMessages.valueLimited
+      }),
+    [overviewMessages, snapshot]
+  );
+  const capabilities = useMemo(
+    () =>
+      buildAdminOverviewCapabilityItems(snapshot, {
+        capabilityManageUsersLabel: overviewMessages.capabilityManageUsersLabel,
+        capabilityViewAllSkillsLabel: overviewMessages.capabilityViewAllSkillsLabel,
+        capabilityPrivateCoverageLabel: overviewMessages.capabilityPrivateCoverageLabel,
+        capabilitySyncReadyLabel: overviewMessages.capabilitySyncReadyLabel,
+        valueEnabled: overviewMessages.valueEnabled,
+        valueUnavailable: overviewMessages.valueUnavailable,
+        valueScoped: overviewMessages.valueScoped
+      }),
+    [overviewMessages, snapshot]
+  );
+  const distribution = useMemo(
+    () =>
+      buildAdminOverviewDistribution(snapshot, {
+        distributionPublicSkillsLabel: overviewMessages.distributionPublicSkillsLabel,
+        distributionPrivateSkillsLabel: overviewMessages.distributionPrivateSkillsLabel,
+        distributionSyncableSkillsLabel: overviewMessages.distributionSyncableSkillsLabel
+      }),
+    [overviewMessages, snapshot]
+  );
+  const quickLinks = useMemo(
+    () =>
+      buildAdminOverviewQuickLinks({
+        quickLinkSkillGovernanceLabel: overviewMessages.quickLinkSkillGovernanceLabel,
+        quickLinkSkillGovernanceDescription: overviewMessages.quickLinkSkillGovernanceDescription,
+        quickLinkRepositoryIntakeLabel: overviewMessages.quickLinkRepositoryIntakeLabel,
+        quickLinkRepositoryIntakeDescription: overviewMessages.quickLinkRepositoryIntakeDescription,
+        quickLinkAccessControlLabel: overviewMessages.quickLinkAccessControlLabel,
+        quickLinkAccessControlDescription: overviewMessages.quickLinkAccessControlDescription,
+        quickLinkOperationsLabel: overviewMessages.quickLinkOperationsLabel,
+        quickLinkOperationsDescription: overviewMessages.quickLinkOperationsDescription
+      }),
+    [overviewMessages]
+  );
 
   return (
     <div className="admin-overview-stage" data-testid="admin-overview-stage">
       <section className="admin-overview-stage-panel admin-overview-hero">
         <div className="admin-overview-panel-title-row">
-          <p className="admin-overview-kicker">Governed Workbench</p>
-          <h1>Admin Overview</h1>
-          <p className="admin-overview-description">
-            Dedicated operator dashboard for catalog posture, account reach, and navigation into high-frequency control surfaces.
-          </p>
+          <p className="admin-overview-kicker">{overviewMessages.heroKicker}</p>
+          <h1>{overviewMessages.pageTitle}</h1>
+          <p className="admin-overview-description">{overviewMessages.pageDescription}</p>
         </div>
 
         <div className="admin-overview-summary-grid">
@@ -68,13 +114,13 @@ export function AdminOverviewPage() {
 
         <div className="admin-overview-action-row" data-testid="admin-overview-actions">
           <button type="button" className="admin-overview-action is-primary" onClick={() => void loadData()}>
-            {loading ? "Refreshing..." : "Refresh"}
+            {loading ? commonMessages.refreshing : commonMessages.refresh}
           </button>
           <Link href="/admin/ingestion/repository" className="admin-overview-action">
-            Open Intake
+            {overviewMessages.openIntakeAction}
           </Link>
           <Link href="/admin/ops/alerts" className="admin-overview-action">
-            Open Alerts
+            {overviewMessages.openAlertsAction}
           </Link>
         </div>
       </section>
@@ -87,11 +133,9 @@ export function AdminOverviewPage() {
         <div className="admin-overview-column">
           <section className="admin-overview-stage-panel admin-overview-panel">
             <div className="admin-overview-panel-title-row">
-              <p className="admin-overview-section-kicker">Distribution</p>
-              <h2>Catalog Posture</h2>
-              <p className="admin-overview-panel-description">
-                Visibility mix and synchronization readiness for the current governed inventory.
-              </p>
+              <p className="admin-overview-section-kicker">{overviewMessages.distributionKicker}</p>
+              <h2>{overviewMessages.distributionTitle}</h2>
+              <p className="admin-overview-panel-description">{overviewMessages.distributionDescription}</p>
             </div>
 
             <div className="admin-overview-distribution-list">
@@ -113,11 +157,9 @@ export function AdminOverviewPage() {
 
           <section className="admin-overview-stage-panel admin-overview-panel">
             <div className="admin-overview-panel-title-row">
-              <p className="admin-overview-section-kicker">Navigation</p>
-              <h2>Navigation Index</h2>
-              <p className="admin-overview-panel-description">
-                Fast entry points for the control surfaces that operators touch most often.
-              </p>
+              <p className="admin-overview-section-kicker">{overviewMessages.navigationKicker}</p>
+              <h2>{overviewMessages.navigationTitle}</h2>
+              <p className="admin-overview-panel-description">{overviewMessages.navigationDescription}</p>
             </div>
 
             <div className="admin-overview-nav-grid" data-testid="admin-overview-nav-grid">
@@ -136,11 +178,9 @@ export function AdminOverviewPage() {
         <div className="admin-overview-column">
           <section className="admin-overview-stage-panel admin-overview-panel">
             <div className="admin-overview-panel-title-row">
-              <p className="admin-overview-section-kicker">Coverage</p>
-              <h2>Capability Envelope</h2>
-              <p className="admin-overview-panel-description">
-                Current administrative permissions and coverage indicators.
-              </p>
+              <p className="admin-overview-section-kicker">{overviewMessages.capabilityKicker}</p>
+              <h2>{overviewMessages.capabilityTitle}</h2>
+              <p className="admin-overview-panel-description">{overviewMessages.capabilityDescription}</p>
             </div>
 
             <div className="admin-overview-capability-grid">
@@ -155,30 +195,28 @@ export function AdminOverviewPage() {
 
           <section className="admin-overview-stage-panel admin-overview-panel">
             <div className="admin-overview-panel-title-row">
-              <p className="admin-overview-section-kicker">Readiness</p>
-              <h2>Current Readiness</h2>
-              <p className="admin-overview-panel-description">
-                Compact reading of inventory exposure and administrative reach.
-              </p>
+              <p className="admin-overview-section-kicker">{overviewMessages.readinessKicker}</p>
+              <h2>{overviewMessages.readinessTitle}</h2>
+              <p className="admin-overview-panel-description">{overviewMessages.readinessDescription}</p>
             </div>
 
             <div className="admin-overview-readiness-list">
               <div className="admin-overview-readiness-item">
-                <strong>Public exposure</strong>
+                <strong>{overviewMessages.readinessPublicExposureTitle}</strong>
                 <p className="admin-overview-copy">
-                  {snapshot.publicSkills} public skills are currently visible from the governed inventory.
+                  {formatProtectedMessage(overviewMessages.readinessPublicExposureTemplate, { count: snapshot.publicSkills })}
                 </p>
               </div>
               <div className="admin-overview-readiness-item">
-                <strong>Private operating space</strong>
+                <strong>{overviewMessages.readinessPrivateSpaceTitle}</strong>
                 <p className="admin-overview-copy">
-                  {snapshot.privateSkills} private skills remain under internal-only posture.
+                  {formatProtectedMessage(overviewMessages.readinessPrivateSpaceTemplate, { count: snapshot.privateSkills })}
                 </p>
               </div>
               <div className="admin-overview-readiness-item">
-                <strong>Synchronization reach</strong>
+                <strong>{overviewMessages.readinessSyncReachTitle}</strong>
                 <p className="admin-overview-copy">
-                  {snapshot.syncableSkills} skills are prepared for repository-backed or scheduled refresh flows.
+                  {formatProtectedMessage(overviewMessages.readinessSyncReachTemplate, { count: snapshot.syncableSkills })}
                 </p>
               </div>
             </div>

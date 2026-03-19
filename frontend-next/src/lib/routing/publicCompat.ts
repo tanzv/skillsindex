@@ -115,6 +115,16 @@ export function withPublicPathPrefix(prefix: string, route: string): string {
   return prefix ? `${prefix}${normalizedRoute}` : normalizedRoute;
 }
 
+function buildPublicDisplayPath(prefix: string, route: string): string {
+  const normalizedRoute = normalizePath(route);
+
+  if (!prefix) {
+    return normalizedRoute;
+  }
+
+  return normalizedRoute === "/" ? prefix : `${prefix}${normalizedRoute}`;
+}
+
 export function buildPublicPrefix(isLightTheme: boolean, isMobileLayout: boolean): string {
   if (isMobileLayout && isLightTheme) {
     return "/mobile/light";
@@ -159,6 +169,15 @@ export function buildPublicLinkTarget(prefix: string, route: string): PublicLink
 
   const { pathname, suffix } = splitRouteSuffix(trimmedRoute);
   const normalizedPath = normalizePath(pathname);
+  const prefixedRouteState = splitPublicPathPrefix(normalizedPath);
+
+  if (prefixedRouteState.prefix && isDisplayablePublicCorePath(prefixedRouteState.corePath)) {
+    return {
+      href: `${prefixedRouteState.corePath}${suffix}`,
+      as: `${buildPublicDisplayPath(prefixedRouteState.prefix, prefixedRouteState.corePath)}${suffix}`
+    };
+  }
+
   const href = `${normalizedPath}${suffix}`;
 
   if (!prefix || !isDisplayablePublicCorePath(normalizedPath)) {
@@ -167,7 +186,7 @@ export function buildPublicLinkTarget(prefix: string, route: string): PublicLink
 
   return {
     href,
-    as: `${withPublicPathPrefix(prefix, normalizedPath)}${suffix}`
+    as: `${buildPublicDisplayPath(prefix, normalizedPath)}${suffix}`
   };
 }
 

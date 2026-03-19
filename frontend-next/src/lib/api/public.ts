@@ -1,4 +1,5 @@
 import { buildMarketplacePresentationPayload } from "@/src/features/public/marketplace/marketplaceTaxonomy";
+import { sessionCookieName } from "@/src/lib/auth/middleware";
 
 import { serverFetchJSON } from "../http/serverFetch";
 import type {
@@ -9,6 +10,13 @@ import type {
   PublicSkillResourcesResponse,
   PublicSkillVersionsResponse
 } from "../schemas/public";
+
+export const anonymousMarketplaceRevalidateSeconds = 30;
+
+export interface MarketplaceRequestStrategy {
+  includeViewerContext: boolean;
+  revalidateSeconds?: number;
+}
 
 function buildMarketplaceQuery(searchParams?: Record<string, string | string[] | undefined>): string {
   const params = new URLSearchParams();
@@ -35,12 +43,37 @@ function buildMarketplaceQuery(searchParams?: Record<string, string | string[] |
   return suffix ? `?${suffix}` : "";
 }
 
+export function resolveMarketplaceRequestStrategy(requestHeaders: Headers): MarketplaceRequestStrategy {
+  const cookieHeader = String(requestHeaders.get("cookie") || "").trim();
+  const hasSessionCookie = cookieHeader
+    .split(";")
+    .map((segment) => segment.trim())
+    .some((segment) => segment.startsWith(`${sessionCookieName}=`));
+
+  if (hasSessionCookie) {
+    return {
+      includeViewerContext: true
+    };
+  }
+
+  return {
+    includeViewerContext: false,
+    revalidateSeconds: anonymousMarketplaceRevalidateSeconds
+  };
+}
+
 export async function fetchMarketplace(
   requestHeaders: Headers,
   searchParams?: Record<string, string | string[] | undefined>
 ): Promise<PublicMarketplaceResponse> {
+  const requestStrategy = resolveMarketplaceRequestStrategy(requestHeaders);
   const payload = await serverFetchJSON<PublicMarketplaceResponse>(`/api/v1/public/marketplace${buildMarketplaceQuery(searchParams)}`, {
-    requestHeaders
+    requestHeaders: requestStrategy.includeViewerContext ? requestHeaders : new Headers(),
+    next: requestStrategy.revalidateSeconds
+      ? {
+          revalidate: requestStrategy.revalidateSeconds
+        }
+      : undefined
   });
 
   return buildMarketplacePresentationPayload(payload);
