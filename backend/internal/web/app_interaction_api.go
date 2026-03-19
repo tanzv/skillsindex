@@ -9,10 +9,6 @@ import (
 	"skillsindex/internal/services"
 )
 
-type apiSkillFavoriteRequest struct {
-	Favorite any `json:"favorite"`
-}
-
 type apiSkillRatingRequest struct {
 	Score int `json:"score"`
 }

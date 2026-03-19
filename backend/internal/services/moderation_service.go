@@ -72,21 +72,9 @@ func (s *ModerationService) CreateCase(ctx context.Context, input CreateModerati
 	if reasonCode == "" {
 		return models.ModerationCase{}, fmt.Errorf("reason code is required")
 	}
-	reasonDetail := strings.TrimSpace(input.ReasonDetail)
-	if len(reasonDetail) > 2048 {
-		reasonDetail = reasonDetail[:2048]
-	}
-
-	var skillID *uint
-	if input.SkillID != nil && *input.SkillID != 0 {
-		value := *input.SkillID
-		skillID = &value
-	}
-	var commentID *uint
-	if input.CommentID != nil && *input.CommentID != 0 {
-		value := *input.CommentID
-		commentID = &value
-	}
+	reasonDetail := truncateModerationText(input.ReasonDetail, 2048)
+	skillID := normalizeOptionalModerationEntityID(input.SkillID)
+	commentID := normalizeOptionalModerationEntityID(input.CommentID)
 
 	switch targetType {
 	case models.ModerationTargetSkill:
@@ -189,10 +177,7 @@ func (s *ModerationService) ResolveCase(
 	}
 
 	action := normalizeModerationAction(input.Action)
-	note := strings.TrimSpace(input.ResolutionNote)
-	if len(note) > 2048 {
-		note = note[:2048]
-	}
+	note := truncateModerationText(input.ResolutionNote, 2048)
 	resolvedAt := time.Now().UTC()
 	resolverID := input.ResolverUserID
 	updates := map[string]any{
@@ -235,10 +220,7 @@ func (s *ModerationService) RejectCase(
 		return models.ModerationCase{}, ErrModerationCaseClosed
 	}
 
-	note := strings.TrimSpace(input.RejectionNote)
-	if len(note) > 2048 {
-		note = note[:2048]
-	}
+	note := truncateModerationText(input.RejectionNote, 2048)
 	resolvedAt := time.Now().UTC()
 	resolverID := input.ResolverUserID
 	updates := map[string]any{
@@ -255,165 +237,4 @@ func (s *ModerationService) RejectCase(
 		return models.ModerationCase{}, fmt.Errorf("failed to reject moderation case: %w", err)
 	}
 	return s.GetCaseByID(ctx, caseID)
-}
-
-func normalizeModerationTargetType(raw models.ModerationTargetType) (models.ModerationTargetType, error) {
-	switch strings.ToLower(strings.TrimSpace(string(raw))) {
-	case string(models.ModerationTargetSkill):
-		return models.ModerationTargetSkill, nil
-	case string(models.ModerationTargetComment):
-		return models.ModerationTargetComment, nil
-	default:
-		return "", fmt.Errorf("invalid moderation target type")
-	}
-}
-
-func normalizeModerationAction(raw models.ModerationAction) models.ModerationAction {
-	switch strings.ToLower(strings.TrimSpace(string(raw))) {
-	case string(models.ModerationActionFlagged):
-		return models.ModerationActionFlagged
-	case string(models.ModerationActionHidden):
-		return models.ModerationActionHidden
-	case string(models.ModerationActionDeleted):
-		return models.ModerationActionDeleted
-	default:
-		return models.ModerationActionNone
-	}
-}
-
-func normalizeOptionalUserID(raw *uint) *uint {
-	if raw == nil || *raw == 0 {
-		return nil
-	}
-	value := *raw
-	return &value
-}
-
-func ensureSkillExists(ctx context.Context, db *gorm.DB, skillID uint) error {
-	var total int64
-	if err := db.WithContext(ctx).
-		Model(&models.Skill{}).
-		Where("id = ?", skillID).
-		Count(&total).Error; err != nil {
-		return fmt.Errorf("failed to verify skill existence: %w", err)
-	}
-	if total == 0 {
-		return fmt.Errorf("skill not found")
-	}
-	return nil
-}
-
-func ensureCommentBelongsSkill(ctx context.Context, db *gorm.DB, commentID uint, skillID uint) error {
-	var total int64
-	if err := db.WithContext(ctx).
-		Model(&models.SkillComment{}).
-		Where("id = ? AND skill_id = ?", commentID, skillID).
-		Count(&total).Error; err != nil {
-		return fmt.Errorf("failed to verify comment existence: %w", err)
-	}
-	if total == 0 {
-		return fmt.Errorf("comment not found")
-	}
-	return nil
-}
-
-func (s *ModerationService) applyModerationAction(
-	ctx context.Context,
-	tx *gorm.DB,
-	item models.ModerationCase,
-	action models.ModerationAction,
-) error {
-	switch item.TargetType {
-	case models.ModerationTargetSkill:
-		return applySkillModerationAction(ctx, tx, item, action)
-	case models.ModerationTargetComment:
-		return applyCommentModerationAction(ctx, tx, item, action)
-	default:
-		return fmt.Errorf("invalid moderation target type")
-	}
-}
-
-func applySkillModerationAction(
-	ctx context.Context,
-	tx *gorm.DB,
-	item models.ModerationCase,
-	action models.ModerationAction,
-) error {
-	if item.SkillID == nil || *item.SkillID == 0 {
-		return fmt.Errorf("skill id is required for skill moderation action")
-	}
-	switch action {
-	case models.ModerationActionNone, models.ModerationActionFlagged:
-		return nil
-	case models.ModerationActionHidden:
-		result := tx.WithContext(ctx).
-			Model(&models.Skill{}).
-			Where("id = ?", *item.SkillID).
-			Update("visibility", models.VisibilityPrivate)
-		if result.Error != nil {
-			return fmt.Errorf("failed to apply hidden action on skill: %w", result.Error)
-		}
-		if result.RowsAffected == 0 {
-			return fmt.Errorf("skill not found")
-		}
-		return nil
-	case models.ModerationActionDeleted:
-		result := tx.WithContext(ctx).
-			Model(&models.Skill{}).
-			Where("id = ?", *item.SkillID).
-			Updates(map[string]any{
-				"visibility":  models.VisibilityPrivate,
-				"description": moderatedSkillDescription,
-				"content":     moderatedSkillContent,
-			})
-		if result.Error != nil {
-			return fmt.Errorf("failed to apply deleted action on skill: %w", result.Error)
-		}
-		if result.RowsAffected == 0 {
-			return fmt.Errorf("skill not found")
-		}
-		return nil
-	default:
-		return fmt.Errorf("invalid moderation action")
-	}
-}
-
-func applyCommentModerationAction(
-	ctx context.Context,
-	tx *gorm.DB,
-	item models.ModerationCase,
-	action models.ModerationAction,
-) error {
-	if item.CommentID == nil || *item.CommentID == 0 {
-		return fmt.Errorf("comment id is required for comment moderation action")
-	}
-	switch action {
-	case models.ModerationActionNone, models.ModerationActionFlagged:
-		return nil
-	case models.ModerationActionHidden:
-		result := tx.WithContext(ctx).
-			Model(&models.SkillComment{}).
-			Where("id = ?", *item.CommentID).
-			Update("content", moderatedHiddenCommentContent)
-		if result.Error != nil {
-			return fmt.Errorf("failed to apply hidden action on comment: %w", result.Error)
-		}
-		if result.RowsAffected == 0 {
-			return fmt.Errorf("comment not found")
-		}
-		return nil
-	case models.ModerationActionDeleted:
-		result := tx.WithContext(ctx).
-			Where("id = ?", *item.CommentID).
-			Delete(&models.SkillComment{})
-		if result.Error != nil {
-			return fmt.Errorf("failed to apply deleted action on comment: %w", result.Error)
-		}
-		if result.RowsAffected == 0 {
-			return fmt.Errorf("comment not found")
-		}
-		return nil
-	default:
-		return fmt.Errorf("invalid moderation action")
-	}
 }

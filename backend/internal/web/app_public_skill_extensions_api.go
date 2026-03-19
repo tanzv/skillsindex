@@ -234,7 +234,7 @@ func writeMarketplaceSkillLookupError(w http.ResponseWriter, err error, side str
 	if err == services.ErrSkillNotFound {
 		statusCode = http.StatusNotFound
 		errorCode = "skill_not_found"
-		message = fmt.Sprintf("%s skill not found", strings.Title(side))
+		message = fmt.Sprintf("%s skill not found", side)
 	}
 	writeJSON(w, statusCode, map[string]any{
 		"error":   errorCode,

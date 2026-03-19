@@ -1,0 +1,200 @@
+package web
+
+import (
+	"math"
+	"net/http"
+	"strings"
+
+	"skillsindex/internal/models"
+	"skillsindex/internal/services"
+)
+
+func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request) {
+	if !a.ensureMarketplaceAccess(w, r) {
+		return
+	}
+	if a.skillService == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
+			"error":   "service_unavailable",
+			"message": "Skill service unavailable",
+		})
+		return
+	}
+
+	query := strings.TrimSpace(r.URL.Query().Get("q"))
+	tagFilter := strings.TrimSpace(r.URL.Query().Get("tags"))
+	category := strings.TrimSpace(r.URL.Query().Get("category"))
+	subcategory := strings.TrimSpace(r.URL.Query().Get("subcategory"))
+	sortBy := normalizeMarketplaceSort(r.URL.Query().Get("sort"))
+	mode := normalizeMarketplaceMode(r.URL.Query().Get("mode"))
+	page := parsePositiveInt(r.URL.Query().Get("page"), 1)
+	pageSize := 24
+
+	totalSkills, err := a.skillService.CountPublicSkills(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{
+			"error":   "summary_query_failed",
+			"message": "Failed to count public skills",
+		})
+		return
+	}
+
+	categoryCards, err := a.loadCategoryCards(r.Context(), "")
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{
+			"error":   "category_query_failed",
+			"message": "Failed to load category cards",
+		})
+		return
+	}
+
+	topTags := []TagCard{}
+	if highlight, err := a.skillService.SearchPublicSkills(r.Context(), services.PublicSearchInput{
+		SortBy: "stars",
+		Page:   1,
+		Limit:  120,
+	}); err == nil {
+		topTags = buildTopTags(highlight.Items, 12)
+	}
+
+	var (
+		items           []models.Skill
+		totalItems      int64
+		currentPage     = page
+		currentPageSize = pageSize
+	)
+
+	if mode == "ai" && query != "" {
+		semanticItems, err := a.skillService.AISemanticSearchPublicSkills(r.Context(), query, 48)
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]any{
+				"error":   "ai_search_failed",
+				"message": "Failed to run AI search",
+			})
+			return
+		}
+		semanticItems = filterSkillsByCategory(semanticItems, category, subcategory)
+		items = semanticItems
+		totalItems = int64(len(semanticItems))
+		currentPage = 1
+		currentPageSize = maxInt(len(semanticItems), 1)
+	} else {
+		result, err := a.skillService.SearchPublicSkills(r.Context(), services.PublicSearchInput{
+			Query:           query,
+			Tags:            services.ParseTagInput(tagFilter),
+			CategorySlug:    category,
+			SubcategorySlug: subcategory,
+			SortBy:          sortBy,
+			Page:            page,
+			Limit:           pageSize,
+		})
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]any{
+				"error":   "search_failed",
+				"message": "Failed to query marketplace skills",
+			})
+			return
+		}
+		items = result.Items
+		totalItems = result.Total
+		currentPage = result.Page
+		currentPageSize = maxInt(result.Limit, 1)
+	}
+
+	totalPages := int(math.Ceil(float64(totalItems) / float64(maxInt(currentPageSize, 1))))
+	if totalPages < 1 {
+		totalPages = 1
+	}
+	prevPage := 0
+	nextPage := 0
+	if currentPage > 1 {
+		prevPage = currentPage - 1
+	}
+	if currentPage < totalPages {
+		nextPage = currentPage + 1
+	}
+
+	var (
+		sessionUser        *apiAuthUserResponse
+		canAccessDashboard bool
+	)
+	if current := currentUserFromContext(r.Context()); current != nil {
+		user := *current
+		if a.authService != nil {
+			if loaded, err := a.authService.GetUserByID(r.Context(), current.ID); err == nil {
+				user = loaded
+			}
+		}
+		payload := buildAPIAuthUserResponse(user)
+		sessionUser = &payload
+		canAccessDashboard = user.CanAccessDashboard()
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"filters": map[string]any{
+			"q":           query,
+			"tags":        tagFilter,
+			"category":    category,
+			"subcategory": subcategory,
+			"sort":        sortBy,
+			"mode":        mode,
+		},
+		"stats": map[string]any{
+			"total_skills":    totalSkills,
+			"matching_skills": totalItems,
+		},
+		"pagination": map[string]any{
+			"page":        currentPage,
+			"page_size":   currentPageSize,
+			"total_items": totalItems,
+			"total_pages": totalPages,
+			"prev_page":   prevPage,
+			"next_page":   nextPage,
+		},
+		"categories":           mapCategoryCardsToAPI(categoryCards),
+		"top_tags":             topTags,
+		"filter_options":       buildMarketplaceFilterOptions(categoryCards),
+		"items":                resultToAPIItems(items),
+		"session_user":         sessionUser,
+		"can_access_dashboard": canAccessDashboard,
+	})
+}
+
+func (a *App) handleAPISearch(w http.ResponseWriter, r *http.Request) {
+	result, err := a.skillService.SearchPublicSkills(r.Context(), services.PublicSearchInput{
+		Query:           strings.TrimSpace(r.URL.Query().Get("q")),
+		Tags:            services.ParseTagInput(strings.TrimSpace(r.URL.Query().Get("tags"))),
+		CategorySlug:    strings.TrimSpace(r.URL.Query().Get("category")),
+		SubcategorySlug: strings.TrimSpace(r.URL.Query().Get("subcategory")),
+		SortBy:          defaultString(strings.TrimSpace(r.URL.Query().Get("sort")), "recent"),
+		Page:            parsePositiveInt(r.URL.Query().Get("page"), 1),
+		Limit:           parsePositiveInt(r.URL.Query().Get("limit"), 20),
+	})
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "search_failed", "message": err.Error()})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"items": resultToAPIItems(result.Items),
+		"page":  result.Page,
+		"limit": result.Limit,
+		"total": result.Total,
+	})
+}
+
+func (a *App) handleAPIAISearch(w http.ResponseWriter, r *http.Request) {
+	items, err := a.skillService.AISemanticSearchPublicSkills(
+		r.Context(),
+		strings.TrimSpace(r.URL.Query().Get("q")),
+		parsePositiveInt(r.URL.Query().Get("limit"), 20),
+	)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "ai_search_failed", "message": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"items": resultToAPIItems(items),
+		"total": len(items),
+	})
+}

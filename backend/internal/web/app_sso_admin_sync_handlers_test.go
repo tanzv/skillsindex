@@ -23,8 +23,7 @@ func TestHandleSSOCallbackAutoJoinsDefaultOrganization(t *testing.T) {
 	}
 
 	tokenCode := "code-org-join"
-	var server *httptest.Server
-	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/oauth/token":
 			if err := r.ParseForm(); err != nil {
@@ -147,8 +146,7 @@ func TestHandleSSOCallbackSkipsDefaultOrganizationWhenEmailDomainNotMatched(t *t
 	}
 
 	tokenCode := "code-org-domain-mismatch"
-	var server *httptest.Server
-	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/oauth/token":
 			if err := r.ParseForm(); err != nil {
@@ -251,8 +249,7 @@ func TestHandleSSOCallbackAutoJoinsOrganizationByGroupRule(t *testing.T) {
 	}
 
 	tokenCode := "code-org-group-rule"
-	var server *httptest.Server
-	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/oauth/token":
 			if err := r.ParseForm(); err != nil {

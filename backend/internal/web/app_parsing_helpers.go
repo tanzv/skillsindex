@@ -327,11 +327,7 @@ func mapCategoryCardsToAPI(cards []CategoryCard) []apiMarketplaceCategoryRespons
 	for _, card := range cards {
 		subcategories := make([]apiMarketplaceSubcategoryEntry, 0, len(card.Subcategories))
 		for _, sub := range card.Subcategories {
-			subcategories = append(subcategories, apiMarketplaceSubcategoryEntry{
-				Slug:  sub.Slug,
-				Name:  sub.Name,
-				Count: sub.Count,
-			})
+			subcategories = append(subcategories, apiMarketplaceSubcategoryEntry(sub))
 		}
 		result = append(result, apiMarketplaceCategoryResponse{
 			Slug:          card.Slug,

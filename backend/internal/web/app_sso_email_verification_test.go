@@ -66,8 +66,7 @@ func TestHandleSSOCallbackSkipsDefaultOrgJoinWhenEmailUnverified(t *testing.T) {
 	}
 
 	tokenCode := "code-unverified-domain"
-	var server *httptest.Server
-	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/oauth/token":
 			if err := r.ParseForm(); err != nil {
@@ -138,8 +137,7 @@ func TestHandleSSOCallbackSkipsEmailMappingWhenEmailUnverified(t *testing.T) {
 	}
 
 	tokenCode := "code-unverified-mapping"
-	var server *httptest.Server
-	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/oauth/token":
 			if err := r.ParseForm(); err != nil {

@@ -18,8 +18,7 @@ func TestHandleSSOCallbackAssignsConfiguredDefaultUserRole(t *testing.T) {
 	app, authSvc, integrationSvc, oauthSvc, admin := setupSSOHandlersTestApp(t)
 
 	tokenCode := "code-default-user-role"
-	var server *httptest.Server
-	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/oauth/token":
 			if err := r.ParseForm(); err != nil {

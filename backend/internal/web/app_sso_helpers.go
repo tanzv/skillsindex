@@ -303,15 +303,6 @@ func setSSOStateCookie(w http.ResponseWriter, payload ssoStatePayload, secure bo
 	})
 }
 
-func validateSSOStateCookie(r *http.Request, provider string, state string) bool {
-	payload, ok := readSSOStateCookiePayload(r)
-	if !ok {
-		return false
-	}
-	return payload.Provider == normalizeSSOProvider(provider) &&
-		payload.State == strings.TrimSpace(state)
-}
-
 func readSSOStateCookiePayload(r *http.Request) (ssoStatePayload, bool) {
 	cookie, err := r.Cookie(ssoStateCookieName)
 	if err != nil {
