@@ -1,41 +1,41 @@
-# Frontend Pages and Visual Baselines Standard
+# Frontend Features and Visual Baselines Standard
 
-Version: 1.0
-Last Updated: 2026-03-08
+Version: 1.1
+Last Updated: 2026-03-18
 Owner: Frontend Engineering
 
 ## Objective
 
-Define the mandatory structure for route-level frontend modules and the maintenance contract for visual regression baselines.
-
-This standard exists to keep `frontend/src/pages` scalable, reviewable, and predictable while preserving reliable screenshot-based verification.
+Define the mandatory structure for route-level frontend modules and the maintenance contract for visual verification in `frontend-next/`.
+This standard exists to keep App Router entry files thin, feature modules scalable, and screenshot-sensitive checks deterministic.
 
 ## Scope
 
 This standard applies to:
 
-1. `frontend/src/pages/**`
-2. `frontend/scripts/visual-regression/**`
-3. `frontend/prototype-baselines/**`
-4. `frontend/public/prototypes/previews/**` when a scenario or prototype-alignment rule depends on those files
+1. `frontend-next/app/**`
+2. `frontend-next/src/features/**`
+3. `frontend-next/src/components/**`
+4. `frontend-next/tests/e2e/**`
+5. `frontend-next/tmp-screens/**` when a task intentionally captures supplemental screenshot evidence
 
-## 1. Pages Directory Structure Contract
+## 1. Route Entry And Feature Structure Contract
 
-### 1.1 Root Directory Rule
+### 1.1 App Router Entry Rule
 
-1. `frontend/src/pages/` is a feature-folder index, not a dumping ground.
-2. Do not place new page implementation files directly under `frontend/src/pages/`.
-3. The root may contain folders only, unless a temporary exception is explicitly approved and documented.
+1. `frontend-next/app/` owns route registration, layouts, and server entry orchestration.
+2. Do not place substantial route business logic directly in `page.tsx` or `layout.tsx` files.
+3. App Router files should stay thin and delegate implementation to `frontend-next/src/features/**` or shared shell components.
 
 ### 1.2 Feature Folder Rule
 
-1. Create one folder per route family, page family, or cohesive workbench area.
+1. Create one folder per route family, page family, or cohesive workbench area under `frontend-next/src/features/`.
 2. Folder names must describe the domain boundary, for example:
-   - `marketplaceHome`
-   - `marketplacePublic`
+   - `public`
+   - `workspace`
    - `adminOverview`
-   - `adminWorkbench`
-   - `publicSkillDetail`
+   - `adminCatalog`
+   - `accountCenter`
 3. Prefer stable domain names over temporary workflow names.
 
 ### 1.3 Co-location Rule
@@ -48,111 +48,95 @@ Keep the following together inside the same feature folder when they belong to o
 4. Local helpers
 5. Local types
 6. Local copy/config modules
-7. Local style modules
-8. Unit tests and alignment tests
-
-Example:
-
-- `WorkspaceCenterPage.tsx`
-- `WorkspaceCenterPage.helpers.ts`
-- `WorkspaceCenterPage.navigation.ts`
-- `WorkspaceCenterPage.styles.ts`
-- `WorkspaceCenterPage.test.ts`
+7. Page-local state/view-model modules
+8. Unit tests that specifically cover that feature boundary
 
 ### 1.4 Shared Extraction Rule
 
-1. If code is reusable across multiple feature folders, move it out of the page folder.
-2. Shared presentational UI belongs in `frontend/src/components/`.
-3. Shared pure logic, data shaping, or route-agnostic utilities belong in `frontend/src/lib/`.
-4. Route-family shared helpers may live in an explicit shared page folder such as `publicShared` or `adminShared`.
-5. Do not keep cross-feature reuse hidden inside an unrelated feature folder.
+1. If code is reusable across multiple feature folders, move it out of the feature folder.
+2. Shared presentational UI belongs in `frontend-next/src/components/`.
+3. Shared pure logic, data shaping, routing helpers, or route-agnostic utilities belong in `frontend-next/src/lib/`.
+4. Do not keep cross-feature reuse hidden inside an unrelated feature folder.
 
-### 1.5 Naming Rule
-
-1. Keep page entry filenames explicit and stable, for example `MarketplaceHomePage.tsx`.
-2. Keep companion module names aligned with the page basename, for example:
-   - `MarketplaceHomePage.helpers.ts`
-   - `MarketplaceHomePage.styles.tsx`
-   - `MarketplaceHomePage.copy.ts`
-3. Avoid ambiguous generic filenames such as `helpers.ts`, `styles.ts`, or `types.ts` unless they are nested under a page-specific folder and the scope is obvious.
-
-## 2. Import and Refactor Safety Contract
+## 2. Import And Refactor Safety Contract
 
 ### 2.1 Import Path Rule
 
-1. App-level route wiring must import pages from their feature folders.
+1. App-level route wiring must import page implementations from feature folders or shared shells.
 2. Relative imports inside a feature folder should stay local to that folder.
-3. Do not preserve legacy root-level page paths through compatibility shims unless explicitly approved.
+3. Do not recreate legacy flat page registries or compatibility shims unless explicitly approved.
 
 ### 2.2 Move-Safety Rule
 
-Whenever a page file moves:
+Whenever a route file or feature module moves:
 
 1. Update direct imports.
-2. Update `?raw` imports used by style or governance tests.
-3. Update filesystem-based alignment tests that resolve files through `path.resolve(...)`.
-4. Update route-entry imports in `frontend/src/App.tsx` and any affected test files.
+2. Update App Router entry files under `frontend-next/app/**`.
+3. Update any filesystem-based tests or route render helpers.
+4. Update affected unit and e2e coverage in the same change set.
 
 ### 2.3 Review Rule
 
-A pages refactor is not complete until:
+A pages/features refactor is not complete until:
 
 1. The target feature folder owns the moved files coherently.
 2. No stale import path references remain.
 3. No temporary duplicate files remain in the old location.
 
-## 3. Visual Baseline Contract
+## 3. Visual Verification Contract
 
 ### 3.1 Scenario Coverage Rule
 
-1. Every scenario declared in `frontend/scripts/visual-regression/run.mjs` must reference an existing baseline file.
-2. Missing baselines are validation gaps and must be treated as unfinished verification for that scenario.
+1. Every screenshot-sensitive route change must have deterministic Playwright coverage or an explicitly documented manual capture procedure.
+2. Missing coverage for a screenshot-sensitive route is a validation gap.
 
-### 3.2 Baseline Storage Rule
+### 3.2 Evidence Storage Rule
 
-1. Use `frontend/prototype-baselines/` for active visual regression baselines driven by the screenshot runner.
-2. Use `frontend/public/prototypes/previews/` for prototype preview assets and route-alignment previews.
-3. If a scenario depends on preview assets instead of regression baselines, document that explicitly in the scenario config.
+1. Use `frontend-next/test-results/` for Playwright artifacts generated during verification.
+2. Use `frontend-next/tmp-screens/` only for temporary or task-specific screenshot evidence.
+3. Use `prototypes/skillsindex_framework/` for long-lived prototype baselines and design-source reference material.
 
-### 3.3 Baseline Update Rule
+### 3.3 Intentional Visual Change Rule
 
 When a route-level visual contract changes intentionally:
 
 1. Update the implementation.
-2. Update the matching baseline image.
-3. Update the scenario path if storage location changes.
-4. Re-run the relevant visual regression command and record the evidence.
+2. Update the matching tests or screenshot assertions.
+3. Refresh any manual screenshots captured for review.
+4. Re-run the relevant verification command and record the evidence.
 
-Do not merge intentional UI changes while leaving stale baselines in place.
+Do not merge intentional UI changes while leaving stale visual evidence in place.
 
 ## 4. Visual Capture Stability Rule
 
-Visual regression runs must reduce avoidable screenshot noise.
+Visual verification runs must reduce avoidable screenshot noise.
 
 Required stabilization behavior:
 
-1. Wait for route content selector visibility.
-2. Wait for document fonts to finish loading.
-3. Neutralize animations and transitions during capture.
-4. Use a deterministic viewport derived from the baseline image dimensions.
-5. Keep locale, auth stubs, and mock data deterministic for the scenario.
+1. Wait for route content to load before capture or assertion.
+2. Wait for fonts and client hydration to settle when the flow depends on them.
+3. Neutralize non-essential animations and transitions during capture.
+4. Keep locale, auth stubs, and mock data deterministic for the scenario.
+5. Prefer route-specific assertions over broad screenshot snapshots when behavior is the real contract.
 
 ## 5. Verification Requirements
 
-### 5.1 Required Commands for Pages Refactors
+### 5.1 Required Commands For Route Refactors
 
-For route-level file moves or page-folder refactors, run at minimum:
+For route-level file moves or feature-folder refactors, run at minimum:
 
-1. `cd frontend && npm run build`
-2. Targeted `cd frontend && npm run test:unit -- ...` for the moved page families
-3. Relevant visual regression or route-alignment checks when screenshot-based coverage exists
+1. `cd frontend-next && npm run lint`
+2. `cd frontend-next && npm run build`
+3. Targeted `cd frontend-next && npm run test:unit -- ...` for the changed feature families
+4. Relevant `cd frontend-next && npm run test:e2e -- ...` coverage when route behavior or shells are affected
 
-### 5.2 Expanded Verification for High-Risk Frontend Changes
+### 5.2 Expanded Verification For High-Risk Frontend Changes
 
-When route behavior, navigation, or shared shells change, also run:
+When route behavior, navigation, shared shells, or screenshot-sensitive layouts change, also record:
 
-1. `cd frontend && npm run test:e2e`
-2. `cd frontend && npm run test:visual`
+1. Which e2e specs were run
+2. Whether Playwright produced artifacts under `frontend-next/test-results/`
+3. Any manual screenshots captured under `frontend-next/tmp-screens/`
 
 If any command is flaky or partially scoped, document:
 
@@ -165,7 +149,7 @@ If any command is flaky or partially scoped, document:
 
 The following are considered rule violations:
 
-1. Adding new route implementation files directly under `frontend/src/pages/`
-2. Moving page files without fixing relative path tests or raw imports
-3. Shipping visual regression scenarios with missing baselines
-4. Claiming completion for a frontend refactor without matching verification evidence
+1. Putting substantial route implementation directly under `frontend-next/app/` instead of a feature module
+2. Moving feature files without fixing route entry imports or affected tests
+3. Shipping screenshot-sensitive UI changes without matching verification evidence
+4. Claiming completion for a frontend refactor without command-based verification evidence

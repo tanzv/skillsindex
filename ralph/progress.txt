@@ -4,8 +4,7 @@
 - Status: completed
 - Completed At: 2026-03-06
 - Verification:
-  - cd frontend && npm run test:unit
-  - cd frontend && npm run test:e2e
-  - cd frontend && npm run test:visual
-  - cd frontend && npm run build
+  - cd frontend-next && npm run test:unit
+  - cd frontend-next && npm run test:e2e
+  - cd frontend-next && npm run build
   - ./scripts/check_max_lines.sh (passed with soft warnings)

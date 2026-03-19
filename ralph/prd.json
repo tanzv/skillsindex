@@ -8,9 +8,9 @@
       "title": "Introduce shared marketplace topbar action bundle builder",
       "description": "As a frontend engineer, I want one helper to build primary and utility topbar actions so that pages stop duplicating action composition logic.",
       "acceptanceCriteria": [
-        "Add buildMarketplaceTopbarActionBundle in frontend/src/pages/MarketplaceHomePage.lightTopbar.ts",
+        "Add buildMarketplaceTopbarActionBundle in the legacy marketplace topbar helper module",
         "Bundle helper returns primaryActions and utilityActions with behavior parity to existing builders",
-        "Expose the bundle helper through frontend/src/pages/marketplacePublic/MarketplacePublicShared.ts",
+        "Expose the bundle helper through the shared public-page helper surface",
         "Typecheck passes"
       ],
       "priority": 1,
@@ -22,7 +22,7 @@
       "title": "Add session-aware workspace/login right-side registration helper",
       "description": "As a frontend engineer, I want one helper for signed-in and signed-out topbar CTA registrations so that right-side action rules are centralized.",
       "acceptanceCriteria": [
-        "Add buildMarketplaceWorkspaceAccessRightRegistrations in frontend/src/pages/MarketplaceTopbarRightRegistrations.tsx",
+        "Add buildMarketplaceWorkspaceAccessRightRegistrations in the legacy topbar registration helper surface",
         "Helper resolves dark-status and dark-cta using session presence and toPublicPath",
         "Helper supports workspacePath and loginPath overrides",
         "Typecheck passes"
@@ -83,7 +83,7 @@
       "title": "Run full frontend verification and record evidence",
       "description": "As a reviewer, I want complete verification evidence for the refactor so that maintainability improvements can be accepted safely.",
       "acceptanceCriteria": [
-        "Run frontend verification commands: npm run test:unit, npm run test:e2e, npm run test:visual, npm run build",
+        "Run active frontend verification commands: npm run test:unit, npm run test:e2e, npm run build",
         "Visual verification reports mismatch ratio and artifact paths",
         "Run ./scripts/check_max_lines.sh and report hard-limit status",
         "Typecheck passes"

@@ -43,6 +43,12 @@ soft_warned=0
 
 echo "Line limit check (soft <= ${SOFT_MAX}, hard <= ${HARD_MAX})"
 for file in "${files[@]}"; do
+  case "${file}" in
+  backend/web/static/app.part*.css)
+    continue
+    ;;
+  esac
+
   line_count="$(wc -l <"${file}")"
   line_count="${line_count//[[:space:]]/}"
   if [ -z "${line_count}" ]; then

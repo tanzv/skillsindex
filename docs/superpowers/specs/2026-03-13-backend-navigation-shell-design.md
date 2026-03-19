@@ -37,7 +37,7 @@
 
 ### 1. 架构不动，表达升级
 
-继续复用 `BackendWorkbenchShell` 作为唯一受保护工作台壳，避免再次出现 prototype 壳与 backend 壳并存的分叉。
+继续复用 `ProtectedConsoleShell` 以及其上的 `AdminShell` / `WorkspaceShell` 作为唯一受保护工作台壳，避免再次出现多套受保护壳并存的分叉。
 
 ### 2. 控制层强于内容层
 
@@ -84,16 +84,17 @@
 
 主要改动范围：
 
-1. `frontend/src/components/BackendWorkbenchShell.tsx`
-2. `frontend/src/styles/globalStyles.workbench.ts`
-3. `frontend/src/styles/globalStyles.backendUserControl.ts`
-4. 与后台壳稳定性相关的测试和视觉基线
+1. `frontend-next/src/components/shared/ProtectedConsoleShell.tsx`
+2. `frontend-next/src/components/shared/AdminShell.tsx`
+3. `frontend-next/src/components/shared/WorkspaceShell.tsx`
+4. `frontend-next/src/components/shared/ProtectedTopbar.tsx`
+5. 与受保护壳稳定性相关的测试和截图证据
 
 不改动：
 
-1. `frontend/src/app/protectedWorkbenchConfig.ts` 的导航映射
-2. `frontend/src/app/AppProtectedWorkbenchLayout.tsx` 的壳装配职责
-3. `frontend/src/app/AppProtectedRouteView.tsx` 的受保护路由装配职责
+1. `frontend-next/src/lib/routing/adminNavigation.ts` 与 `frontend-next/src/lib/routing/workspaceNavigation.ts` 的导航映射
+2. `frontend-next/src/features/admin/renderAdminRoute.tsx` 的后台路由装配职责
+3. `frontend-next/src/features/workspace/renderWorkspaceRoute.tsx` 的工作台路由装配职责
 4. 业务页面路由与数据请求
 5. 页面内容组件的渲染路径
 
@@ -117,12 +118,10 @@
 
 计划执行的验证：
 
-1. `cd frontend && npm run test:unit -- src/components/BackendWorkbenchShell.test.ts`
-2. `cd frontend && VITE_ADMIN_PROTOTYPE_MODE=live E2E_PORT=4318 npm run test:e2e -- e2e/workspace-topbar.spec.ts e2e/workspace-admin-shell.spec.ts e2e/workspace-sidebar-layout.spec.ts e2e/admin-accounts-topbar-layer.spec.ts`
-3. `cd frontend && VISUAL_SCENARIO=workspace-activity node ./scripts/visual-regression/run.mjs`
-4. `cd frontend && VISUAL_SCENARIO=admin-overview node ./scripts/visual-regression/run.mjs`
-5. `cd frontend && npm run build`
-6. `./scripts/check_max_lines.sh`
+1. `cd frontend-next && npm run test:unit -- tests/unit/admin-route-rendering.test.ts tests/unit/workbench-config.test.ts tests/unit/protected-topbar-model.test.ts tests/unit/workspace-topbar-model.test.ts`
+2. `cd frontend-next && npm run test:e2e -- authenticated-management.spec.ts authenticated-admin-contracts.spec.ts authenticated-routes.spec.ts`
+3. `cd frontend-next && npm run build`
+4. `./scripts/check_max_lines.sh`
 
 ## 风险
 

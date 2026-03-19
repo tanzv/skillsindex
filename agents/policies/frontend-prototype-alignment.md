@@ -3,13 +3,14 @@
 ## Baseline Rules
 
 1. Any page mapped to a prototype route must keep structure and interaction flow aligned to the baseline.
-2. For prototype-aligned changes, include visual verification with current screenshots and the baseline image in `frontend/public/prototypes/previews/`.
+2. For prototype-aligned changes, include visual verification with current route captures from `frontend-next/`, using Playwright artifacts under `frontend-next/test-results/` or curated task screenshots under `frontend-next/tmp-screens/`.
 
 ## Source-of-Truth Order
 
-1. Route-mapped baseline image in `frontend/public/prototypes/previews/`.
-2. Active `.pen` file: `prototypes/skillsindex_framework/skillsindex_framework.pen`.
-3. Do not use backup `.pen.bak*` files as baselines unless explicitly requested.
+1. Active `.pen` file: `prototypes/skillsindex_framework/skillsindex_framework.pen`.
+2. Prototype support material under `prototypes/skillsindex_framework/`.
+3. Admin parity references in `docs/superpowers/migration/admin-layout-baseline.md` and `docs/superpowers/migration/admin-route-map.md`.
+4. Fresh screenshots captured from the active `frontend-next/` implementation.
 
 ## Required Frontend Verification
 
@@ -20,10 +21,10 @@ Every frontend behavior change must include one-to-one test coverage:
 
 Completion requires fresh evidence from:
 
-- `cd frontend && npm run test:unit`
-- `cd frontend && npm run test:e2e`
-- `cd frontend && npm run test:visual`
-- `cd frontend && npm run build`
+- `cd frontend-next && npm run lint`
+- `cd frontend-next && npm run test:unit`
+- `cd frontend-next && npm run test:e2e`
+- `cd frontend-next && npm run build`
 
-If visual diff fails, report mismatch ratio and artifact paths under `frontend/test-results/visual/`.
+If Playwright verification fails, report failed specs and artifact paths under `frontend-next/test-results/`.
 If any command is skipped or flaky, record scope, reason, and residual risk.

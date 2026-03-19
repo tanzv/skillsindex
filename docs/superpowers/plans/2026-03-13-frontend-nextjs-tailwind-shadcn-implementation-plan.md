@@ -4,7 +4,7 @@
 
 **Goal:** Build a new `frontend-next/` application on `Next.js App Router`, `Tailwind CSS`, and `shadcn/ui`, fully replacing the current frontend while preserving current `Admin` functional layout and allowing full redesign of `Public` and `Workspace`.
 
-**Architecture:** Use a dual-track migration. Keep the current `frontend/` as the behavioral baseline, especially for `Admin`, while building `frontend-next/` as a clean application with route groups, BFF adapters, a governed design system, and shared app shells. Prioritize infrastructure and design system first, then migrate `Public`, `Workspace`, and finally `Admin` with parity checks.
+**Architecture:** Use a dual-track migration. Keep the previous React/Vite frontend as the behavioral baseline, especially for `Admin`, while building `frontend-next/` as a clean application with route groups, BFF adapters, a governed design system, and shared app shells. Prioritize infrastructure and design system first, then migrate `Public`, `Workspace`, and finally `Admin` with parity checks.
 
 **Tech Stack:** Next.js App Router, React, TypeScript, Tailwind CSS, shadcn/ui, Radix UI, TanStack Query, Playwright, Vitest, Go backend session/cookie/CSRF integration.
 
@@ -146,10 +146,10 @@
 - Create: `docs/superpowers/migration/admin-layout-baseline.md`
 - Create: `docs/superpowers/migration/admin-route-map.md`
 - Create: `docs/superpowers/migration/admin-parity-checklist.md`
-- Read for reference: `frontend/src/appNavigationConfig.ts`
-- Read for reference: `frontend/src/App.tsx`
-- Read for reference: `frontend/src/pages/adminOverview/AdminOverviewPage.tsx`
-- Read for reference: `frontend/src/pages/adminWorkbench/AdminWorkbenchPage.tsx`
+- Read for reference: `frontend-next/src/lib/routing/adminNavigation.ts`
+- Read for reference: `frontend-next/src/features/admin/renderAdminRoute.tsx`
+- Read for reference: `frontend-next/src/features/adminOverview/AdminOverviewPage.tsx`
+- Read for reference: `frontend-next/src/components/shared/AdminShell.tsx`
 
 - [ ] **Step 1: Inventory current admin routes and navigation groups**
 

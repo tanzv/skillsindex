@@ -12,13 +12,13 @@
 
 - Implementation status: Window A implementation is complete for the scoped backend, contract, and documentation changes. Commit steps remain intentionally open because the current worktree contains unrelated user changes.
 - Implementation note: The final patch set converged on `backend/internal/web/app_login_protection.go`, `backend/internal/web/app_response_helpers.go`, `backend/internal/db/db.go`, and `backend/internal/web/openapi_paths_admin_ops.go`. Some candidate files listed below did not require direct edits after implementation review.
-- Marketplace decision: Retain `marketplace_public_access`. Existing redirect-and-return coverage in `frontend/e2e/public-route-prefix.spec.ts` was reused instead of adding a duplicate Playwright spec.
+- Marketplace decision: Retain `marketplace_public_access`. Existing redirect-and-return coverage in the previous React/Vite frontend Playwright suite was reused instead of adding a duplicate spec.
 - Verification evidence:
   - `GOCACHE=/tmp/skillsindex-go-build go test ./...` in `backend/` passed.
-  - `npm exec -- vitest run src/lib/api.test.ts` in `frontend/` passed.
-  - `npm exec -- playwright test e2e/public-route-prefix.spec.ts --grep 'private marketplace redirects anonymous visits'` in `frontend/` passed.
+  - Targeted previous React/Vite frontend unit coverage for marketplace access passed.
+  - Targeted previous React/Vite frontend Playwright coverage for private-marketplace redirects passed.
 - Review follow-up: Final review findings on marketplace login redirect preservation and password-reset confirm audit ordering were fixed and covered by backend regression tests.
-- Known unrelated issue: `VITE_MARKETPLACE_HOME_MODE=prototype npm run build` in `frontend/` still fails because of pre-existing workspace issues in `src/components/AppShellTopbar.test.ts`, `src/lib/visualRegressionRuntime.test.ts`, and `../../scripts/visual-regression/runtime.mjs` declarations.
+- Known unrelated issue: the previous React/Vite frontend build still failed during that phase because of pre-existing workspace issues unrelated to Window A.
 
 ---
 
@@ -61,12 +61,9 @@
 
 ### Frontend And E2E
 
-- Modify if retaining marketplace toggle: `frontend/src/lib/api.ts`
-- Modify if retaining marketplace toggle: `frontend/src/App.shared.tsx`
-- Modify if retaining marketplace toggle: `frontend/src/App.tsx`
-- Modify if retaining marketplace toggle: `frontend/src/lib/api.test.ts`
-- Modify if retaining marketplace toggle: `frontend/src/App.shared.test.ts`
-- Create if retaining marketplace toggle: `frontend/e2e/marketplace-private-access.spec.ts`
+- Modify if retaining marketplace toggle: previous React/Vite frontend API client and route access surface
+- Modify if retaining marketplace toggle: matching previous React/Vite frontend unit coverage
+- Reuse or extend previous React/Vite frontend Playwright coverage for private-marketplace redirects
 
 ### Docs
 
@@ -363,12 +360,7 @@ git commit -m "feat: add login failure throttling"
 - Modify: `backend/internal/web/app_access_settings_test.go`
 - Modify: `backend/internal/web/app_public_marketplace_api_test.go`
 - Modify: `backend/internal/web/app_public_skill_detail_api_test.go`
-- Modify: `frontend/src/lib/api.ts`
-- Modify: `frontend/src/lib/api.test.ts`
-- Modify: `frontend/src/App.shared.tsx`
-- Modify: `frontend/src/App.shared.test.ts`
-- Modify: `frontend/src/App.tsx`
-- Create: `frontend/e2e/marketplace-private-access.spec.ts`
+- Modify: previous React/Vite frontend marketplace access surface and matching tests
 - Modify: `docs/design-requirements/marketplace/marketplace-discovery.md`
 - Modify: `docs/design-requirements/public-api/openapi-public-api.md`
 
@@ -384,7 +376,7 @@ Create one short note in the PR description or task tracker:
 
 - [x] **Step 2: If retaining, write the missing end-to-end test first**
 
-Execution note: The retained-path scenario was already covered by `frontend/e2e/public-route-prefix.spec.ts`, so no duplicate spec file was added.
+Execution note: The retained-path scenario was already covered by the previous React/Vite frontend redirect suite, so no duplicate spec file was added.
 
 Minimum coverage:
 - anonymous user hitting homepage or detail when marketplace is private
@@ -393,15 +385,15 @@ Minimum coverage:
 
 - [x] **Step 3: Run the new or updated frontend verification**
 
-Run: `cd frontend && pnpm vitest run src/lib/api.test.ts src/App.shared.test.ts`
+Run: execute the targeted previous React/Vite frontend unit suite for the marketplace access surface.
 Expected: PASS
 
 If retaining:
 
-Run: `cd frontend && pnpm playwright test e2e/marketplace-private-access.spec.ts`
+Run: execute the targeted previous React/Vite frontend Playwright coverage for private-marketplace redirects.
 Expected: PASS
 
-Execution note: Final verification used `npm exec -- vitest run src/lib/api.test.ts` and `npm exec -- playwright test e2e/public-route-prefix.spec.ts --grep 'private marketplace redirects anonymous visits'`. The retained-path behavior was already covered without adding `App.shared.test.ts` or a duplicate Playwright spec.
+Execution note: Final verification reused the existing previous React/Vite frontend unit and redirect coverage. The retained-path behavior was already covered without adding duplicate tests.
 
 - [x] **Step 4: Sync docs and OpenAPI-facing text**
 
@@ -418,12 +410,6 @@ git add backend/internal/web/app_marketplace_access.go \
   backend/internal/web/app_access_settings_test.go \
   backend/internal/web/app_public_marketplace_api_test.go \
   backend/internal/web/app_public_skill_detail_api_test.go \
-  frontend/src/lib/api.ts \
-  frontend/src/lib/api.test.ts \
-  frontend/src/App.shared.tsx \
-  frontend/src/App.shared.test.ts \
-  frontend/src/App.tsx \
-  frontend/e2e/marketplace-private-access.spec.ts \
   docs/design-requirements/marketplace/marketplace-discovery.md \
   docs/design-requirements/public-api/openapi-public-api.md \
   docs/design-requirements/test-acceptance/test-acceptance.md
@@ -437,7 +423,7 @@ git commit -m "feat: finalize marketplace access baseline"
 ### Task 8: Run Window A Exit Verification
 
 **Files:**
-- Verify changed backend, frontend, OpenAPI, and docs files from Tasks 1-7
+- Verify changed backend, frontend-surface, OpenAPI, and docs files from Tasks 1-7
 
 - [x] **Step 1: Run backend tests**
 
@@ -446,17 +432,17 @@ Expected: PASS
 
 - [x] **Step 2: Run targeted frontend tests**
 
-Run: `cd frontend && pnpm vitest run src/lib/api.test.ts src/App.shared.test.ts`
+Run: execute the targeted previous React/Vite frontend unit suite for the retained marketplace path.
 Expected: PASS
 
-Execution note: Final verification reused `npm exec -- vitest run src/lib/api.test.ts` because that is the touched contract surface for the retained marketplace path.
+Execution note: Final verification reused the touched previous React/Vite frontend contract surface without introducing duplicate coverage.
 
 - [x] **Step 3: Run targeted Playwright coverage if marketplace toggle is retained**
 
-Run: `cd frontend && pnpm playwright test e2e/marketplace-private-access.spec.ts`
+Run: execute the targeted previous React/Vite frontend Playwright coverage for the retained private-marketplace redirect flow.
 Expected: PASS
 
-Execution note: Final verification reused `npm exec -- playwright test e2e/public-route-prefix.spec.ts --grep 'private marketplace redirects anonymous visits'` because the existing spec already covers the retained private-marketplace redirect flow.
+Execution note: Final verification reused the existing legacy redirect coverage because the scenario was already covered.
 
 - [x] **Step 4: Verify docs and OpenAPI alignment**
 

@@ -1,13 +1,13 @@
 # SkillsIndex
 
 SkillsIndex is a separated frontend-backend system for skill management and synchronization.
-The backend is a Go API service layer, and the frontend is a standalone React application.
+The backend is a Go API service layer, and the frontend is a standalone Next.js application.
 It supports manual creation, archive uploads, repository sync, tagging, search, and account-level sharing.
 
 ## Project Structure
 
 - `backend/`: Go backend code (API service, domain services, models, migrations, templates)
-- `frontend/`: React frontend code
+- `frontend-next/`: Next.js frontend code
 - `docs/`: requirement and documentation artifacts
 - `prototypes/`: design prototype artifacts
 
@@ -81,8 +81,9 @@ It supports manual creation, archive uploads, repository sync, tagging, search, 
 
 ## Tech Stack
 
-- Backend: Go 1.20, PostgreSQL, GORM, Chi router
-- Frontend: React 18, TypeScript, Vite
+- Backend: Go 1.24, PostgreSQL, GORM, Chi router
+- Frontend: Next.js 16 App Router, React 19, TypeScript, Tailwind CSS
+- Frontend quality tooling: ESLint 9, Vitest 4, Playwright 1.58
 
 ## Quick Start
 
@@ -106,10 +107,10 @@ set -a && source .env && set +a
 go run ./cmd/api
 ```
 
-### 4. Run frontend React app
+### 4. Run frontend Next.js app
 
 ```bash
-cd ../frontend
+cd ../frontend-next
 cp .env.example .env
 npm install
 npm run dev
@@ -118,8 +119,35 @@ npm run dev
 ### 5. Open
 
 ```text
-Frontend: http://localhost:5173
+Frontend: http://localhost:3000
 Backend API: http://localhost:8080
+```
+
+## Verification Commands
+
+### Frontend
+
+```bash
+cd frontend-next
+npm run lint
+npm run test:unit
+npm run build
+npm run test:e2e
+```
+
+### Backend
+
+```bash
+cd backend
+go test ./...
+go vet ./...
+go run honnef.co/go/tools/cmd/staticcheck@v0.7.0 ./...
+```
+
+### Repository-Wide Maintainability Gate
+
+```bash
+./scripts/check_max_lines.sh
 ```
 
 ## Environment Variables
@@ -129,7 +157,7 @@ Backend API: http://localhost:8080
 - `DATABASE_URL`: PostgreSQL DSN
 - `SESSION_SECRET`: HMAC secret for session cookies
 - `API_ONLY`: if `true`, backend only exposes API and OpenAPI endpoints
-- `CORS_ALLOWED_ORIGINS`: comma-separated frontend origins for credentialed CORS (example: `http://localhost:5173`)
+- `CORS_ALLOWED_ORIGINS`: comma-separated frontend origins for credentialed CORS (example: `http://localhost:3000`)
 - `STORAGE_PATH`: path for uploaded archives, default `./storage`
 - `ALLOW_REGISTRATION`: bootstrap value for public registration policy on first start
 - `ADMIN_USERNAME`: bootstrap admin username (default `admin`)
@@ -290,7 +318,12 @@ curl -H "Authorization: Bearer <API_KEY>" \
 ## Tests
 
 ```bash
+cd frontend-next && npm run lint
+cd frontend-next && npm run test:unit
+cd frontend-next && npm run build
+cd frontend-next && npm run test:e2e
 go test ./...
+go vet ./...
 ```
 
 ## Notes

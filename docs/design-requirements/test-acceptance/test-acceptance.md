@@ -50,10 +50,15 @@
 ## 4. 发布前强制检查
 
 1. `go test ./...` 全通过
-2. 无 P0/P1 未关闭缺陷
-3. 鉴权与权限链路人工抽检通过
-4. OpenAPI 文档可访问且可在 Swagger 正常浏览
-5. 性能基线压测完成并产出报告（包含 P50/P95/错误率）
+2. `go vet ./...` 全通过
+3. `cd frontend-next && npm run lint` 全通过
+4. `cd frontend-next && npm run test:unit` 全通过
+5. `cd frontend-next && npm run build` 全通过
+6. 涉及前端交互或视觉路径变更时，`cd frontend-next && npm run test:e2e` 全通过
+7. 无 P0/P1 未关闭缺陷
+8. 鉴权与权限链路人工抽检通过
+9. OpenAPI 文档可访问且可在 Swagger 正常浏览
+10. 性能基线压测完成并产出报告（包含 P50/P95/错误率）
 
 ## 5. 验收通过标准
 

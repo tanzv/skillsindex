@@ -12,12 +12,14 @@
 ## Quality Gates
 
 1. All changed code must pass lint, type-check, and relevant tests.
-2. Avoid monolithic changes; keep patches focused and reviewable.
-3. Handle expected failures explicitly; avoid silent failures.
-4. Remove temporary debug code and dead logic before completion.
-5. Any TODO/FIXME must include scope and tracking reference.
-6. Evaluate security, performance, and data integrity impact for behavior changes.
-7. Keep public contracts stable; if changed, include compatibility notes and migration steps.
+2. Frontend changes under `frontend-next/` must pass `npm run lint`, `npm run test:unit`, `npm run build`, and relevant `npm run test:e2e` coverage for the changed scope.
+3. Backend changes under `backend/` must pass `go test ./...`, `go vet ./...`, and repository-configured static analysis in local verification or CI.
+4. Avoid monolithic changes; keep patches focused and reviewable.
+5. Handle expected failures explicitly; avoid silent failures.
+6. Remove temporary debug code and dead logic before completion.
+7. Any TODO/FIXME must include scope and tracking reference.
+8. Evaluate security, performance, and data integrity impact for behavior changes.
+9. Keep public contracts stable; if changed, include compatibility notes and migration steps.
 
 ## Implementation Process
 

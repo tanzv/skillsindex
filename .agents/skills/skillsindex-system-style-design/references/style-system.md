@@ -1,124 +1,129 @@
 # Style System Reference
 
-This reference documents the active system style token pipeline and how to extend it safely.
-The current public marketplace module is used as the most complete concrete implementation example.
+This reference documents the active style-variable pipeline in `frontend-next/` and how to extend it safely.
+The public marketplace and protected shell layers are the primary concrete examples.
 
 ## 1. Token Layers
 
-### Global Theme Tokens
+### Global Composition Root
 
-Source: `frontend/src/theme/themeSystem.ts`
+Source: `frontend-next/app/globals.css`
 
-- Color tokens: `--si-color-*`
-- Overlay and shadow tokens: `--si-color-overlay-mask`, `--si-shadow-overlay`
-- Sizing tokens: `--si-size-*` (including marketplace dimensions)
+- imports shared public and protected CSS layers
+- defines global HTML/body defaults
+- composes the route-facing theme files into one application root
 
-Both dark and light mode values are defined in the shared theme token set.
-
-### Marketplace Component Tokens
+### Public Marketplace Tokens
 
 Primary sources:
 
-- `frontend/src/pages/MarketplaceHomePage.styles.theme.ts`
-- `frontend/src/pages/MarketplaceHomePage.styles.dimensionTokens.ts`
-- `frontend/src/pages/MarketplaceHomePage.styles.theme.categoryTokens.ts`
+- `frontend-next/app/public-marketplace-theme.css`
+- `frontend-next/app/public-marketplace-layout.css`
+- `frontend-next/app/public-marketplace-home.css`
 
 Pattern:
 
-- Global tokens (`--si-*`) feed page/component tokens (`--marketplace-*`).
-- Component styles consume `--marketplace-*` tokens.
+- shared shell tokens use `--si-*`
+- marketplace surface tokens use `--marketplace-*`
+- feature and component selectors consume those variables in public routes
+
+### Protected Shell Tokens
+
+Primary sources:
+
+- `frontend-next/app/protected-theme.css`
+- `frontend-next/app/protected-content-theme.css`
+- `frontend-next/app/admin-shell.css`
+- `frontend-next/app/workspace-shell.css`
+- `frontend-next/app/account-shell.css`
+
+Pattern:
+
+- protected-shell variables use `--protected-*`
+- shared UI variables use `--ui-*`
+- route-family shell variables (`--admin-*`, `--workspace-*`, `--account-*`) derive from shared protected layers
 
 Rule:
 
-- New visual values should be introduced through token mapping, not direct hardcoded values in leaf selectors.
+- new visual values should be introduced through shared variable mapping, not direct hardcoded values in leaf selectors.
 
 ## 2. Typography System
 
-Source: `frontend/src/pages/MarketplaceHomePage.styles.theme.ts`
+Primary sources:
 
-- Body/UI: `"Noto Sans SC", "Noto Sans", sans-serif`
-- Metrics/labels/chips: `"JetBrains Mono", monospace`
+- `frontend-next/app/globals.css`
+- route-specific CSS files under `frontend-next/app/*.css`
 
 Usage conventions:
 
-- Mono font for compact labels, chips, counts, and diagnostics.
-- Sans font for body text, titles, descriptions, and interaction-heavy copy.
+- primary UI text uses the shared sans stack from `globals.css`
+- technical labels and dense metadata may use mono styles only when the route already establishes that contract
+- preserve title/body/meta contrast hierarchy across public and protected shells
 
-## 3. Surface and Contrast Direction
+## 3. Surface And Contrast Direction
 
-### Dark Mode
+### Public Marketplace
 
-- Canvas is near-black with subtle depth and low-alpha surfaces.
-- Borders are soft and minimal.
-- High-contrast action states should remain clear.
+- dark and light marketplace routes share the same variable interface
+- shell, card, chip, overlay, and search surfaces derive from `--marketplace-*`
+- landing and results routes may layer additional surface rules, but should not bypass the base token set
 
-### Light Mode
+### Protected Shells
 
-- Canvas uses cool neutral backgrounds.
-- Surface layers move toward white/light gray values.
-- Active actions preserve strong contrast for readability.
+- admin, workspace, and account routes derive from `--protected-*` and `--ui-*`
+- page-local CSS may specialize spacing or emphasis, but should not redefine the shell contract ad hoc
 
-## 4. Category Detail Theming Rules
-
-Category detail surfaces must stay token-driven.
-
-Use category-specific marketplace tokens for:
-
-- heading overline text
-- heading title text
-- filter labels and chip states
-- filter button states
-- category search input surface
-
-Do not hardcode category section colors directly in `MarketplaceHomePage.styles.search.utility.ts`.
-
-## 5. Radius, Spacing, and Density
+## 4. Radius, Spacing, And Density
 
 Common patterns:
 
-- Pills/chips: `999px`
-- Utility/action controls: `8px` to `11px`
-- Card/surface blocks: `12px` to `16px`
-- Spacing rhythm: mostly 8/10/12/14 px increments
+- chips and pills keep fully rounded treatment where the shell already establishes it
+- cards and panels preserve medium-to-large radii with restrained shadow depth
+- spacing rhythm should stay compact and information-dense for management surfaces
 
 Rule:
 
-- Preserve dense information layout while keeping distinct section separation.
+- preserve dense information layout while keeping distinct section separation.
 
-## 6. Motion and Accessibility Contracts
+## 5. Motion And Accessibility Contracts
 
 Keep existing behavior:
 
-- section/page fade transitions
-- loading indicators and subtle state transitions
-- reduced-motion fallback (`@media (prefers-reduced-motion: reduce)`)
-- visible keyboard focus (`:focus-visible`)
+- visible keyboard focus
+- reduced-motion support where transitions are used
+- explicit hover/active/disabled state separation
+- overlay close affordances that remain keyboard reachable
 
 Do not remove or weaken accessibility behavior when adjusting visuals.
 
-## 7. Responsive Contract
+## 6. Responsive Contract
 
-Source: `frontend/src/pages/MarketplaceHomePage.styles.responsive.ts`
+Primary sources:
 
-Mobile behavior relies on class gates (`.is-mobile`, `.is-mobile-stage`) and existing media rules.
+- `frontend-next/app/public-marketplace-layout.css`
+- `frontend-next/app/workspace-shell.css`
+- `frontend-next/app/admin-shell.css`
+- `frontend-next/app/account-shell.css`
 
 Expected outcomes:
 
-- topbar wraps/reshapes without overlap
-- search rows collapse into stacked layout
-- result grids reduce column count
-- compact controls remain operable
+- topbars wrap or compress without overlap
+- search rows collapse cleanly when layout narrows
+- protected shells preserve navigation hierarchy on smaller viewports
+- compact controls remain operable without losing contrast
 
-Prefer extending existing responsive rules over introducing unrelated breakpoints.
+Prefer extending existing responsive rules over introducing unrelated breakpoint systems.
 
-## 8. Overlay and Modal Rules
+## 7. Overlay And Modal Rules
 
-Source: `frontend/src/pages/MarketplaceHomePage.styles.resultsPage.ts`
+Primary sources:
 
-- Overlay mask and panel should remain tokenized.
-- Result overlay should keep keyboard and pointer-close affordances.
-- Modal row layout adapts desktop/mobile while preserving function order.
+- `frontend-next/app/public-marketplace-home-search-baseline.css`
+- `frontend-next/app/public-skill-detail-resources-browser.css`
+- `frontend-next/src/features/public/marketplace/MarketplaceSearchOverlay.tsx`
 
 Important:
 
-- Category detail page should not rely on floating overlay UI.
+- overlay masks and panels should remain variable-driven
+- close affordances must preserve keyboard and pointer semantics
+- category and detail routes should only use overlay patterns that match their established interaction model

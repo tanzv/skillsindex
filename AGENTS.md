@@ -14,12 +14,11 @@ Detailed operational rules are split into `agents/` subfolders.
 7. `agents/standards/review-checklist.md`
 8. `agents/policies/frontend-prototype-alignment.md`
 9. `agents/policies/language-rules.md`
-10. `frontend/AGENTS.md` (mandatory when changing files under `frontend/`)
 
 ## Mandatory Operating Rules
 
 1. Use project skills when the task matches a skill description.
-2. For frontend style work, apply `skillsindex-system-style-design` and follow token-first implementation.
+2. For frontend style work in `frontend-next/`, apply `skillsindex-system-style-design` and follow token-first implementation.
 3. Keep backward compatibility by default unless a breaking change is explicitly approved.
 4. Do not claim completion without verifiable test/build evidence for the changed scope.
 5. Treat `agents/records/` as historical evidence, not active policy source.

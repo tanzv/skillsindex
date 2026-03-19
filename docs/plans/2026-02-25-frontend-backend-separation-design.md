@@ -63,35 +63,25 @@
 **Step 4: Run test to verify it passes**
 - Run: `go test ./internal/web -count=1`
 
-### Task 3: React Frontend Separation
+### Task 3: Standalone Frontend Separation (Historical)
+
+> Historical note (2026-03-18): this task created the previous React/Vite frontend during an earlier migration phase. The active frontend workspace now lives in `frontend-next/`.
 
 **Files:**
-- Create: `frontend/package.json`
-- Create: `frontend/tsconfig.json`
-- Create: `frontend/tsconfig.node.json`
-- Create: `frontend/vite.config.ts`
-- Create: `frontend/index.html`
-- Create: `frontend/src/main.tsx`
-- Create: `frontend/src/App.tsx`
-- Create: `frontend/src/styles.css`
-- Create: `frontend/src/lib/api.ts`
-- Create: `frontend/src/pages/LoginPage.tsx`
-- Create: `frontend/src/pages/AdminIntegrationsPage.tsx`
-- Create: `frontend/src/pages/AdminOpsMetricsPage.tsx`
-- Create: `frontend/.env.example`
+- Create the then-active standalone frontend workspace files and API client layer.
 
 **Step 1: Write the failing test**
-- Add minimal type-check/build guard by running `npm run build`.
+- Add minimal type-check/build guard by running the frontend build.
 
 **Step 2: Run build to verify it fails before files exist**
-- Run: `cd frontend && npm run build`
+- Run the build command in the standalone frontend workspace used during that phase.
 
 **Step 3: Write minimal implementation**
-- Build a React app with basic route switching and API fetch layer.
-- Use backend base URL from `VITE_API_BASE_URL`.
+- Build a standalone frontend app with basic route switching and an API fetch layer.
+- Use the frontend base URL variable from the active workspace configuration for that phase.
 
 **Step 4: Run build to verify it passes**
-- Run: `cd frontend && npm install && npm run build`
+- Run install + build in the standalone frontend workspace used during that phase.
 
 ### Task 4: End-to-End Verification
 
@@ -102,8 +92,8 @@
 - Run: `go test ./... -count=1`
 
 **Step 2: Validate frontend build**
-- Run: `cd frontend && npm run build`
+- Run: `cd frontend-next && npm run build`
 
 **Step 3: Verify startup commands**
 - Backend API: `go run ./cmd/api`
-- Frontend Dev: `cd frontend && npm run dev`
+- Frontend Dev: `cd frontend-next && npm run dev`

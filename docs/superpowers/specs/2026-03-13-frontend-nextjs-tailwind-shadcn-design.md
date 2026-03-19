@@ -4,7 +4,7 @@
 
 ## 1. Goal
 
-Rebuild the current `frontend/` into a new `frontend-next/` application based on `Next.js App Router`, `Tailwind CSS`, and `shadcn/ui`, while keeping the Go backend as the system of record.
+Rebuild the previous React/Vite frontend into the current `frontend-next/` application based on `Next.js App Router`, `Tailwind CSS`, and `shadcn/ui`, while keeping the Go backend as the system of record.
 
 The new frontend should:
 
@@ -58,7 +58,7 @@ The new frontend should:
 
 Use a dual-track rebuild:
 
-1. Keep the current `frontend/` as the reference baseline during migration.
+1. Keep the previous React/Vite frontend as the reference baseline during migration.
 2. Build the new system in `frontend-next/`.
 3. Migrate by product surface and shared system milestones.
 4. Switch traffic only after the new frontend reaches functional parity for the approved scope.
@@ -75,7 +75,7 @@ The current frontend is deeply tied to:
 4. layout-specific page contracts
 5. visual baseline scripts
 
-An in-place rewrite inside `frontend/` would mix old and new assumptions and make review, rollback, and parity validation harder.
+An in-place rewrite inside the previous React/Vite frontend would mix old and new assumptions and make review, rollback, and parity validation harder.
 
 ## 4. Target Architecture
 
@@ -516,7 +516,7 @@ Verification must be layered.
 
 1. the Go backend remains authoritative for auth and business logic
 2. the migration is allowed to introduce `frontend-next/` as a parallel application
-3. old `frontend/` stays in place until cutover
+3. the previous React/Vite frontend stays in place until cutover
 4. `Public` and `Workspace` may be restructured substantially
 5. `Admin` remains structurally aligned with the current frontend
 
