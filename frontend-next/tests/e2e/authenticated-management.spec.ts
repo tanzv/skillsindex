@@ -148,11 +148,10 @@ test("executes admin governance actions and renders additional admin routes", as
     accountCenterMenu.getByRole("button", { name: "Integrations Review connector inventory and webhook delivery coverage." })
   ).toBeVisible();
   await accountCenterMenu.getByRole("button", { name: "Access Manage access registration and authorization controls." }).click();
-  const accessEntryDialog = page.getByRole("dialog", { name: "Access" });
-  await expect(accessEntryDialog).toBeVisible();
-  await expect(accessEntryDialog.getByText("/admin/access")).toBeVisible();
-  await accessEntryDialog.getByLabel("Close account center").click();
-  await expect(accessEntryDialog).not.toBeVisible();
+  await page.waitForURL("**/admin/access");
+  await expect(page.getByRole("heading", { name: "Access", level: 1 })).toBeVisible();
+
+  await gotoProtectedRoute(page, "/admin/accounts/new");
   await expect(page.getByRole("heading", { name: "Account Provisioning", level: 1 })).toBeVisible();
   await expect(page.getByText("Registration enabled · Marketplace public")).toBeVisible();
   const allowRegistrationCheckbox = page.getByLabel("Allow registration");
@@ -297,21 +296,32 @@ test("uses the right account avatar as the protected personal center trigger", a
   await expect(menu.getByRole("button", { name: /Security/i })).toBeVisible();
   await expect(menu.getByRole("button", { name: /Sessions/i })).toBeVisible();
   await expect(menu.getByRole("button", { name: /API Credentials/i })).toBeVisible();
-  await menu.getByRole("button", { name: /Profile/i }).click();
-
-  const profileEntryDialog = page.getByRole("dialog", { name: "Profile" });
-  await expect(profileEntryDialog).toBeVisible();
-  await expect(profileEntryDialog.getByRole("button", { name: "Open Profile" })).toBeVisible();
-  await expect(profileEntryDialog.getByText("/account/profile")).toBeVisible();
-  await profileEntryDialog.getByLabel("Close account center").click();
-  await expect(profileEntryDialog).not.toBeVisible();
-
-  await trigger.focus();
-  await trigger.press("Enter");
-  await expect(menu).toHaveAttribute("aria-hidden", "false");
   await page.getByTestId("workspace-topbar-theme-dark").click();
   await expect(shell).toHaveAttribute("data-protected-theme", "dark");
 
   await page.getByTestId("workspace-topbar-theme-light").click();
   await expect(shell).toHaveAttribute("data-protected-theme", "light");
+
+  await menu.getByRole("button", { name: /Profile/i }).click();
+
+  const profileDialog = page.getByRole("dialog", { name: "Profile" });
+  await expect(profileDialog).toBeVisible();
+  await profileDialog.getByLabel("Display Name").fill("Admin Commander");
+  await profileDialog.getByLabel("Avatar URL").fill("https://example.com/avatar-commander.png");
+  await profileDialog.getByLabel("Bio").fill("Owns protected shell reviews and release readiness.");
+  await profileDialog.getByRole("button", { name: "Save Profile" }).click();
+  await expect(profileDialog.getByLabel("Display Name")).toHaveValue("Admin Commander");
+  await profileDialog.getByLabel("Close account center").click();
+  await expect(profileDialog).not.toBeVisible();
+
+  await expect(trigger).toHaveAttribute("title", "Admin Commander");
+  await page.reload();
+  await expect(trigger).toHaveAttribute("title", "Admin Commander");
+
+  await trigger.click();
+  await expect(menu).toHaveAttribute("aria-hidden", "false");
+  await expect(menu.getByText("Admin Commander")).toBeVisible();
+  await menu.getByRole("button", { name: /Security/i }).click();
+  await page.waitForURL("**/account/security");
+  await expect(page.getByRole("heading", { name: "Account Center", level: 1 })).toBeVisible();
 });

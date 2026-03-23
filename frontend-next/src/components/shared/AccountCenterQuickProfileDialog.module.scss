@@ -18,50 +18,81 @@ $dialog-transition: 160ms ease;
     color $dialog-transition;
 }
 
-.stack {
-  display: grid;
-  gap: 12px;
-}
-
-.summaryCard,
-.pathCard {
-  display: grid;
-  gap: 8px;
-  padding: 16px;
+%field-surface {
+  width: 100%;
   border: 1px solid var(--protected-shell-border);
   border-radius: 12px;
   background: var(--protected-shell-card-alt);
+  color: var(--protected-shell-text);
+  transition:
+    border-color $dialog-transition,
+    background-color $dialog-transition,
+    color $dialog-transition,
+    box-shadow $dialog-transition;
+
+  &::placeholder {
+    color: var(--protected-shell-text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.72;
+  }
+}
+
+.body {
+  display: grid;
+  gap: 16px;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
 }
 
 .summaryCard {
+  display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--protected-shell-border);
+  border-radius: 14px;
+  background: var(--protected-shell-card-alt);
 }
 
-.iconShell {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--protected-topbar-account-link-icon-bg);
-  color: var(--protected-topbar-account-link-icon-text);
+  background: var(--protected-topbar-avatar-bg);
+  color: var(--protected-topbar-avatar-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: var(--protected-topbar-avatar-shadow);
 }
 
-.icon {
-  width: 18px;
-  height: 18px;
+.summaryCopy,
+.fields,
+.field {
+  display: grid;
+  gap: 8px;
 }
 
 .summaryCopy {
-  display: grid;
-  gap: 6px;
   min-width: 0;
 }
 
 .eyebrow,
-.pathLabel {
+.fieldLabel {
   margin: 0;
   color: var(--protected-shell-text-muted);
   font-family: "JetBrains Mono", monospace;
@@ -71,7 +102,7 @@ $dialog-transition: 160ms ease;
   text-transform: uppercase;
 }
 
-.title {
+.summaryTitle {
   margin: 0;
   color: var(--protected-shell-text);
   font-size: 1rem;
@@ -79,17 +110,47 @@ $dialog-transition: 160ms ease;
   line-height: 1.35;
 }
 
-.description,
-.pathValue {
+.summaryDescription {
   margin: 0;
   color: var(--protected-shell-text-secondary);
   font-size: 0.9375rem;
   line-height: 1.6;
 }
 
-.pathValue {
-  font-family: "JetBrains Mono", monospace;
-  overflow-wrap: anywhere;
+.noticeSuccess,
+.noticeError {
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.noticeSuccess {
+  border: 1px solid var(--protected-shell-border);
+  background: var(--protected-topbar-account-section-count-bg);
+  color: var(--protected-shell-text);
+}
+
+.noticeError {
+  border: 1px solid color-mix(in srgb, var(--protected-shell-danger, #d14343) 45%, var(--protected-shell-border));
+  background: color-mix(in srgb, var(--protected-shell-danger, #d14343) 10%, var(--protected-shell-card-alt));
+  color: var(--protected-shell-text);
+}
+
+.input,
+.textarea {
+  @extend %field-surface;
+}
+
+.input {
+  min-height: 44px;
+  padding: 0 14px;
+}
+
+.textarea {
+  min-height: 120px;
+  padding: 12px 14px;
+  resize: vertical;
 }
 
 .footerActions {
@@ -107,7 +168,7 @@ $dialog-transition: 160ms ease;
   background: var(--protected-shell-interactive-bg);
   color: var(--protected-shell-text-secondary);
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: var(--protected-shell-interactive-border-hover);
     background: var(--protected-shell-interactive-bg-hover);
     color: var(--protected-shell-text);
@@ -119,7 +180,7 @@ $dialog-transition: 160ms ease;
   background: var(--protected-shell-accent);
   color: var(--protected-shell-accent-contrast);
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: var(--protected-shell-accent);
     background: var(--protected-shell-accent-hover);
     color: var(--protected-shell-accent-contrast);
@@ -130,6 +191,12 @@ $dialog-transition: 160ms ease;
 .primaryAction:focus-visible {
   outline: 2px solid var(--ui-focus-ring);
   outline-offset: 2px;
+}
+
+.secondaryAction:disabled,
+.primaryAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
 }
 
 @media (max-width: 640px) {

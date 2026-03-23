@@ -20,16 +20,32 @@ import {
   formatProtectedSessionStatus,
   type ProtectedTopbarMessages
 } from "@/src/lib/i18n/protectedMessages";
+import {
+  resolveAccountProfileDisplayName,
+  resolveAvatarInitials,
+} from "@/src/lib/account/accountProfile";
 import { useProtectedI18n } from "@/src/lib/i18n/ProtectedI18nProvider";
 import { publicLoginRoute } from "@/src/lib/routing/publicRouteRegistry";
 import type { SessionContext } from "@/src/lib/schemas/session";
 import { cn } from "@/src/lib/utils";
 import styles from "./AccountCenterMenu.module.scss";
-import { AccountCenterEntryDialog } from "./AccountCenterEntryDialog";
+import { AccountCenterQuickProfileDialog } from "./AccountCenterQuickProfileDialog";
+import { useAccountCenterProfileEditor } from "./useAccountCenterProfileEditor";
 
 import type { AccountCenterMenuConfig, AccountCenterMenuIcon } from "./accountCenterMenu.types";
 
 type ProtectedThemePreference = "light" | "dark";
+
+const accountMessageFallbacks = {
+  closePanelAction: "Cancel",
+  profileSectionDescription: "Review personal identity, display name, avatar, and public profile details.",
+  profileDisplayNamePlaceholder: "Display name",
+  profileAvatarUrlPlaceholder: "https://example.com/avatar.png",
+  profileBioPlaceholder: "Short biography",
+  profileSaveAction: "Save Profile",
+  profileSaveSuccess: "Profile updated.",
+  profileSaveError: "Unable to update profile."
+} as const;
 
 interface AccountCenterMenuProps {
   session: SessionContext;
@@ -48,35 +64,6 @@ function useOptionalRouter() {
   } catch {
     return null;
   }
-}
-
-function resolveUserInitials(displayName: string, fallback: string) {
-  const tokens = displayName
-    .split(/\s+/)
-    .map((token) => token.trim())
-    .filter(Boolean);
-
-  if (tokens.length === 0) {
-    const fallbackTokens = fallback
-      .split(/\s+/)
-      .map((token) => token.trim())
-      .filter(Boolean);
-
-    if (fallbackTokens.length === 0) {
-      return "U";
-    }
-    if (fallbackTokens.length === 1) {
-      return fallbackTokens[0].slice(0, 2).toUpperCase();
-    }
-
-    return `${fallbackTokens[0][0] || ""}${fallbackTokens[1][0] || ""}`.toUpperCase();
-  }
-
-  if (tokens.length === 1) {
-    return tokens[0].slice(0, 2).toUpperCase();
-  }
-
-  return `${tokens[0][0] || ""}${tokens[1][0] || ""}`.toUpperCase();
 }
 
 function resolveAccountCenterMenuIcon(icon: AccountCenterMenuIcon) {
@@ -105,17 +92,34 @@ export function AccountCenterMenu({
   onExpandedChange
 }: AccountCenterMenuProps) {
   const router = useOptionalRouter();
-  const { locale, setLocale } = useProtectedI18n();
+  const { locale, messages: protectedMessages, setLocale } = useProtectedI18n();
+  const accountMessages = protectedMessages.accountCenter || accountMessageFallbacks;
+  const fallbackUserName = session.user?.displayName || session.user?.username || messages.guestUser;
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const menuId = `${dataTestId}-account-menu-region`;
-  const userName = session.user?.displayName || session.user?.username || messages.guestUser;
+  const {
+    closeProfileEditor,
+    openProfileEditor,
+    profileDraft,
+    profileEditorOpen,
+    profileError,
+    profileLoading,
+    profileMessage,
+    profilePayload,
+    profileSaving,
+    saveProfile,
+    setProfileDraft
+  } = useAccountCenterProfileEditor({
+    fallbackUserName,
+    messages: accountMessages,
+    onSaved: () => router?.refresh()
+  });
+  const userName = resolveAccountProfileDisplayName(profilePayload, fallbackUserName) || fallbackUserName;
   const userSubtitle = `${formatProtectedSessionRole(session.user?.role, messages)} · ${formatProtectedSessionStatus(session.user?.status, messages)}`;
-  const userInitials = resolveUserInitials(userName, messages.guestUser);
-  const activeEntrySection = menuConfig.sections.find((section) => section.entries.some((entry) => entry.id === activeEntryId)) || null;
-  const activeEntry = activeEntrySection?.entries.find((entry) => entry.id === activeEntryId) || null;
+  const userInitials = resolveAvatarInitials(userName, messages.guestUser);
+  const profileEditorAvatarInitials = resolveAvatarInitials(profileDraft.displayName || userName, messages.guestUser);
 
   function setExpandedState(nextExpanded: boolean) {
     setIsExpanded(nextExpanded);
@@ -254,8 +258,22 @@ export function AccountCenterMenu({
                       type="button"
                       className={styles.accountLink}
                       onClick={() => {
+                        if (entry.action === "quick-profile") {
+                          setExpandedState(false);
+                          void openProfileEditor();
+                          return;
+                        }
+
                         setExpandedState(false);
-                        setActiveEntryId(entry.id);
+                        if (router) {
+                          router.push(entry.href);
+                          router.refresh();
+                          return;
+                        }
+
+                        if (typeof window !== "undefined") {
+                          window.location.assign(entry.href);
+                        }
                       }}
                     >
                       <span className={styles.iconShell} aria-hidden="true">
@@ -343,28 +361,29 @@ export function AccountCenterMenu({
         </div>
       </div>
 
-      <AccountCenterEntryDialog
-        open={Boolean(activeEntry)}
-        entry={activeEntry}
-        groupTitle={activeEntrySection?.title}
+      <AccountCenterQuickProfileDialog
+        open={profileEditorOpen}
         closeLabel={messages.closeAccountCenterAriaLabel}
-        confirmLabel={activeEntry ? `Open ${activeEntry.label}` : ""}
-        onClose={() => setActiveEntryId(null)}
-        onConfirm={() => {
-          if (!activeEntry) {
-            return;
-          }
-
-          setActiveEntryId(null);
-          if (router) {
-            router.push(activeEntry.href);
-            router.refresh();
-            return;
-          }
-
-          if (typeof window !== "undefined") {
-            window.location.assign(activeEntry.href);
-          }
+        title={messages.accountMenuProfileLabel}
+        description={accountMessages.profileSectionDescription}
+        displayNameLabel="Display Name"
+        avatarURLLabel="Avatar URL"
+        bioLabel="Bio"
+        displayNamePlaceholder={accountMessages.profileDisplayNamePlaceholder}
+        avatarURLPlaceholder={accountMessages.profileAvatarUrlPlaceholder}
+        bioPlaceholder={accountMessages.profileBioPlaceholder}
+        saveLabel={accountMessages.profileSaveAction}
+        cancelLabel={accountMessages.closePanelAction}
+        statusMessage={profileMessage}
+        errorMessage={profileError}
+        loading={profileLoading}
+        saving={profileSaving}
+        avatarInitials={profileEditorAvatarInitials}
+        draft={profileDraft}
+        onDraftChange={(patch) => setProfileDraft((currentDraft) => ({ ...currentDraft, ...patch }))}
+        onClose={closeProfileEditor}
+        onSave={() => {
+          void saveProfile();
         }}
       />
     </div>

@@ -119,6 +119,8 @@ describe("protected topbar account center configs", () => {
     ]);
     expect(config.sections[0]?.entries.every((entry) => entry.kind === "account")).toBe(true);
     expect(config.sections[0]?.entries.every((entry) => entry.description.length > 0)).toBe(true);
+    expect(config.sections[0]?.entries[0]?.action).toBe("quick-profile");
+    expect(config.sections[0]?.entries.slice(1).every((entry) => entry.action === "navigate")).toBe(true);
   });
 
   it("prepends admin service sections ahead of the shared account center actions", () => {

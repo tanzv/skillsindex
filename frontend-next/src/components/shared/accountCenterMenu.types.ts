@@ -2,6 +2,7 @@ export type ProtectedConsoleScope = "workspace" | "admin" | "account";
 
 export type AccountCenterMenuIcon = "profile" | "security" | "sessions" | "credentials" | "link";
 export type AccountCenterMenuEntryKind = "account" | "admin";
+export type AccountCenterMenuEntryAction = "navigate" | "quick-profile";
 
 export interface AccountCenterMenuEntry {
   id: string;
@@ -10,6 +11,7 @@ export interface AccountCenterMenuEntry {
   icon: AccountCenterMenuIcon;
   description: string;
   kind: AccountCenterMenuEntryKind;
+  action: AccountCenterMenuEntryAction;
 }
 
 export interface AccountCenterMenuSection {

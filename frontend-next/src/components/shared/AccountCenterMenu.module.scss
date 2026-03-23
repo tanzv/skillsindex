@@ -37,6 +37,11 @@ $account-menu-transition: 160ms ease;
   cursor: pointer;
   background: var(--protected-topbar-user-bg);
   box-shadow: var(--protected-topbar-user-shadow);
+  transition:
+    border-color $account-menu-transition,
+    background-color $account-menu-transition,
+    color $account-menu-transition,
+    box-shadow $account-menu-transition;
 }
 .userTriggerAvatarOnly {
   min-width: 42px;
@@ -53,7 +58,6 @@ $account-menu-transition: 160ms ease;
   background: var(--protected-shell-interactive-bg-hover);
   color: var(--protected-shell-text);
 }
-
 .userTrigger:focus-visible,
 .accountLink:focus-visible,
 .accountLogout:focus-visible,
@@ -67,7 +71,6 @@ $account-menu-transition: 160ms ease;
   background: var(--protected-topbar-control-bg-hover);
   color: var(--protected-shell-text);
 }
-
 .triggerCopy {
   min-width: 0;
   display: grid;
@@ -75,7 +78,6 @@ $account-menu-transition: 160ms ease;
   justify-items: start;
   flex: 1 1 auto;
 }
-
 .triggerTitle,
 .triggerMeta {
   max-width: 100%;
@@ -83,28 +85,24 @@ $account-menu-transition: 160ms ease;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .triggerTitle {
   color: var(--protected-topbar-user-meta-text);
   font-size: 11px;
   line-height: 1.15;
   font-weight: 700;
 }
-
 .triggerMeta {
   color: var(--protected-topbar-user-meta-muted);
   font-size: 9px;
   line-height: 1.15;
   font-weight: 600;
 }
-
 .userIcon {
   width: 12px;
   height: 12px;
   color: var(--protected-topbar-user-icon);
   flex: 0 0 auto;
 }
-
 .visuallyHidden {
   position: absolute;
   width: 1px;
@@ -116,7 +114,6 @@ $account-menu-transition: 160ms ease;
   white-space: nowrap;
   border: 0;
 }
-
 .avatar,
 .accountAvatar {
   width: 32px;
@@ -133,18 +130,17 @@ $account-menu-transition: 160ms ease;
   box-shadow: var(--protected-topbar-avatar-shadow);
   flex: 0 0 auto;
 }
-
 .userTriggerAvatarOnly .avatar {
   width: 34px;
   height: 34px;
   font-size: 11px;
 }
-
 .menu {
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
   width: min(360px, calc(100vw - 24px));
+  max-height: min(560px, calc(100vh - 96px));
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
@@ -152,14 +148,12 @@ $account-menu-transition: 160ms ease;
   transition: opacity 160ms ease, transform 160ms ease, visibility 160ms ease;
   z-index: 52;
 }
-
 .menuExpanded {
   pointer-events: auto;
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
 }
-
 .card {
   display: grid;
   gap: 6px;
@@ -168,8 +162,8 @@ $account-menu-transition: 160ms ease;
   border-radius: 14px;
   background: var(--protected-topbar-account-card-bg);
   box-shadow: none;
+  overflow-y: auto;
 }
-
 .summary,
 .actions,
 .preferenceRow,
@@ -290,7 +284,7 @@ $account-menu-transition: 160ms ease;
   min-height: 44px;
   padding: 10px 10px 10px 12px;
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
   gap: 10px;
   line-height: 1.2;
@@ -381,6 +375,7 @@ $account-menu-transition: 160ms ease;
   .menu {
     right: 0;
     width: min(320px, calc(100vw - 20px));
+    max-height: min(520px, calc(100vh - 80px));
   }
 
   .actions,

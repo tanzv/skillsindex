@@ -23,7 +23,7 @@ describe("account center model", () => {
 
   it("builds and sanitizes profile drafts", () => {
     const draft = buildAccountProfileDraft({
-      user: { id: 1, username: "alex", displayName: "Alex", role: "admin", status: "active" },
+      user: { id: 1, username: "alex", display_name: "Alex", role: "admin", status: "active" },
       profile: { display_name: "", avatar_url: "https://example.test/a.png", bio: "  Maintainer  " }
     });
 
@@ -47,7 +47,7 @@ describe("account center model", () => {
 
   it("falls back to username when explicit display names are empty", () => {
     const draft = buildAccountProfileDraft({
-      user: { id: 2, username: "admin", displayName: "", role: "super_admin", status: "active" },
+      user: { id: 2, username: "admin", display_name: "", role: "super_admin", status: "active" },
       profile: { display_name: "", avatar_url: "", bio: "" }
     });
 
@@ -57,7 +57,7 @@ describe("account center model", () => {
   it("computes completeness, formatting, and initials safely", () => {
     expect(
       profileCompletenessScore({
-        user: { id: 1, username: "alex", displayName: "Alex", role: "admin", status: "active" },
+        user: { id: 1, username: "alex", display_name: "Alex", role: "admin", status: "active" },
         profile: { display_name: "", avatar_url: "", bio: "" }
       })
     ).toBe(25);

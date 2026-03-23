@@ -27,6 +27,7 @@ import {
 } from "@/src/lib/navigation/protectedNavigationRegistry";
 
 import type {
+  AccountCenterMenuEntryAction,
   AccountCenterMenuConfig,
   AccountCenterMenuEntry,
   AccountCenterMenuEntryKind,
@@ -34,13 +35,18 @@ import type {
   AccountCenterMenuSection
 } from "./accountCenterMenu.types";
 
+interface CreateAccountEntryOptions {
+  kind?: AccountCenterMenuEntryKind;
+  action?: AccountCenterMenuEntryAction;
+}
+
 function createAccountEntry(
   id: string,
   href: string,
   label: string,
   icon: AccountCenterMenuIcon,
   description: string,
-  kind: AccountCenterMenuEntryKind = "account"
+  options: CreateAccountEntryOptions = {}
 ): AccountCenterMenuEntry {
   return {
     id,
@@ -48,7 +54,8 @@ function createAccountEntry(
     label,
     icon,
     description,
-    kind
+    kind: options.kind ?? "account",
+    action: options.action ?? "navigate"
   };
 }
 
@@ -68,7 +75,8 @@ export function buildAccountCenterMenuConfig(
             accountProfileRoute,
             messages.accountMenuProfileLabel,
             "profile",
-            "Review personal identity, display name, avatar, and public profile details."
+            "Review personal identity, display name, avatar, and public profile details.",
+            { action: "quick-profile" }
           ),
           createAccountEntry(
             "account-security",
@@ -108,52 +116,52 @@ export function buildAdminAccountCenterMenuConfig(
       entries: [
         createAccountEntry(
           "admin-access",
-          adminAccessRoute,
-          navigationMessages.itemAccessLabel,
-          "security",
-          navigationMessages.itemAccessDescription,
-          "admin"
-        ),
-        createAccountEntry(
-          "admin-roles",
-          adminRolesRoute,
-          navigationMessages.itemRolesLabel,
-          "link",
-          navigationMessages.itemRolesDescription,
-          "admin"
-        ),
-        createAccountEntry(
-          "admin-organizations",
-          adminOrganizationsRoute,
-          navigationMessages.itemOrganizationsLabel,
-          "link",
-          navigationMessages.itemOrganizationsDescription,
-          "admin"
-        )
-      ]
-    },
+            adminAccessRoute,
+            navigationMessages.itemAccessLabel,
+            "security",
+            navigationMessages.itemAccessDescription,
+            { kind: "admin" }
+          ),
+          createAccountEntry(
+            "admin-roles",
+            adminRolesRoute,
+            navigationMessages.itemRolesLabel,
+            "link",
+            navigationMessages.itemRolesDescription,
+            { kind: "admin" }
+          ),
+          createAccountEntry(
+            "admin-organizations",
+            adminOrganizationsRoute,
+            navigationMessages.itemOrganizationsLabel,
+            "link",
+            navigationMessages.itemOrganizationsDescription,
+            { kind: "admin" }
+          )
+        ]
+      },
     {
       id: "admin-runtime-services",
       title: navigationMessages.moduleAdministrationLabel,
       entries: [
         createAccountEntry(
           "admin-integrations",
-          adminIntegrationsRoute,
-          navigationMessages.itemIntegrationsLabel,
-          "link",
-          navigationMessages.itemIntegrationsDescription,
-          "admin"
-        ),
-        createAccountEntry(
-          "admin-release-gates",
-          adminReleaseGatesRoute,
-          navigationMessages.itemReleaseGatesLabel,
-          "link",
-          navigationMessages.itemReleaseGatesDescription,
-          "admin"
-        )
-      ]
-    }
+            adminIntegrationsRoute,
+            navigationMessages.itemIntegrationsLabel,
+            "link",
+            navigationMessages.itemIntegrationsDescription,
+            { kind: "admin" }
+          ),
+          createAccountEntry(
+            "admin-release-gates",
+            adminReleaseGatesRoute,
+            navigationMessages.itemReleaseGatesLabel,
+            "link",
+            navigationMessages.itemReleaseGatesDescription,
+            { kind: "admin" }
+          )
+        ]
+      }
   ]);
 }
 
