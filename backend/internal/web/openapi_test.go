@@ -17,12 +17,16 @@ func TestBuildOpenAPISpecContainsCorePaths(t *testing.T) {
 		t.Fatalf("missing paths object")
 	}
 
-	requiredPaths := []string{
-		"/api/v1/public/marketplace",
-		"/api/v1/public/rankings",
-		"/api/v1/public/skills/{skillID}",
-		"/api/v1/skills/search",
-		"/api/v1/skills/ai-search",
+		requiredPaths := []string{
+			"/api/v1/public/marketplace",
+			"/api/v1/public/rankings",
+			"/api/v1/public/skills/{skillID}",
+			"/api/v1/public/skills/compare",
+			"/api/v1/public/skills/{skillID}/resources",
+			"/api/v1/public/skills/{skillID}/resource-file",
+			"/api/v1/public/skills/{skillID}/versions",
+			"/api/v1/skills/search",
+			"/api/v1/skills/ai-search",
 		"/api/v1/auth/login",
 		"/api/v1/auth/providers",
 		"/api/v1/auth/csrf",

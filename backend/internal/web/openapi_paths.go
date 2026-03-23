@@ -3,6 +3,7 @@ package web
 func openAPIPaths() map[string]any {
 	paths := map[string]any{}
 	mergeOpenAPIPathMap(paths, openAPIPathsPublicAuth())
+	mergeOpenAPIPathMap(paths, openAPIPathsPublicSkillExtensions())
 	mergeOpenAPIPathMap(paths, openAPIPathsAccountAPIKey())
 	mergeOpenAPIPathMap(paths, openAPIPathsAdminIngestion())
 	mergeOpenAPIPathMap(paths, openAPIPathsAdminCore())
