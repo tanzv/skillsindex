@@ -68,7 +68,7 @@
   inset: 0;
   border: 0;
   padding: 0;
-  background: rgba(15, 23, 42, 0.18);
+  background: var(--protected-shell-drawer-backdrop);
   opacity: 0;
   pointer-events: none;
   transition: opacity 160ms ease;
@@ -89,7 +89,7 @@
   padding: 88px 14px 18px;
   overflow-y: auto;
   background: var(--protected-shell-bg-alt);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--protected-shell-drawer-shadow);
   transform: translateX(calc(-100% - 18px));
   transition: transform 180ms ease;
   z-index: 50;
