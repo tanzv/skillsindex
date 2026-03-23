@@ -21,6 +21,9 @@ func setupAPISpecRegistryTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("failed to open sqlite db: %v", err)
 	}
+	if err := dbpkg.Migrate(db); err != nil {
+		t.Fatalf("failed to migrate sqlite db: %v", err)
+	}
 	return db
 }
 

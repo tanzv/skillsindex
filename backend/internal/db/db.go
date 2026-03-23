@@ -45,6 +45,8 @@ func Migrate(database *gorm.DB) error {
 		&models.SyncJobRun{},
 		&models.SkillVersion{},
 		&models.SystemSetting{},
+		&models.APISpec{},
+		&models.APIPublishEvent{},
 	}
 
 	for _, schemaModel := range schemaModels {
