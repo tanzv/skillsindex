@@ -9,7 +9,7 @@ interface LoginInfoPanelProps {
 
 export function LoginInfoPanel({ model, showCards = false }: LoginInfoPanelProps) {
   return (
-    <div className={styles.infoCard} data-testid="login-info-card">
+    <div className={styles.infoCard} data-has-cards={showCards ? "true" : "false"} data-testid="login-info-card">
       <div className={styles.infoHero}>
         <p className={styles.infoEyebrow}>{model.eyebrow}</p>
         <h2 className={styles.infoTitle}>{model.title}</h2>

@@ -55,6 +55,7 @@ export function LoginForm({ redirectTarget, initialLocale, infoPanelModel, messa
   const safeRedirectTarget =
     redirectTarget.startsWith("/") && !redirectTarget.startsWith("//") ? redirectTarget : workspaceOverviewRoute;
   const locale = initialLocale;
+  const showInfoCards = infoPanelModel.cards.length > 0;
   const isVisualBaselineViewport = viewport.width === 512 && viewport.height === 342;
   const visualScale = isVisualBaselineViewport ? viewport.width / 1440 : 1;
   const wordmarkSrc = resolveBrandWordmarkSrc(theme === "light");
@@ -188,7 +189,7 @@ export function LoginForm({ redirectTarget, initialLocale, infoPanelModel, messa
 
           <section className={styles.layout}>
             <aside className={styles.infoPanel}>
-              <LoginInfoPanel model={infoPanelModel} />
+              <LoginInfoPanel model={infoPanelModel} showCards={showInfoCards} />
             </aside>
 
             <section className={styles.formCard}>

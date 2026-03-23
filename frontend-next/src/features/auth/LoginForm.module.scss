@@ -29,6 +29,8 @@
   --login-button-text: #111111;
   --login-error: #ef4444;
   --login-focus-ring: rgba(148, 163, 184, 0.24);
+  --login-divider-tone: rgba(255, 255, 255, 0.08);
+  --login-orbit-tone: rgba(255, 255, 255, 0.2);
   min-height: 100vh;
   position: relative;
   isolation: isolate;
@@ -97,6 +99,8 @@
   --login-input-placeholder: #94a3b8;
   --login-button-bg: #0f172a;
   --login-button-text: #ffffff;
+  --login-divider-tone: rgba(15, 23, 42, 0.08);
+  --login-orbit-tone: rgba(59, 130, 246, 0.18);
   background:
     radial-gradient(circle at 10% 16%, rgba(15, 23, 42, 0.08), transparent 24%),
     radial-gradient(circle at 54% 72%, rgba(59, 130, 246, 0.06), transparent 30%),
@@ -235,6 +239,36 @@
   align-items: center;
   gap: clamp(28px, 4vw, 56px);
   background: transparent;
+  position: relative;
+}
+
+.layout::before {
+  content: "";
+  position: absolute;
+  left: calc(50% - 20px);
+  top: clamp(60px, 14vh, 120px);
+  bottom: clamp(60px, 10vh, 108px);
+  width: 1px;
+  background: linear-gradient(180deg, transparent 0%, var(--login-divider-tone) 18%, var(--login-divider-tone) 82%, transparent 100%);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.layout::after {
+  content: "";
+  position: absolute;
+  left: calc(50% - 132px);
+  top: 50%;
+  width: 264px;
+  height: 264px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--login-orbit-tone) 58%, transparent);
+  opacity: 0.34;
+  filter: blur(0.2px);
+  transform: translate3d(0, -50%, 0);
+  transform-origin: center;
+  pointer-events: none;
+  animation: loginOrbitalPulse 10s ease-in-out infinite;
 }
 
 .infoPanel {
@@ -244,6 +278,8 @@
   align-items: center;
   justify-content: flex-start;
   animation: loginPanelReveal 900ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+  position: relative;
+  z-index: 1;
 }
 
 .stage[data-theme="light"] .infoPanel {
@@ -258,6 +294,8 @@
   padding: 0;
   background: transparent;
   animation: loginFormReveal 900ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
+  position: relative;
+  z-index: 1;
 }
 
 @keyframes loginAmbientFloat {
@@ -307,6 +345,19 @@
   }
 }
 
+@keyframes loginOrbitalPulse {
+  0%,
+  100% {
+    opacity: 0.22;
+    transform: translate3d(0, -50%, 0) scale(0.94);
+  }
+
+  50% {
+    opacity: 0.42;
+    transform: translate3d(0, -50%, 0) scale(1.04);
+  }
+}
+
 .isVisualBaselineShell .topbar {
   padding: 0 22px;
 }
@@ -317,6 +368,63 @@
 
 .isVisualBaselineShell .formCard {
   padding: 0;
+}
+
+@media (max-width: 1120px) {
+  .layout {
+    width: min(100%, 920px);
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 28px;
+  }
+
+  .layout::before,
+  .layout::after {
+    display: none;
+  }
+
+  .formCard {
+    order: 1;
+    justify-content: flex-start;
+  }
+
+  .infoPanel {
+    order: 2;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    height: auto;
+    min-height: 0;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .topbarControls {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .layout {
+    padding: 24px 16px 32px;
+    gap: 20px;
+    min-height: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage::before,
+  .stage::after,
+  .topbar,
+  .infoPanel,
+  .formCard,
+  .layout::after {
+    animation: none;
+  }
 }
 
 @media (max-width: 1400px) {

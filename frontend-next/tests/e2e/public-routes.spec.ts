@@ -49,10 +49,13 @@ test("renders the login route with the prototype-aligned auth layout", async ({ 
   await expect(page.getByTestId("login-topbar")).toBeVisible();
   await expect(page.getByTestId("login-info-card")).toBeVisible();
   await expect(page.getByTestId("login-info-card")).toContainText("Welcome Back");
-  await expect(page.getByTestId("login-info-card")).not.toContainText("Password Sign-In");
-  await expect(page.getByTestId("login-info-card")).not.toContainText("Controlled by Admin");
-  await expect(page.getByTestId("login-info-card")).not.toContainText("/admin/overview");
-  await expect(page.getByTestId("login-info-card-list")).toHaveCount(0);
+  await expect(page.getByTestId("login-info-card")).toContainText("Password Sign-In");
+  await expect(page.getByTestId("login-info-card")).toContainText("Controlled by Admin");
+  await expect(page.getByTestId("login-info-card")).toContainText("/admin/overview");
+  await expect(page.getByTestId("login-info-card-list")).toBeVisible();
+  await expect(page.getByTestId("login-info-card-item-credentials")).toBeVisible();
+  await expect(page.getByTestId("login-info-card-item-providers")).toBeVisible();
+  await expect(page.getByTestId("login-info-card-item-redirect")).toBeVisible();
   await expect(page.getByTestId("login-form-card")).toBeVisible();
   await expect(page.getByTestId("login-form-brand")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Account Sign In" })).toBeVisible();

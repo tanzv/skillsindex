@@ -14,6 +14,10 @@
   -webkit-backdrop-filter: none;
 }
 
+.infoCard[data-has-cards="true"] {
+  width: min(100%, 468px);
+}
+
 .infoCard::before {
   content: "";
   position: absolute;
@@ -43,6 +47,18 @@
   display: grid;
   gap: 18px;
   animation-delay: 160ms;
+  position: relative;
+}
+
+.infoHero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -18px;
+  width: min(100%, 220px);
+  height: 1px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--login-text-primary) 22%, transparent) 0%, transparent 100%);
+  opacity: 0.7;
 }
 
 .infoListItem:nth-child(1) {
@@ -109,11 +125,12 @@
 
 .infoList {
   width: min(100%, 460px);
-  margin: 0;
+  margin: 28px 0 0;
   padding: 0;
   list-style: none;
   display: grid;
   gap: 10px;
+  position: relative;
 }
 
 .infoListItem {
@@ -127,6 +144,7 @@
   border-radius: 18px;
   background: linear-gradient(180deg, var(--login-surface-soft) 0%, var(--login-surface-softer) 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  transition: transform 220ms ease, border-color 220ms ease, background-color 220ms ease, box-shadow 220ms ease;
 }
 
 .infoListItem[data-accent="primary"] {
@@ -145,6 +163,17 @@
   opacity: 0.36;
 }
 
+.infoListItem::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 18%, rgba(255, 255, 255, 0.08) 50%, transparent 82%);
+  opacity: 0;
+  transform: translate3d(-10%, 0, 0);
+  transition: opacity 220ms ease, transform 380ms ease;
+  pointer-events: none;
+}
+
 :global([data-theme="light"]) .infoListItem::before {
   background: linear-gradient(180deg, rgba(59, 130, 246, 0.42) 0%, transparent 100%);
 }
@@ -156,6 +185,19 @@
 .infoListItem:first-child::before {
   width: 2px;
   opacity: 0.7;
+}
+
+.infoListItem:hover {
+  transform: translate3d(0, -2px, 0);
+  border-color: color-mix(in srgb, var(--login-glass-highlight) 72%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 14px 30px rgba(0, 0, 0, 0.14);
+}
+
+.infoListItem:hover::after {
+  opacity: 1;
+  transform: translate3d(8%, 0, 0);
 }
 
 .infoIndex {
@@ -310,6 +352,11 @@
     font-size: 14px;
     line-height: 1.6;
   }
+
+  .infoList {
+    margin-top: 18px;
+    width: 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -317,5 +364,14 @@
   .infoListItem {
     opacity: 1;
     animation: none;
+  }
+
+  .infoListItem,
+  .infoListItem::after {
+    transition: none;
+  }
+
+  .infoListItem:hover {
+    transform: none;
   }
 }
