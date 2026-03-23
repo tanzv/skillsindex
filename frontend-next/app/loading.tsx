@@ -1,14 +1,44 @@
-import { SystemStatusPage } from "@/src/components/shared/SystemStatusPage";
+import styles from "./RootLoadingPage.module.scss";
 
 export default function RootLoadingPage() {
   return (
-    <SystemStatusPage
-      eyebrow="Transition State"
-      title="Loading Next Surface"
-      description="The shell is assembling route data, navigation context, and the first visible content block."
-      detail="This transition page is shared across public and protected surfaces to avoid blank states during navigation."
-      tone="loading"
-      testId="system-status-loading-page"
-    />
+    <div className={styles.page} data-testid="root-loading-page">
+      <div className={styles.shell} aria-hidden="true">
+        <header className={styles.topbar}>
+          <div className={styles.brandBlock}>
+            <span className={styles.brandMark} />
+            <span className={styles.brandWordmark} />
+          </div>
+          <div className={styles.topbarActions}>
+            <span className={styles.actionChip} />
+            <span className={styles.actionChip} />
+            <span className={styles.actionChipShort} />
+          </div>
+        </header>
+
+        <main className={styles.content}>
+          <section className={styles.heroPanel}>
+            <span className={styles.heroKicker} />
+            <span className={styles.heroTitle} />
+            <span className={styles.heroTitleShort} />
+            <span className={styles.heroBody} />
+            <span className={styles.heroBody} />
+            <span className={styles.heroBodyShort} />
+            <div className={styles.heroActionRow}>
+              <span className={styles.heroActionPrimary} />
+              <span className={styles.heroActionSecondary} />
+            </div>
+          </section>
+
+          <section className={styles.metricGrid}>
+            <span className={styles.metricCard} />
+            <span className={styles.metricCard} />
+            <span className={styles.metricCard} />
+          </section>
+        </main>
+      </div>
+
+      <span className={styles.srOnly}>Loading route content.</span>
+    </div>
   );
 }

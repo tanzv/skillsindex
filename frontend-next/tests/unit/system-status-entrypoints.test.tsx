@@ -7,12 +7,13 @@ import RootLoadingPage from "@/app/loading";
 import NotFoundPage from "@/app/not-found";
 
 describe("system status entrypoints", () => {
-  it("renders the root loading entrypoint with a dedicated transient test id", () => {
+  it("renders the root loading entrypoint as a lightweight shell skeleton", () => {
     const markup = renderToStaticMarkup(createElement(RootLoadingPage));
 
-    expect(markup).toContain('data-testid="system-status-loading-page"');
-    expect(markup).toContain("Loading Next Surface");
-    expect(markup).toContain("In Progress");
+    expect(markup).toContain('data-testid="root-loading-page"');
+    expect(markup).toContain("Loading route content.");
+    expect(markup).not.toContain("Loading Next Surface");
+    expect(markup).not.toContain("Transition State");
   });
 
   it("renders the root not-found entrypoint with the expected recovery links", () => {
