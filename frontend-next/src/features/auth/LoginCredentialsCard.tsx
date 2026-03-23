@@ -43,7 +43,7 @@ export function LoginCredentialsCard({
   const wordmarkSrc = resolveBrandWordmarkSrc(theme === "light");
 
   return (
-    <div className={styles.formInner} data-testid="login-form-card">
+    <div className={styles.formInner} aria-busy={isSubmitting} data-testid="login-form-card">
       <header className={styles.formHeader}>
         <div className={styles.formBrand} data-testid="login-form-brand">
           <Image
@@ -73,6 +73,8 @@ export function LoginCredentialsCard({
               className={styles.input}
               autoComplete="username"
               data-testid="login-username-input"
+              name="username"
+              required
               value={username}
               onChange={(event) => onUsernameChange(event.target.value)}
               placeholder={messages.usernamePlaceholder}
@@ -91,6 +93,8 @@ export function LoginCredentialsCard({
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               data-testid="login-password-input"
+              name="password"
+              required
               value={password}
               onChange={(event) => onPasswordChange(event.target.value)}
               placeholder={messages.passwordPlaceholder}
@@ -123,14 +127,23 @@ export function LoginCredentialsCard({
           </button>
         </div>
 
-        {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
+        {errorMessage ? (
+          <p className={styles.error} role="alert">
+            {errorMessage}
+          </p>
+        ) : null}
 
         <button
           type="submit"
           className={styles.submitButton}
+          aria-busy={isSubmitting}
+          data-testid="login-submit-button"
           disabled={isSubmitting || !username.trim() || !password.trim()}
         >
-          {isSubmitting ? messages.submitting : messages.submit}
+          {isSubmitting ? (
+            <span className={styles.submitSpinner} aria-hidden="true" data-testid="login-submit-spinner" />
+          ) : null}
+          <span className={styles.submitLabel}>{isSubmitting ? messages.submitting : messages.submit}</span>
         </button>
       </form>
     </div>
