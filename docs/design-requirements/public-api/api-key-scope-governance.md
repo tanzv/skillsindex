@@ -154,6 +154,19 @@
 14. `created_at`
 15. `updated_at`
 
+管理接口的 JSON 响应当前还会返回：
+
+1. `supported_scopes`
+2. `default_scopes`
+
+适用场景：
+
+1. `GET /api/v1/admin/apikeys`
+2. `GET /api/v1/admin/apikeys/{keyID}`
+3. `POST /api/v1/admin/apikeys`
+4. `POST /api/v1/admin/apikeys/{keyID}/rotate`
+5. `POST /api/v1/admin/apikeys/{keyID}/scopes`
+
 ## 5. 当前鉴权执行链
 
 ### 5.1 校验流程
