@@ -121,7 +121,7 @@ $dialog-transition: 160ms ease;
 
   &:hover {
     border-color: var(--protected-shell-accent);
-    background: color-mix(in srgb, var(--protected-shell-accent) 88%, transparent);
+    background: var(--protected-shell-accent-hover);
     color: var(--protected-shell-accent-contrast);
   }
 }
