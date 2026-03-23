@@ -230,17 +230,40 @@ func (a *App) handleAPISearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleAPIAISearch(w http.ResponseWriter, r *http.Request) {
-	items, err := a.skillService.AISemanticSearchPublicSkills(
-		r.Context(),
-		strings.TrimSpace(r.URL.Query().Get("q")),
-		parsePositiveInt(r.URL.Query().Get("limit"), 20),
-	)
+	page := parsePositiveInt(r.URL.Query().Get("page"), 1)
+	if page < 1 {
+		page = 1
+	}
+	limit := parsePositiveInt(r.URL.Query().Get("limit"), 20)
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	items, err := a.skillService.AISemanticSearchPublicSkills(r.Context(), strings.TrimSpace(r.URL.Query().Get("q")), 100)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "ai_search_failed", "message": err.Error()})
 		return
 	}
+
+	total := len(items)
+	start := (page - 1) * limit
+	if start >= total {
+		items = []models.Skill{}
+	} else {
+		end := start + limit
+		if end > total {
+			end = total
+		}
+		items = items[start:end]
+	}
+
 	writeJSON(w, http.StatusOK, map[string]any{
 		"items": resultToAPIItems(items),
-		"total": len(items),
+		"page":  page,
+		"limit": limit,
+		"total": total,
 	})
 }

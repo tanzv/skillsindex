@@ -17,16 +17,16 @@ func TestBuildOpenAPISpecContainsCorePaths(t *testing.T) {
 		t.Fatalf("missing paths object")
 	}
 
-		requiredPaths := []string{
-			"/api/v1/public/marketplace",
-			"/api/v1/public/rankings",
-			"/api/v1/public/skills/{skillID}",
-			"/api/v1/public/skills/compare",
-			"/api/v1/public/skills/{skillID}/resources",
-			"/api/v1/public/skills/{skillID}/resource-file",
-			"/api/v1/public/skills/{skillID}/versions",
-			"/api/v1/skills/search",
-			"/api/v1/skills/ai-search",
+	requiredPaths := []string{
+		"/api/v1/public/marketplace",
+		"/api/v1/public/rankings",
+		"/api/v1/public/skills/{skillID}",
+		"/api/v1/public/skills/compare",
+		"/api/v1/public/skills/{skillID}/resources",
+		"/api/v1/public/skills/{skillID}/resource-file",
+		"/api/v1/public/skills/{skillID}/versions",
+		"/api/v1/skills/search",
+		"/api/v1/skills/ai-search",
 		"/api/v1/auth/login",
 		"/api/v1/auth/providers",
 		"/api/v1/auth/csrf",
@@ -161,6 +161,62 @@ func TestBuildOpenAPISpecInteractionSecurity(t *testing.T) {
 	security, ok := post["security"].([]map[string]any)
 	if !ok || len(security) == 0 {
 		t.Fatalf("missing session security for favorite endpoint")
+	}
+}
+
+func TestBuildOpenAPISpecAISearchPaginationContract(t *testing.T) {
+	spec := buildOpenAPISpec("http://127.0.0.1:8080")
+	paths, ok := spec["paths"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing paths object")
+	}
+
+	pathItem, ok := paths["/api/v1/skills/ai-search"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing ai search path")
+	}
+	getOp, ok := pathItem["get"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing ai search get operation")
+	}
+	params, ok := getOp["parameters"].([]map[string]any)
+	if !ok {
+		t.Fatalf("missing ai search parameters")
+	}
+
+	found := make(map[string]struct{}, len(params))
+	for _, param := range params {
+		name, _ := param["name"].(string)
+		if name != "" {
+			found[name] = struct{}{}
+		}
+	}
+	for _, name := range []string{"q", "page", "limit", "api_key"} {
+		if _, exists := found[name]; !exists {
+			t.Fatalf("missing ai search query param %s", name)
+		}
+	}
+
+	components, ok := spec["components"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing components object")
+	}
+	schemas, ok := components["schemas"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing schemas object")
+	}
+	schema, ok := schemas["AISearchSkillsResponse"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing AI search response schema")
+	}
+	properties, ok := schema["properties"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing AI search response properties")
+	}
+	for _, key := range []string{"items", "page", "limit", "total"} {
+		if _, exists := properties[key]; !exists {
+			t.Fatalf("AI search response schema should include %s", key)
+		}
 	}
 }
 

@@ -92,6 +92,7 @@ func openAPIPathsPublicAuth() map[string]any {
 				"security":    apiKeySecurity(),
 				"parameters": []map[string]any{
 					queryParam("q", "string", true, "Natural language query"),
+					queryParam("page", "integer", false, "Page number"),
 					queryParam("limit", "integer", false, "Maximum result count"),
 					queryParam("api_key", "string", false, "API key in query"),
 				},

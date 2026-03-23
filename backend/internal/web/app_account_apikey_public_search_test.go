@@ -154,12 +154,26 @@ func TestAccountAPIKeyDefaultScopesCanCallPublicAISearch(t *testing.T) {
 	if aiSearchRecorder.Code != http.StatusOK {
 		t.Fatalf("unexpected ai search status code: got=%d want=%d body=%s", aiSearchRecorder.Code, http.StatusOK, aiSearchRecorder.Body.String())
 	}
-	body := aiSearchRecorder.Body.String()
-	if !strings.Contains(body, `"React Dashboard Builder"`) {
-		t.Fatalf("missing expected ai search result payload: %s", body)
+	payload := decodeBodyMap(t, aiSearchRecorder)
+	items, ok := payload["items"].([]any)
+	if !ok || len(items) != 1 {
+		t.Fatalf("unexpected ai search items payload: %#v", payload["items"])
 	}
-	if !strings.Contains(body, `"total":1`) {
-		t.Fatalf("missing expected ai search total payload: %s", body)
+	firstItem, ok := items[0].(map[string]any)
+	if !ok {
+		t.Fatalf("unexpected ai search item shape: %#v", items[0])
+	}
+	if got, _ := firstItem["name"].(string); got != "React Dashboard Builder" {
+		t.Fatalf("unexpected ai search item name: %#v", firstItem["name"])
+	}
+	if total, ok := payload["total"].(float64); !ok || int(total) != 1 {
+		t.Fatalf("unexpected ai search total payload: %#v", payload["total"])
+	}
+	if page, ok := payload["page"].(float64); !ok || int(page) != 1 {
+		t.Fatalf("unexpected ai search page payload: %#v", payload["page"])
+	}
+	if limit, ok := payload["limit"].(float64); !ok || int(limit) != 20 {
+		t.Fatalf("unexpected ai search limit payload: %#v", payload["limit"])
 	}
 }
 

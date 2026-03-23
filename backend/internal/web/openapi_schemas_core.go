@@ -307,6 +307,8 @@ func openAPISchemasCoreCatalogAndAuth() map[string]any {
 			"type": "object",
 			"properties": map[string]any{
 				"items": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/SkillItem"}},
+				"page":  map[string]any{"type": "integer"},
+				"limit": map[string]any{"type": "integer"},
 				"total": map[string]any{"type": "integer"},
 			},
 		},
