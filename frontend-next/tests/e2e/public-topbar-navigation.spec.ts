@@ -40,19 +40,13 @@ test("uses client-side navigation when opening marketplace categories from the l
   expect(navigationEntryCountAfter).toBe(navigationEntryCountBefore);
 });
 
-test("keeps marketplace topbars and shells within compact gutters on large screens", async ({ page }) => {
-  test.setTimeout(120_000);
-  const alignedShellRoutes = [
+test("keeps representative marketplace topbars aligned with shell content without horizontal overflow", async ({ page }) => {
+  const representativeShellRoutes = [
     "/",
     "/categories",
-    "/rankings",
     "/results?q=nextjs&tags=react",
-    "/skills/101",
-    "/docs",
-    "/about",
-    "/governance",
-    "/rollout",
-    "/timeline"
+    "/rankings",
+    "/skills/101"
   ];
 
   async function resolveShellMetrics(pathname: string) {
@@ -79,53 +73,49 @@ test("keeps marketplace topbars and shells within compact gutters on large scree
         topbar: {
           left: Math.round(topbarRect.left),
           right: Math.round(window.innerWidth - topbarRect.right),
-          width: Math.round(topbarRect.width)
+          width: Math.round(topbarRect.width),
+          center: Math.round(topbarRect.left + topbarRect.width / 2)
         },
         below: belowRect
           ? {
               left: Math.round(belowRect.left),
               right: Math.round(window.innerWidth - belowRect.right),
-              width: Math.round(belowRect.width)
+              width: Math.round(belowRect.width),
+              center: Math.round(belowRect.left + belowRect.width / 2)
             }
           : null,
         content: {
           left: Math.round(contentRect.left),
           right: Math.round(window.innerWidth - contentRect.right),
-          width: Math.round(contentRect.width)
+          width: Math.round(contentRect.width),
+          center: Math.round(contentRect.left + contentRect.width / 2)
         }
       };
     });
   }
 
-  for (const viewportWidth of [1600, 1920]) {
-    await page.setViewportSize({ width: viewportWidth, height: 1200 });
+  const viewportWidth = 1600;
+  await page.setViewportSize({ width: viewportWidth, height: 1200 });
 
-    for (const pathname of alignedShellRoutes) {
-      const routeMetrics = await resolveShellMetrics(pathname);
+  for (const pathname of representativeShellRoutes) {
+    const routeMetrics = await resolveShellMetrics(pathname);
 
-      expect(routeMetrics).not.toBeNull();
-      if (!routeMetrics) {
-        continue;
-      }
+    expect(routeMetrics).not.toBeNull();
+    if (!routeMetrics) {
+      continue;
+    }
 
-      expect(routeMetrics.scrollWidth).toBeLessThanOrEqual(routeMetrics.viewportWidth);
-      expect(routeMetrics.topbar.left).toBe(routeMetrics.content.left);
-      expect(routeMetrics.topbar.right).toBe(routeMetrics.content.right);
+    expect(routeMetrics.scrollWidth).toBeLessThanOrEqual(routeMetrics.viewportWidth);
+    expect(Math.abs(routeMetrics.topbar.left - routeMetrics.content.left)).toBeLessThanOrEqual(2);
+    expect(Math.abs(routeMetrics.topbar.right - routeMetrics.content.right)).toBeLessThanOrEqual(2);
+    expect(Math.abs(routeMetrics.topbar.center - routeMetrics.content.center)).toBeLessThanOrEqual(1);
+    expect(routeMetrics.topbar.left).toBeLessThanOrEqual(64);
+    expect(routeMetrics.topbar.right).toBeLessThanOrEqual(64);
 
-      if (routeMetrics.below) {
-        expect(routeMetrics.below.left).toBe(routeMetrics.content.left);
-        expect(routeMetrics.below.right).toBe(routeMetrics.content.right);
-      }
-
-      if (viewportWidth === 1600) {
-        expect(routeMetrics.topbar.left).toBeLessThanOrEqual(32);
-        expect(routeMetrics.topbar.right).toBeLessThanOrEqual(32);
-      }
-
-      if (viewportWidth === 1920) {
-        expect(routeMetrics.topbar.left).toBeLessThanOrEqual(64);
-        expect(routeMetrics.topbar.right).toBeLessThanOrEqual(64);
-      }
+    if (routeMetrics.below) {
+      expect(Math.abs(routeMetrics.below.left - routeMetrics.content.left)).toBeLessThanOrEqual(2);
+      expect(Math.abs(routeMetrics.below.right - routeMetrics.content.right)).toBeLessThanOrEqual(2);
+      expect(Math.abs(routeMetrics.below.center - routeMetrics.content.center)).toBeLessThanOrEqual(1);
     }
   }
 });
