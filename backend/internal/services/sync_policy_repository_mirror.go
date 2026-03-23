@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"skillsindex/internal/models"
-
-	"gorm.io/gorm"
 )
 
 const (
@@ -73,11 +71,12 @@ func (s *SyncPolicyService) GetRepositoryMirror(ctx context.Context, includeDele
 	}
 
 	var item models.SyncPolicy
-	if err := query.First(&item).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return models.SyncPolicy{}, ErrSyncPolicyNotFound
-		}
-		return models.SyncPolicy{}, fmt.Errorf("failed to load repository mirror policy: %w", err)
+	result := query.Limit(1).Find(&item)
+	if result.Error != nil {
+		return models.SyncPolicy{}, fmt.Errorf("failed to load repository mirror policy: %w", result.Error)
+	}
+	if result.RowsAffected == 0 || item.ID == 0 {
+		return models.SyncPolicy{}, ErrSyncPolicyNotFound
 	}
 	return item, nil
 }

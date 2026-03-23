@@ -164,3 +164,16 @@ func TestSyncPolicyServiceUpsertRepositoryMirror(t *testing.T) {
 		t.Fatalf("unexpected updated mirror: %#v", updated)
 	}
 }
+
+func TestSyncPolicyServiceGetRepositoryMirrorReturnsNotFoundWhenMissing(t *testing.T) {
+	db := setupSyncPolicyServiceTestDB(t)
+	svc := NewSyncPolicyService(db)
+
+	_, err := svc.GetRepositoryMirror(context.Background(), false)
+	if err == nil {
+		t.Fatalf("expected missing repository mirror error")
+	}
+	if err != ErrSyncPolicyNotFound {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
