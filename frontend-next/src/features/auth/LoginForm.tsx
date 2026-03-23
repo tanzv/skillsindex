@@ -2,8 +2,7 @@
 
 import { Globe2, Languages, MoonStar, SunMedium } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { resolveBrandWordmarkAlt, resolveBrandWordmarkSrc } from "@/src/components/shared/brandWordmark";
 import { useThemeAwareFavicon } from "@/src/components/shared/themeAwareFavicon";
@@ -41,7 +40,6 @@ interface LoginResponse {
 type LoginTheme = "dark" | "light";
 
 export function LoginForm({ redirectTarget, initialLocale, infoPanelModel, messages }: LoginFormProps) {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -49,7 +47,6 @@ export function LoginForm({ redirectTarget, initialLocale, infoPanelModel, messa
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [theme, setTheme] = useState<LoginTheme>("dark");
-  const [requestedLocale, setRequestedLocale] = useState<PublicLocale | null>(null);
   const [viewport, setViewport] = useState(() => ({
     width: typeof window === "undefined" ? 1440 : window.innerWidth,
     height: typeof window === "undefined" ? 1160 : window.innerHeight
@@ -57,7 +54,7 @@ export function LoginForm({ redirectTarget, initialLocale, infoPanelModel, messa
 
   const safeRedirectTarget =
     redirectTarget.startsWith("/") && !redirectTarget.startsWith("//") ? redirectTarget : workspaceOverviewRoute;
-  const locale = requestedLocale === null || requestedLocale === initialLocale ? initialLocale : requestedLocale;
+  const locale = initialLocale;
   const isVisualBaselineViewport = viewport.width === 512 && viewport.height === 342;
   const visualScale = isVisualBaselineViewport ? viewport.width / 1440 : 1;
   const wordmarkSrc = resolveBrandWordmarkSrc(theme === "light");
@@ -88,13 +85,12 @@ export function LoginForm({ redirectTarget, initialLocale, infoPanelModel, messa
       return;
     }
 
-    setRequestedLocale(nextLocale);
     window.localStorage.setItem(publicLocaleStorageKey, nextLocale);
     document.cookie = `${publicLocaleCookieName}=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
     document.documentElement.lang = nextLocale;
-    startTransition(() => {
-      router.refresh();
-    });
+
+    const nextLocation = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    window.location.assign(nextLocation);
   }
 
   function handleForgotPassword() {

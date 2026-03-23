@@ -234,10 +234,10 @@
 
 .infoPanel {
   min-height: 100%;
-  padding: clamp(72px, 8vw, 132px) clamp(56px, 6vw, 96px) 48px;
+  padding: clamp(56px, 7vw, 108px) clamp(48px, 5vw, 88px) 40px;
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: center;
   background:
     radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.08), transparent 24%),
     radial-gradient(circle at 42% 74%, rgba(255, 255, 255, 0.04), transparent 30%),
@@ -346,7 +346,7 @@
 
   .infoPanel {
     min-height: 0;
-    padding: 28px 24px 18px;
+    padding: 28px 24px 16px;
   }
 
   .formCard {
