@@ -9,6 +9,8 @@ Owner: Frontend Engineering
 Enforce a consistent style system across the project through a token-first theme architecture.
 All frontend style work must integrate with the active `frontend-next/` theme system instead of introducing isolated styling logic.
 
+This standard specializes the repository-wide rules in `agents/standards/frontend-styling-standard.md` for the active `frontend-next/` implementation.
+
 ## Mandatory Skill
 
 For frontend style implementation/refactor/restyle tasks, use project skill:
@@ -25,6 +27,10 @@ Apply it before editing style-related code.
 4. Shared UI composition: `frontend-next/src/components/**`
 5. Route-level feature composition: `frontend-next/src/features/**`
 6. App Router entry wrappers: `frontend-next/app/**`
+
+Approved local-style default for new work:
+
+7. Component and feature-local styles: co-located `*.module.scss`
 
 ## Unified Style System Rules
 

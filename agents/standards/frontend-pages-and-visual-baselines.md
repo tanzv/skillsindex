@@ -9,6 +9,11 @@ Owner: Frontend Engineering
 Define the mandatory structure for route-level frontend modules and the maintenance contract for visual verification in `frontend-next/`.
 This standard exists to keep App Router entry files thin, feature modules scalable, and screenshot-sensitive checks deterministic.
 
+This standard works with:
+
+1. `agents/standards/frontend-architecture-layering.md`
+2. `agents/standards/frameworks/react-nextjs-standards.md`
+
 ## Scope
 
 This standard applies to:
