@@ -1,4 +1,4 @@
-import { createElement } from "react";
+import { createElement, type AnchorHTMLAttributes, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
@@ -10,6 +10,11 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({
     refresh: () => {}
   })
+}));
+
+vi.mock("next/link", () => ({
+  default: ({ href, children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) =>
+    createElement("a", { href, ...props }, children)
 }));
 
 vi.mock("@/src/features/public/i18n/PublicI18nProvider", () => ({
@@ -44,6 +49,32 @@ vi.mock("@/src/features/public/i18n/PublicI18nProvider", () => ({
   })
 }));
 
+function expectMarkupToContainAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).toContain(fragment);
+  }
+}
+
+function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).not.toContain(fragment);
+  }
+}
+
+function findAnchorMarkupByHref(markup: string, href: string) {
+  const escapedHref = href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const anchorMatch = markup.match(new RegExp(`<a[^>]*href="${escapedHref}"[^>]*>[\\s\\S]*?<\\/a>`, "u"));
+  expect(anchorMatch?.[0]).toBeDefined();
+  return anchorMatch?.[0] ?? "";
+}
+
+function findAnchorMarkupByLabel(markup: string, label: string) {
+  const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const anchorMatch = markup.match(new RegExp(`<a[^>]*>[\\s\\S]*?>${escapedLabel}<[^>]*>[\\s\\S]*?<\\/a>`, "u"));
+  expect(anchorMatch?.[0]).toBeDefined();
+  return anchorMatch?.[0] ?? "";
+}
+
 describe("MarketplaceSearchPanel", () => {
   it("renders results variant with the form before the recommendations", () => {
     const markup = renderToStaticMarkup(
@@ -57,6 +88,14 @@ describe("MarketplaceSearchPanel", () => {
       })
     );
 
+    expectMarkupToContainAll(markup, [
+      'class="marketplace-search-form"',
+      'action="/results"',
+      'aria-label="Search utility"',
+      'aria-label="Sort"',
+      'aria-label="Mode"',
+      ">Filters<"
+    ]);
     expect(markup.indexOf("marketplace-search-form")).toBeLessThan(markup.indexOf("marketplace-top-recommendations"));
   });
 
@@ -72,6 +111,13 @@ describe("MarketplaceSearchPanel", () => {
       })
     );
 
+    expectMarkupToContainAll(markup, [
+      'class="marketplace-top-recommendations"',
+      'class="marketplace-search-form"',
+      'aria-label="Search utility"',
+      ">Recommended<",
+      ">Filters<"
+    ]);
     expect(markup.indexOf("marketplace-top-recommendations")).toBeLessThan(markup.indexOf("marketplace-search-form"));
   });
 
@@ -87,10 +133,13 @@ describe("MarketplaceSearchPanel", () => {
       })
     );
 
+    const releaseSuggestionMarkup = findAnchorMarkupByHref(markup, "/results?q=release");
+    const syncSuggestionMarkup = findAnchorMarkupByHref(markup, "/results?q=sync");
+
     expect((markup.match(/marketplace-recommendation-chip/g) || []).length).toBe(2);
-    expect(markup).toContain(">release<");
-    expect(markup).toContain(">sync<");
-    expect(markup).not.toContain("href=\"/results\">");
+    expectMarkupToContainAll(releaseSuggestionMarkup, [">release<"]);
+    expectMarkupToContainAll(syncSuggestionMarkup, [">sync<"]);
+    expectMarkupToExcludeAll(markup, ['href="/results"']);
   });
 
   it("renders interactive sort and mode controls that preserve the active search filters", () => {
@@ -106,11 +155,15 @@ describe("MarketplaceSearchPanel", () => {
       })
     );
 
-    expect(markup).toContain("Relevance");
-    expect(markup).toContain("Stars");
-    expect(markup).toContain("Keyword");
-    expect(markup).toContain("AI");
-    expect(markup).toContain('href="/results?q=release&amp;tags=ops&amp;sort=stars&amp;mode=ai"');
-    expect(markup).toContain('href="/results?q=release&amp;tags=ops&amp;sort=quality&amp;mode=keyword"');
+    const qualityControlMarkup = findAnchorMarkupByLabel(markup, "Quality");
+    const starsControlMarkup = findAnchorMarkupByHref(markup, "/results?q=release&amp;tags=ops&amp;sort=stars&amp;mode=ai");
+    const keywordControlMarkup = findAnchorMarkupByHref(markup, "/results?q=release&amp;tags=ops&amp;sort=quality&amp;mode=keyword");
+    const aiControlMarkup = findAnchorMarkupByLabel(markup, "AI");
+
+    expectMarkupToContainAll(markup, ["Relevance", "Stars", "Keyword", "AI"]);
+    expectMarkupToContainAll(qualityControlMarkup, ['aria-current="page"', ">Quality<"]);
+    expectMarkupToContainAll(aiControlMarkup, ['aria-current="page"', ">AI<"]);
+    expectMarkupToContainAll(starsControlMarkup, [">Stars<", "q=release", "tags=ops", "sort=stars", "mode=ai"]);
+    expectMarkupToContainAll(keywordControlMarkup, [">Keyword<", "q=release", "tags=ops", "sort=quality", "mode=keyword"]);
   });
 });

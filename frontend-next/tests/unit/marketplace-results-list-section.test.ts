@@ -4,6 +4,18 @@ import { describe, expect, it } from "vitest";
 
 import { MarketplaceResultsListSection } from "@/src/features/public/marketplace/MarketplaceResultsListSection";
 
+function expectMarkupToContainAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).toContain(fragment);
+  }
+}
+
+function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).not.toContain(fragment);
+  }
+}
+
 describe("MarketplaceResultsListSection", () => {
   it("renders results content when results are available", () => {
     const markup = renderToStaticMarkup(
@@ -18,12 +30,17 @@ describe("MarketplaceResultsListSection", () => {
       })
     );
 
-    expect(markup).toContain("data-testid=\"results-section\"");
-    expect(markup).toContain("Search Results");
-    expect(markup).toContain("Browse matching skills.");
-    expect(markup).toContain("section-meta");
-    expect(markup).toContain("result-card");
-    expect(markup).not.toContain("empty-card");
+    expectMarkupToContainAll(markup, [
+      'data-testid="results-section"',
+      'class="marketplace-section-card"',
+      'class="marketplace-section-header"',
+      "Search Results",
+      "Browse matching skills.",
+      "section-meta",
+      'class="marketplace-list-stack"',
+      "result-card"
+    ]);
+    expectMarkupToExcludeAll(markup, ["empty-card"]);
   });
 
   it("renders empty content when no results are available", () => {
@@ -37,7 +54,13 @@ describe("MarketplaceResultsListSection", () => {
       })
     );
 
-    expect(markup).toContain("empty-card");
-    expect(markup).not.toContain("result-card");
+    expectMarkupToContainAll(markup, [
+      'class="marketplace-section-card"',
+      'class="marketplace-list-stack"',
+      "Category Results",
+      "No matching skills.",
+      "empty-card"
+    ]);
+    expectMarkupToExcludeAll(markup, ["result-card"]);
   });
 });
