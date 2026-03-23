@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -261,6 +262,9 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 	repositoryService := services.NewRepositorySyncService()
 	repositorySyncCoordinator := services.NewRepositorySyncCoordinator(skillService, repositoryService)
 	skillMPService := services.NewSkillMPService(runtimeConfig.SkillMPBaseURL, runtimeConfig.SkillMPToken)
+	apiManagementStoragePath := filepath.Join(runtimeConfig.StoragePath, "api-management")
+	apiSpecRegistryService := services.NewAPISpecRegistryService(database, apiManagementStoragePath)
+	apiPublishService := services.NewAPIPublishService(database)
 
 	scheduler := services.NewRepositorySyncScheduler(
 		repositorySyncCoordinator,
@@ -299,6 +303,8 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 		SettingsService:       settingsService,
 		SyncPolicyService:     repoSyncPolicyService,
 		SyncPolicyRecordSvc:   syncPolicyRecordService,
+		APISpecRegistrySvc:    apiSpecRegistryService,
+		APIPublishSvc:         apiPublishService,
 		AllowRegistration:     runtimeConfig.AllowRegistration,
 		CookieSecure:          runtimeConfig.SessionCookieSecure,
 		APIOnly:               runtimeConfig.APIOnly,

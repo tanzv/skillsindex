@@ -39,6 +39,8 @@ type AppDependencies struct {
 	SettingsService       *services.SettingsService
 	SyncPolicyService     *services.RepositorySyncPolicyService
 	SyncPolicyRecordSvc   *services.SyncPolicyService
+	APISpecRegistrySvc    *services.APISpecRegistryService
+	APIPublishSvc         *services.APIPublishService
 	AllowRegistration     bool
 	CookieSecure          bool
 	APIOnly               bool
@@ -84,6 +86,8 @@ func NewApp(deps AppDependencies) (*App, error) {
 		settingsService:     deps.SettingsService,
 		syncPolicyService:   deps.SyncPolicyService,
 		syncPolicyRecordSvc: deps.SyncPolicyRecordSvc,
+		apiSpecRegistrySvc:  deps.APISpecRegistrySvc,
+		apiPublishSvc:       deps.APIPublishSvc,
 		allowRegistration:   deps.AllowRegistration,
 		cookieSecure:        deps.CookieSecure,
 		apiKeys:             buildAPIKeySet(deps.APIKeys),
