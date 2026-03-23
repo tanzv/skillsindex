@@ -14,7 +14,6 @@ import (
 	"skillsindex/internal/models"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
 )
 
@@ -67,15 +66,16 @@ func (s *APISpecRegistryService) ImportDraft(ctx context.Context, input ImportAP
 	if slug == "" {
 		return ImportAPISpecDraftResult{}, fmt.Errorf("api spec slug is required")
 	}
-	sourcePath := strings.TrimSpace(input.SourcePath)
-	if sourcePath == "" {
-		return ImportAPISpecDraftResult{}, fmt.Errorf("api spec source path is required")
-	}
 	if input.ActorUserID == 0 {
 		return ImportAPISpecDraftResult{}, fmt.Errorf("actor user id is required")
 	}
 
-	document, bundleRaw, err := loadOpenAPIDocument(sourcePath)
+	sourcePath, allowedRoots, err := resolveAPISpecSourcePath(input.SourcePath)
+	if err != nil {
+		return ImportAPISpecDraftResult{}, err
+	}
+
+	document, bundleRaw, err := loadOpenAPIDocument(sourcePath, allowedRoots)
 	if err != nil {
 		return ImportAPISpecDraftResult{}, err
 	}
@@ -114,11 +114,25 @@ func (s *APISpecRegistryService) ValidateDraft(ctx context.Context, specID uint)
 	if err != nil {
 		return models.APISpec{}, err
 	}
-	if _, _, err := loadOpenAPIDocument(spec.SourcePath); err != nil {
+
+	sourcePath, allowedRoots, err := resolveAPISpecSourcePath(spec.SourcePath)
+	if err != nil {
+		return models.APISpec{}, err
+	}
+	document, bundleRaw, err := loadOpenAPIDocument(sourcePath, allowedRoots)
+	if err != nil {
+		return models.APISpec{}, err
+	}
+	bundlePath, checksum, err := s.persistBundle(spec.Slug, bundleRaw)
+	if err != nil {
 		return models.APISpec{}, err
 	}
 
+	spec.SourcePath = sourcePath
 	spec.Status = models.APISpecStatusValidated
+	spec.BundlePath = bundlePath
+	spec.Checksum = checksum
+	spec.SemanticVersion = resolveSpecVersion(document)
 	if err := s.db.WithContext(ctx).Save(&spec).Error; err != nil {
 		return models.APISpec{}, fmt.Errorf("failed to mark api spec validated: %w", err)
 	}
@@ -170,26 +184,6 @@ func (s *APISpecRegistryService) persistBundle(slug string, bundleRaw []byte) (s
 		return "", "", fmt.Errorf("failed to write api spec bundle: %w", err)
 	}
 	return targetPath, checksum, nil
-}
-
-func loadOpenAPIDocument(sourcePath string) (*openapi3.T, []byte, error) {
-	loader := openapi3.NewLoader()
-	loader.IsExternalRefsAllowed = true
-
-	document, err := loader.LoadFromFile(sourcePath)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to load openapi source: %w", err)
-	}
-	if err := document.Validate(loader.Context); err != nil {
-		return nil, nil, fmt.Errorf("failed to validate openapi source: %w", err)
-	}
-
-	bundleRaw, err := yaml.Marshal(document)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to marshal bundled openapi document: %w", err)
-	}
-
-	return document, bundleRaw, nil
 }
 
 func resolveSpecVersion(document *openapi3.T) string {
