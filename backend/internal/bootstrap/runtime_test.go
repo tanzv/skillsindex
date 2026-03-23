@@ -212,3 +212,25 @@ func TestResolveStateInitializationOptionsUsesProvidedOverrides(t *testing.T) {
 		t.Fatalf("expected RepositorySyncMirror override to be true")
 	}
 }
+
+func TestAPIStateInitializationOptionsDisablesSeedOnly(t *testing.T) {
+	got := APIStateInitializationOptions()
+	if got == nil {
+		t.Fatalf("expected API state initialization options")
+	}
+	if got.SeedData {
+		t.Fatalf("expected API state initialization to disable SeedData")
+	}
+	if !got.DefaultAccount {
+		t.Fatalf("expected API state initialization to keep DefaultAccount enabled")
+	}
+	if !got.RegistrationSetting {
+		t.Fatalf("expected API state initialization to keep RegistrationSetting enabled")
+	}
+	if !got.RepositorySyncPolicy {
+		t.Fatalf("expected API state initialization to keep RepositorySyncPolicy enabled")
+	}
+	if !got.RepositorySyncMirror {
+		t.Fatalf("expected API state initialization to keep RepositorySyncMirror enabled")
+	}
+}

@@ -40,6 +40,16 @@ type StateInitializationOptions struct {
 	RepositorySyncMirror bool
 }
 
+func defaultStateInitializationOptions() StateInitializationOptions {
+	return StateInitializationOptions{
+		SeedData:             true,
+		DefaultAccount:       true,
+		RegistrationSetting:  true,
+		RepositorySyncPolicy: true,
+		RepositorySyncMirror: true,
+	}
+}
+
 // NormalizeRuntimeConfig applies runtime defaults for a command entrypoint.
 func NormalizeRuntimeConfig(cfg config.Config, options RunOptions) config.Config {
 	if options.ForceAPIOnly {
@@ -84,15 +94,16 @@ func resolveTemplateGlob(apiOnly bool) string {
 
 func resolveStateInitializationOptions(options *StateInitializationOptions) StateInitializationOptions {
 	if options == nil {
-		return StateInitializationOptions{
-			SeedData:             true,
-			DefaultAccount:       true,
-			RegistrationSetting:  true,
-			RepositorySyncPolicy: true,
-			RepositorySyncMirror: true,
-		}
+		return defaultStateInitializationOptions()
 	}
 	return *options
+}
+
+// APIStateInitializationOptions returns the startup state policy for the API-only command.
+func APIStateInitializationOptions() *StateInitializationOptions {
+	options := defaultStateInitializationOptions()
+	options.SeedData = false
+	return &options
 }
 
 func initializeRuntimeState(
