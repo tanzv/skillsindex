@@ -1,0 +1,103 @@
+@media (max-width: 1400px) {
+  .layout {
+    width: min(100%, 1240px);
+    grid-template-columns: minmax(320px, 0.86fr) minmax(460px, 540px);
+  }
+}
+
+@media (max-width: 1120px) {
+  .layout {
+    width: min(100%, 920px);
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 28px;
+  }
+
+  .layout::before,
+  .layout::after {
+    display: none;
+  }
+
+  .formCard {
+    order: 1;
+    justify-content: flex-start;
+  }
+
+  .infoPanel {
+    order: 2;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 1024px) {
+  .topbar {
+    height: 72px;
+    min-height: 72px;
+  }
+
+  .layout {
+    width: 100%;
+    margin: 0;
+    padding: 28px 22px 32px;
+    min-height: calc(100dvh - 72px);
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .infoPanel {
+    justify-content: center;
+  }
+
+  .formCard {
+    padding: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    height: auto;
+    min-height: 0;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .topbarControls {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .layout {
+    padding: 24px 16px 32px;
+    gap: 20px;
+    min-height: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar {
+    padding: 0 12px;
+  }
+
+  .topbarBrandWordmark {
+    width: 154px;
+  }
+
+  .topbarControls {
+    gap: 6px;
+  }
+
+  .infoPanel {
+    justify-content: stretch;
+  }
+
+  .formCard {
+    padding: 0;
+  }
+
+  .layout {
+    padding: 22px 16px 24px;
+    gap: 16px;
+  }
+}
