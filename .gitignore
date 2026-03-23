@@ -14,8 +14,10 @@ dist/
 *.tsbuildinfo
 
 frontend-next/.next/
+frontend-next/.next.bak-*/
 frontend-next/test-results/
 frontend-next/playwright-report/
+frontend-next/frontend-next/
 frontend-next/tmp-screens/
 
 tmp-*.png
