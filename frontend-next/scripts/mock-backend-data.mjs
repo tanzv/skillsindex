@@ -62,6 +62,12 @@ export function createInitialMockState() {
       allow_registration: true,
       marketplace_public_access: true
     },
+    marketplaceRanking: {
+      default_sort: "stars",
+      ranking_limit: 12,
+      highlight_limit: 3,
+      category_leader_limit: 5
+    },
     authProviders: {
       auth_providers: ["password", "github"],
       available_auth_providers: ["password", "github", "google"]

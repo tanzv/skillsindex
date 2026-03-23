@@ -333,6 +333,21 @@ function createMockBackendServer() {
     return json(response, 200, state.registration);
   }
 
+  if (method === "GET" && pathname === "/api/v1/admin/settings/marketplace-ranking") {
+    return json(response, 200, state.marketplaceRanking);
+  }
+
+  if (method === "POST" && pathname === "/api/v1/admin/settings/marketplace-ranking") {
+    const body = await parseJSONBody(request);
+    state.marketplaceRanking = {
+      default_sort: String(body.default_sort || state.marketplaceRanking.default_sort) === "quality" ? "quality" : "stars",
+      ranking_limit: Number(body.ranking_limit) || state.marketplaceRanking.ranking_limit,
+      highlight_limit: Number(body.highlight_limit) || state.marketplaceRanking.highlight_limit,
+      category_leader_limit: Number(body.category_leader_limit) || state.marketplaceRanking.category_leader_limit
+    };
+    return json(response, 200, state.marketplaceRanking);
+  }
+
   if (method === "GET" && pathname === "/api/v1/admin/settings/auth-providers") {
     return json(response, 200, state.authProviders);
   }

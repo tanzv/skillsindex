@@ -6,6 +6,7 @@ import { startMockBackend } from "./mock-backend.mjs";
 import { shouldRecoverFromNextBuildFailure } from "./run-e2e-build.mjs";
 import { terminateWorkspaceConflictingProcesses } from "./run-e2e-process-guard.mjs";
 import { resolveE2ERuntimeOptions } from "./run-e2e-runtime.mjs";
+import { acquireRunE2ELock, releaseRunE2ELock } from "./run-e2e-lock.mjs";
 
 const startupTimeoutMs = 240_000;
 const metadataPath = join(process.cwd(), ".next", "e2e-runtime.json");
@@ -121,6 +122,7 @@ async function main() {
   const playwrightArgs = process.argv.slice(2);
   const managedChildren = [];
   let mockBackendServer = null;
+  let lockAcquired = false;
   const hasBuildOutput = existsSync(".next/BUILD_ID");
   const buildMetadata = readBuildMetadata();
   const runtime = resolveE2ERuntimeOptions({
@@ -145,6 +147,12 @@ async function main() {
       mockBackendServer = null;
     }
     await Promise.allSettled(managedChildren.map((child) => terminateProcessGracefully(child)));
+    if (lockAcquired) {
+      await releaseRunE2ELock({
+        projectDirectory: process.cwd()
+      });
+      lockAcquired = false;
+    }
   };
 
   process.on("SIGINT", async () => {
@@ -158,6 +166,11 @@ async function main() {
   });
 
   try {
+    await acquireRunE2ELock({
+      projectDirectory: process.cwd()
+    });
+    lockAcquired = true;
+
     await terminateWorkspaceConflictingProcesses({
       projectDirectory: process.cwd(),
       log: (message) => {
