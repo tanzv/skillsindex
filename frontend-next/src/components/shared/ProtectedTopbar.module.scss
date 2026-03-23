@@ -106,9 +106,9 @@
   justify-content: center;
   gap: 0;
   padding: 6px 12px;
-  border: 1px solid color-mix(in srgb, var(--protected-topbar-brand-border) 72%, transparent);
+  border: 1px solid var(--protected-topbar-brand-link-border);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--protected-topbar-brand-bg) 78%, transparent);
+  background: var(--protected-topbar-brand-link-bg);
   box-shadow: none;
   transition:
     border-color 160ms ease,
