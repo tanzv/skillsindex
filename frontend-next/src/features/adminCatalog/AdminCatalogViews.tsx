@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src
 import { Input as TextInput } from "@/src/components/ui/input";
 
 import type { AdminCatalogRow, AdminCatalogViewModel, RepositorySyncPolicy } from "./model";
-import { CatalogDetailDrawer, RowSelectionButton, SidePanels, useSelectedRow } from "./AdminCatalogShared";
+import { CatalogDetailDrawer, DetailCard, RowSelectionButton, SidePanels, useSelectedRow } from "./AdminCatalogShared";
 import styles from "./AdminCatalogSurface.module.scss";
 
 export { QueryFilters } from "./AdminCatalogShared";
@@ -29,7 +29,6 @@ export function SkillsView({
   const { messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
   const { selectedRow, selectedRowId, setSelectedRowId } = useSelectedRow(rows);
-  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
 
   return (
     <div className={styles.splitLayout}>
@@ -48,16 +47,6 @@ export function SkillsView({
                 buttonLabel={adminCatalogMessages.inspectAction}
                 onSelect={() => setSelectedRowId(row.id)}
               >
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedRowId(row.id);
-                    setDetailDrawerOpen(true);
-                  }}
-                >
-                  {adminCatalogMessages.openDetailAction}
-                </Button>
                 {row.syncable ? (
                   <Button size="sm" variant="outline" onClick={() => onSyncSkill(row.id)} disabled={Boolean(busyAction)}>
                     {busyAction === `sync-skill-${row.id}` ? adminCatalogMessages.syncingAction : adminCatalogMessages.syncNowAction}
@@ -70,34 +59,33 @@ export function SkillsView({
         </Card>
       </div>
 
-      <div className={styles.column}>
+      <div className={`${styles.column} ${styles.detailRail}`}>
+        <DetailCard
+          title={adminCatalogMessages.selectedSkillTitle}
+          description={adminCatalogMessages.selectedSkillDescription}
+          row={selectedRow}
+          emptyText={adminCatalogMessages.selectedSkillEmpty}
+          testId="admin-skills-inline-detail"
+          actions={
+            selectedRow ? (
+              <>
+                {selectedRow.syncable ? (
+                  <Button variant="outline" onClick={() => onSyncSkill(selectedRow.id)} disabled={Boolean(busyAction)}>
+                    {busyAction === `sync-skill-${selectedRow.id}` ? adminCatalogMessages.syncingAction : adminCatalogMessages.syncNowAction}
+                  </Button>
+                ) : null}
+                <Button asChild>
+                  <Link href={`/skills/${selectedRow.id}`}>{adminCatalogMessages.openSkillDetailAction}</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/admin/ingestion/repository">{adminCatalogMessages.openIntakeAction}</Link>
+                </Button>
+              </>
+            ) : null
+          }
+        />
         <SidePanels panels={sidePanels} />
       </div>
-
-      <CatalogDetailDrawer
-        open={detailDrawerOpen}
-        row={selectedRow}
-        description={adminCatalogMessages.selectedSkillDescription}
-        closeLabel={adminCatalogMessages.closePanelAction}
-        onClose={() => setDetailDrawerOpen(false)}
-        actions={
-          selectedRow ? (
-            <>
-              {selectedRow.syncable ? (
-                <Button variant="outline" onClick={() => onSyncSkill(selectedRow.id)} disabled={Boolean(busyAction)}>
-                  {busyAction === `sync-skill-${selectedRow.id}` ? adminCatalogMessages.syncingAction : adminCatalogMessages.syncNowAction}
-                </Button>
-              ) : null}
-              <Button asChild>
-                <Link href={`/skills/${selectedRow.id}`}>{adminCatalogMessages.openSkillDetailAction}</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/admin/ingestion/repository">{adminCatalogMessages.openIntakeAction}</Link>
-              </Button>
-            </>
-          ) : null
-        }
-      />
     </div>
   );
 }

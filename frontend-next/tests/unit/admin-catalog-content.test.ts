@@ -201,14 +201,16 @@ function renderCatalogRoute(route: AdminCatalogRoute) {
 }
 
 describe("admin catalog content", () => {
-  it("renders the skills route as governed inventory with explicit detail triggers", () => {
+  it("renders the skills route as governed inventory with inline selection details", () => {
     const markup = renderCatalogRoute("/admin/skills");
 
     expect(markup).toContain("Governed Inventory");
-    expect(markup).toContain("Open Details");
+    expect(markup).toContain("Selected Skill");
+    expect(markup).toContain("Keep governance decisions anchored to one skill at a time instead of scanning anonymous rows.");
     expect(markup).toContain("Sync now");
     expect(markup).toContain(styles.splitLayout);
     expect(markup).toContain(styles.rowLayout);
+    expect(markup).not.toContain('role="dialog"');
   });
 
   it("renders the jobs route as execution queue with row actions", () => {

@@ -198,13 +198,14 @@ interface DetailCardProps {
   row: AdminCatalogRow | null;
   emptyText: string;
   actions?: ReactNode;
+  testId?: string;
 }
 
-export function DetailCard({ title, description, row, emptyText, actions }: DetailCardProps) {
+export function DetailCard({ title, description, row, emptyText, actions, testId }: DetailCardProps) {
   const statusLabel = row?.statusLabel || row?.status || "";
 
   return (
-    <Card className={styles.sectionCard}>
+    <Card className={styles.sectionCard} data-testid={testId}>
       <CardHeader className={styles.sectionHeader}>
         <CardTitle>{title}</CardTitle>
         <CardDescription className={styles.sectionDescription}>{description}</CardDescription>
