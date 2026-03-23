@@ -87,40 +87,65 @@ It supports manual creation, archive uploads, repository sync, tagging, search, 
 
 ## Quick Start
 
-### 1. Start PostgreSQL
+Recommended local development workflow:
+
+1. Keep runtime configuration in `backend/.env` and `frontend-next/.env`.
+2. Use the root `Makefile` as the shortest local-development entrypoint.
+3. Let `lcode` profiles manage frontend and backend processes underneath, while `make dev*` reuses existing sessions when possible.
+
+For the Chinese local-development guide and quick-reference commands, see:
+
+- `docs/user-docs/local-development-launch-code.md`
+- `docs/user-docs/local-development-quick-reference.md`
+
+### 1. Prepare local environment once
 
 ```bash
-docker compose up -d postgres
+make env-init
+make postgres-up
+make bootstrap
 ```
 
-### 2. Prepare environment variables
+Or use the one-shot setup target:
 
 ```bash
-cp backend/.env.example backend/.env
+make init-local
 ```
 
-### 3. Run backend API service
+### 2. Start services
 
 ```bash
-cd backend
-set -a && source .env && set +a
-go run ./cmd/api
+make dev
 ```
 
-### 4. Run frontend Next.js app
+Or start them individually:
 
 ```bash
-cd ../frontend-next
-cp .env.example .env
-npm install
-npm run dev
+make dev-backend
+make dev-frontend
 ```
 
-### 5. Open
+### 3. Check running sessions
+
+```bash
+make dev-status
+lcode config show --name skillsindex-frontend --json
+lcode config show --name skillsindex-backend --json
+```
+
+### 4. Open
 
 ```text
 Frontend: http://localhost:3000
 Backend API: http://localhost:8080
+```
+
+### 5. Direct commands behind the make targets
+
+```bash
+lcode config run --name skillsindex-backend
+lcode config run --name skillsindex-frontend
+lcode running --json
 ```
 
 ## Verification Commands
