@@ -4,6 +4,18 @@ import { describe, expect, it } from "vitest";
 
 import { MarketplaceSearchForm } from "@/src/features/public/marketplace/MarketplaceSearchForm";
 
+function expectMarkupToContainAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).toContain(fragment);
+  }
+}
+
+function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).not.toContain(fragment);
+  }
+}
+
 describe("MarketplaceSearchForm", () => {
   it("renders semantic input, hidden fields, and submit action", () => {
     const markup = renderToStaticMarkup(
@@ -24,12 +36,22 @@ describe("MarketplaceSearchForm", () => {
       })
     );
 
-    expect(markup).toContain("action=\"/categories/operations\"");
-    expect(markup).toContain("name=\"q\"");
-    expect(markup).toContain("name=\"tags\"");
-    expect(markup).toContain("name=\"subcategory\"");
-    expect(markup).toContain("name=\"sort\"");
-    expect(markup).toContain(">Search<");
+    expectMarkupToContainAll(markup, [
+      'action="/categories/operations"',
+      'class="marketplace-search-form"',
+      'name="q"',
+      'value="release"',
+      'placeholder="Search skills"',
+      'aria-label="Search"',
+      'name="tags"',
+      'value="ops"',
+      'placeholder="Semantic filters"',
+      'aria-label="Semantic Filters"',
+      'type="hidden"',
+      'name="subcategory"',
+      'name="sort"',
+      ">Search<"
+    ]);
   });
 
   it("omits optional semantic and submit controls when disabled", () => {
@@ -46,8 +68,7 @@ describe("MarketplaceSearchForm", () => {
       })
     );
 
-    expect(markup).toContain("name=\"q\"");
-    expect(markup).not.toContain("name=\"tags\"");
-    expect(markup).not.toContain(">Search<");
+    expectMarkupToContainAll(markup, ['name="q"', 'placeholder="Search skills"', 'aria-label="Search"']);
+    expectMarkupToExcludeAll(markup, ['name="tags"', ">Search<"]);
   });
 });

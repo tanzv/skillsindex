@@ -46,6 +46,7 @@ vi.mock("@/src/features/public/i18n/PublicI18nProvider", () => ({
       shellNavigationAriaLabel: "Marketplace navigation",
       shellCategories: "Categories",
       shellRankings: "Rankings",
+      shellSearch: "Search",
       shellWorkspace: "Workspace",
       shellSignIn: "Sign In",
       shellSignedIn: "Signed In",
@@ -69,6 +70,29 @@ vi.mock("@/src/lib/routing/usePublicRouteState", () => ({
   usePublicRouteState: mockUsePublicRouteState
 }));
 
+function renderMarkup(element: ReactNode) {
+  return renderToStaticMarkup(createElement(() => element));
+}
+
+function expectMarkupToContainAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).toContain(fragment);
+  }
+}
+
+function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).not.toContain(fragment);
+  }
+}
+
+function findElementMarkup(markup: string, testID: string) {
+  const escapedTestID = testID.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const elementMatch = markup.match(new RegExp(`<[^>]*data-testid="${escapedTestID}"[^>]*>`, "u"));
+  expect(elementMatch?.[0]).toBeDefined();
+  return elementMatch?.[0] ?? "";
+}
+
 describe("MarketplaceHomeTopbar", () => {
   beforeEach(() => {
     mockUsePublicViewerSession.mockReturnValue({
@@ -84,21 +108,33 @@ describe("MarketplaceHomeTopbar", () => {
   });
 
   it("renders the homepage brand as a single-line title with subtitle", () => {
-    const markup = renderToStaticMarkup(createElement(MarketplaceHomeBrand));
+    const markup = renderMarkup(createElement(MarketplaceHomeBrand));
 
-    expect(markup).toContain("SkillsIndex");
-    expect(markup).toContain("Team Skill Marketplace");
-    expect(markup).toContain('href="/"');
+    expectMarkupToContainAll(markup, [
+      "SkillsIndex",
+      "Team Skill Marketplace",
+      'href="/"',
+      'aria-label="SkillsIndex"',
+      'data-marketplace-topbar-slot="brand"',
+      'data-marketplace-topbar-variant="landing"'
+    ]);
   });
 
   it("renders compact homepage navigation with categories and rankings", () => {
-    const markup = renderToStaticMarkup(createElement(MarketplaceHomePrimaryNavigation));
+    const markup = renderMarkup(createElement(MarketplaceHomePrimaryNavigation));
 
-    expect(markup).toContain("Categories");
-    expect(markup).toContain("Rankings");
-    expect(markup).toContain("TOP");
-    expect(markup).toContain('data-testid="landing-topbar-nav-categories"');
-    expect(markup).toContain('data-testid="landing-topbar-nav-rankings"');
+    expectMarkupToContainAll(markup, [
+      'aria-label="Marketplace navigation"',
+      "Categories",
+      "Rankings",
+      "TOP",
+      'href="/categories"',
+      'href="/rankings"',
+      'data-testid="landing-topbar-nav-categories"',
+      'data-testid="landing-topbar-nav-rankings"',
+      'data-marketplace-topbar-slot="primary-navigation"',
+      'data-marketplace-topbar-variant="landing"'
+    ]);
   });
 
   it("marks categories and compare routes active through the shared public navigation registry", () => {
@@ -110,12 +146,20 @@ describe("MarketplaceHomeTopbar", () => {
       toPublicLinkTarget: (route: string) => ({ href: route })
     });
 
-    const categoriesMarkup = renderToStaticMarkup(createElement(MarketplaceHomePrimaryNavigation));
+    const categoriesMarkup = renderMarkup(createElement(MarketplaceHomePrimaryNavigation));
+    const categoriesLinkMarkup = findElementMarkup(categoriesMarkup, "landing-topbar-nav-categories");
+    const rankingsLinkMarkup = findElementMarkup(categoriesMarkup, "landing-topbar-nav-rankings");
 
-    expect(categoriesMarkup).toContain(
-      'href="/categories" class="marketplace-nav-button is-active" aria-current="page" data-testid="landing-topbar-nav-categories"'
-    );
-    expect(categoriesMarkup).toContain('href="/rankings" class="marketplace-nav-button" data-testid="landing-topbar-nav-rankings"');
+    expectMarkupToContainAll(categoriesLinkMarkup, [
+      'href="/categories"',
+      'class="marketplace-nav-button is-active"',
+      'aria-current="page"'
+    ]);
+    expectMarkupToContainAll(rankingsLinkMarkup, [
+      'href="/rankings"',
+      'class="marketplace-nav-button"'
+    ]);
+    expect(rankingsLinkMarkup).not.toContain('aria-current="page"');
 
     mockUsePublicRouteState.mockReturnValue({
       corePath: "/compare",
@@ -125,25 +169,38 @@ describe("MarketplaceHomeTopbar", () => {
       toPublicLinkTarget: (route: string) => ({ href: route })
     });
 
-    const compareMarkup = renderToStaticMarkup(createElement(MarketplaceHomePrimaryNavigation));
+    const compareMarkup = renderMarkup(createElement(MarketplaceHomePrimaryNavigation));
+    const compareCategoriesLinkMarkup = findElementMarkup(compareMarkup, "landing-topbar-nav-categories");
+    const compareRankingsLinkMarkup = findElementMarkup(compareMarkup, "landing-topbar-nav-rankings");
 
-    expect(compareMarkup).toContain(
-      'href="/rankings" class="marketplace-nav-button is-active" aria-current="page" data-testid="landing-topbar-nav-rankings"'
-    );
-    expect(compareMarkup).toContain('href="/categories" class="marketplace-nav-button" data-testid="landing-topbar-nav-categories"');
+    expectMarkupToContainAll(compareRankingsLinkMarkup, [
+      'href="/rankings"',
+      'class="marketplace-nav-button is-active"',
+      'aria-current="page"'
+    ]);
+    expectMarkupToContainAll(compareCategoriesLinkMarkup, [
+      'href="/categories"',
+      'class="marketplace-nav-button"'
+    ]);
+    expect(compareCategoriesLinkMarkup).not.toContain('aria-current="page"');
   });
 
   it("renders the signed-out status and sign-in action inside a unified auth cluster", () => {
-    const markup = renderToStaticMarkup(createElement(MarketplaceHomeTopbarActions));
+    const markup = renderMarkup(createElement(MarketplaceHomeTopbarActions));
 
-    expect(markup).toContain('data-testid="landing-topbar-auth-cluster"');
-    expect(markup).toContain("Not Signed In");
-    expect(markup).toContain(">Sign In<");
-    expect(markup).toMatch(
-      /data-testid="landing-topbar-auth-cluster"[\s\S]*data-testid="landing-topbar-status"[\s\S]*>Sign In</
-    );
-    expect(markup).toContain("data-testid=\"topbar-theme-switch-dark\"");
-    expect(markup).toContain("data-testid=\"topbar-theme-switch-light\"");
+    expectMarkupToContainAll(markup, [
+      'data-marketplace-topbar-slot="actions"',
+      'data-marketplace-topbar-variant="landing"',
+      'data-testid="landing-topbar-auth-cluster"',
+      'data-testid="landing-topbar-status"',
+      "Not Signed In",
+      ">Sign In<",
+      'data-testid="topbar-theme-switch-dark"',
+      'data-testid="topbar-theme-switch-light"',
+      'data-testid="topbar-locale-switch-zh"',
+      'data-testid="topbar-locale-switch-en"'
+    ]);
+    expectMarkupToExcludeAll(markup, [">Workspace<"]);
   });
 
   it("renders workspace access for authenticated viewers", async () => {
@@ -151,25 +208,34 @@ describe("MarketplaceHomeTopbar", () => {
       isAuthenticated: true
     });
 
-    const markup = renderToStaticMarkup(createElement(MarketplaceHomeTopbarActions));
+    const markup = renderMarkup(createElement(MarketplaceHomeTopbarActions));
 
-    expect(markup).toContain("Signed In");
-    expect(markup).toContain(">Workspace<");
-    expect(markup).not.toContain(">Sign In<");
+    expectMarkupToContainAll(markup, [
+      "Signed In",
+      ">Workspace<",
+      'data-testid="landing-topbar-auth-cluster"',
+      'data-testid="landing-topbar-status"'
+    ]);
+    expectMarkupToExcludeAll(markup, [">Sign In<", "Not Signed In"]);
   });
 
   it("renders a compact section action cluster without the signed-out pill", () => {
-    const markup = renderToStaticMarkup(createElement(MarketplaceSectionTopbarActions));
+    const markup = renderMarkup(createElement(MarketplaceSectionTopbarActions));
 
-    expect(markup).not.toContain("Not Signed In");
-    expect(markup).toContain(">Sign In<");
-    expect(markup).toContain("marketplace-topbar-button is-primary");
+    expectMarkupToContainAll(markup, [
+      'data-marketplace-topbar-slot="actions"',
+      'data-marketplace-topbar-variant="market"',
+      ">Search<",
+      ">Sign In<",
+      'class="marketplace-topbar-button is-subtle"',
+      'class="marketplace-topbar-button is-primary"'
+    ]);
+    expectMarkupToExcludeAll(markup, ["Not Signed In", 'data-testid="landing-topbar-auth-cluster"']);
   });
 
   it("renders a reusable marketplace stage status pill", () => {
-    const markup = renderToStaticMarkup(createElement(MarketplaceTopbarStageStatus, { label: "Results" }));
+    const markup = renderMarkup(createElement(MarketplaceTopbarStageStatus, { label: "Results" }));
 
-    expect(markup).toContain("Results");
-    expect(markup).toContain("marketplace-topbar-status");
+    expectMarkupToContainAll(markup, ["Results", 'class="marketplace-topbar-status"']);
   });
 });
