@@ -54,7 +54,7 @@ test("opens workspace detail drawers across queue, activity, policy, and runbook
   await page.getByRole("button", { name: "Open Details" }).first().click();
   const queueDialog = page.getByRole("dialog");
   await expect(queueDialog).toBeVisible();
-  await expect(queueDialog.getByRole("link", { name: "Open Skill Detail" })).toBeVisible();
+  await expect(queueDialog.getByRole("link", { name: "Open Skill Detail" }).first()).toBeVisible();
   await page.getByRole("button", { name: "Close Panel" }).click();
   await expect(queueDialog).toHaveCount(0);
 
@@ -140,14 +140,18 @@ test("executes admin governance actions and renders additional admin routes", as
   await page.getByTestId("admin-topbar-account-trigger").click();
   const accountCenterMenu = page.getByTestId("admin-topbar-account-menu");
   await expect(accountCenterMenu).toBeVisible();
-  await expect(accountCenterMenu.getByRole("button", { name: /Access/i })).toBeVisible();
-  await expect(accountCenterMenu.getByRole("button", { name: /Roles/i })).toBeVisible();
-  await expect(accountCenterMenu.getByRole("button", { name: /Integrations/i })).toBeVisible();
-  await accountCenterMenu.getByRole("button", { name: /Access/i }).click();
+  await expect(
+    accountCenterMenu.getByRole("button", { name: "Access Manage access registration and authorization controls." })
+  ).toBeVisible();
+  await expect(accountCenterMenu.getByRole("button", { name: "Roles Review role definitions and access shape." })).toBeVisible();
+  await expect(
+    accountCenterMenu.getByRole("button", { name: "Integrations Review connector inventory and webhook delivery coverage." })
+  ).toBeVisible();
+  await accountCenterMenu.getByRole("button", { name: "Access Manage access registration and authorization controls." }).click();
   const accessEntryDialog = page.getByRole("dialog", { name: "Access" });
   await expect(accessEntryDialog).toBeVisible();
   await expect(accessEntryDialog.getByText("/admin/access")).toBeVisible();
-  await accessEntryDialog.getByRole("button", { name: "Close account center" }).click();
+  await accessEntryDialog.getByLabel("Close account center").click();
   await expect(accessEntryDialog).not.toBeVisible();
   await expect(page.getByRole("heading", { name: "Account Provisioning", level: 1 })).toBeVisible();
   await expect(page.getByText("Registration enabled · Marketplace public")).toBeVisible();
@@ -217,10 +221,13 @@ test("opens the workspace navigation drawer on tablet widths", async ({ page }) 
 
   const toggle = page.getByTestId("workspace-topbar-menu-trigger");
   await expect(toggle).toBeVisible();
-  await toggle.click();
+  await toggle.focus();
+  await toggle.press("Enter");
 
   const drawer = page.getByTestId("workspace-side-nav-drawer");
-  await expect(drawer).toBeVisible();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(drawer).toHaveAttribute("aria-hidden", "false");
+  await expect(drawer.getByRole("link", { name: /Queue/i })).toBeVisible();
   await drawer.getByRole("link", { name: /Queue/i }).click();
   await page.waitForURL("**/workspace/queue");
   await expect(page.getByRole("heading", { name: "Queue Execution", level: 1 })).toBeVisible();
@@ -282,8 +289,10 @@ test("uses the right account avatar as the protected personal center trigger", a
   expect(triggerBox.x).toBeGreaterThan(navBox.x + navBox.width);
   expect(triggerBox.width).toBeGreaterThanOrEqual(40);
   expect(triggerBox.width).toBeLessThan(70);
-  await trigger.click();
-  await expect(menu).toBeVisible();
+  await trigger.focus();
+  await trigger.press("Enter");
+  await expect(trigger).toHaveAttribute("aria-label", "Close account center");
+  await expect(menu).toHaveAttribute("aria-hidden", "false");
   await expect(menu.getByRole("button", { name: /Profile/i })).toBeVisible();
   await expect(menu.getByRole("button", { name: /Security/i })).toBeVisible();
   await expect(menu.getByRole("button", { name: /Sessions/i })).toBeVisible();
@@ -294,9 +303,12 @@ test("uses the right account avatar as the protected personal center trigger", a
   await expect(profileEntryDialog).toBeVisible();
   await expect(profileEntryDialog.getByRole("button", { name: "Open Profile" })).toBeVisible();
   await expect(profileEntryDialog.getByText("/account/profile")).toBeVisible();
-  await profileEntryDialog.getByRole("button", { name: "Close account center" }).click();
+  await profileEntryDialog.getByLabel("Close account center").click();
   await expect(profileEntryDialog).not.toBeVisible();
 
+  await trigger.focus();
+  await trigger.press("Enter");
+  await expect(menu).toHaveAttribute("aria-hidden", "false");
   await page.getByTestId("workspace-topbar-theme-dark").click();
   await expect(shell).toHaveAttribute("data-protected-theme", "dark");
 
