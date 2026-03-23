@@ -1,0 +1,7 @@
+paths:
+  /api/v1/admin/api-management/specs/current:
+    get:
+      operationId: getCurrentPublishedSpec
+      responses:
+        '200':
+          description: Current published spec metadata

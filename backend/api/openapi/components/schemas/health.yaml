@@ -1,0 +1,5 @@
+HealthEnvelope:
+  type: object
+  properties:
+    status:
+      type: string

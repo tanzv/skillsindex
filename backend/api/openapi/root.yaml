@@ -1,0 +1,11 @@
+openapi: 3.0.3
+info:
+  title: SkillsIndex OpenAPI
+  version: 0.1.0
+paths:
+  /api/v1/admin/api-management/specs/current:
+    $ref: ./paths/admin/api_management.yaml#/paths/~1api~1v1~1admin~1api-management~1specs~1current
+components:
+  schemas:
+    HealthEnvelope:
+      $ref: ./components/schemas/health.yaml#/HealthEnvelope

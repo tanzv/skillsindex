@@ -48,6 +48,8 @@ type App struct {
 	settingsService     *services.SettingsService
 	syncPolicyService   *services.RepositorySyncPolicyService
 	syncPolicyRecordSvc *services.SyncPolicyService
+	apiSpecRegistrySvc  *services.APISpecRegistryService
+	apiPublishSvc       *services.APIPublishService
 	loginThrottle       *loginThrottleState
 	allowRegistration   bool
 	apiKeys             map[string]struct{}

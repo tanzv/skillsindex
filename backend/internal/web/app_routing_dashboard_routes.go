@@ -11,6 +11,7 @@ func (a *App) registerDashboardRoutes(r chi.Router) {
 		a.registerAdminIngestionRoutes(private)
 		a.registerAdminSyncGovernanceRoutes(private)
 		a.registerAdminAccessRoutes(private)
+		a.registerAdminAPIManagementRoutes(private)
 		a.registerAdminOrganizationRoutes(private)
 		a.registerAdminSecurityRoutes(private)
 		a.registerAdminOperationsRoutes(private)
@@ -33,6 +34,15 @@ func (a *App) registerAdminOverviewRoutes(r chi.Router) {
 	r.Get("/api/v1/admin/overview", a.handleAPIAdminOverview)
 	r.Get("/api/v1/admin/skills", a.handleAPIAdminSkills)
 	r.Get("/api/v1/admin/integrations", a.handleAPIAdminIntegrations)
+}
+
+func (a *App) registerAdminAPIManagementRoutes(r chi.Router) {
+	r.Get("/api/v1/admin/api-management/specs/current", a.handleAPIAdminCurrentSpec)
+	r.Post("/api/v1/admin/api-management/specs/import", a.handleAPIAdminImportSpec)
+	r.Post("/api/v1/admin/api-management/specs/{specID}/validate", a.handleAPIAdminValidateSpec)
+	r.Post("/api/v1/admin/api-management/specs/{specID}/publish", a.handleAPIAdminPublishSpec)
+	r.Get("/api/v1/admin/api-management/specs/current/export.json", a.handleAPIAdminExportSpecJSON)
+	r.Get("/api/v1/admin/api-management/specs/current/export.yaml", a.handleAPIAdminExportSpecYAML)
 }
 
 func (a *App) registerAdminIngestionRoutes(r chi.Router) {
