@@ -49,7 +49,8 @@ test("renders authenticated admin, workspace, and account routes", async ({ page
 test("executes authenticated profile and manual ingestion actions", async ({ page }) => {
   await loginAsAdmin(page, "/account/profile");
 
-  const displayNameInput = page.getByPlaceholder("Display name");
+  await expect(page.getByRole("heading", { name: "Account Center", level: 1 })).toBeVisible();
+  const displayNameInput = page.locator(".account-center-form-grid input").first();
   const nextDisplayName = `Admin Operator ${Date.now()}`;
 
   await expect(displayNameInput).toHaveValue(/.+/);
