@@ -4,15 +4,13 @@ import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { startMockBackend } from "./mock-backend.mjs";
 import { shouldRecoverFromNextBuildFailure } from "./run-e2e-build.mjs";
+import { terminateWorkspaceConflictingProcesses } from "./run-e2e-process-guard.mjs";
+import { resolveE2ERuntimeOptions } from "./run-e2e-runtime.mjs";
 
 const startupTimeoutMs = 240_000;
 const metadataPath = join(process.cwd(), ".next", "e2e-runtime.json");
 const nextBinary = join(process.cwd(), "node_modules", ".bin", "next");
 const playwrightBinary = join(process.cwd(), "node_modules", ".bin", "playwright");
-
-function resolveDefaultPort(base) {
-  return base + (process.pid % 1000);
-}
 
 function readBuildMetadata() {
   if (!existsSync(metadataPath)) {
@@ -125,12 +123,21 @@ async function main() {
   let mockBackendServer = null;
   const hasBuildOutput = existsSync(".next/BUILD_ID");
   const buildMetadata = readBuildMetadata();
-  const requestedBuildReuse = process.env.PLAYWRIGHT_SKIP_BUILD === "1";
-  const skipFreshBuild = requestedBuildReuse && hasBuildOutput && buildMetadata !== null;
-  const backendPort = Number(process.env.PLAYWRIGHT_BACKEND_PORT || buildMetadata?.backendPort || resolveDefaultPort(34200));
-  const frontendPort = Number(process.env.PLAYWRIGHT_FRONTEND_PORT || resolveDefaultPort(33200));
-  const backendBaseURL = `http://127.0.0.1:${backendPort}`;
-  const frontendBaseURL = `http://127.0.0.1:${frontendPort}`;
+  const runtime = resolveE2ERuntimeOptions({
+    env: process.env,
+    buildMetadata,
+    hasBuildOutput
+  });
+  const {
+    requestedBuildReuse,
+    skipFreshBuild,
+    backendPort,
+    backendBaseURL,
+    frontendPort,
+    frontendBaseURL,
+    shouldStartMockBackend,
+    useExternalBackend
+  } = runtime;
 
   const cleanup = async () => {
     if (mockBackendServer) {
@@ -151,12 +158,23 @@ async function main() {
   });
 
   try {
-    mockBackendServer = await startMockBackend({
-      listenPort: backendPort,
-      onReady: (address) => {
-        process.stdout.write(`[mock-backend] Mock backend listening on ${address}\n`);
+    await terminateWorkspaceConflictingProcesses({
+      projectDirectory: process.cwd(),
+      log: (message) => {
+        process.stdout.write(`[preflight] ${message}\n`);
       }
     });
+
+    if (shouldStartMockBackend) {
+      mockBackendServer = await startMockBackend({
+        listenPort: backendPort,
+        onReady: (address) => {
+          process.stdout.write(`[mock-backend] Mock backend listening on ${address}\n`);
+        }
+      });
+    } else {
+      process.stdout.write(`[e2e-backend] Using external backend ${backendBaseURL}\n`);
+    }
 
     await waitForHealthyResponse(
       `${backendBaseURL}/api/v1/auth/csrf`,
@@ -198,7 +216,9 @@ async function main() {
         );
       }
 
-      writeBuildMetadata({ backendPort });
+      if (!useExternalBackend && typeof backendPort === "number" && Number.isFinite(backendPort)) {
+        writeBuildMetadata({ backendPort });
+      }
     } else {
       const reusedPortMessage = buildMetadata?.backendPort ? ` using backend port ${String(buildMetadata.backendPort)}` : "";
       process.stdout.write(`[next-build] Reusing existing build because PLAYWRIGHT_SKIP_BUILD=1 and .next/BUILD_ID exists${reusedPortMessage}.\n`);
@@ -225,7 +245,9 @@ async function main() {
       env: {
         ...process.env,
         PLAYWRIGHT_FRONTEND_PORT: String(frontendPort),
-        PLAYWRIGHT_BACKEND_PORT: String(backendPort)
+        ...(typeof backendPort === "number" && Number.isFinite(backendPort)
+          ? { PLAYWRIGHT_BACKEND_PORT: String(backendPort) }
+          : {})
       },
       stdio: "inherit"
     });
