@@ -226,45 +226,37 @@
 
 .layout {
   flex: 1 1 auto;
+  width: min(100%, 1320px);
+  margin: 0 auto;
+  padding: clamp(36px, 5vw, 72px) clamp(18px, 2.8vw, 36px);
   min-height: calc(100dvh - 82px);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(460px, 520px);
-  background: inherit;
+  grid-template-columns: minmax(360px, 0.92fr) minmax(480px, 560px);
+  align-items: center;
+  gap: clamp(28px, 4vw, 56px);
+  background: transparent;
 }
 
 .infoPanel {
-  min-height: 100%;
-  padding: clamp(56px, 7vw, 108px) clamp(48px, 5vw, 88px) 40px;
+  min-height: 0;
+  padding: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  background:
-    radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.08), transparent 24%),
-    radial-gradient(circle at 42% 74%, rgba(255, 255, 255, 0.04), transparent 30%),
-    linear-gradient(150deg, rgba(23, 23, 23, 0.54) 0%, rgba(16, 16, 16, 0.12) 100%);
+  justify-content: flex-start;
   animation: loginPanelReveal 900ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
 }
 
 .stage[data-theme="light"] .infoPanel {
-  background:
-    radial-gradient(circle at 14% 18%, rgba(59, 130, 246, 0.08), transparent 24%),
-    radial-gradient(circle at 42% 74%, rgba(15, 23, 42, 0.04), transparent 30%),
-    linear-gradient(150deg, rgba(255, 255, 255, 0.36) 0%, rgba(255, 255, 255, 0.1) 100%);
+  background: transparent;
 }
 
 .formCard {
-  min-height: 100%;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(28px, 2.6vw, 40px);
-  border-left: 1px solid color-mix(in srgb, var(--login-panel-border) 72%, transparent);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--login-panel-form-bg) 90%, var(--login-root-bg) 10%) 0%,
-      color-mix(in srgb, var(--login-root-bg-accent) 74%, var(--login-root-bg) 26%) 100%
-    );
+  padding: 0;
+  background: transparent;
   animation: loginFormReveal 900ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
 }
 
@@ -320,16 +312,17 @@
 }
 
 .isVisualBaselineShell .infoPanel {
-  padding: 18px 18px 16px;
+  padding: 0;
 }
 
 .isVisualBaselineShell .formCard {
-  padding: 20px 22px 22px;
+  padding: 0;
 }
 
 @media (max-width: 1400px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr) minmax(420px, 480px);
+    width: min(100%, 1240px);
+    grid-template-columns: minmax(320px, 0.86fr) minmax(460px, 540px);
   }
 }
 
@@ -340,20 +333,20 @@
   }
 
   .layout {
+    width: 100%;
+    margin: 0;
+    padding: 28px 22px 32px;
     min-height: calc(100dvh - 72px);
     grid-template-columns: 1fr;
+    gap: 20px;
   }
 
   .infoPanel {
-    min-height: 0;
-    padding: 28px 24px 16px;
+    justify-content: center;
   }
 
   .formCard {
-    min-height: 0;
-    padding: 24px 22px 28px;
-    border-left: 0;
-    border-top: 1px solid color-mix(in srgb, var(--login-panel-border) 72%, transparent);
+    padding: 0;
   }
 }
 
@@ -371,11 +364,16 @@
   }
 
   .infoPanel {
-    padding: 22px 16px 14px;
+    justify-content: stretch;
   }
 
   .formCard {
-    padding: 18px 16px 22px;
+    padding: 0;
+  }
+
+  .layout {
+    padding: 22px 16px 24px;
+    gap: 16px;
   }
 }
 
