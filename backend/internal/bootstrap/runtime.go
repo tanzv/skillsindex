@@ -50,6 +50,12 @@ func defaultStateInitializationOptions() StateInitializationOptions {
 	}
 }
 
+// BootstrapStateInitializationOptions returns the startup state policy for explicit bootstrap runs.
+func BootstrapStateInitializationOptions() *StateInitializationOptions {
+	options := defaultStateInitializationOptions()
+	return &options
+}
+
 // NormalizeRuntimeConfig applies runtime defaults for a command entrypoint.
 func NormalizeRuntimeConfig(cfg config.Config, options RunOptions) config.Config {
 	if options.ForceAPIOnly {
@@ -103,6 +109,7 @@ func resolveStateInitializationOptions(options *StateInitializationOptions) Stat
 func APIStateInitializationOptions() *StateInitializationOptions {
 	options := defaultStateInitializationOptions()
 	options.SeedData = false
+	options.DefaultAccount = false
 	return &options
 }
 
@@ -319,6 +326,61 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 	if err := runHTTPServer(ctx, httpServer, listener, defaultHTTPShutdownTimeout); err != nil {
 		return fmt.Errorf("server failed: %w", err)
 	}
+	return nil
+}
+
+// RunBootstrapState applies schema migration and explicit state initialization without starting the HTTP server.
+func RunBootstrapState(ctx context.Context, cfg config.Config, options *StateInitializationOptions) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	runtimeConfig := NormalizeRuntimeConfig(cfg, RunOptions{})
+	if err := ValidateSecurityDefaults(runtimeConfig); err != nil {
+		return err
+	}
+
+	database, err := db.Open(runtimeConfig.DatabaseURL)
+	if err != nil {
+		return fmt.Errorf("failed to connect database: %w", err)
+	}
+	if err := db.Migrate(database); err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
+	}
+	sqlDB, err := database.DB()
+	if err != nil {
+		return fmt.Errorf("failed to access sql db handle: %w", err)
+	}
+	defer func() {
+		if closeErr := sqlDB.Close(); closeErr != nil {
+			log.Printf("failed to close database: %v", closeErr)
+		}
+	}()
+
+	authService := services.NewAuthService(database)
+	settingsService := services.NewSettingsService(database)
+	repoSyncPolicyService := services.NewRepositorySyncPolicyService(settingsService, services.RepositorySyncPolicy{
+		Enabled:   runtimeConfig.RepoSyncEnabled,
+		Interval:  runtimeConfig.RepoSyncInterval,
+		Timeout:   runtimeConfig.RepoSyncTimeout,
+		BatchSize: runtimeConfig.RepoSyncBatchSize,
+	})
+	syncPolicyRecordService := services.NewSyncPolicyService(database)
+	stateInitOptions := resolveStateInitializationOptions(options)
+	if err := initializeRuntimeState(
+		ctx,
+		runtimeConfig,
+		stateInitOptions,
+		database,
+		authService,
+		settingsService,
+		repoSyncPolicyService,
+		syncPolicyRecordService,
+	); err != nil {
+		return err
+	}
+
+	log.Printf("bootstrap state initialization completed")
 	return nil
 }
 

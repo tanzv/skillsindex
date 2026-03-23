@@ -213,7 +213,7 @@ func TestResolveStateInitializationOptionsUsesProvidedOverrides(t *testing.T) {
 	}
 }
 
-func TestAPIStateInitializationOptionsDisablesSeedOnly(t *testing.T) {
+func TestAPIStateInitializationOptionsDisablesSeedAndDefaultAccount(t *testing.T) {
 	got := APIStateInitializationOptions()
 	if got == nil {
 		t.Fatalf("expected API state initialization options")
@@ -221,8 +221,8 @@ func TestAPIStateInitializationOptionsDisablesSeedOnly(t *testing.T) {
 	if got.SeedData {
 		t.Fatalf("expected API state initialization to disable SeedData")
 	}
-	if !got.DefaultAccount {
-		t.Fatalf("expected API state initialization to keep DefaultAccount enabled")
+	if got.DefaultAccount {
+		t.Fatalf("expected API state initialization to disable DefaultAccount")
 	}
 	if !got.RegistrationSetting {
 		t.Fatalf("expected API state initialization to keep RegistrationSetting enabled")
@@ -232,5 +232,27 @@ func TestAPIStateInitializationOptionsDisablesSeedOnly(t *testing.T) {
 	}
 	if !got.RepositorySyncMirror {
 		t.Fatalf("expected API state initialization to keep RepositorySyncMirror enabled")
+	}
+}
+
+func TestBootstrapStateInitializationOptionsEnablesAll(t *testing.T) {
+	got := BootstrapStateInitializationOptions()
+	if got == nil {
+		t.Fatalf("expected bootstrap state initialization options")
+	}
+	if !got.SeedData {
+		t.Fatalf("expected bootstrap state initialization to enable SeedData")
+	}
+	if !got.DefaultAccount {
+		t.Fatalf("expected bootstrap state initialization to enable DefaultAccount")
+	}
+	if !got.RegistrationSetting {
+		t.Fatalf("expected bootstrap state initialization to enable RegistrationSetting")
+	}
+	if !got.RepositorySyncPolicy {
+		t.Fatalf("expected bootstrap state initialization to enable RepositorySyncPolicy")
+	}
+	if !got.RepositorySyncMirror {
+		t.Fatalf("expected bootstrap state initialization to enable RepositorySyncMirror")
 	}
 }
