@@ -79,6 +79,8 @@ export const protectedMessageKeyMap = {
     groupOperationsLabel: "admin_navigation_group_operations_label",
     groupUsersLabel: "admin_navigation_group_users_label",
     groupSecurityLabel: "admin_navigation_group_security_label",
+    moduleAdministrationLabel: "admin_navigation_module_administration_label",
+    moduleAdministrationDescription: "admin_navigation_module_administration_description",
     hubWorkspaceLabel: "admin_navigation_hub_workspace_label",
     hubWorkspaceDescription: "admin_navigation_hub_workspace_description",
     hubAccountLabel: "admin_navigation_hub_account_label",

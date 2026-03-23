@@ -1,8 +1,18 @@
 import type { SessionContext } from "@/src/lib/schemas/session";
-import type { ProtectedTopbarMessages } from "@/src/lib/i18n/protectedMessages";
+import {
+  adminNavigationMessageFallbacks,
+  type AdminNavigationMessages,
+  type ProtectedTopbarMessages,
+  type WorkspaceShellMessages
+} from "@/src/lib/i18n/protectedMessages";
 import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
+import { marketplaceHomeRoute, workspaceOverviewRoute } from "@/src/lib/routing/protectedSurfaceLinks";
+import {
+  buildWorkspaceShellNavigationRegistry,
+  buildProtectedTopbarConfigFromRegistry
+} from "@/src/lib/navigation/protectedNavigationRegistry";
 
-import { buildAccountCenterMenuConfig, buildWorkspaceProtectedTopbarConfig } from "./protectedTopbarConfigs";
+import { buildAccountCenterMenuConfig } from "./protectedTopbarConfigs";
 import { ProtectedTopbar } from "./ProtectedTopbar";
 
 export interface WorkspaceTopbarProps {
@@ -12,8 +22,11 @@ export interface WorkspaceTopbarProps {
   brandSubtitle: string;
   messages: ProtectedTopbarMessages;
   workspaceMessages: WorkspaceMessages;
+  navigationMessages?: AdminNavigationMessages;
+  workspaceShellMessages?: WorkspaceShellMessages;
   theme: "light" | "dark";
   onThemeChange: (nextTheme: "light" | "dark") => void;
+  accountMenuTriggerVariant?: "pill" | "avatar";
   defaultOverflowExpanded?: boolean;
   onOpenNavigation?: () => void;
   navigationToggleLabel?: string;
@@ -29,8 +42,11 @@ export function WorkspaceTopbar({
   brandSubtitle,
   messages,
   workspaceMessages,
+  navigationMessages = adminNavigationMessageFallbacks,
+  workspaceShellMessages,
   theme,
   onThemeChange,
+  accountMenuTriggerVariant,
   defaultOverflowExpanded = false,
   onOpenNavigation,
   navigationToggleLabel,
@@ -38,18 +54,37 @@ export function WorkspaceTopbar({
   navigationToggleControlsId,
   navigationToggleExpanded
 }: WorkspaceTopbarProps) {
+  const registry = buildWorkspaceShellNavigationRegistry({
+    adminNavigation: navigationMessages,
+    workspacePage: workspaceMessages,
+    workspaceShell: workspaceShellMessages
+  });
+
   return (
     <ProtectedTopbar
       pathname={pathname}
       session={session}
       brandTitle={brandTitle}
       brandSubtitle={brandSubtitle}
-      brandHref="/workspace"
-      config={buildWorkspaceProtectedTopbarConfig(workspaceMessages, messages)}
+      brandHref={workspaceOverviewRoute}
+      config={buildProtectedTopbarConfigFromRegistry(
+        pathname,
+        registry,
+        {
+          primaryGroupLabel: workspaceMessages.topbarPrimaryGroupLabel,
+          primaryGroupTag: workspaceMessages.topbarPrimaryGroupTag,
+          overflowTitle: workspaceMessages.topbarOverflowTitle,
+          overflowHint: workspaceMessages.topbarOverflowHint,
+          overflowPrimaryTitle: workspaceMessages.topbarOverflowAppSectionsTitle
+        },
+        messages
+      )}
       accountCenterMenu={buildAccountCenterMenuConfig(messages)}
       dataTestId="workspace-topbar"
       navigationAriaLabel={messages.navigationAriaLabelWorkspace}
       messages={messages}
+      utilityLink={{ href: marketplaceHomeRoute, label: messages.marketplaceLinkLabel }}
+      accountMenuTriggerVariant={accountMenuTriggerVariant ?? "avatar"}
       theme={theme}
       onThemeChange={onThemeChange}
       defaultOverflowExpanded={defaultOverflowExpanded}

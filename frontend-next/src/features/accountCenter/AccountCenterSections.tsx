@@ -1,4 +1,7 @@
+import type { ReactElement } from "react";
+
 import type { AccountRoute } from "./model";
+import { accountSectionByRoute, type AccountSection } from "./model";
 import {
   type AccountCredentialsSectionProps,
   type AccountProfileSectionProps,
@@ -20,46 +23,39 @@ interface AccountRouteSectionsProps
   route: AccountRoute;
 }
 
-export function AccountRouteSections(props: AccountRouteSectionsProps) {
-  if (props.route === "/account/profile") {
-    return (
-      <AccountProfileSection
-        loading={props.loading}
-        saving={props.saving}
-        avatarInitials={props.avatarInitials}
-        profileDraft={props.profileDraft}
-        onProfileDraftChange={props.onProfileDraftChange}
-        onSaveProfile={props.onSaveProfile}
-      />
-    );
-  }
+type AccountSectionRenderer = (props: AccountRouteSectionsProps) => ReactElement;
 
-  if (props.route === "/account/security") {
-    return (
-      <AccountSecuritySection
-        loading={props.loading}
-        saving={props.saving}
-        passwordDraft={props.passwordDraft}
-        sessionsPayload={props.sessionsPayload}
-        onPasswordDraftChange={props.onPasswordDraftChange}
-        onChangePassword={props.onChangePassword}
-        onRevokeOtherSessions={props.onRevokeOtherSessions}
-      />
-    );
-  }
-
-  if (props.route === "/account/sessions") {
-    return (
-      <AccountSessionsSection
-        loading={props.loading}
-        saving={props.saving}
-        sessionsPayload={props.sessionsPayload}
-        onRevokeSession={props.onRevokeSession}
-      />
-    );
-  }
-
-  return (
+const accountSectionRenderers: Record<AccountSection, AccountSectionRenderer> = {
+  profile: (props) => (
+    <AccountProfileSection
+      loading={props.loading}
+      saving={props.saving}
+      avatarInitials={props.avatarInitials}
+      profileDraft={props.profileDraft}
+      onProfileDraftChange={props.onProfileDraftChange}
+      onSaveProfile={props.onSaveProfile}
+    />
+  ),
+  security: (props) => (
+    <AccountSecuritySection
+      loading={props.loading}
+      saving={props.saving}
+      passwordDraft={props.passwordDraft}
+      sessionsPayload={props.sessionsPayload}
+      onPasswordDraftChange={props.onPasswordDraftChange}
+      onChangePassword={props.onChangePassword}
+      onRevokeOtherSessions={props.onRevokeOtherSessions}
+    />
+  ),
+  sessions: (props) => (
+    <AccountSessionsSection
+      loading={props.loading}
+      saving={props.saving}
+      sessionsPayload={props.sessionsPayload}
+      onRevokeSession={props.onRevokeSession}
+    />
+  ),
+  credentials: (props) => (
     <AccountCredentialsSection
       loading={props.loading}
       saving={props.saving}
@@ -73,5 +69,11 @@ export function AccountRouteSections(props: AccountRouteSectionsProps) {
       onRevokeCredential={props.onRevokeCredential}
       onApplyCredentialScopes={props.onApplyCredentialScopes}
     />
-  );
+  )
+};
+
+export function AccountRouteSections(props: AccountRouteSectionsProps) {
+  const section = accountSectionByRoute[props.route];
+
+  return accountSectionRenderers[section](props);
 }

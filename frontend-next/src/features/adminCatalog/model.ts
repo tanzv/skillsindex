@@ -1,9 +1,7 @@
 export type {
   AdminCatalogMetric,
   AdminCatalogModelMessages,
-  AdminCatalogPageMessages,
   AdminCatalogRoute,
-  AdminCatalogRouteMeta,
   AdminCatalogRow,
   AdminCatalogSidePanel,
   AdminCatalogViewModel,
@@ -16,7 +14,6 @@ export type {
   SyncJobRunItem,
   SyncJobsPayload
 } from "./model.types";
-export { resolveAdminCatalogRouteMeta } from "./model.messages";
 export {
   normalizeJobsPayload,
   normalizeSkillsPayload,

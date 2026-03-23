@@ -1,4 +1,14 @@
 import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
+import {
+  accountApiCredentialsRoute,
+  accountProfileRoute,
+  adminImportsRoute,
+  adminRepositoryIntakeRoute,
+  adminSkillsRoute,
+  adminSyncJobsRoute,
+  workspaceActivityRoute,
+  workspacePolicyRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 import type { SessionContext } from "@/src/lib/schemas/session";
 
 import { buildCommonQuickActions, buildOverviewQuickActions } from "./pageMetrics";
@@ -36,7 +46,7 @@ export function buildOverviewRouteSections(
         description: messages.sectionRecentActivityDescription,
         variant: "activity-list",
         items: buildActivityItems(snapshot.recentActivity, messages),
-        actions: [{ label: messages.actionOpenActivityFeed, href: "/workspace/activity", variant: "outline" }]
+        actions: [{ label: messages.actionOpenActivityFeed, href: workspaceActivityRoute, variant: "outline" }]
       }
     ],
     railSections: [
@@ -53,7 +63,7 @@ export function buildOverviewRouteSections(
         description: messages.sectionRiskWatchlistDescription,
         variant: "activity-list",
         items: buildRiskWatchlistItems(snapshot, messages),
-        actions: [{ label: messages.actionReviewPolicy, href: "/workspace/policy", variant: "soft" }]
+        actions: [{ label: messages.actionReviewPolicy, href: workspacePolicyRoute, variant: "soft" }]
       },
       {
         id: "policy-coverage",
@@ -120,21 +130,21 @@ export function buildQueueRouteSections(
         items: [
           {
             label: messages.escalationImportRecoveryLabel,
-            value: "/admin/records/imports",
+            value: adminImportsRoute,
             description: messages.escalationImportRecoveryDescription
           },
           {
             label: messages.escalationGovernanceFollowupLabel,
-            value: "/workspace/policy",
+            value: workspacePolicyRoute,
             description: messages.escalationGovernanceFollowupDescription
           },
           {
             label: messages.escalationCatalogReviewLabel,
-            value: "/admin/skills",
+            value: adminSkillsRoute,
             description: messages.escalationCatalogReviewDescription
           }
         ],
-        actions: [{ label: messages.actionOpenImports, href: "/admin/records/imports", variant: "soft" }]
+        actions: [{ label: messages.actionOpenImports, href: adminImportsRoute, variant: "soft" }]
       },
       buildCurrentSessionSection(session, messages)
     ]
@@ -213,7 +223,7 @@ export function buildActionsRouteSections(
   return {
     quickActions: [
       ...buildCommonQuickActions(messages),
-      { label: messages.quickActionOpenAccountCenter, href: "/account/profile", variant: "outline" }
+      { label: messages.quickActionOpenAccountCenter, href: accountProfileRoute, variant: "outline" }
     ],
     primarySections: [
       {
@@ -224,23 +234,23 @@ export function buildActionsRouteSections(
         items: [
           {
             label: messages.quickActionsCatalogIntakeLabel,
-            value: "/admin/ingestion/repository",
+            value: adminRepositoryIntakeRoute,
             description: messages.quickActionsCatalogIntakeDescription
           },
           {
             label: messages.quickActionsManualImportLabel,
-            value: "/admin/records/imports",
+            value: adminImportsRoute,
             description: messages.quickActionsManualImportDescription
           },
           {
             label: messages.quickActionsPolicyReviewLabel,
-            value: "/workspace/policy",
+            value: workspacePolicyRoute,
             description: messages.quickActionsPolicyReviewDescription
           }
         ],
         actions: [
-          { label: messages.actionOpenRepositoryIntake, href: "/admin/ingestion/repository", variant: "default" },
-          { label: messages.actionOpenPolicyView, href: "/workspace/policy", variant: "outline" }
+          { label: messages.actionOpenRepositoryIntake, href: adminRepositoryIntakeRoute, variant: "default" },
+          { label: messages.actionOpenPolicyView, href: workspacePolicyRoute, variant: "outline" }
         ]
       },
       {
@@ -251,17 +261,17 @@ export function buildActionsRouteSections(
         items: [
           {
             label: messages.linkedSurfacesAdminSkillsLabel,
-            value: "/admin/skills",
+            value: adminSkillsRoute,
             description: messages.linkedSurfacesAdminSkillsDescription
           },
           {
             label: messages.linkedSurfacesSyncJobsLabel,
-            value: "/admin/sync-jobs",
+            value: adminSyncJobsRoute,
             description: messages.linkedSurfacesSyncJobsDescription
           },
           {
             label: messages.linkedSurfacesApiCredentialsLabel,
-            value: "/account/api-credentials",
+            value: accountApiCredentialsRoute,
             description: messages.linkedSurfacesApiCredentialsDescription
           }
         ]

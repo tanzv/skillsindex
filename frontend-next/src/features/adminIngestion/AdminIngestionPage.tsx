@@ -1,24 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
+import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
+import { useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
+import { resolveAdminIngestionPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
+import type { AdminIngestionRoute } from "@/src/lib/routing/adminRouteRegistry";
 
 import { AdminIngestionContent } from "./AdminIngestionContent";
+import type { AdminIngestionOverlayEntity } from "./AdminIngestionViewProps";
 import {
-  type AdminIngestionRoute,
   buildAdminIngestionMetrics,
   createImportsDraft,
   createManualDraft,
   createRepositoryDraft,
   createRepositorySyncPolicy,
+  createAdminIngestionRepositorySnapshot,
   normalizeImportJobsPayload,
-  normalizeRepositorySyncPolicyPayload,
   normalizeSkillInventoryPayload,
-  resolveAdminIngestionRouteMeta,
   normalizeSyncRunsPayload,
+  resolveSelectedImportJobItem,
+  resolveSelectedSkillInventoryItem,
+  resolveSelectedSyncRunItem,
+  type AdminIngestionRepositorySnapshot,
   type RepositorySyncPolicy,
   type SkillInventoryItem
 } from "./model";
@@ -32,22 +40,54 @@ interface ActionConfig {
   afterSuccess?: () => void;
 }
 
-export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
+interface AdminIngestionPageProps {
+  route: AdminIngestionRoute;
+  initialRepositorySnapshot?: AdminIngestionRepositorySnapshot | null;
+}
+
+export function AdminIngestionPage({
+  route,
+  initialRepositorySnapshot = null
+}: AdminIngestionPageProps) {
   const { messages } = useProtectedI18n();
   const ingestionMessages = messages.adminIngestion;
-  const meta = useMemo(() => resolveAdminIngestionRouteMeta(route, ingestionMessages), [ingestionMessages, route]);
-  const [loading, setLoading] = useState(true);
+  const meta = useMemo(() => resolveAdminIngestionPageRouteMeta(route, ingestionMessages), [ingestionMessages, route]);
+  const { overlay, openOverlay, closeOverlay } = useAdminOverlayState<AdminIngestionOverlayEntity>();
+  const hasInitialRepositorySnapshotRef = useRef(
+    route === "/admin/ingestion/repository" && initialRepositorySnapshot !== null
+  );
+  const [loading, setLoading] = useState(() => !(route === "/admin/ingestion/repository" && initialRepositorySnapshot));
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [skills, setSkills] = useState<SkillInventoryItem[]>([]);
-  const [repositoryPolicy, setRepositoryPolicy] = useState<RepositorySyncPolicy>(createRepositorySyncPolicy);
-  const [syncRuns, setSyncRuns] = useState<ReturnType<typeof normalizeSyncRunsPayload>["items"]>([]);
+  const [skills, setSkills] = useState<SkillInventoryItem[]>(() => initialRepositorySnapshot?.skills || []);
+  const [repositoryPolicy, setRepositoryPolicy] = useState<RepositorySyncPolicy>(
+    () => initialRepositorySnapshot?.policy || createRepositorySyncPolicy()
+  );
+  const [syncRuns, setSyncRuns] = useState<ReturnType<typeof normalizeSyncRunsPayload>["items"]>(
+    () => initialRepositorySnapshot?.syncRuns || []
+  );
   const [importJobs, setImportJobs] = useState<ReturnType<typeof normalizeImportJobsPayload>["items"]>([]);
   const [manualDraft, setManualDraft] = useState(createManualDraft);
   const [repositoryDraft, setRepositoryDraft] = useState(createRepositoryDraft);
   const [importsDraft, setImportsDraft] = useState(createImportsDraft);
   const [archiveFile, setArchiveFile] = useState<File | null>(null);
+  const [loadedRoute, setLoadedRoute] = useState<AdminIngestionRoute | null>(
+    route === "/admin/ingestion/repository" && initialRepositorySnapshot !== null ? route : null
+  );
+
+  const selectedSkill = useMemo(
+    () => resolveSelectedSkillInventoryItem(skills, overlay?.entity === "skillDetail" ? Number(overlay.entityId || 0) : null),
+    [overlay, skills]
+  );
+  const selectedSyncRun = useMemo(
+    () => resolveSelectedSyncRunItem(syncRuns, overlay?.entity === "syncRunDetail" ? Number(overlay.entityId || 0) : null),
+    [overlay, syncRuns]
+  );
+  const selectedJob = useMemo(
+    () => resolveSelectedImportJobItem(importJobs, overlay?.entity === "importJobDetail" ? Number(overlay.entityId || 0) : null),
+    [importJobs, overlay]
+  );
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -60,6 +100,7 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
         setImportJobs([]);
         setSyncRuns([]);
         setRepositoryPolicy(createRepositorySyncPolicy());
+        setLoadedRoute(route);
         return;
       }
 
@@ -69,10 +110,16 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
           clientFetchJSON("/api/bff/admin/sync-policy/repository"),
           clientFetchJSON("/api/bff/admin/sync-jobs?limit=6")
         ]);
-        setSkills(normalizeSkillInventoryPayload(skillsPayload).items);
-        setRepositoryPolicy(normalizeRepositorySyncPolicyPayload(policyPayload));
-        setSyncRuns(normalizeSyncRunsPayload(syncRunsPayload).items);
+        const snapshot = createAdminIngestionRepositorySnapshot({
+          skillsPayload,
+          policyPayload,
+          syncRunsPayload
+        });
+        setSkills(snapshot.skills);
+        setRepositoryPolicy(snapshot.policy);
+        setSyncRuns(snapshot.syncRuns);
         setImportJobs([]);
+        setLoadedRoute(route);
         return;
       }
 
@@ -87,6 +134,7 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
       setImportJobs(normalizeImportJobsPayload(jobsPayload).items);
       setSyncRuns([]);
       setRepositoryPolicy(createRepositorySyncPolicy());
+      setLoadedRoute(route);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : ingestionMessages.loadError);
     } finally {
@@ -95,8 +143,15 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
   }, [ingestionMessages.loadError, route]);
 
   useEffect(() => {
+    closeOverlay();
+    if (route === "/admin/ingestion/repository" && hasInitialRepositorySnapshotRef.current) {
+      hasInitialRepositorySnapshotRef.current = false;
+      return;
+    }
     void loadData();
-  }, [loadData]);
+  }, [closeOverlay, loadData, route]);
+
+  const loadState = resolveAdminPageLoadState({ loading, error, hasData: loadedRoute === route });
 
   const metrics = useMemo(
     () =>
@@ -137,7 +192,10 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
       successMessage: ingestionMessages.manualCreateSuccess,
       failureMessage: ingestionMessages.manualCreateError,
       request: () => clientFetchJSON("/api/bff/admin/ingestion/manual", { method: "POST", body: buildManualPayload(manualDraft) }),
-      afterSuccess: () => setManualDraft(createManualDraft())
+      afterSuccess: () => {
+        setManualDraft(createManualDraft());
+        closeOverlay();
+      }
     });
   }
 
@@ -147,7 +205,10 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
       successMessage: ingestionMessages.repositorySubmitSuccess,
       failureMessage: ingestionMessages.repositorySubmitError,
       request: () => clientFetchJSON("/api/bff/admin/ingestion/repository", { method: "POST", body: buildRepositoryPayload(repositoryDraft) }),
-      afterSuccess: () => setRepositoryDraft(createRepositoryDraft())
+      afterSuccess: () => {
+        setRepositoryDraft(createRepositoryDraft());
+        closeOverlay();
+      }
     });
   }
 
@@ -165,7 +226,8 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
             timeout: repositoryPolicy.timeout,
             batch_size: repositoryPolicy.batchSize
           }
-        })
+        }),
+      afterSuccess: closeOverlay
     });
   }
 
@@ -195,6 +257,7 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
           archive_install_command: "",
           archive_visibility: "private"
         }));
+        closeOverlay();
       }
     });
   }
@@ -205,7 +268,7 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
       successMessage: ingestionMessages.skillmpSubmitSuccess,
       failureMessage: ingestionMessages.skillmpSubmitError,
       request: () => clientFetchJSON("/api/bff/admin/ingestion/skillmp", { method: "POST", body: buildSkillMPPayload(importsDraft) }),
-      afterSuccess: () =>
+      afterSuccess: () => {
         setImportsDraft((current) => ({
           ...current,
           skillmp_url: "",
@@ -214,7 +277,9 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
           skillmp_tags: "",
           skillmp_visibility: "private",
           skillmp_install_command: ""
-        }))
+        }));
+        closeOverlay();
+      }
     });
   }
 
@@ -230,6 +295,18 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
     });
   }
 
+  if (loadState !== "ready") {
+    return (
+      <AdminPageLoadStateFrame
+        eyebrow={messages.adminCommon.adminEyebrow}
+        title={meta.title}
+        description={meta.description}
+        error={loadState === "error" ? error : undefined}
+        actions={<Button onClick={() => void loadData()}>{loading ? messages.adminCommon.refreshing : messages.adminCommon.refresh}</Button>}
+      />
+    );
+  }
+
   return (
     <AdminIngestionContent
       route={route}
@@ -239,36 +316,53 @@ export function AdminIngestionPage({ route }: { route: AdminIngestionRoute }) {
       error={error}
       message={message}
       metrics={metrics}
+      overlay={overlay}
+      onCloseOverlay={closeOverlay}
       onRefresh={() => void loadData()}
       manualView={{
         draft: manualDraft,
         skills,
+        selectedSkill,
         busyAction,
         onDraftChange: (patch) => setManualDraft((current) => ({ ...current, ...patch })),
-        onSubmit: () => void submitManual()
+        onSubmit: () => void submitManual(),
+        onOpenCreate: () => openOverlay({ kind: "create", entity: "manualForm" }),
+        onOpenSkillDetail: (skillId) => openOverlay({ kind: "detail", entity: "skillDetail", entityId: skillId })
       }}
       repositoryView={{
         draft: repositoryDraft,
         skills,
+        selectedSkill,
         policy: repositoryPolicy,
         syncRuns,
+        selectedSyncRun,
         busyAction,
         onDraftChange: (patch) => setRepositoryDraft((current) => ({ ...current, ...patch })),
         onPolicyChange: (patch) => setRepositoryPolicy((current) => ({ ...current, ...patch })),
         onSubmit: () => void submitRepository(),
-        onSavePolicy: () => void saveRepositoryPolicy()
+        onSavePolicy: () => void saveRepositoryPolicy(),
+        onOpenRepositoryIntake: () => openOverlay({ kind: "create", entity: "repositoryForm" }),
+        onOpenPolicy: () => openOverlay({ kind: "edit", entity: "repositoryPolicy" }),
+        onOpenSkillDetail: (skillId) => openOverlay({ kind: "detail", entity: "skillDetail", entityId: skillId }),
+        onOpenSyncRunDetail: (runId) => openOverlay({ kind: "detail", entity: "syncRunDetail", entityId: runId })
       }}
       importsView={{
         draft: importsDraft,
         selectedArchiveName: archiveFile?.name || "",
         skills,
+        selectedSkill,
         jobs: importJobs,
+        selectedJob,
         busyAction,
         onDraftChange: (patch) => setImportsDraft((current) => ({ ...current, ...patch })),
         onArchiveFileChange: setArchiveFile,
         onSubmitArchive: () => void submitArchive(),
         onSubmitSkillMP: () => void submitSkillMP(),
-        onRunJobAction: (jobId, action) => void runJobAction(jobId, action)
+        onRunJobAction: (jobId, action) => void runJobAction(jobId, action),
+        onOpenArchiveImport: () => openOverlay({ kind: "create", entity: "archiveForm" }),
+        onOpenSkillMPImport: () => openOverlay({ kind: "create", entity: "skillmpForm" }),
+        onOpenSkillDetail: (skillId) => openOverlay({ kind: "detail", entity: "skillDetail", entityId: skillId }),
+        onOpenJobDetail: (jobId) => openOverlay({ kind: "detail", entity: "importJobDetail", entityId: jobId })
       }}
     />
   );

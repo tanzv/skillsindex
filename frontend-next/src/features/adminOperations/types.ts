@@ -1,13 +1,8 @@
-export type AdminOperationsRoute =
-  | "/admin/ops/metrics"
-  | "/admin/ops/alerts"
-  | "/admin/ops/release-gates"
-  | "/admin/ops/audit-export"
-  | "/admin/ops/recovery-drills"
-  | "/admin/ops/releases"
-  | "/admin/ops/change-approvals"
-  | "/admin/ops/backup/plans"
-  | "/admin/ops/backup/runs";
+export type {
+  AdminOperationsDashboardRoute,
+  AdminOperationsRecordsRoute,
+  AdminOperationsRoute
+} from "@/src/lib/routing/adminRouteRegistry";
 
 export interface OpsMetricItem {
   openIncidents: number;

@@ -1,0 +1,318 @@
+.page {
+  --status-canvas: var(--marketplace-home-background, #0f172a);
+  --status-surface: var(--marketplace-section-background, rgba(15, 23, 42, 0.84));
+  --status-surface-alt: var(--marketplace-section-emphasis-background, rgba(15, 23, 42, 0.62));
+  --status-border: var(--marketplace-card-border, rgba(148, 163, 184, 0.28));
+  --status-border-soft: var(--marketplace-card-border-soft, rgba(148, 163, 184, 0.18));
+  --status-text: var(--marketplace-home-text, #e2e8f0);
+  --status-text-muted: var(--si-color-text-secondary, #94a3b8);
+  --status-code: #f8fafc;
+  --status-accent: #e2e8f0;
+  --status-accent-contrast: #0f172a;
+  --status-shadow:
+    0 28px 60px rgba(2, 8, 23, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+}
+
+.page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(56, 189, 248, 0.16), transparent 30%),
+    radial-gradient(circle at 82% 12%, rgba(148, 163, 184, 0.14), transparent 28%),
+    radial-gradient(circle at 78% 88%, rgba(59, 130, 246, 0.12), transparent 34%);
+  opacity: 0.9;
+}
+
+.pageFullscreen {
+  min-height: 100vh;
+  padding: clamp(24px, 4vw, 48px);
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--status-canvas) 92%, #020617 8%) 0%, var(--status-canvas) 100%);
+}
+
+.pageEmbedded {
+  padding: 8px 0 20px;
+}
+
+.pageWarning {
+  --status-accent: #f8d27b;
+  --status-accent-contrast: #2a2111;
+}
+
+.pageDanger {
+  --status-accent: #f3b4b4;
+  --status-accent-contrast: #2c1414;
+}
+
+.pageLoading {
+  --status-accent: #c9d8f7;
+  --status-accent-contrast: #13213d;
+}
+
+.panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1120px);
+  border: 1px solid var(--status-border);
+  border-radius: 32px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--status-surface) 92%, transparent 8%) 0%, var(--status-surface-alt) 100%);
+  box-shadow: var(--status-shadow);
+  display: grid;
+  gap: 20px;
+  overflow: hidden;
+}
+
+.pageFullscreen .panel {
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+  padding: clamp(24px, 4vw, 42px);
+}
+
+.pageEmbedded .panel {
+  grid-template-columns: minmax(0, 1fr);
+  padding: clamp(20px, 3vw, 28px);
+}
+
+.copyColumn,
+.insightColumn,
+.insightCard,
+.telemetryCard,
+.telemetryRail,
+.telemetryGrid,
+.skeletonRail,
+.actions {
+  display: grid;
+}
+
+.copyColumn {
+  gap: 16px;
+  align-content: start;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--status-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.headlineRow {
+  display: grid;
+  gap: 12px;
+}
+
+.code {
+  width: fit-content;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--status-border);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--status-accent) 18%, transparent);
+  color: var(--status-code);
+  font-family: "JetBrains Mono", "SFMono-Regular", monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.title {
+  margin: 0;
+  color: var(--status-text);
+  font-size: clamp(32px, 5vw, 56px);
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+}
+
+.description,
+.detail,
+.insightText {
+  margin: 0;
+  color: var(--status-text-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.detail {
+  max-width: 66ch;
+}
+
+.actions {
+  gap: 10px;
+  grid-auto-flow: column;
+  justify-content: start;
+  align-items: center;
+}
+
+.action {
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.action:hover {
+  transform: translateY(-1px);
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--status-accent);
+  outline-offset: 3px;
+}
+
+.actionPrimary {
+  border: 1px solid transparent;
+  background: var(--status-accent);
+  color: var(--status-accent-contrast);
+}
+
+.actionSecondary {
+  border: 1px solid var(--status-border);
+  background: color-mix(in srgb, var(--status-surface-alt) 74%, transparent);
+  color: var(--status-text);
+}
+
+.insightColumn {
+  gap: 14px;
+  align-content: start;
+}
+
+.insightCard,
+.telemetryCard {
+  gap: 10px;
+  border: 1px solid var(--status-border-soft);
+  border-radius: 24px;
+  padding: 18px;
+  background: color-mix(in srgb, var(--status-surface-alt) 86%, transparent);
+}
+
+.insightLabel {
+  color: var(--status-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.insightValue {
+  color: var(--status-text);
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.telemetryRail,
+.skeletonRail {
+  gap: 12px;
+}
+
+.telemetryBar,
+.skeletonLine,
+.skeletonPulseDot,
+.telemetryGrid span {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--status-accent) 28%, transparent);
+}
+
+.telemetryBar,
+.skeletonLine {
+  height: 10px;
+}
+
+.telemetryBarMuted,
+.skeletonLineShort {
+  width: 62%;
+}
+
+.telemetryGrid {
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.telemetryGrid span {
+  height: 68px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--status-accent) 18%, transparent);
+}
+
+.skeletonLine,
+.skeletonPulseDot {
+  position: relative;
+  overflow: hidden;
+}
+
+.skeletonLine::after,
+.skeletonPulseDot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.24) 50%, transparent 100%);
+  transform: translateX(-100%);
+  animation: statusShimmer 1.4s ease-in-out infinite;
+}
+
+.skeletonPulseRow {
+  display: flex;
+  gap: 10px;
+}
+
+.skeletonPulseDot {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+}
+
+@keyframes statusShimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 860px) {
+  .pageFullscreen .panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actions {
+    grid-auto-flow: row;
+    justify-content: stretch;
+  }
+
+  .action {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action {
+    transition: none;
+  }
+
+  .action:hover {
+    transform: none;
+  }
+
+  .skeletonLine::after,
+  .skeletonPulseDot::after {
+    animation: none;
+  }
+}

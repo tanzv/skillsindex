@@ -24,9 +24,16 @@ function renderPage() {
             ledgerTitleSuffix: "Ledger",
             ledgerDescription: "Structured operational evidence.",
             noRecords: "No records returned.",
+            openRecordEntryAction: "Open Record Entry",
+            openRecordDetailAction: "Open Details",
             recordEntryTitle: "Record Entry",
             recordEntryDescription: "Create a new record.",
+            recordDetailTitle: "Record Detail",
+            recordDetailDescription: "Inspect the selected record without leaving the ledger.",
+            rawRecordDetailTitle: "Raw record",
+            closePanelAction: "Close Panel",
             saveRecordAction: "Save Record",
+            savingRecordAction: "Saving...",
             endpointStatusTitle: "Endpoint Status",
             endpointStatusDescription: "Endpoint details.",
             releaseVersionLabel: "Version",
@@ -48,17 +55,16 @@ function renderPage() {
 }
 
 describe("admin operations records page", () => {
-  it("renders localized records layout and empty state", () => {
+  it("defers records sections until live data loads", () => {
     const markup = renderPage();
 
     expect(markup).toContain("Releases");
     expect(markup).toContain("Track release records.");
-    expect(markup).toContain("Releases Ledger");
-    expect(markup).toContain("Structured operational evidence.");
-    expect(markup).toContain("No records returned.");
-    expect(markup).toContain("Record Entry");
-    expect(markup).toContain("Save Record");
-    expect(markup).toContain("Endpoint Status");
     expect(markup).toContain("Refreshing...");
+    expect(markup).not.toContain("Releases Ledger");
+    expect(markup).not.toContain("Structured operational evidence.");
+    expect(markup).not.toContain("No records returned.");
+    expect(markup).not.toContain("Open Record Entry");
+    expect(markup).not.toContain("Endpoint Status");
   });
 });

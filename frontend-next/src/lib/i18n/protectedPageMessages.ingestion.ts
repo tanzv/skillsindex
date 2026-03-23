@@ -77,6 +77,8 @@ export interface AdminIngestionMessages {
   uploadingArchiveAction: string;
   importSkillmpAction: string;
   submittingSkillmpAction: string;
+  openDetailAction: string;
+  closePanelAction: string;
   retryAction: string;
   retryingAction: string;
   cancelAction: string;
@@ -209,6 +211,8 @@ export const adminIngestionMessageKeyMap = {
   uploadingArchiveAction: "admin_ingestion_uploading_archive_action",
   importSkillmpAction: "admin_ingestion_import_skillmp_action",
   submittingSkillmpAction: "admin_ingestion_submitting_skillmp_action",
+  openDetailAction: "admin_ingestion_open_detail_action",
+  closePanelAction: "admin_ingestion_close_panel_action",
   retryAction: "admin_ingestion_retry_action",
   retryingAction: "admin_ingestion_retrying_action",
   cancelAction: "admin_ingestion_cancel_action",

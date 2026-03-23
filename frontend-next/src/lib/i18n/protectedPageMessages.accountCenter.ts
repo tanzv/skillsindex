@@ -108,6 +108,8 @@ export interface AccountCenterMessages {
   credentialExpiresInDaysPlaceholder: string;
   credentialScopesPlaceholder: string;
   createCredentialAction: string;
+  openCredentialDetailAction: string;
+  closePanelAction: string;
   credentialsInventoryTitle: string;
   credentialsInventoryDescription: string;
   credentialNoPurpose: string;
@@ -245,6 +247,8 @@ export const accountCenterMessageKeyMap = {
   credentialExpiresInDaysPlaceholder: "account_center_credential_expires_in_days_placeholder",
   credentialScopesPlaceholder: "account_center_credential_scopes_placeholder",
   createCredentialAction: "account_center_create_credential_action",
+  openCredentialDetailAction: "account_center_open_credential_detail_action",
+  closePanelAction: "account_center_close_panel_action",
   credentialsInventoryTitle: "account_center_credentials_inventory_title",
   credentialsInventoryDescription: "account_center_credentials_inventory_description",
   credentialNoPurpose: "account_center_credential_no_purpose",

@@ -1,6 +1,5 @@
 import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
 import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
-import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
 import type { MarketplaceSkill, PublicMarketplaceResponse } from "@/src/lib/schemas/public";
 import type { SessionContext } from "@/src/lib/schemas/session";
 
@@ -165,7 +164,7 @@ export function formatWorkspaceDate(
 }
 
 export function buildWorkspaceSnapshot(
-  payload: PublicMarketplaceResponse = buildPublicMarketplaceFallback(),
+  payload: PublicMarketplaceResponse,
   session: SessionContext = { user: null, marketplacePublicAccess: false },
   messageOverrides?: Partial<WorkspaceMessages>,
   locale: PublicLocale = "en"

@@ -1,0 +1,183 @@
+.overflowWrapper {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  width: min(1120px, calc(100vw - 48px));
+  max-width: 100%;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity 170ms ease, transform 170ms ease, visibility 170ms ease;
+}
+
+.overflowExpanded {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.overflowPanel,
+.overflowHeader,
+.overflowTitleBlock,
+.overflowSummary,
+.overflowGroups,
+.overflowGroup,
+.overflowGroupActions,
+.actionCopy {
+  display: grid;
+  gap: 14px;
+}
+
+.overflowPanel {
+  width: 100%;
+  padding: 18px;
+  border: 1px solid var(--protected-topbar-overflow-panel-border);
+  border-radius: 24px;
+  background: var(--protected-topbar-overflow-panel-bg);
+  box-shadow: var(--protected-topbar-overflow-panel-shadow);
+}
+
+.overflowHeader {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.overflowTitle,
+.overflowGroupTitle {
+  margin: 0;
+  color: var(--protected-shell-text);
+}
+
+.overflowTitle {
+  font-size: 16px;
+  line-height: 1.15;
+}
+
+.overflowSummary {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.overflowSummaryPill {
+  min-height: 30px;
+  padding: 0 6px 0 10px;
+  border: 1px solid var(--protected-topbar-overflow-pill-border);
+  border-radius: 999px;
+  background: var(--protected-topbar-overflow-pill-bg);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.overflowSummaryPillActive {
+  background: var(--protected-topbar-overflow-pill-bg-active);
+}
+
+.overflowSummaryPillLabel,
+.overflowSummaryPillCount {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.overflowSummaryPillLabel {
+  color: var(--protected-topbar-overflow-pill-text);
+}
+
+.overflowSummaryPillCount,
+.overflowGroupCount {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--protected-topbar-overflow-count-bg);
+  color: var(--protected-topbar-overflow-count-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.overflowGroups {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.overflowGroup {
+  padding: 14px;
+  border: 1px solid var(--protected-topbar-overflow-panel-border);
+  border-radius: 18px;
+  background: var(--protected-topbar-overflow-group-bg);
+}
+
+.overflowGroupActive {
+  border-color: var(--protected-topbar-control-border-active);
+  background: var(--protected-topbar-overflow-group-bg-active);
+}
+
+.overflowGroupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.overflowGroupTitle {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.overflowGroupCount {
+  min-width: 26px;
+}
+
+.overflowNavButton {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  justify-content: flex-start;
+  border-radius: 14px;
+  border-color: var(--protected-topbar-overflow-panel-border);
+  background: var(--protected-topbar-overflow-group-bg);
+}
+
+.actionCopy {
+  min-width: 0;
+  gap: 4px;
+}
+
+.actionNote {
+  color: var(--protected-shell-text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+@media (max-width: 1180px) {
+  .overflowWrapper {
+    width: 100%;
+  }
+}
+
+@media (max-width: 780px) {
+  .overflowHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .overflowSummary {
+    justify-content: flex-start;
+  }
+
+  .overflowGroups {
+    grid-template-columns: 1fr;
+  }
+}

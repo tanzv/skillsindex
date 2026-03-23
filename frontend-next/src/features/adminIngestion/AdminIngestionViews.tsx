@@ -1,34 +1,35 @@
 "use client";
 
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
-import {
-  ArchiveImportCard,
-  ManualAuthoringCard,
-  RepositoryIntakeCard,
-  SchedulerPolicyCard,
-  SkillMPImportCard
-} from "./AdminIngestionFormCards";
-import { ImportJobsCard, ManualGuidanceCard, RecentSyncRunsCard } from "./AdminIngestionPanels";
+
 import type {
   ImportsIngestionViewProps,
   ManualIngestionViewProps,
   RepositoryIngestionViewProps
 } from "./AdminIngestionViewProps";
-import { SkillInventoryList } from "./shared";
+import { ImportJobsCard, ManualGuidanceCard, RecentSyncRunsCard } from "./AdminIngestionPanels";
+import { IngestionTriggerCard, SkillInventoryList } from "./shared";
 
 export function ManualIngestionView(props: ManualIngestionViewProps) {
   const { messages } = useProtectedI18n();
   const ingestionMessages = messages.adminIngestion;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-      <ManualAuthoringCard {...props} />
+    <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+      <SkillInventoryList
+        title={ingestionMessages.manualInventoryTitle}
+        description={ingestionMessages.manualInventoryDescription}
+        items={props.skills}
+        emptyText={ingestionMessages.manualInventoryEmpty}
+        actionLabel={ingestionMessages.openDetailAction}
+        onOpenItem={props.onOpenSkillDetail}
+      />
       <div className="space-y-6">
-        <SkillInventoryList
-          title={ingestionMessages.manualInventoryTitle}
-          description={ingestionMessages.manualInventoryDescription}
-          items={props.skills}
-          emptyText={ingestionMessages.manualInventoryEmpty}
+        <IngestionTriggerCard
+          title={ingestionMessages.manualAuthoringTitle}
+          description={ingestionMessages.manualAuthoringDescription}
+          actionLabel={ingestionMessages.createManualAction}
+          onAction={props.onOpenCreate}
         />
         <ManualGuidanceCard />
       </div>
@@ -42,18 +43,28 @@ export function RepositoryIngestionView(props: RepositoryIngestionViewProps) {
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+      <SkillInventoryList
+        title={ingestionMessages.repositoryInventoryTitle}
+        description={ingestionMessages.repositoryInventoryDescription}
+        items={props.skills}
+        emptyText={ingestionMessages.repositoryInventoryEmpty}
+        actionLabel={ingestionMessages.openDetailAction}
+        onOpenItem={props.onOpenSkillDetail}
+      />
       <div className="space-y-6">
-        <RepositoryIntakeCard {...props} />
-        <SkillInventoryList
-          title={ingestionMessages.repositoryInventoryTitle}
-          description={ingestionMessages.repositoryInventoryDescription}
-          items={props.skills}
-          emptyText={ingestionMessages.repositoryInventoryEmpty}
+        <IngestionTriggerCard
+          title={ingestionMessages.repositoryIntakeTitle}
+          description={ingestionMessages.repositoryIntakeDescription}
+          actionLabel={ingestionMessages.startRepositoryAction}
+          onAction={props.onOpenRepositoryIntake}
         />
-      </div>
-      <div className="space-y-6">
-        <SchedulerPolicyCard {...props} />
-        <RecentSyncRunsCard syncRuns={props.syncRuns} />
+        <IngestionTriggerCard
+          title={ingestionMessages.schedulerPolicyTitle}
+          description={ingestionMessages.schedulerPolicyDescription}
+          actionLabel={ingestionMessages.savePolicyAction}
+          onAction={props.onOpenPolicy}
+        />
+        <RecentSyncRunsCard syncRuns={props.syncRuns} onOpenDetail={props.onOpenSyncRunDetail} />
       </div>
     </div>
   );
@@ -66,8 +77,18 @@ export function ImportsIngestionView(props: ImportsIngestionViewProps) {
   return (
     <div className="space-y-6">
       <div className="grid gap-6 xl:grid-cols-2">
-        <ArchiveImportCard {...props} />
-        <SkillMPImportCard {...props} />
+        <IngestionTriggerCard
+          title={ingestionMessages.archiveImportTitle}
+          description={ingestionMessages.archiveImportDescription}
+          actionLabel={ingestionMessages.importArchiveAction}
+          onAction={props.onOpenArchiveImport}
+        />
+        <IngestionTriggerCard
+          title={ingestionMessages.skillmpImportTitle}
+          description={ingestionMessages.skillmpImportDescription}
+          actionLabel={ingestionMessages.importSkillmpAction}
+          onAction={props.onOpenSkillMPImport}
+        />
       </div>
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <SkillInventoryList
@@ -75,8 +96,10 @@ export function ImportsIngestionView(props: ImportsIngestionViewProps) {
           description={ingestionMessages.importedInventoryDescription}
           items={props.skills}
           emptyText={ingestionMessages.importedInventoryEmpty}
+          actionLabel={ingestionMessages.openDetailAction}
+          onOpenItem={props.onOpenSkillDetail}
         />
-        <ImportJobsCard jobs={props.jobs} busyAction={props.busyAction} onRunJobAction={props.onRunJobAction} />
+        <ImportJobsCard jobs={props.jobs} busyAction={props.busyAction} onRunJobAction={props.onRunJobAction} onOpenDetail={props.onOpenJobDetail} />
       </div>
     </div>
   );

@@ -1,76 +1,70 @@
-export const publicRoutes = [
-  "/",
-  "/search",
-  "/results",
-  "/categories",
-  "/compare",
-  "/rankings",
-  "/rollout",
-  "/timeline",
-  "/governance",
-  "/docs",
-  "/about",
-  "/login"
-] as const;
+import {
+  publicDocsRoute,
+  publicHomeRoute,
+  publicDocsTopNavMatchPrefixes,
+  publicMarketplaceTopNavMatchPrefixes,
+  publicRouteEntries
+} from "./publicRouteRegistry";
+import { adminRoutePaths } from "./adminRouteRegistry";
+import {
+  accountApiCredentialsRoute,
+  accountProfileRoute,
+  accountRoutePrefix,
+  accountSecurityRoute,
+  accountSessionsRoute,
+  isAccountSurfacePath,
+  isAdminSurfacePath,
+  isProtectedSurfacePath,
+  isWorkspaceSurfacePath,
+  adminOverviewRoute,
+  adminRoutePrefix,
+  workspaceActionsRoute,
+  workspaceActivityRoute,
+  workspaceOverviewRoute,
+  workspacePolicyRoute,
+  workspaceRoutePrefix,
+  workspaceQueueRoute,
+  workspaceRunbookRoute
+} from "./protectedSurfaceLinks";
+
+export const publicRoutes = publicRouteEntries;
 
 export const workspaceRoutes = [
-  "/workspace",
-  "/workspace/activity",
-  "/workspace/queue",
-  "/workspace/policy",
-  "/workspace/runbook",
-  "/workspace/actions"
+  workspaceOverviewRoute,
+  workspaceActivityRoute,
+  workspaceQueueRoute,
+  workspacePolicyRoute,
+  workspaceRunbookRoute,
+  workspaceActionsRoute
 ] as const;
 
-export const accountRoutes = ["/account/profile", "/account/security", "/account/sessions", "/account/api-credentials"] as const;
-
-export const adminRoutes = [
-  "/admin/overview",
-  "/admin/ingestion/manual",
-  "/admin/ingestion/repository",
-  "/admin/records/imports",
-  "/admin/skills",
-  "/admin/jobs",
-  "/admin/sync-jobs",
-  "/admin/sync-policy/repository",
-  "/admin/integrations",
-  "/admin/ops/metrics",
-  "/admin/ops/alerts",
-  "/admin/ops/audit-export",
-  "/admin/ops/release-gates",
-  "/admin/ops/recovery-drills",
-  "/admin/ops/releases",
-  "/admin/ops/change-approvals",
-  "/admin/ops/backup/plans",
-  "/admin/ops/backup/runs",
-  "/admin/accounts",
-  "/admin/accounts/new",
-  "/admin/roles",
-  "/admin/roles/new",
-  "/admin/access",
-  "/admin/organizations",
-  "/admin/apikeys",
-  "/admin/moderation"
+export const accountRoutes = [
+  accountProfileRoute,
+  accountSecurityRoute,
+  accountSessionsRoute,
+  accountApiCredentialsRoute
 ] as const;
+
+export const adminRoutes = adminRoutePaths;
 
 export type WorkspaceRoute = (typeof workspaceRoutes)[number];
 export type AccountRoute = (typeof accountRoutes)[number];
 export type AdminRoute = (typeof adminRoutes)[number];
 
 export function isProtectedRoute(pathname: string): boolean {
-  return pathname === "/dashboard" || pathname.startsWith("/workspace") || pathname.startsWith("/admin") || pathname.startsWith("/account");
+  return isProtectedSurfacePath(pathname);
 }
 
 export function isAdminPath(pathname: string): boolean {
-  return pathname.startsWith("/admin");
+  return isAdminSurfacePath(pathname);
 }
 
 export function isWorkspacePath(pathname: string): boolean {
-  return pathname.startsWith("/workspace");
+  return isWorkspaceSurfacePath(pathname);
 }
 
 export function isAccountPath(pathname: string): boolean {
-  return pathname.startsWith("/account");
+  return isAccountSurfacePath(pathname);
 }
 
 export interface AppNavItem {
@@ -81,28 +75,28 @@ export interface AppNavItem {
 
 export const appTopNavItems: AppNavItem[] = [
   {
-    href: "/",
+    href: publicHomeRoute,
     label: "Marketplace",
-    matchPrefixes: ["/", "/search", "/results", "/categories", "/skills", "/compare", "/rankings", "/rollout", "/timeline", "/governance", "/states"]
+    matchPrefixes: [...publicMarketplaceTopNavMatchPrefixes]
   },
   {
-    href: "/workspace",
+    href: workspaceOverviewRoute,
     label: "Workspace",
-    matchPrefixes: ["/workspace"]
+    matchPrefixes: [workspaceRoutePrefix]
   },
   {
-    href: "/admin/overview",
+    href: adminOverviewRoute,
     label: "Admin",
-    matchPrefixes: ["/admin"]
+    matchPrefixes: [adminRoutePrefix]
   },
   {
-    href: "/account/profile",
+    href: accountProfileRoute,
     label: "Account",
-    matchPrefixes: ["/account"]
+    matchPrefixes: [accountRoutePrefix]
   },
   {
-    href: "/docs",
+    href: publicDocsRoute,
     label: "Docs",
-    matchPrefixes: ["/docs", "/about"]
+    matchPrefixes: [...publicDocsTopNavMatchPrefixes]
   }
 ];

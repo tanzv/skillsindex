@@ -2,24 +2,23 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { AdminPageScaffold } from "@/src/components/admin/AdminPrimitives";
+import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
+import { useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
-import { buildOrganizationsOverview, normalizeOrganizationMembersPayload, normalizeOrganizationsPayload } from "./organizationsModel";
+import { AdminOrganizationsContent } from "./AdminOrganizationsContent";
 import {
-  CreateOrganizationPanel,
-  MemberAssignmentPanel,
-  MemberLedgerPanel,
-  OrganizationDirectoryPanel,
-  SelectedOrganizationPanel
-} from "./AdminOrganizationsPanels";
+  buildOrganizationsOverview,
+  normalizeOrganizationMembersPayload,
+  normalizeOrganizationsPayload,
+  resolveSelectedOrganizationMember
+} from "./organizationsModel";
 
 export function AdminOrganizationsPage() {
   const { messages } = useProtectedI18n();
-  const commonMessages = messages.adminCommon;
   const organizationMessages = messages.adminOrganizations;
   const organizationNormalizationMessages = useMemo(
     () => ({
@@ -45,6 +44,8 @@ export function AdminOrganizationsPage() {
   const [rawOrganizations, setRawOrganizations] = useState<unknown>(null);
   const [rawMembers, setRawMembers] = useState<unknown>(null);
   const [selectedOrgId, setSelectedOrgId] = useState(0);
+  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  const { overlay, openOverlay, closeOverlay } = useAdminOverlayState<"organizationCreate" | "organizationMember">();
   const [newOrganizationName, setNewOrganizationName] = useState("");
   const [targetUserId, setTargetUserId] = useState("");
   const [targetRole, setTargetRole] = useState("member");
@@ -57,6 +58,10 @@ export function AdminOrganizationsPage() {
   const members = useMemo(
     () => normalizeOrganizationMembersPayload(rawMembers, organizationNormalizationMessages),
     [organizationNormalizationMessages, rawMembers]
+  );
+  const selectedMember = useMemo(
+    () => resolveSelectedOrganizationMember(members.items, selectedMemberId),
+    [members.items, selectedMemberId]
   );
   const overview = useMemo(
     () =>
@@ -106,6 +111,10 @@ export function AdminOrganizationsPage() {
           return accumulator;
         }, {})
       );
+    } catch (loadError) {
+      setRawMembers(null);
+      setRowRoleDrafts({});
+      throw loadError;
     } finally {
       setMembersLoading(false);
     }
@@ -138,11 +147,26 @@ export function AdminOrganizationsPage() {
     void refreshAll();
   }, [refreshAll]);
 
+  const loadState = resolveAdminPageLoadState({
+    loading,
+    error,
+    hasData: rawOrganizations !== null && (selectedOrgId === 0 || rawMembers !== null)
+  });
+
   useEffect(() => {
     if (selectedOrgId) {
-      void loadMembers(selectedOrgId);
+      void loadMembers(selectedOrgId).catch((loadError) => {
+        setError(loadError instanceof Error ? loadError.message : organizationMessages.loadError);
+      });
     }
-  }, [loadMembers, selectedOrgId]);
+  }, [loadMembers, organizationMessages.loadError, selectedOrgId]);
+
+  useEffect(() => {
+    if (selectedMemberId !== null && !selectedMember) {
+      setSelectedMemberId(null);
+      closeOverlay();
+    }
+  }, [closeOverlay, selectedMember, selectedMemberId]);
 
   async function createOrganization() {
     const name = newOrganizationName.trim();
@@ -159,6 +183,7 @@ export function AdminOrganizationsPage() {
         body: { name }
       });
       const nextOrgId = Number(payload.item?.id || 0) || undefined;
+      closeOverlay();
       setNewOrganizationName("");
       setMessage(organizationMessages.createSuccess);
       await refreshAll(nextOrgId);
@@ -183,7 +208,9 @@ export function AdminOrganizationsPage() {
         method: "POST",
         body: { user_id: userId, role: targetRole }
       });
+      closeOverlay();
       setTargetUserId("");
+      setTargetRole("member");
       setMessage(organizationMessages.addMemberSuccess);
       await loadMembers(selectedOrgId);
     } catch (actionError) {
@@ -219,6 +246,8 @@ export function AdminOrganizationsPage() {
       await clientFetchJSON(`/api/bff/admin/organizations/${selectedOrgId}/members/${userId}/remove`, {
         method: "POST"
       });
+      setSelectedMemberId(null);
+      closeOverlay();
       setMessage(formatProtectedMessage(organizationMessages.removeMemberSuccess, { userId }));
       await loadMembers(selectedOrgId);
     } catch (actionError) {
@@ -228,63 +257,69 @@ export function AdminOrganizationsPage() {
     }
   }
 
-  return (
-    <AdminPageScaffold
-      eyebrow={commonMessages.adminEyebrow}
-      title={organizationMessages.pageTitle}
-      description={organizationMessages.pageDescription}
-      actions={
-        <Button onClick={() => void refreshAll(selectedOrgId)}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>
-      }
-      metrics={overview.metrics}
-    >
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="space-y-6">
-          <OrganizationDirectoryPanel
-            organizations={organizations.items}
-            selectedOrgId={selectedOrgId}
-            loading={loading}
-            error={error}
-            message={message}
-            onSelectOrganization={setSelectedOrgId}
-          />
-          <MemberLedgerPanel
-            members={members.items}
-            totalMembers={members.total}
-            membersLoading={membersLoading}
-            loading={loading}
-            busyAction={busyAction}
-            rowRoleDrafts={rowRoleDrafts}
-            onRoleDraftChange={(userId, role) =>
-              setRowRoleDrafts((current) => ({
-                ...current,
-                [userId]: role
-              }))
-            }
-            onUpdateMemberRole={(userId) => void updateMemberRole(userId)}
-            onRemoveMember={(userId) => void removeMember(userId)}
-          />
-        </div>
+  if (loadState !== "ready") {
+    return (
+      <AdminPageLoadStateFrame
+        eyebrow={messages.adminCommon.adminEyebrow}
+        title={organizationMessages.pageTitle}
+        description={organizationMessages.pageDescription}
+        error={loadState === "error" ? error : undefined}
+        actions={<Button onClick={() => void refreshAll()}>{loading ? messages.adminCommon.refreshing : messages.adminCommon.refresh}</Button>}
+      />
+    );
+  }
 
-        <div className="space-y-6">
-          <CreateOrganizationPanel
-            value={newOrganizationName}
-            busyAction={busyAction}
-            onChange={setNewOrganizationName}
-            onCreate={() => void createOrganization()}
-          />
-          <MemberAssignmentPanel
-            selectedOrgId={selectedOrgId}
-            targetUserId={targetUserId}
-            targetRole={targetRole}
-            busyAction={busyAction}
-            onTargetUserIdChange={setTargetUserId}
-            onTargetRoleChange={setTargetRole}
-            onSave={() => void addOrUpdateMember()}
-          />
-          <SelectedOrganizationPanel overview={overview} />
-        </div>
-      </div>
-    </AdminPageScaffold>
+  return (
+    <AdminOrganizationsContent
+      loading={loading}
+      membersLoading={membersLoading}
+      busyAction={busyAction}
+      error={error}
+      message={message}
+      metrics={overview.metrics}
+      organizations={organizations.items}
+      members={members.items}
+      totalMembers={members.total}
+      overview={overview}
+      selectedOrgId={selectedOrgId}
+      selectedMember={selectedMember}
+      rowRoleDrafts={rowRoleDrafts}
+      newOrganizationName={newOrganizationName}
+      targetUserId={targetUserId}
+      targetRole={targetRole}
+      createDrawerOpen={overlay?.entity === "organizationCreate"}
+      memberDrawerOpen={overlay?.entity === "organizationMember"}
+      onRefresh={() => void refreshAll(selectedOrgId)}
+      onSelectOrganization={setSelectedOrgId}
+      onOpenCreateDrawer={() => openOverlay({ kind: "create", entity: "organizationCreate" })}
+      onCloseCreateDrawer={closeOverlay}
+      onOpenMemberAssignmentDrawer={() => {
+        setSelectedMemberId(null);
+        setTargetUserId("");
+        setTargetRole("member");
+        openOverlay({ kind: "edit", entity: "organizationMember", entityId: selectedOrgId || null });
+      }}
+      onOpenMemberDetailDrawer={(userId) => {
+        setSelectedMemberId(userId);
+        openOverlay({ kind: "detail", entity: "organizationMember", entityId: userId });
+      }}
+      onCloseMemberDrawer={() => {
+        setSelectedMemberId(null);
+        closeOverlay();
+      }}
+      onNewOrganizationNameChange={setNewOrganizationName}
+      onTargetUserIdChange={setTargetUserId}
+      onTargetRoleChange={setTargetRole}
+      onRoleDraftChange={(userId, role) =>
+        setRowRoleDrafts((current) => ({
+          ...current,
+          [userId]: role
+        }))
+      }
+      onCreateOrganization={() => void createOrganization()}
+      onSaveMember={() => void addOrUpdateMember()}
+      onUpdateMemberRole={(userId) => void updateMemberRole(userId)}
+      onRemoveMember={(userId) => void removeMember(userId)}
+    />
   );
 }

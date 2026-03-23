@@ -1,11 +1,6 @@
 import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
-import type { AdminCatalogMessages } from "@/src/lib/i18n/protectedPageMessages.catalog";
 
-export type AdminCatalogRoute =
-  | "/admin/skills"
-  | "/admin/jobs"
-  | "/admin/sync-jobs"
-  | "/admin/sync-policy/repository";
+export type { AdminCatalogRoute } from "@/src/lib/routing/adminRouteRegistry";
 
 export interface AdminSkillItem {
   id: number;
@@ -150,27 +145,3 @@ export interface AdminCatalogViewModelOptions {
   locale?: PublicLocale;
   messages?: AdminCatalogModelMessages;
 }
-
-export interface AdminCatalogRouteMeta {
-  title: string;
-  description: string;
-  endpoint: string;
-}
-
-export type AdminCatalogPageMessages = Pick<
-  AdminCatalogMessages,
-  | "routeSkillsTitle"
-  | "routeSkillsDescription"
-  | "routeJobsTitle"
-  | "routeJobsDescription"
-  | "routeSyncJobsTitle"
-  | "routeSyncJobsDescription"
-  | "routePolicyTitle"
-  | "routePolicyDescription"
-  | "loadError"
-  | "actionError"
-  | "retryJobSuccess"
-  | "cancelJobSuccess"
-  | "skillSyncSuccess"
-  | "policySaveSuccess"
->;

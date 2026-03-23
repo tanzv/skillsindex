@@ -1,16 +1,27 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { buildAccountNavigationItems } from "@/src/lib/routing/accountNavigation";
+import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
 import type { SessionContext } from "@/src/lib/schemas/session";
-import { cn } from "@/src/lib/utils";
-import { type AccountShellMessages, type AdminNavigationMessages, type ProtectedTopbarMessages } from "@/src/lib/i18n/protectedMessages";
+import {
+  type AccountShellMessages,
+  type AdminNavigationMessages,
+  type ProtectedTopbarMessages
+} from "@/src/lib/i18n/protectedMessages";
+import {
+  buildAccountShellNavigationRegistry,
+  buildProtectedTopbarConfigFromRegistry,
+  resolveProtectedBrandSubtitle,
+  resolveProtectedNavigationSidebarState
+} from "@/src/lib/navigation/protectedNavigationRegistry";
+import { marketplaceHomeRoute } from "@/src/lib/routing/protectedSurfaceLinks";
+import { buildMarketplaceHrefForTheme } from "@/src/lib/theme/sharedThemePreference";
 
-import { buildAccountCenterMenuConfig, buildAccountProtectedTopbarConfig } from "./protectedTopbarConfigs";
+import { buildAccountCenterMenuConfig, buildAdminAccountCenterMenuConfig } from "./protectedTopbarConfigs";
 import { ProtectedConsoleShell } from "./ProtectedConsoleShell";
+import { ProtectedSectionSidebar } from "./ProtectedSectionSidebar";
 import { ProtectedTopbar } from "./ProtectedTopbar";
 
 interface AccountShellProps {
@@ -20,13 +31,21 @@ interface AccountShellProps {
     shell: AccountShellMessages;
     navigation: AdminNavigationMessages;
     topbar: ProtectedTopbarMessages;
+    workspace: WorkspaceMessages;
   };
 }
 
 export function AccountShell({ children, session, messages }: AccountShellProps) {
   const pathname = usePathname();
-  const accountNavigationItems = buildAccountNavigationItems(messages.shell);
-  const activeAccountItem = accountNavigationItems.find((item) => item.href === pathname) || accountNavigationItems[0];
+  const registry = buildAccountShellNavigationRegistry({
+    adminNavigation: messages.navigation,
+    workspacePage: messages.workspace,
+    accountShell: messages.shell
+  });
+  const sidebarState = resolveProtectedNavigationSidebarState(pathname, registry);
+  const accountCenterMenu = sidebarState.activeModule.accountCenterVariant === "admin"
+    ? buildAdminAccountCenterMenuConfig(messages.topbar, messages.navigation)
+    : buildAccountCenterMenuConfig(messages.topbar);
 
   return (
     <ProtectedConsoleShell
@@ -39,14 +58,26 @@ export function AccountShell({ children, session, messages }: AccountShellProps)
           pathname={pathname}
           session={session}
           brandTitle="SkillsIndex"
-          brandSubtitle={`${activeAccountItem.label} ${messages.shell.brandSubtitleSuffix}`}
-          brandHref="/account/profile"
-          config={buildAccountProtectedTopbarConfig(messages.navigation, messages.shell, messages.topbar)}
-          accountCenterMenu={buildAccountCenterMenuConfig(messages.topbar)}
+          brandSubtitle={resolveProtectedBrandSubtitle(pathname, registry, messages.shell.brandSubtitleSuffix)}
+          brandHref={sidebarState.activeModule.topLevel.href}
+          config={buildProtectedTopbarConfigFromRegistry(
+            pathname,
+            registry,
+            {
+              primaryGroupLabel: messages.navigation.topbarPrimaryGroupLabel,
+              primaryGroupTag: messages.navigation.topbarPrimaryGroupTag,
+              overflowTitle: messages.shell.topbarOverflowTitle,
+              overflowHint: messages.shell.topbarOverflowHint,
+              overflowPrimaryTitle: messages.navigation.topbarOverflowPrimaryTitle
+            },
+            messages.topbar
+          )}
+          accountCenterMenu={accountCenterMenu}
           dataTestId="account-topbar"
           navigationAriaLabel={messages.topbar.navigationAriaLabelAccount}
           messages={messages.topbar}
-          utilityLink={{ href: "/", label: messages.topbar.marketplaceLinkLabel }}
+          utilityLink={{ href: buildMarketplaceHrefForTheme(theme, marketplaceHomeRoute), label: messages.topbar.marketplaceLinkLabel }}
+          accountMenuTriggerVariant="avatar"
           theme={theme}
           onThemeChange={setTheme}
           onOpenNavigation={openSidebar}
@@ -56,25 +87,25 @@ export function AccountShell({ children, session, messages }: AccountShellProps)
           navigationToggleExpanded={isSidebarOpen}
         />
       )}
-      sidebar={
-        <>
-          <section className="account-shell-panel">
-            <p className="account-shell-panel-title">{messages.shell.sectionsTitle}</p>
-            <div className="account-shell-side-list">
-              {accountNavigationItems.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-
-                return (
-                  <Link key={item.href} href={item.href} className={cn("account-shell-side-link", isActive && "is-active")}>
-                    <span>{item.label}</span>
-                    <span className="account-shell-side-link-note">{item.description || item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-        </>
-      }
+      sidebar={(
+        <ProtectedSectionSidebar
+          scope="account-shell"
+          title={sidebarState.activeModule.sidebar.title}
+          description={sidebarState.activeModule.sidebar.description}
+          groups={sidebarState.groups.map((group) => ({
+            id: group.id,
+            title: group.title,
+            items: group.items.map((item) => ({
+              id: item.id,
+              href: item.href,
+              label: item.label,
+              note: item.description || item.label,
+              active: item.active
+            }))
+          }))}
+          dataTestId="account-secondary-sidebar"
+        />
+      )}
     >
       {children}
     </ProtectedConsoleShell>

@@ -5,12 +5,6 @@ export interface PublicAuthMessages {
   localeSwitchAriaLabel: string;
   localeEnAriaLabel: string;
   localeZhAriaLabel: string;
-  infoEyebrow: string;
-  infoTitle: string;
-  infoLead: string;
-  infoPointOne: string;
-  infoPointTwo: string;
-  infoPointThree: string;
   brandText: string;
   heading: string;
   note: string;
@@ -40,12 +34,6 @@ export const publicAuthMessageKeyMap = {
   localeSwitchAriaLabel: "locale_switch_aria_label",
   localeEnAriaLabel: "locale_en_aria_label",
   localeZhAriaLabel: "locale_zh_aria_label",
-  infoEyebrow: "info_eyebrow",
-  infoTitle: "info_title",
-  infoLead: "info_lead",
-  infoPointOne: "info_point_one",
-  infoPointTwo: "info_point_two",
-  infoPointThree: "info_point_three",
   brandText: "brand_text",
   heading: "heading",
   note: "note",

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildAdminIngestionMetrics,
+  createAdminIngestionRepositorySnapshot,
   normalizeImportJobsPayload,
   normalizeRepositorySyncPolicyPayload,
   normalizeSkillInventoryPayload,
@@ -86,5 +87,53 @@ describe("admin ingestion model", () => {
         expect.objectContaining({ label: "Import Jobs", value: "2" })
       ])
     );
+  });
+
+  it("creates a repository snapshot from the three repository payloads", () => {
+    const snapshot = createAdminIngestionRepositorySnapshot({
+      skillsPayload: {
+        items: [
+          {
+            id: 21,
+            name: "Repository Skill",
+            description: "Repository description",
+            source_type: "repository",
+            visibility: "public",
+            owner_username: "repo.bot",
+            updated_at: "2026-03-16T08:00:00Z"
+          }
+        ]
+      },
+      policyPayload: {
+        enabled: true,
+        interval: "15m",
+        timeout: "5m",
+        batch_size: 30
+      },
+      syncRunsPayload: {
+        items: [
+          {
+            id: 41,
+            trigger: "schedule",
+            scope: "repository",
+            status: "success",
+            failed: 0,
+            synced: 12,
+            started_at: "2026-03-16T08:10:00Z"
+          }
+        ]
+      }
+    });
+
+    expect(snapshot.skills).toHaveLength(1);
+    expect(snapshot.skills[0]).toEqual(expect.objectContaining({ name: "Repository Skill" }));
+    expect(snapshot.policy).toEqual({
+      enabled: true,
+      interval: "15m",
+      timeout: "5m",
+      batchSize: 30
+    });
+    expect(snapshot.syncRuns).toHaveLength(1);
+    expect(snapshot.syncRuns[0]).toEqual(expect.objectContaining({ id: 41, synced: 12 }));
   });
 });

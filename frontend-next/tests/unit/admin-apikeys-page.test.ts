@@ -35,14 +35,14 @@ function renderPage() {
 }
 
 describe("admin api keys page", () => {
-  it("renders localized sections and actions", () => {
+  it("defers api key sections until live data loads", () => {
     const markup = renderPage();
 
     expect(markup).toContain("API Keys");
     expect(markup).toContain("Manage API credentials.");
-    expect(markup).toContain("Key Inventory");
-    expect(markup).toContain("Create Key");
-    expect(markup).toContain("Owner Summary");
     expect(markup).toContain("Refreshing...");
+    expect(markup).not.toContain("Key Inventory");
+    expect(markup).not.toContain("Create Key");
+    expect(markup).not.toContain("Owner Summary");
   });
 });

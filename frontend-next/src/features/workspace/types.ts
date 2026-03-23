@@ -1,8 +1,8 @@
 import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
 import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
-import type { workspaceRouteMeta } from "./workspaceRouteMeta";
+import type { WorkspaceRoute } from "@/src/lib/routing/routes";
 
-export type WorkspaceRoutePath = keyof typeof workspaceRouteMeta;
+export type WorkspaceRoutePath = WorkspaceRoute;
 export type WorkspaceQueueStatus = "pending" | "running" | "risk";
 
 export interface WorkspaceMetric {

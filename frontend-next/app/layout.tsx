@@ -13,8 +13,12 @@ export const metadata: Metadata = {
   title: "SkillsIndex",
   description: "Next.js migration workspace for SkillsIndex.",
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-    shortcut: ["/icon.svg"]
+    icon: [
+      { url: "/brand/skillsindex-tab-light.svg", type: "image/svg+xml", media: "(prefers-color-scheme: light)" },
+      { url: "/brand/skillsindex-tab-dark.svg", type: "image/svg+xml", media: "(prefers-color-scheme: dark)" },
+      { url: "/icon.svg", type: "image/svg+xml" }
+    ],
+    shortcut: ["/brand/skillsindex-tab-light.svg"]
   }
 };
 

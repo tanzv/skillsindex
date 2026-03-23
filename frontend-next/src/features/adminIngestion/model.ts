@@ -1,7 +1,5 @@
+import type { AdminIngestionRoute } from "@/src/lib/routing/adminRouteRegistry";
 import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
-import type { AdminIngestionMessages } from "@/src/lib/i18n/protectedPageMessages.ingestion";
-
-export type AdminIngestionRoute = "/admin/ingestion/manual" | "/admin/ingestion/repository" | "/admin/records/imports";
 
 export interface ManualDraft {
   name: string;
@@ -70,6 +68,12 @@ export interface RepositorySyncPolicy {
   batchSize: number;
 }
 
+export interface AdminIngestionRepositorySnapshot {
+  skills: SkillInventoryItem[];
+  policy: RepositorySyncPolicy;
+  syncRuns: SyncRunItem[];
+}
+
 const repositorySyncPolicyDefaults: RepositorySyncPolicy = {
   enabled: false,
   interval: "30m",
@@ -129,16 +133,6 @@ const defaultAdminIngestionMetricMessages: AdminIngestionMetricMessages = {
   valueEnabled: "Enabled",
   valueDisabled: "Disabled"
 };
-
-export type AdminIngestionPageMessages = Pick<
-  AdminIngestionMessages,
-  | "routeManualTitle"
-  | "routeManualDescription"
-  | "routeRepositoryTitle"
-  | "routeRepositoryDescription"
-  | "routeImportsTitle"
-  | "routeImportsDescription"
->;
 
 export function createManualDraft(): ManualDraft {
   return {
@@ -264,6 +258,18 @@ export function normalizeRepositorySyncPolicyPayload(payload: unknown): Reposito
   };
 }
 
+export function createAdminIngestionRepositorySnapshot(input: {
+  skillsPayload: unknown;
+  policyPayload: unknown;
+  syncRunsPayload: unknown;
+}): AdminIngestionRepositorySnapshot {
+  return {
+    skills: normalizeSkillInventoryPayload(input.skillsPayload).items,
+    policy: normalizeRepositorySyncPolicyPayload(input.policyPayload),
+    syncRuns: normalizeSyncRunsPayload(input.syncRunsPayload).items
+  };
+}
+
 export function formatAdminIngestionDate(
   value: string,
   locale: PublicLocale = "en",
@@ -329,27 +335,6 @@ export function buildAdminIngestionMetrics(
   ];
 }
 
-export function resolveAdminIngestionRouteMeta(route: AdminIngestionRoute, messages: AdminIngestionPageMessages) {
-  if (route === "/admin/ingestion/manual") {
-    return {
-      title: messages.routeManualTitle,
-      description: messages.routeManualDescription
-    };
-  }
-
-  if (route === "/admin/ingestion/repository") {
-    return {
-      title: messages.routeRepositoryTitle,
-      description: messages.routeRepositoryDescription
-    };
-  }
-
-  return {
-    title: messages.routeImportsTitle,
-    description: messages.routeImportsDescription
-  };
-}
-
 export function canRetryImportJob(job: ImportJobItem): boolean {
   const status = job.status.toLowerCase();
   return status === "failed" || status === "canceled";
@@ -358,4 +343,28 @@ export function canRetryImportJob(job: ImportJobItem): boolean {
 export function canCancelImportJob(job: ImportJobItem): boolean {
   const status = job.status.toLowerCase();
   return status === "pending" || status === "running";
+}
+
+export function resolveSelectedSkillInventoryItem(items: SkillInventoryItem[], skillId: number | null): SkillInventoryItem | null {
+  if (!skillId) {
+    return null;
+  }
+
+  return items.find((item) => item.id === skillId) || null;
+}
+
+export function resolveSelectedSyncRunItem(items: SyncRunItem[], runId: number | null): SyncRunItem | null {
+  if (!runId) {
+    return null;
+  }
+
+  return items.find((item) => item.id === runId) || null;
+}
+
+export function resolveSelectedImportJobItem(items: ImportJobItem[], jobId: number | null): ImportJobItem | null {
+  if (!jobId) {
+    return null;
+  }
+
+  return items.find((item) => item.id === jobId) || null;
 }

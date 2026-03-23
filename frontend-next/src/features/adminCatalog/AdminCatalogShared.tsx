@@ -3,6 +3,7 @@
 import { type ReactNode, useMemo, useState } from "react";
 
 import { AdminEmptyBlock, AdminMetaChipList, AdminSelectableRecordCard } from "@/src/components/admin/AdminPrimitives";
+import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -10,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src
 import { Input } from "@/src/components/ui/input";
 
 import type { AdminCatalogRoute, AdminCatalogRow, AdminCatalogViewModel } from "./model";
+import styles from "./AdminCatalogSurface.module.scss";
 
 export function statusTone(status: string) {
   const normalized = status.toLowerCase();
@@ -64,12 +66,12 @@ export function QueryFilters({
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className={styles.sectionCard}>
+      <CardHeader className={styles.sectionHeader}>
         <CardTitle>{adminCatalogMessages.filtersTitle}</CardTitle>
-        <CardDescription>{adminCatalogMessages.filtersDescription}</CardDescription>
+        <CardDescription className={styles.sectionDescription}>{adminCatalogMessages.filtersDescription}</CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4 md:grid-cols-3">
+      <CardContent className={styles.filtersContent}>
         <Input
           aria-label={adminCatalogMessages.keywordLabel}
           value={query.q || ""}
@@ -88,7 +90,7 @@ export function QueryFilters({
           placeholder={route === "/admin/skills" ? adminCatalogMessages.visibilityPlaceholder : adminCatalogMessages.jobTypePlaceholder}
           onChange={(event) => onQueryChange(route === "/admin/skills" ? "visibility" : "job_type", event.target.value)}
         />
-        <div className="flex flex-wrap gap-3 md:col-span-3">
+        <div className={styles.filterActions}>
           <Button onClick={onRefresh} disabled={loading}>
             {adminCatalogMessages.applyFiltersAction}
           </Button>
@@ -115,22 +117,22 @@ export function RowSelectionButton({ row, selected, buttonLabel, onSelect, child
   const statusLabel = row.statusLabel || row.status;
 
   return (
-    <AdminSelectableRecordCard selected={selected} data-testid={`admin-catalog-row-${row.id}`}>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="text-sm font-semibold text-[color:var(--ui-text-primary)]">{row.name}</div>
+    <AdminSelectableRecordCard
+      selected={selected}
+      className={selected ? `${styles.rowCard} ${styles.rowCardSelected}` : styles.rowCard}
+      data-testid={`admin-catalog-row-${row.id}`}
+    >
+      <div className={styles.rowLayout}>
+        <div className={styles.rowContent}>
+          <div className={styles.rowHeader}>
+            <div className={styles.rowTitle}>{row.name}</div>
             <Badge variant={statusTone(row.status)}>{statusLabel}</Badge>
           </div>
-          <div className="text-sm text-[color:var(--ui-text-secondary)]">{row.summary}</div>
+          <div className={styles.rowSummary}>{row.summary}</div>
           <AdminMetaChipList items={row.meta} />
-          {row.detail ? (
-            <div className="rounded-xl border border-[color:var(--ui-danger-border)] bg-[color:var(--ui-danger-bg)] px-3 py-2 text-xs text-[color:var(--ui-danger-text)]">
-              {row.detail}
-            </div>
-          ) : null}
+          {row.detail ? <div className={styles.rowDetail}>{row.detail}</div> : null}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className={styles.rowActions}>
           <Button size="sm" variant={selected ? "soft" : "outline"} onClick={onSelect}>
             {selected ? adminCatalogMessages.selectedAction : buttonLabel}
           </Button>
@@ -138,6 +140,55 @@ export function RowSelectionButton({ row, selected, buttonLabel, onSelect, child
         </div>
       </div>
     </AdminSelectableRecordCard>
+  );
+}
+
+interface CatalogDetailDrawerProps {
+  open: boolean;
+  row: AdminCatalogRow | null;
+  description: string;
+  closeLabel: string;
+  onClose: () => void;
+  actions?: ReactNode;
+}
+
+export function CatalogDetailDrawer({
+  open,
+  row,
+  description,
+  closeLabel,
+  onClose,
+  actions
+}: CatalogDetailDrawerProps) {
+  const statusLabel = row?.statusLabel || row?.status || "";
+
+  return (
+    <DetailFormSurface
+      open={open && Boolean(row)}
+      variant="drawer"
+      size="default"
+      title={row?.name || ""}
+      description={description}
+      closeLabel={closeLabel}
+      onClose={onClose}
+    >
+      {row ? (
+        <div className={styles.detailContent}>
+          <div className={styles.detailSurface}>
+            <div className={styles.detailHeader}>
+              <span className={styles.detailTitle}>{row.name}</span>
+              <Badge variant={statusTone(row.status)}>{statusLabel}</Badge>
+            </div>
+            <p className={styles.detailSummary}>{row.summary}</p>
+            <AdminMetaChipList items={row.meta} tone="control" />
+            {row.detail ? <div className={styles.rowDetail}>{row.detail}</div> : null}
+          </div>
+          {actions ? <div className={styles.detailActions}>{actions}</div> : null}
+        </div>
+      ) : (
+        <AdminEmptyBlock>{description}</AdminEmptyBlock>
+      )}
+    </DetailFormSurface>
   );
 }
 
@@ -153,28 +204,24 @@ export function DetailCard({ title, description, row, emptyText, actions }: Deta
   const statusLabel = row?.statusLabel || row?.status || "";
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className={styles.sectionCard}>
+      <CardHeader className={styles.sectionHeader}>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <CardDescription className={styles.sectionDescription}>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className={styles.detailContent}>
         {row ? (
           <>
-            <div className="rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] p-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-base font-semibold text-[color:var(--ui-text-primary)]">{row.name}</span>
+            <div className={styles.detailSurface}>
+              <div className={styles.detailHeader}>
+                <span className={styles.detailTitle}>{row.name}</span>
                 <Badge variant={statusTone(row.status)}>{statusLabel}</Badge>
               </div>
-              <p className="mt-3 text-sm leading-6 text-[color:var(--ui-text-secondary)]">{row.summary}</p>
-              <AdminMetaChipList items={row.meta} tone="control" className="mt-3" />
-              {row.detail ? (
-                <div className="mt-3 rounded-xl border border-[color:var(--ui-danger-border)] bg-[color:var(--ui-danger-bg)] px-3 py-2 text-xs text-[color:var(--ui-danger-text)]">
-                  {row.detail}
-                </div>
-              ) : null}
+              <p className={styles.detailSummary}>{row.summary}</p>
+              <AdminMetaChipList items={row.meta} tone="control" />
+              {row.detail ? <div className={styles.rowDetail}>{row.detail}</div> : null}
             </div>
-            {actions ? <div className="flex flex-wrap gap-3">{actions}</div> : null}
+            {actions ? <div className={styles.detailActions}>{actions}</div> : null}
           </>
         ) : (
           <AdminEmptyBlock>{emptyText}</AdminEmptyBlock>
@@ -190,20 +237,17 @@ interface SidePanelsProps {
 
 export function SidePanels({ panels }: SidePanelsProps) {
   return (
-    <div className="space-y-6">
+    <div className={styles.panelStack}>
       {panels.map((panel) => (
-        <Card key={panel.title}>
-          <CardHeader>
+        <Card key={panel.title} className={styles.sectionCard}>
+          <CardHeader className={styles.sectionHeaderCompact}>
             <CardTitle>{panel.title}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className={styles.panelContent}>
             {panel.items.map((item) => (
-              <div
-                key={`${panel.title}-${item.label}`}
-                className="rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] px-4 py-3"
-              >
-                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ui-text-muted)]">{item.label}</div>
-                <div className="mt-2 text-sm font-semibold text-[color:var(--ui-text-primary)]">{item.value}</div>
+              <div key={`${panel.title}-${item.label}`} className={styles.panelItem}>
+                <div className={styles.panelItemLabel}>{item.label}</div>
+                <div className={styles.panelItemValue}>{item.value}</div>
               </div>
             ))}
           </CardContent>

@@ -2,9 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildAccountCenterMenuConfig,
-  buildAdminAccountCenterMenuConfig
+  buildAccountProtectedTopbarConfig,
+  buildAdminAccountCenterMenuConfig,
+  buildAdminProtectedTopbarConfig,
+  buildWorkspaceProtectedTopbarConfig
 } from "@/src/components/shared/protectedTopbarConfigs";
 import { protectedTopbarMessageFallbacks } from "@/src/lib/i18n/protectedMessages";
+import type { AccountShellMessages } from "@/src/lib/i18n/protectedMessages";
+import { workspaceMessageFallbacks } from "@/src/lib/i18n/protectedPageMessages.workspace";
 import type { AdminNavigationMessages } from "@/src/lib/i18n/protectedMessages";
 
 const adminNavigationMessages: AdminNavigationMessages = {
@@ -17,6 +22,8 @@ const adminNavigationMessages: AdminNavigationMessages = {
   groupOperationsLabel: "Operations",
   groupUsersLabel: "Users",
   groupSecurityLabel: "Security",
+  moduleAdministrationLabel: "Administration",
+  moduleAdministrationDescription: "Administration module.",
   hubWorkspaceLabel: "Workspace",
   hubWorkspaceDescription: "Workspace hub.",
   hubAccountLabel: "Account",
@@ -76,6 +83,28 @@ const adminNavigationMessages: AdminNavigationMessages = {
   topbarOverflowRelatedTitle: "Related"
 };
 
+const accountShellMessages: AccountShellMessages = {
+  brandSubtitleSuffix: "Center",
+  sectionsTitle: "Account",
+  currentUserTitle: "Current User",
+  marketplaceAccessLine: "Marketplace access",
+  marketplaceAccessPublic: "Public",
+  marketplaceAccessRestricted: "Restricted",
+  unknownUser: "Unknown User",
+  guestRole: "guest",
+  inactiveStatus: "inactive",
+  navProfileLabel: "Profile",
+  navProfileNote: "Manage profile information.",
+  navSecurityLabel: "Security",
+  navSecurityNote: "Review credentials and policies.",
+  navSessionsLabel: "Sessions",
+  navSessionsNote: "Inspect active sessions.",
+  navApiCredentialsLabel: "API Credentials",
+  navApiCredentialsNote: "Manage API credentials.",
+  topbarOverflowTitle: "Account Menu",
+  topbarOverflowHint: "Continue through account settings without leaving the protected shell."
+};
+
 describe("protected topbar account center configs", () => {
   it("builds the shared account center section by default", () => {
     const config = buildAccountCenterMenuConfig(protectedTopbarMessageFallbacks);
@@ -88,6 +117,8 @@ describe("protected topbar account center configs", () => {
       "account-sessions",
       "account-api-credentials"
     ]);
+    expect(config.sections[0]?.entries.every((entry) => entry.kind === "account")).toBe(true);
+    expect(config.sections[0]?.entries.every((entry) => entry.description.length > 0)).toBe(true);
   });
 
   it("prepends admin service sections ahead of the shared account center actions", () => {
@@ -100,5 +131,54 @@ describe("protected topbar account center configs", () => {
     ]);
     expect(config.sections[0]?.entries.map((entry) => entry.label)).toEqual(["Access", "Roles", "Organizations"]);
     expect(config.sections[1]?.entries.map((entry) => entry.label)).toEqual(["Integrations", "Release Gates"]);
+    expect(config.sections[0]?.entries.every((entry) => entry.kind === "admin")).toBe(true);
+    expect(config.sections[1]?.entries.every((entry) => entry.description.length > 0)).toBe(true);
+  });
+
+  it("keeps admin first-level navigation in the header so the sidebar can stay second-level only", () => {
+    const config = buildAdminProtectedTopbarConfig(adminNavigationMessages, protectedTopbarMessageFallbacks);
+
+    expect(config.entries.map((entry) => entry.label)).toEqual([
+      "Workspace",
+      "Skills",
+      "Organizations",
+      "Administration",
+      "Account"
+    ]);
+  });
+
+  it("keeps workspace topbar entries while avoiding workspace shell sidebars for other modules", () => {
+    const config = buildWorkspaceProtectedTopbarConfig(
+      workspaceMessageFallbacks,
+      protectedTopbarMessageFallbacks,
+      adminNavigationMessages
+    );
+
+    expect(config.entries.map((entry) => entry.label)).toEqual([
+      "Workspace",
+      "Skills",
+      "Organizations",
+      "Administration",
+      "Account"
+    ]);
+    expect(config.entries.find((entry) => entry.id === "skill-management")?.matchPrefixes).toContain("/admin/skills");
+  });
+
+  it("keeps account topbar entries while deferring admin sidebar expansion", () => {
+    const config = buildAccountProtectedTopbarConfig(
+      adminNavigationMessages,
+      accountShellMessages,
+      protectedTopbarMessageFallbacks,
+      workspaceMessageFallbacks
+    );
+
+    expect(config.entries.map((entry) => entry.label)).toEqual([
+      "Workspace",
+      "Skills",
+      "Organizations",
+      "Administration",
+      "Account"
+    ]);
+    expect(config.entries.find((entry) => entry.id === "account")?.matchPrefixes).toContain("/account");
   });
 });

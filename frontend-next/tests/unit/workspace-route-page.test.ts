@@ -8,6 +8,9 @@ import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.wor
 import type { WorkspaceRoutePath } from "@/src/features/workspace/types";
 
 import { createProtectedPageTestMessages } from "./protected-page-test-messages";
+import { buildPublicMarketplaceFallback } from "@/src/lib/marketplace/fallback";
+
+const workspacePayload = buildPublicMarketplaceFallback();
 
 function renderWorkspaceRoute(route: WorkspaceRoutePath, messages?: Partial<WorkspaceMessages>) {
   const model = buildWorkspacePageModel(route, {
@@ -19,33 +22,34 @@ function renderWorkspaceRoute(route: WorkspaceRoutePath, messages?: Partial<Work
       status: "active"
     },
     marketplacePublicAccess: true
-  }, undefined, messages);
+  }, workspacePayload, messages);
 
   return renderToStaticMarkup(createElement(WorkspaceRoutePage, { model }));
 }
 
 describe("workspace route page", () => {
-  it("renders queue route as list-detail workspace", () => {
+  it("renders queue route as backlog plus drawer entry actions", () => {
     const markup = renderWorkspaceRoute("/workspace/queue");
 
     expect(markup).toContain("Queue Backlog");
-    expect(markup).toContain("Execution Spotlight");
+    expect(markup).toContain("Open Details");
     expect(markup).toContain("Queue Insights");
   });
 
-  it("renders policy route with focused review queue", () => {
+  it("renders policy route with focused review queue and drawer triggers", () => {
     const markup = renderWorkspaceRoute("/workspace/policy");
 
     expect(markup).toContain("Policy Focus Queue");
+    expect(markup).toContain("Open Details");
     expect(markup).toContain("Governance Priorities");
     expect(markup).toContain("Review Pressure");
   });
 
-  it("renders runbook route with explicit target selection", () => {
+  it("renders runbook route with explicit target selection and drawer triggers", () => {
     const markup = renderWorkspaceRoute("/workspace/runbook");
 
     expect(markup).toContain("Runbook Targets");
-    expect(markup).toContain("Response Script");
+    expect(markup).toContain("Open Details");
     expect(markup).toContain("Escalation Checklist");
   });
 
@@ -53,15 +57,15 @@ describe("workspace route page", () => {
     const testMessages = createProtectedPageTestMessages({
       workspace: {
         statusRunning: "running_custom",
-        itemCategoryPathTemplate: "path::{category}>{subcategory}",
         ownerCoverageValueTemplate: "{items} custom-items · {risk} custom-risk",
-        topTagBadgeTemplate: "{tag} :: {count}"
+        topTagBadgeTemplate: "{tag} :: {count}",
+        actionOpenDetails: "Open Details Now"
       }
     });
 
     const markup = renderWorkspaceRoute("/workspace/runbook", testMessages.workspace);
 
     expect(markup).toContain("running_custom");
-    expect(markup).toContain("path::development&gt;frontend");
+    expect(markup).toContain("Open Details Now");
   });
 });

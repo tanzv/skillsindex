@@ -9,6 +9,9 @@ export interface AdminIntegrationsMessages {
   reloadAction: string;
   connectorInventoryTitle: string;
   connectorInventoryDescription: string;
+  openConnectorDetailAction: string;
+  closePanelAction: string;
+  connectorDetailDescription: string;
   emptyFilteredConnectors: string;
   enabledLabel: string;
   disabledLabel: string;
@@ -25,6 +28,11 @@ export interface AdminIntegrationsMessages {
   latestDeliveryLabel: string;
   connectorSelectionSummaryLabel: string;
   unknownConnector: string;
+  noConnectorSelected: string;
+  connectorProviderLabel: string;
+  connectorBaseUrlLabel: string;
+  connectorUpdatedLabel: string;
+  connectorDescriptionLabel: string;
   loadError: string;
   metricTotalConnectors: string;
   metricEnabledConnectors: string;
@@ -53,6 +61,9 @@ export const adminIntegrationsMessageKeyMap = {
   reloadAction: "admin_integrations_reload_action",
   connectorInventoryTitle: "admin_integrations_connector_inventory_title",
   connectorInventoryDescription: "admin_integrations_connector_inventory_description",
+  openConnectorDetailAction: "admin_integrations_open_connector_detail_action",
+  closePanelAction: "admin_integrations_close_panel_action",
+  connectorDetailDescription: "admin_integrations_connector_detail_description",
   emptyFilteredConnectors: "admin_integrations_empty_filtered_connectors",
   enabledLabel: "admin_integrations_enabled_label",
   disabledLabel: "admin_integrations_disabled_label",
@@ -69,6 +80,11 @@ export const adminIntegrationsMessageKeyMap = {
   latestDeliveryLabel: "admin_integrations_latest_delivery_label",
   connectorSelectionSummaryLabel: "admin_integrations_connector_selection_summary_label",
   unknownConnector: "admin_integrations_unknown_connector",
+  noConnectorSelected: "admin_integrations_no_connector_selected",
+  connectorProviderLabel: "admin_integrations_connector_provider_label",
+  connectorBaseUrlLabel: "admin_integrations_connector_base_url_label",
+  connectorUpdatedLabel: "admin_integrations_connector_updated_label",
+  connectorDescriptionLabel: "admin_integrations_connector_description_label",
   loadError: "admin_integrations_load_error",
   metricTotalConnectors: "admin_integrations_metric_total_connectors",
   metricEnabledConnectors: "admin_integrations_metric_enabled_connectors",
@@ -97,6 +113,9 @@ export const adminIntegrationsMessageFallbacks = {
   reloadAction: "Reload",
   connectorInventoryTitle: "Connector Inventory",
   connectorInventoryDescription: "Filter by provider or connector name, then inspect telemetry for the active connector.",
+  openConnectorDetailAction: "Open Details",
+  closePanelAction: "Close Panel",
+  connectorDetailDescription: "Inspect connector metadata without leaving the governance workspace.",
   emptyFilteredConnectors: "No connectors match the current filters.",
   enabledLabel: "enabled",
   disabledLabel: "disabled",
@@ -113,6 +132,11 @@ export const adminIntegrationsMessageFallbacks = {
   latestDeliveryLabel: "Latest delivery",
   connectorSelectionSummaryLabel: "Connector selection",
   unknownConnector: "Unknown connector",
+  noConnectorSelected: "No connector selected",
+  connectorProviderLabel: "Provider",
+  connectorBaseUrlLabel: "Base URL",
+  connectorUpdatedLabel: "Updated",
+  connectorDescriptionLabel: "Description",
   loadError: "Failed to load integrations.",
   metricTotalConnectors: "Total Connectors",
   metricEnabledConnectors: "Enabled Connectors",

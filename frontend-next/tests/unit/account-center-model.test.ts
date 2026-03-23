@@ -12,7 +12,7 @@ import {
   sanitizeAccountAPIKeyCreateDraft,
   sanitizeAccountProfileDraft
 } from "@/src/features/accountCenter/model";
-import { buildAccessOverview, buildAdminAccessGovernanceData } from "@/src/features/adminAccess/model";
+import { buildAccessOverview, buildAdminAccessGovernanceData, resolveSelectedAccessAccount } from "@/src/features/adminAccess/model";
 
 describe("account center model", () => {
   it("maps account routes to sections and back", () => {
@@ -43,6 +43,15 @@ describe("account center model", () => {
       avatar_url: "https://example.test/a.png",
       bio: "Maintainer"
     });
+  });
+
+  it("falls back to username when explicit display names are empty", () => {
+    const draft = buildAccountProfileDraft({
+      user: { id: 2, username: "admin", displayName: "", role: "super_admin", status: "active" },
+      profile: { display_name: "", avatar_url: "", bio: "" }
+    });
+
+    expect(draft.displayName).toBe("admin");
   });
 
   it("computes completeness, formatting, and initials safely", () => {
@@ -141,5 +150,26 @@ describe("admin access model", () => {
       ])
     );
     expect(overview.roleSummary).toEqual(expect.arrayContaining([expect.objectContaining({ role: "admin", count: 1 })]));
+  });
+
+  it("resolves selected access account by id", () => {
+    const selectedAccount = resolveSelectedAccessAccount(
+      [
+        {
+          id: 9,
+          username: "viewer.user",
+          role: "viewer",
+          status: "active",
+          createdAt: "2026-03-01T00:00:00Z",
+          updatedAt: "2026-03-02T00:00:00Z",
+          forceLogoutAt: ""
+        }
+      ],
+      9
+    );
+
+    expect(selectedAccount).toEqual(expect.objectContaining({ id: 9, username: "viewer.user" }));
+    expect(resolveSelectedAccessAccount([], 9)).toBeNull();
+    expect(resolveSelectedAccessAccount([], null)).toBeNull();
   });
 });

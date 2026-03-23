@@ -1,4 +1,7 @@
-export type ProtectedTopbarEntryKind = "primary" | "access" | "quick";
+import type {
+  ProtectedTopbarConfig,
+  ProtectedTopbarEntryKind
+} from "@/src/lib/navigation/protectedTopbarContracts";
 
 export interface ProtectedTopbarEntry {
   id: string;
@@ -8,17 +11,6 @@ export interface ProtectedTopbarEntry {
   kind: ProtectedTopbarEntryKind;
   overflowGroupId: string;
   active: boolean;
-  matchPrefixes?: string[];
-}
-
-export interface ProtectedTopbarEntrySeed {
-  id: string;
-  href: string;
-  label: string;
-  description: string;
-  kind: ProtectedTopbarEntryKind;
-  overflowGroupId: string;
-  exactMatch?: boolean;
   matchPrefixes?: string[];
 }
 
@@ -42,19 +34,6 @@ export interface ProtectedTopbarOverflowMetric {
   id: string;
   label: string;
   value: string;
-}
-
-export interface ProtectedTopbarConfig {
-  entries: ProtectedTopbarEntrySeed[];
-  primaryGroups: Array<Pick<ProtectedTopbarPrimaryGroup, "id" | "label" | "tagLabel" | "kind">>;
-  overflowGroupTitles: Record<string, string>;
-  overflowGroupOrder: string[];
-  overflowTitle: string;
-  overflowHint: string;
-  overflowMetricLabels: {
-    visible: string;
-    hidden: string;
-  };
 }
 
 export interface ProtectedTopbarModel {

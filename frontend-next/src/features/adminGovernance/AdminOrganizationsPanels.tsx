@@ -6,12 +6,9 @@ import { Input } from "@/src/components/ui/input";
 import { Select } from "@/src/components/ui/select";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
-
 import type { OrganizationItem, OrganizationMemberItem, OrganizationsOverview } from "./organizationsModel";
 import { formatDateTime } from "./shared";
-
 export const organizationRoleOptions = ["owner", "admin", "member", "viewer"] as const;
-
 function resolveOrganizationRoleLabel(
   role: string,
   messages: ReturnType<typeof useProtectedI18n>["messages"]["adminOrganizations"]
@@ -29,7 +26,6 @@ function resolveOrganizationRoleLabel(
       return role || messages.defaultMemberRole;
   }
 }
-
 function resolveOrganizationStatusLabel(
   status: string,
   messages: ReturnType<typeof useProtectedI18n>["messages"]["adminOrganizations"]
@@ -47,7 +43,6 @@ function resolveOrganizationStatusLabel(
       return status || messages.statusUnknown;
   }
 }
-
 export function OrganizationDirectoryPanel({
   organizations,
   selectedOrgId,
@@ -65,7 +60,6 @@ export function OrganizationDirectoryPanel({
 }) {
   const { messages } = useProtectedI18n();
   const organizationMessages = messages.adminOrganizations;
-
   return (
     <AdminSectionCard title={organizationMessages.directoryTitle} description={organizationMessages.directoryDescription}>
       {error ? <ErrorState description={error} /> : null}
@@ -83,31 +77,21 @@ export function OrganizationDirectoryPanel({
     </AdminSectionCard>
   );
 }
-
 export function MemberLedgerPanel({
   members,
   totalMembers,
   membersLoading,
   loading,
-  busyAction,
-  rowRoleDrafts,
-  onRoleDraftChange,
-  onUpdateMemberRole,
-  onRemoveMember
+  onOpenMemberDetail
 }: {
   members: OrganizationMemberItem[];
   totalMembers: number;
   membersLoading: boolean;
   loading: boolean;
-  busyAction: string;
-  rowRoleDrafts: Record<number, string>;
-  onRoleDraftChange: (userId: number, role: string) => void;
-  onUpdateMemberRole: (userId: number) => void;
-  onRemoveMember: (userId: number) => void;
+  onOpenMemberDetail: (userId: number) => void;
 }) {
   const { locale, messages } = useProtectedI18n();
   const organizationMessages = messages.adminOrganizations;
-
   return (
     <AdminSectionCard
       title={organizationMessages.memberLedgerTitle}
@@ -146,23 +130,8 @@ export function MemberLedgerPanel({
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Select
-                aria-label={organizationMessages.memberRoleLabel}
-                className="h-9"
-                value={rowRoleDrafts[member.userId] || member.role}
-                onChange={(event) => onRoleDraftChange(member.userId, event.target.value)}
-              >
-                {organizationRoleOptions.map((role) => (
-                  <option key={role} value={role}>
-                    {resolveOrganizationRoleLabel(role, organizationMessages)}
-                  </option>
-                ))}
-              </Select>
-              <Button size="sm" variant="outline" onClick={() => onUpdateMemberRole(member.userId)} disabled={Boolean(busyAction)}>
-                {busyAction === `update-role-${member.userId}` ? organizationMessages.savingRole : organizationMessages.applyRole}
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => onRemoveMember(member.userId)} disabled={Boolean(busyAction)}>
-                {busyAction === `remove-member-${member.userId}` ? organizationMessages.removingMember : organizationMessages.removeMember}
+              <Button size="sm" variant="outline" onClick={() => onOpenMemberDetail(member.userId)}>
+                {organizationMessages.openMemberDetailAction}
               </Button>
             </div>
           </div>
@@ -173,8 +142,30 @@ export function MemberLedgerPanel({
     </AdminSectionCard>
   );
 }
-
-export function CreateOrganizationPanel({
+export function CreateOrganizationTriggerPanel({
+  loading,
+  busyAction,
+  onOpen
+}: {
+  loading: boolean;
+  busyAction: string;
+  onOpen: () => void;
+}) {
+  const { messages } = useProtectedI18n();
+  const organizationMessages = messages.adminOrganizations;
+  return (
+    <AdminSectionCard
+      title={organizationMessages.createTitle}
+      description={organizationMessages.createDescription}
+      contentClassName="space-y-3"
+    >
+      <Button onClick={onOpen} disabled={Boolean(busyAction) || loading}>
+        {organizationMessages.createAction}
+      </Button>
+    </AdminSectionCard>
+  );
+}
+export function CreateOrganizationForm({
   value,
   busyAction,
   onChange,
@@ -187,13 +178,8 @@ export function CreateOrganizationPanel({
 }) {
   const { messages } = useProtectedI18n();
   const organizationMessages = messages.adminOrganizations;
-
   return (
-    <AdminSectionCard
-      title={organizationMessages.createTitle}
-      description={organizationMessages.createDescription}
-      contentClassName="space-y-3"
-    >
+    <div className="space-y-3">
       <Input
         aria-label={organizationMessages.organizationNameLabel}
         value={value}
@@ -203,11 +189,35 @@ export function CreateOrganizationPanel({
       <Button onClick={onCreate} disabled={Boolean(busyAction)}>
         {busyAction === "create-organization" ? organizationMessages.creatingAction : organizationMessages.createAction}
       </Button>
+    </div>
+  );
+}
+export function MemberAssignmentTriggerPanel({
+  selectedOrgId,
+  loading,
+  busyAction,
+  onOpen
+}: {
+  selectedOrgId: number;
+  loading: boolean;
+  busyAction: string;
+  onOpen: () => void;
+}) {
+  const { messages } = useProtectedI18n();
+  const organizationMessages = messages.adminOrganizations;
+  return (
+    <AdminSectionCard
+      title={organizationMessages.assignmentTitle}
+      description={organizationMessages.assignmentDescription}
+      contentClassName="space-y-3"
+    >
+      <Button onClick={onOpen} disabled={Boolean(busyAction) || loading || !selectedOrgId}>
+        {organizationMessages.openMemberAssignmentAction}
+      </Button>
     </AdminSectionCard>
   );
 }
-
-export function MemberAssignmentPanel({
+export function MemberAssignmentForm({
   selectedOrgId,
   targetUserId,
   targetRole,
@@ -262,7 +272,7 @@ export function SelectedOrganizationPanel({
 }: {
   overview: OrganizationsOverview;
 }) {
-  const { locale, messages } = useProtectedI18n();
+  const { messages } = useProtectedI18n();
   const organizationMessages = messages.adminOrganizations;
 
   return (
@@ -271,6 +281,21 @@ export function SelectedOrganizationPanel({
       description={organizationMessages.selectedDescription}
       contentClassName="space-y-3 text-sm text-[color:var(--ui-text-secondary)]"
     >
+      <SelectedOrganizationSummary overview={overview} />
+    </AdminSectionCard>
+  );
+}
+
+export function SelectedOrganizationSummary({
+  overview
+}: {
+  overview: OrganizationsOverview;
+}) {
+  const { locale, messages } = useProtectedI18n();
+  const organizationMessages = messages.adminOrganizations;
+
+  return (
+    <div className="space-y-3 text-sm text-[color:var(--ui-text-secondary)]">
       <AdminInsetBlock>
         <div className="font-semibold text-[color:var(--ui-text-primary)]">
           {overview.selectedOrganization?.name || organizationMessages.noSelection}
@@ -291,6 +316,75 @@ export function SelectedOrganizationPanel({
           <span className="font-semibold text-[color:var(--ui-text-primary)]">{item.count}</span>
         </AdminInsetBlock>
       ))}
-    </AdminSectionCard>
+    </div>
+  );
+}
+
+export function OrganizationMemberDetailForm({
+  member,
+  busyAction,
+  rowRoleDrafts,
+  onRoleDraftChange,
+  onUpdateMemberRole,
+  onRemoveMember
+}: {
+  member: OrganizationMemberItem;
+  busyAction: string;
+  rowRoleDrafts: Record<number, string>;
+  onRoleDraftChange: (userId: number, role: string) => void;
+  onUpdateMemberRole: (userId: number) => void;
+  onRemoveMember: (userId: number) => void;
+}) {
+  const { locale, messages } = useProtectedI18n();
+  const organizationMessages = messages.adminOrganizations;
+
+  return (
+    <div className="space-y-4" data-testid={`organization-member-detail-${member.userId}`}>
+      <AdminInsetBlock>
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">
+              {member.username} #{member.userId}
+            </span>
+            <Badge variant={member.userStatus.toLowerCase() === "active" ? "soft" : "outline"}>
+              {resolveOrganizationStatusLabel(member.userStatus, organizationMessages)}
+            </Badge>
+          </div>
+          <div className="flex flex-wrap gap-2 text-xs text-[color:var(--ui-text-muted)]">
+            <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
+              {organizationMessages.workspaceRolePrefix} {resolveOrganizationRoleLabel(member.userRole, organizationMessages)}
+            </span>
+            <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
+              {organizationMessages.organizationRolePrefix} {resolveOrganizationRoleLabel(member.role, organizationMessages)}
+            </span>
+            <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
+              {organizationMessages.updatedPrefix} {formatDateTime(member.updatedAt, locale)}
+            </span>
+          </div>
+        </div>
+      </AdminInsetBlock>
+
+      <div className="space-y-3">
+        <Select
+          aria-label={organizationMessages.memberRoleLabel}
+          value={rowRoleDrafts[member.userId] || member.role}
+          onChange={(event) => onRoleDraftChange(member.userId, event.target.value)}
+        >
+          {organizationRoleOptions.map((role) => (
+            <option key={role} value={role}>
+              {resolveOrganizationRoleLabel(role, organizationMessages)}
+            </option>
+          ))}
+        </Select>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => onUpdateMemberRole(member.userId)} disabled={Boolean(busyAction)}>
+            {busyAction === `update-role-${member.userId}` ? organizationMessages.savingRole : organizationMessages.applyRole}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => onRemoveMember(member.userId)} disabled={Boolean(busyAction)}>
+            {busyAction === `remove-member-${member.userId}` ? organizationMessages.removingMember : organizationMessages.removeMember}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

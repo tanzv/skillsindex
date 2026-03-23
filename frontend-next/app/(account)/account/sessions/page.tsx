@@ -1,5 +1,5 @@
-import { AccountCenterPage } from "@/src/features/accountCenter/AccountCenterPage";
+import { renderAccountRoute } from "@/src/features/accountCenter/renderAccountRoute";
 
-export default function AccountSessionsPage() {
-  return <AccountCenterPage route="/account/sessions" />;
+export default async function AccountSessionsPage() {
+  return renderAccountRoute("/account/sessions");
 }

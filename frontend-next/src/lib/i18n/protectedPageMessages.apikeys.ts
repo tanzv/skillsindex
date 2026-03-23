@@ -33,6 +33,8 @@ export interface AdminApiKeysMessages {
   rotatingAction: string;
   revokeAction: string;
   revokingAction: string;
+  openDetailAction: string;
+  closePanelAction: string;
   scopeInputAriaLabel: string;
   scopeInputPlaceholder: string;
   applyScopesAction: string;
@@ -57,6 +59,10 @@ export interface AdminApiKeysMessages {
   ownerUnknown: string;
   unnamedKey: string;
   valueNotAvailable: string;
+  detailOwnerLabel: string;
+  detailScopeCountLabel: string;
+  detailUserIdLabel: string;
+  detailCreatedByLabel: string;
   metaPrefixTemplate: string;
   metaCreatedTemplate: string;
   metaUpdatedTemplate: string;
@@ -98,6 +104,8 @@ export const adminApiKeysMessageKeyMap = {
   rotatingAction: "admin_apikeys_rotating_action",
   revokeAction: "admin_apikeys_revoke_action",
   revokingAction: "admin_apikeys_revoking_action",
+  openDetailAction: "admin_apikeys_open_detail_action",
+  closePanelAction: "admin_apikeys_close_panel_action",
   scopeInputAriaLabel: "admin_apikeys_scope_input_aria_label",
   scopeInputPlaceholder: "admin_apikeys_scope_input_placeholder",
   applyScopesAction: "admin_apikeys_apply_scopes_action",
@@ -122,6 +130,10 @@ export const adminApiKeysMessageKeyMap = {
   ownerUnknown: "admin_apikeys_owner_unknown",
   unnamedKey: "admin_apikeys_unnamed_key",
   valueNotAvailable: "admin_apikeys_value_not_available",
+  detailOwnerLabel: "admin_apikeys_detail_owner_label",
+  detailScopeCountLabel: "admin_apikeys_detail_scope_count_label",
+  detailUserIdLabel: "admin_apikeys_detail_user_id_label",
+  detailCreatedByLabel: "admin_apikeys_detail_created_by_label",
   metaPrefixTemplate: "admin_apikeys_meta_prefix_template",
   metaCreatedTemplate: "admin_apikeys_meta_created_template",
   metaUpdatedTemplate: "admin_apikeys_meta_updated_template",

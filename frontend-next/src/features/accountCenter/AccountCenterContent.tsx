@@ -4,10 +4,18 @@ import Link from "next/link";
 
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
+import {
+  buildAccountQuickActions,
+  listAccountSectionEntries,
+  resolveAccountSectionLabel,
+  resolveAccountSectionRouteHint,
+  resolveAccountRouteActions,
+  resolveAccountRouteMeta,
+  resolveAccountRouteSignal
+} from "@/src/lib/routing/accountRouteMeta";
 
 import { AccountRouteSections } from "./AccountCenterSections";
 import {
-  accountRouteBySection,
   accountSectionByRoute,
   formatAccountDate,
   type AccountAPIKeyCreateDraft,
@@ -15,7 +23,6 @@ import {
   type AccountAPIKeysPayload,
   type AccountProfileDraft,
   type AccountRoute,
-  type AccountSection,
   type AccountSessionsPayload
 } from "./model";
 
@@ -53,100 +60,6 @@ interface AccountCenterContentProps {
   onApplyCredentialScopes: (keyId: number) => void;
 }
 
-function resolveRouteMeta(route: AccountRoute, messages: ReturnType<typeof useProtectedI18n>["messages"]["accountCenter"]) {
-  switch (route) {
-    case "/account/security":
-      return {
-        kicker: messages.routeSecurityKicker,
-        description: messages.routeSecurityDescription
-      };
-    case "/account/sessions":
-      return {
-        kicker: messages.routeSessionsKicker,
-        description: messages.routeSessionsDescription
-      };
-    case "/account/api-credentials":
-      return {
-        kicker: messages.routeCredentialsKicker,
-        description: messages.routeCredentialsDescription
-      };
-    case "/account/profile":
-    default:
-      return {
-        kicker: messages.routeProfileKicker,
-        description: messages.routeProfileDescription
-      };
-  }
-}
-
-function resolveRouteActions(route: AccountRoute, messages: ReturnType<typeof useProtectedI18n>["messages"]["accountCenter"]) {
-  switch (route) {
-    case "/account/security":
-      return [
-        { href: "/account/sessions", label: messages.routeActionReviewSessions },
-        { href: "/admin/overview", label: messages.routeActionOpenAdmin }
-      ];
-    case "/account/sessions":
-      return [
-        { href: "/account/security", label: messages.routeActionOpenSecurity },
-        { href: "/admin/overview", label: messages.routeActionOpenAdmin }
-      ];
-    case "/account/api-credentials":
-      return [
-        { href: "/", label: messages.routeActionOpenMarketplace },
-        { href: "/account/profile", label: messages.routeActionOpenProfile }
-      ];
-    case "/account/profile":
-    default:
-      return [
-        { href: "/", label: messages.routeActionOpenMarketplace },
-        { href: "/admin/overview", label: messages.routeActionOpenAdmin }
-      ];
-  }
-}
-
-function resolveRouteSignal(route: AccountRoute, messages: ReturnType<typeof useProtectedI18n>["messages"]["accountCenter"]) {
-  switch (route) {
-    case "/account/security":
-      return messages.routeSignalSecurity;
-    case "/account/sessions":
-      return messages.routeSignalSessions;
-    case "/account/api-credentials":
-      return messages.routeSignalCredentials;
-    case "/account/profile":
-    default:
-      return messages.routeSignalProfile;
-  }
-}
-
-function resolveSectionLabel(section: AccountSection, messages: ReturnType<typeof useProtectedI18n>["messages"]["accountCenter"]) {
-  switch (section) {
-    case "security":
-      return messages.sectionSecurity;
-    case "sessions":
-      return messages.sectionSessions;
-    case "credentials":
-      return messages.sectionCredentials;
-    case "profile":
-    default:
-      return messages.sectionProfile;
-  }
-}
-
-function resolveSectionRouteHint(section: AccountSection, messages: ReturnType<typeof useProtectedI18n>["messages"]["accountCenter"]) {
-  switch (section) {
-    case "security":
-      return messages.routeHintSecurity;
-    case "sessions":
-      return messages.routeHintSessions;
-    case "credentials":
-      return messages.routeHintCredentials;
-    case "profile":
-    default:
-      return messages.routeHintProfile;
-  }
-}
-
 export function AccountCenterContent({
   route,
   loading,
@@ -178,10 +91,11 @@ export function AccountCenterContent({
 }: AccountCenterContentProps) {
   const { locale, messages } = useProtectedI18n();
   const accountMessages = messages.accountCenter;
-  const routeMeta = resolveRouteMeta(route, accountMessages);
-  const routeActions = resolveRouteActions(route, accountMessages);
+  const routeMeta = resolveAccountRouteMeta(route, accountMessages);
+  const routeActions = resolveAccountRouteActions(route, accountMessages);
+  const quickActions = buildAccountQuickActions(accountMessages);
   const activeSection = accountSectionByRoute[route];
-  const activeSectionLabel = resolveSectionLabel(activeSection, accountMessages);
+  const activeSectionLabel = resolveAccountSectionLabel(activeSection, accountMessages);
   const latestCredentialSecretMessage = latestCredentialSecret
     ? formatProtectedMessage(
         latestCredentialSecret.action === "created"
@@ -268,10 +182,14 @@ export function AccountCenterContent({
             </div>
 
             <div className="account-center-links">
-              {Object.entries(accountRouteBySection).map(([section, href]) => (
-                <Link key={href} href={href} className={`account-center-tab-link ${route === href ? "is-active" : ""}`}>
-                  <span>{resolveSectionLabel(section as AccountSection, accountMessages)}</span>
-                  <span>{resolveSectionRouteHint(section as AccountSection, accountMessages)}</span>
+              {listAccountSectionEntries().map(({ section, route: sectionRoute }) => (
+                <Link
+                  key={sectionRoute}
+                  href={sectionRoute}
+                  className={`account-center-tab-link ${route === sectionRoute ? "is-active" : ""}`}
+                >
+                  <span>{resolveAccountSectionLabel(section, accountMessages)}</span>
+                  <span>{resolveAccountSectionRouteHint(section, accountMessages)}</span>
                 </Link>
               ))}
             </div>
@@ -297,7 +215,7 @@ export function AccountCenterContent({
             <p className="account-center-surface-copy">
               {formatProtectedMessage(accountMessages.signalRouteFocusTemplate, { value: routeMeta.kicker })}
             </p>
-            <p className="account-center-surface-copy">{resolveRouteSignal(route, accountMessages)}</p>
+            <p className="account-center-surface-copy">{resolveAccountRouteSignal(route, accountMessages)}</p>
           </section>
 
           <section className="account-center-stage-panel account-center-section-stack">
@@ -306,18 +224,11 @@ export function AccountCenterContent({
               <h2>{accountMessages.quickActionsTitle}</h2>
             </div>
             <div className="account-center-action-row">
-              <Link href="/" className="account-center-action">
-                {accountMessages.quickActionMarketplace}
-              </Link>
-              <Link href="/admin/overview" className="account-center-action">
-                {accountMessages.quickActionAdmin}
-              </Link>
-              <Link href="/account/sessions" className="account-center-action">
-                {accountMessages.quickActionSessions}
-              </Link>
-              <Link href="/account/api-credentials" className="account-center-action">
-                {accountMessages.quickActionApiCredentials}
-              </Link>
+              {quickActions.map((action) => (
+                <Link key={action.href} href={action.href} className="account-center-action">
+                  {action.label}
+                </Link>
+              ))}
             </div>
           </section>
 

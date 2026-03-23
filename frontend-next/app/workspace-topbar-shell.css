@@ -1,4 +1,4 @@
-.workspace-shell-topbar-brand {
+.protected-topbar-brand-link {
   flex: 0 0 auto;
   min-width: 0;
   display: inline-flex;
@@ -11,7 +11,7 @@
   box-shadow: var(--protected-topbar-brand-shadow);
 }
 
-.workspace-shell-topbar-brand-dot {
+.protected-topbar-brand-dot {
   width: 11px;
   height: 11px;
   border-radius: 999px;
@@ -19,27 +19,27 @@
   box-shadow: var(--protected-topbar-brand-dot-shadow);
 }
 
-.workspace-shell-topbar-brand-copy {
+.protected-topbar-brand-copy {
   min-width: 0;
   display: grid;
   gap: 4px;
 }
 
-.workspace-shell-topbar-brand-copy strong {
+.protected-topbar-brand-copy strong {
   color: var(--workspace-shell-text);
   font-size: 14px;
   line-height: 1.1;
   font-weight: 700;
 }
 
-.workspace-shell-topbar-brand-copy small {
+.protected-topbar-brand-copy small {
   color: var(--workspace-shell-text-secondary);
   font-size: 11px;
   line-height: 1.35;
   font-weight: 600;
 }
 
-.workspace-topbar-primary-groups-shell {
+.protected-topbar-primary-shell {
   width: 100%;
   min-width: 0;
   display: inline-flex;
@@ -52,7 +52,7 @@
   box-shadow: var(--protected-topbar-nav-shell-shadow);
 }
 
-.workspace-topbar-primary-group {
+.protected-topbar-primary-group {
   position: relative;
   min-width: 0;
   flex: 0 0 auto;
@@ -62,12 +62,12 @@
   padding: 2px 3px;
 }
 
-.workspace-topbar-primary-group + .workspace-topbar-primary-group {
+.protected-topbar-primary-group + .protected-topbar-primary-group {
   margin-left: 6px;
   padding-left: 12px;
 }
 
-.workspace-topbar-primary-group + .workspace-topbar-primary-group::before {
+.protected-topbar-primary-group + .protected-topbar-primary-group::before {
   content: "";
   position: absolute;
   left: 0;
@@ -78,7 +78,7 @@
   background: var(--protected-topbar-group-divider);
 }
 
-.workspace-topbar-primary-group-label {
+.protected-topbar-primary-group-label {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
@@ -92,7 +92,7 @@
   text-transform: uppercase;
 }
 
-.workspace-topbar-primary-group-label::before {
+.protected-topbar-primary-group-label::before {
   content: "";
   width: 5px;
   height: 5px;

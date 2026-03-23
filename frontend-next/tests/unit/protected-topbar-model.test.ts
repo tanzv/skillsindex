@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  buildProtectedTopbarModel,
-  type ProtectedTopbarConfig
-} from "@/src/components/shared/protectedTopbarModel";
+import { buildProtectedTopbarModel } from "@/src/components/shared/protectedTopbarModel";
+import type { ProtectedTopbarConfig } from "@/src/lib/navigation/protectedTopbarContracts";
 
 const protectedTopbarTestConfig: ProtectedTopbarConfig = {
   entries: [

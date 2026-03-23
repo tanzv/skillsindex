@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import type { AccountShellMessages } from "@/src/lib/i18n/protectedMessages";
 import { buildAccountNavigationItems } from "@/src/lib/routing/accountNavigation";
-import { accountWorkbenchDefinitions, adminWorkbenchDefinitions } from "@/src/features/workbench/definitions";
+import {
+  accountWorkbenchDefinitions,
+  listAdminWorkbenchRouteContracts,
+  resolveAdminRenderableWorkbenchDefinition,
+  resolveAdminWorkbenchRouteContract
+} from "@/src/features/workbench/definitions";
 import { buildBFFPath, buildPathWithQuery, parseScopes, requiredID } from "@/src/features/workbench/utils";
 
 const accountNavigationItems = buildAccountNavigationItems({
@@ -22,7 +27,9 @@ const accountNavigationItems = buildAccountNavigationItems({
   navSessionsLabel: "Sessions",
   navSessionsNote: "Review active sessions.",
   navApiCredentialsLabel: "API Credentials",
-  navApiCredentialsNote: "Manage personal API keys."
+  navApiCredentialsNote: "Manage personal API keys.",
+  topbarOverflowTitle: "Overflow",
+  topbarOverflowHint: "Overflow hint."
 } satisfies AccountShellMessages);
 
 describe("workbench configuration", () => {
@@ -55,20 +62,28 @@ describe("workbench configuration", () => {
   });
 
   it("defines admin workbench routes for catalog, operations, and governance", () => {
-    expect(adminWorkbenchDefinitions["/admin/jobs"]).toBeDefined();
-    expect(adminWorkbenchDefinitions["/admin/ops/release-gates"]).toBeDefined();
-    expect(adminWorkbenchDefinitions["/admin/moderation"]).toBeDefined();
-    expect(adminWorkbenchDefinitions["/admin/access"]).toBeDefined();
-    expect(adminWorkbenchDefinitions["/admin/accounts"]).toBeDefined();
-    expect(adminWorkbenchDefinitions["/admin/accounts/new"]).toBeDefined();
-    expect(adminWorkbenchDefinitions["/admin/roles"]).toBeDefined();
-    expect(adminWorkbenchDefinitions["/admin/roles/new"]).toBeDefined();
+    expect(resolveAdminWorkbenchRouteContract("/admin/jobs")?.renderMode).toBe("definition-only");
+    expect(resolveAdminWorkbenchRouteContract("/admin/ops/release-gates")?.renderMode).toBe("definition-only");
+    expect(resolveAdminWorkbenchRouteContract("/admin/moderation")?.renderMode).toBe("definition-only");
+    expect(resolveAdminWorkbenchRouteContract("/admin/access")?.renderMode).toBe("definition-only");
+    expect(resolveAdminWorkbenchRouteContract("/admin/accounts")?.renderMode).toBe("definition-only");
+    expect(resolveAdminWorkbenchRouteContract("/admin/accounts/new")?.renderMode).toBe("definition-only");
+    expect(resolveAdminWorkbenchRouteContract("/admin/roles")?.renderMode).toBe("definition-only");
+    expect(resolveAdminWorkbenchRouteContract("/admin/roles/new")?.renderMode).toBe("definition-only");
+    expect(resolveAdminRenderableWorkbenchDefinition("/admin/roles")).toBeNull();
   });
 
   it("removes dedicated admin pages from generic workbench definitions", () => {
-    expect(adminWorkbenchDefinitions["/admin/overview"]).toBeUndefined();
-    expect(adminWorkbenchDefinitions["/admin/ingestion/manual"]).toBeUndefined();
-    expect(adminWorkbenchDefinitions["/admin/ingestion/repository"]).toBeUndefined();
-    expect(adminWorkbenchDefinitions["/admin/records/imports"]).toBeUndefined();
+    expect(resolveAdminWorkbenchRouteContract("/admin/overview")).toBeNull();
+    expect(resolveAdminWorkbenchRouteContract("/admin/ingestion/manual")).toBeNull();
+    expect(resolveAdminWorkbenchRouteContract("/admin/ingestion/repository")).toBeNull();
+    expect(resolveAdminWorkbenchRouteContract("/admin/records/imports")).toBeNull();
+  });
+
+  it("lists admin workbench contracts with explicit render modes", () => {
+    const contracts = listAdminWorkbenchRouteContracts();
+
+    expect(contracts.some((contract) => contract.route === "/admin/accounts/new" && contract.renderMode === "definition-only")).toBe(true);
+    expect(contracts.some((contract) => contract.route === "/admin/jobs" && contract.renderMode === "definition-only")).toBe(true);
   });
 });

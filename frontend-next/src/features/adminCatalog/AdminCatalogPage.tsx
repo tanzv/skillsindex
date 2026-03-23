@@ -2,9 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
+import { resolveAdminCatalogPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
+import { Button } from "@/src/components/ui/button";
 
 import { AdminCatalogContent } from "./AdminCatalogContent";
 import {
@@ -13,7 +16,6 @@ import {
   normalizeSkillsPayload,
   normalizeSyncJobsPayload,
   normalizeSyncPolicyPayload,
-  resolveAdminCatalogRouteMeta,
   type AdminCatalogRoute,
   type RepositorySyncPolicy
 } from "./model";
@@ -32,9 +34,9 @@ function buildPath(endpoint: string, query: Record<string, string>) {
 export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
   const { locale, messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
-  const meta = useMemo(() => resolveAdminCatalogRouteMeta(route, adminCatalogMessages), [adminCatalogMessages, route]);
+  const meta = useMemo(() => resolveAdminCatalogPageRouteMeta(route, adminCatalogMessages), [adminCatalogMessages, route]);
   const policyMeta = useMemo(
-    () => resolveAdminCatalogRouteMeta("/admin/sync-policy/repository", adminCatalogMessages),
+    () => resolveAdminCatalogPageRouteMeta("/admin/sync-policy/repository", adminCatalogMessages),
     [adminCatalogMessages]
   );
 
@@ -98,6 +100,8 @@ export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
     void loadData();
   }, [loadData]);
 
+  const loadState = resolveAdminPageLoadState({ loading, error, hasData: rawPayload !== null });
+
   async function runJobAction(jobId: number, action: "retry" | "cancel") {
     setBusyAction(`${action}-${jobId}`);
     setMessage("");
@@ -154,6 +158,18 @@ export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
     } finally {
       setBusyAction("");
     }
+  }
+
+  if (loadState !== "ready") {
+    return (
+      <AdminPageLoadStateFrame
+        eyebrow={messages.adminCommon.adminEyebrow}
+        title={meta.title}
+        description={meta.description}
+        error={loadState === "error" ? error : undefined}
+        actions={<Button onClick={() => void loadData()}>{loading ? messages.adminCommon.refreshing : messages.adminCommon.refresh}</Button>}
+      />
+    );
   }
 
   return (

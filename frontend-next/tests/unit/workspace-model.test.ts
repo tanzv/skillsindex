@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { buildWorkspacePageModel, buildWorkspaceSnapshot } from "@/src/features/workspace/model";
-import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
+import { buildPublicMarketplaceFallback } from "@/src/lib/marketplace/fallback";
 import { createProtectedPageTestMessages } from "./protected-page-test-messages";
+
+const workspacePayload = buildPublicMarketplaceFallback();
 
 describe("workspace model", () => {
   it("builds a stable workspace snapshot from marketplace fallback data", () => {
@@ -37,7 +39,7 @@ describe("workspace model", () => {
         status: "active"
       },
       marketplacePublicAccess: false
-    });
+    }, workspacePayload);
 
     expect(model.title).toBe("Workspace Overview");
     expect(model.summaryMetrics).toEqual(
@@ -81,11 +83,14 @@ describe("workspace model", () => {
         status: "active"
       },
       marketplacePublicAccess: true
-    });
+    }, workspacePayload);
 
     expect(model.title).toBe("Queue Execution");
     expect(model.primarySections.map((section) => section.title)).toEqual(
       expect.arrayContaining(["Execution Spotlight", "Queue Insights"])
+    );
+    expect(model.primarySections.find((section) => section.id === "execution-spotlight")?.actions).toEqual(
+      expect.arrayContaining([expect.objectContaining({ href: "/skills/101" })])
     );
     expect(model.railSections.map((section) => section.title)).toEqual(
       expect.arrayContaining(["Escalation Paths", "Current Session"])
@@ -104,7 +109,7 @@ describe("workspace model", () => {
         status: "active"
       },
       marketplacePublicAccess: true
-    });
+    }, workspacePayload);
 
     const responseScriptSection = model.primarySections.find((section) => section.title === "Response Script");
     const checklistSection = model.railSections.find((section) => section.title === "Escalation Checklist");

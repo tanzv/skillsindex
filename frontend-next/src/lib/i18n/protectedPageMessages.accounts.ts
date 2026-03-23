@@ -28,6 +28,7 @@ export interface AdminAccountsMessages {
   selectedAction: string;
   forceSignOutAction: string;
   forceSignOutBusy: string;
+  closePanelAction: string;
   selectedPanelTitle: string;
   selectedPanelDescription: string;
   selectedPanelEmpty: string;
@@ -136,6 +137,7 @@ export const adminAccountsMessageKeyMap = {
   selectedAction: "admin_accounts_selected_action",
   forceSignOutAction: "admin_accounts_force_sign_out_action",
   forceSignOutBusy: "admin_accounts_force_sign_out_busy",
+  closePanelAction: "admin_accounts_close_panel_action",
   selectedPanelTitle: "admin_accounts_selected_panel_title",
   selectedPanelDescription: "admin_accounts_selected_panel_description",
   selectedPanelEmpty: "admin_accounts_selected_panel_empty",

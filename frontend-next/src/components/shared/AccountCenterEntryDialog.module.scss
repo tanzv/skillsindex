@@ -1,0 +1,143 @@
+$dialog-transition: 160ms ease;
+
+%action-button {
+  min-height: 40px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--protected-shell-border);
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color $dialog-transition,
+    border-color $dialog-transition,
+    color $dialog-transition;
+}
+
+.stack {
+  display: grid;
+  gap: 12px;
+}
+
+.summaryCard,
+.pathCard {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--protected-shell-border);
+  border-radius: 12px;
+  background: var(--protected-shell-card-alt);
+}
+
+.summaryCard {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+}
+
+.iconShell {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--protected-topbar-account-link-icon-bg);
+  color: var(--protected-topbar-account-link-icon-text);
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+}
+
+.summaryCopy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.eyebrow,
+.pathLabel {
+  margin: 0;
+  color: var(--protected-shell-text-muted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--protected-shell-text);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.description,
+.pathValue {
+  margin: 0;
+  color: var(--protected-shell-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.pathValue {
+  font-family: "JetBrains Mono", monospace;
+  overflow-wrap: anywhere;
+}
+
+.footerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.secondaryAction,
+.primaryAction {
+  @extend %action-button;
+}
+
+.secondaryAction {
+  background: var(--protected-shell-interactive-bg);
+  color: var(--protected-shell-text-secondary);
+
+  &:hover {
+    border-color: var(--protected-shell-interactive-border-hover);
+    background: var(--protected-shell-interactive-bg-hover);
+    color: var(--protected-shell-text);
+  }
+}
+
+.primaryAction {
+  border-color: var(--protected-shell-accent);
+  background: var(--protected-shell-accent);
+  color: var(--protected-shell-accent-contrast);
+
+  &:hover {
+    border-color: var(--protected-shell-accent);
+    background: color-mix(in srgb, var(--protected-shell-accent) 88%, transparent);
+    color: var(--protected-shell-accent-contrast);
+  }
+}
+
+.secondaryAction:focus-visible,
+.primaryAction:focus-visible {
+  outline: 2px solid var(--ui-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .summaryCard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .footerActions {
+    flex-direction: column-reverse;
+  }
+}

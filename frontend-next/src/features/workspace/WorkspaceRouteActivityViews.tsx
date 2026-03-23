@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
-
 import { Badge } from "@/src/components/ui/badge";
+import { workspaceQueueRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 
 import { WorkspaceSectionCard } from "./WorkspaceRouteShared";
-import { QueueDetailPanel, QueueListButton, SectionPanel, useSelectedEntry } from "./WorkspaceRouteViewPrimitives";
+import { WorkspaceEntryDetailDrawer, useWorkspaceEntryDetailState } from "./WorkspaceRouteDetailSurface";
+import { QueueListButton, SectionPanel } from "./WorkspaceRouteViewPrimitives";
 import { formatWorkspaceMessage } from "./messages";
 import type { WorkspacePageModel } from "./types";
 
@@ -13,7 +13,10 @@ export function ActivityFeedView({ model }: { model: WorkspacePageModel }) {
   const workspaceMessages = model.messages;
   const activityEntries = model.snapshot.recentActivity;
   const ownerCoverageSection = model.primarySections.find((section) => section.id === "owner-coverage");
-  const { selectedEntry, setSelectedId } = useSelectedEntry(activityEntries, activityEntries[0]?.id);
+  const { selectedEntry, selectedId, setSelectedId, detailOpen, setDetailOpen, openDetail } = useWorkspaceEntryDetailState(
+    activityEntries,
+    activityEntries[0]?.id
+  );
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
@@ -35,8 +38,9 @@ export function ActivityFeedView({ model }: { model: WorkspacePageModel }) {
               <QueueListButton
                 key={entry.id}
                 entry={entry}
-                active={selectedEntry?.id === entry.id}
+                active={selectedId === entry.id}
                 onSelect={() => setSelectedId(entry.id)}
+                onOpenDetail={() => openDetail(entry.id)}
                 messages={workspaceMessages}
               />
             ))}
@@ -45,17 +49,20 @@ export function ActivityFeedView({ model }: { model: WorkspacePageModel }) {
       </div>
 
       <div className="space-y-6">
-        <QueueDetailPanel
-          entry={selectedEntry}
-          actions={[{ label: workspaceMessages.actionOpenQueue, href: "/workspace/queue", variant: "default" }]}
-          locale={model.locale}
-          messages={workspaceMessages}
-        />
         {ownerCoverageSection ? <WorkspaceSectionCard section={ownerCoverageSection} /> : null}
         {model.railSections.map((section) => (
           <WorkspaceSectionCard key={section.id} section={section} />
         ))}
       </div>
+
+      <WorkspaceEntryDetailDrawer
+        open={detailOpen}
+        entry={selectedEntry}
+        locale={model.locale}
+        messages={workspaceMessages}
+        actions={[{ label: workspaceMessages.actionOpenQueue, href: workspaceQueueRoute, variant: "default" }]}
+        onClose={() => setDetailOpen(false)}
+      />
     </div>
   );
 }
@@ -64,18 +71,17 @@ export function QueueExecutionView({ model }: { model: WorkspacePageModel }) {
   const workspaceMessages = model.messages;
   const detailSection = model.primarySections.find((section) => section.id === "execution-spotlight");
   const insightsSection = model.primarySections.find((section) => section.id === "queue-insights");
-  const { selectedEntry, setSelectedId } = useSelectedEntry(model.snapshot.queueEntries, model.snapshot.spotlightEntry?.id);
-  const supplementalActions = useMemo(
-    () =>
-      (detailSection?.actions || []).filter((action) => {
-        if (!selectedEntry) {
-          return true;
-        }
-
-        return action.href !== `/skills/${selectedEntry.id}`;
-      }),
-    [detailSection?.actions, selectedEntry]
+  const { selectedEntry, selectedId, setSelectedId, detailOpen, setDetailOpen, openDetail } = useWorkspaceEntryDetailState(
+    model.snapshot.queueEntries,
+    model.snapshot.spotlightEntry?.id
   );
+  const supplementalActions = (detailSection?.actions || []).filter((action) => {
+    if (!selectedEntry) {
+      return true;
+    }
+
+    return action.href !== `/skills/${selectedEntry.id}`;
+  });
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
@@ -102,8 +108,9 @@ export function QueueExecutionView({ model }: { model: WorkspacePageModel }) {
               <QueueListButton
                 key={entry.id}
                 entry={entry}
-                active={selectedEntry?.id === entry.id}
+                active={selectedId === entry.id}
                 onSelect={() => setSelectedId(entry.id)}
+                onOpenDetail={() => openDetail(entry.id)}
                 messages={workspaceMessages}
               />
             ))}
@@ -112,12 +119,21 @@ export function QueueExecutionView({ model }: { model: WorkspacePageModel }) {
       </div>
 
       <div className="space-y-6">
-        <QueueDetailPanel entry={selectedEntry} actions={supplementalActions} locale={model.locale} messages={workspaceMessages} />
         {insightsSection ? <WorkspaceSectionCard section={insightsSection} /> : null}
         {model.railSections.map((section) => (
           <WorkspaceSectionCard key={section.id} section={section} />
         ))}
       </div>
+
+      <WorkspaceEntryDetailDrawer
+        open={detailOpen}
+        entry={selectedEntry}
+        locale={model.locale}
+        messages={workspaceMessages}
+        actions={supplementalActions}
+        description={detailSection?.description || workspaceMessages.queueDetailDescription}
+        onClose={() => setDetailOpen(false)}
+      />
     </div>
   );
 }

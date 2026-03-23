@@ -1,12 +1,15 @@
+import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 
+import { resolveBrandWordmarkAlt, resolveBrandWordmarkSrc } from "@/src/components/shared/brandWordmark";
 import type { PublicAuthMessages } from "@/src/lib/i18n/publicAuthMessages";
 import { cn } from "@/src/lib/utils";
 
-import styles from "./LoginCredentialsCard.module.css";
+import styles from "./LoginCredentialsCard.module.scss";
 
 interface LoginCredentialsCardProps {
   messages: PublicAuthMessages;
+  theme: "dark" | "light";
   username: string;
   password: string;
   showPassword: boolean;
@@ -23,6 +26,7 @@ interface LoginCredentialsCardProps {
 
 export function LoginCredentialsCard({
   messages,
+  theme,
   username,
   password,
   showPassword,
@@ -36,11 +40,19 @@ export function LoginCredentialsCard({
   onForgotPassword,
   onSubmit
 }: LoginCredentialsCardProps) {
+  const wordmarkSrc = resolveBrandWordmarkSrc(theme === "light");
+
   return (
     <div className={styles.formInner} data-testid="login-form-card">
       <header className={styles.formHeader}>
         <div className={styles.formBrand} data-testid="login-form-brand">
-          <span className={styles.formBrandMark} aria-hidden="true" />
+          <Image
+            src={wordmarkSrc}
+            alt={resolveBrandWordmarkAlt(messages.brandText)}
+            width={560}
+            height={72}
+            className={styles.formBrandWordmark}
+          />
           <span className={styles.formBrandText}>{messages.brandText}</span>
         </div>
       </header>

@@ -40,6 +40,31 @@ export interface IntegrationsOverview {
   failedDeliveryCount: number;
 }
 
+export function resolveSelectedIntegrationConnector(
+  connectors: IntegrationConnector[],
+  connectorId: number | null
+): IntegrationConnector | null {
+  if (connectorId === null || connectorId === 0) {
+    return null;
+  }
+
+  return connectors.find((connector) => connector.id === connectorId) || null;
+}
+
+function normalizeIntegrationOutcome(outcome: string): string {
+  return asString(outcome).toLowerCase();
+}
+
+export function isSuccessfulIntegrationOutcome(outcome: string): boolean {
+  const normalizedOutcome = normalizeIntegrationOutcome(outcome);
+  return normalizedOutcome === "ok" || normalizedOutcome === "success" || normalizedOutcome === "delivered";
+}
+
+export function isFailedIntegrationOutcome(outcome: string): boolean {
+  const normalizedOutcome = normalizeIntegrationOutcome(outcome);
+  return normalizedOutcome === "failed" || normalizedOutcome === "failure" || normalizedOutcome === "error";
+}
+
 type AdminIntegrationsModelMessages = Pick<
   AdminIntegrationsMessages,
   | "unnamedConnector"
@@ -93,12 +118,12 @@ export function resolveIntegrationOutcomeLabel(
   messages?: AdminIntegrationsModelMessageOverrides
 ): string {
   const resolvedMessages = resolveMessages(messages);
-  const normalizedOutcome = asString(outcome).toLowerCase();
+  const normalizedOutcome = normalizeIntegrationOutcome(outcome);
 
   if (!normalizedOutcome || normalizedOutcome === "unknown") {
     return resolvedMessages.unknownOutcome;
   }
-  if (normalizedOutcome === "ok" || normalizedOutcome === "success" || normalizedOutcome === "delivered") {
+  if (isSuccessfulIntegrationOutcome(normalizedOutcome)) {
     return resolvedMessages.outcomeSuccess;
   }
   if (normalizedOutcome === "failed" || normalizedOutcome === "failure") {
@@ -155,7 +180,7 @@ export function buildIntegrationsOverview(
   const resolvedMessages = resolveMessages(messages);
   const enabledCount = payload.items.filter((item) => item.enabled).length;
   const failedDeliveryCount = payload.webhookLogs.filter(
-    (item) => item.statusCode >= 400 || (item.outcome || resolvedMessages.unknownOutcome).toLowerCase() !== "ok"
+    (item) => item.statusCode >= 400 || isFailedIntegrationOutcome(item.outcome || resolvedMessages.unknownOutcome)
   ).length;
   const providerMap = payload.items.reduce<Map<string, number>>((accumulator, item) => {
     const provider = item.provider || resolvedMessages.customProvider;

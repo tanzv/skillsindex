@@ -1,0 +1,69 @@
+.workspace-shell-root {
+  --protected-shell-sidebar-width: 304px;
+  --workspace-shell-panel-bg: var(--ui-card-bg);
+  --workspace-shell-panel-border: var(--ui-border);
+  --workspace-shell-panel-shadow: none;
+  --workspace-shell-link-bg: var(--ui-card-bg);
+  --workspace-shell-link-bg-hover: var(--ui-card-muted-bg);
+  --workspace-shell-link-bg-active: var(--ui-card-highlight-bg);
+  --workspace-shell-link-border: var(--ui-border);
+  --workspace-shell-link-border-hover: var(--ui-border-strong);
+  --workspace-shell-link-border-active: var(--ui-info-border);
+  --workspace-shell-link-note: var(--ui-text-muted);
+  --protected-sidebar-panel-bg: var(--workspace-shell-panel-bg);
+  --protected-sidebar-panel-border: var(--workspace-shell-panel-border);
+  --protected-sidebar-panel-shadow: var(--workspace-shell-panel-shadow);
+  --protected-sidebar-title-color: var(--workspace-shell-text-muted);
+  --protected-sidebar-copy-color: var(--workspace-shell-text-secondary);
+  --protected-sidebar-group-title-color: var(--ui-text-muted);
+  --protected-sidebar-link-bg: var(--workspace-shell-link-bg);
+  --protected-sidebar-link-bg-hover: var(--workspace-shell-link-bg-hover);
+  --protected-sidebar-link-bg-active: var(--workspace-shell-link-bg-active);
+  --protected-sidebar-link-text: var(--workspace-shell-text-secondary);
+  --protected-sidebar-link-text-active: var(--workspace-shell-text);
+  --protected-sidebar-link-divider: var(--workspace-shell-link-border);
+  --protected-sidebar-link-note: var(--workspace-shell-link-note);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, var(--protected-shell-hero-primary), transparent 28%),
+    radial-gradient(circle at 78% 0%, var(--protected-shell-hero-secondary), transparent 24%),
+    linear-gradient(180deg, var(--protected-shell-hero-start) 0%, var(--workspace-shell-bg-alt) 26%, var(--workspace-shell-bg) 100%);
+  color: var(--workspace-shell-text);
+}
+
+.workspace-shell-main {
+  min-width: 0;
+}
+
+.workspace-shell-chip.is-mono {
+  font-family: "JetBrains Mono", monospace;
+}
+.workspace-shell-chip {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  border: 1px solid transparent;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.workspace-shell-chip {
+  justify-content: center;
+  padding: 0 14px;
+  border-color: var(--workspace-shell-border);
+  border-radius: 11px;
+  background: var(--protected-shell-chip-bg);
+  color: var(--workspace-shell-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+
+  &.is-primary {
+    border-color: var(--protected-shell-chip-accent-border);
+    background: var(--protected-shell-chip-accent-bg);
+    color: var(--workspace-shell-text);
+  }
+}

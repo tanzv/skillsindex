@@ -2,9 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
+import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
+import { createAdminOverlayState, useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
+import { loadAdminAccessSettingsPayloads, saveAdminAccessSettings } from "@/src/lib/api/adminAccessSettings";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
+import { resolveAdminAccountsPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 
 import { AdminAccountsContent } from "./AdminAccountsContent";
 import {
@@ -15,6 +20,7 @@ import {
   normalizeAuthProvidersPayload,
   normalizeAccountStatus,
   normalizeRoleName,
+  resolveSelectedAdminAccount,
   resolveRoleTargetUserId,
   normalizeRegistrationPayload,
   sortAccountsByUpdatedAt
@@ -23,6 +29,7 @@ import {
 export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   const { messages } = useProtectedI18n();
   const accountMessages = messages.adminAccounts;
+  const meta = useMemo(() => resolveAdminAccountsPageRouteMeta(route, accountMessages), [accountMessages, route]);
   const latestLoadRequestRef = useRef(0);
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
@@ -34,6 +41,11 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   const [rawRegistration, setRawRegistration] = useState<unknown>(null);
   const [rawAuthProviders, setRawAuthProviders] = useState<unknown>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
+  const { overlay, openOverlay, closeOverlay } = useAdminOverlayState<"accountDetail">(
+    route === "/admin/accounts" || route === "/admin/roles" || route === "/admin/roles/new"
+      ? createAdminOverlayState({ kind: "detail", entity: "accountDetail" })
+      : null
+  );
   const [accountEditor, setAccountEditor] = useState({ userId: "", status: "active", newPassword: "" });
   const [roleEditor, setRoleEditor] = useState({ userId: "", role: "member" });
   const accountEditorRef = useRef(accountEditor);
@@ -68,7 +80,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     [accounts.items, searchQuery, statusFilter]
   );
   const selectedAccount = useMemo(
-    () => filteredAccounts.find((account) => account.id === selectedAccountId) || filteredAccounts[0] || accounts.items[0] || null,
+    () => resolveSelectedAdminAccount(accounts.items, filteredAccounts, selectedAccountId),
     [accounts.items, filteredAccounts, selectedAccountId]
   );
 
@@ -78,11 +90,8 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     setLoading(true);
     setError("");
     try {
-      const [accountsPayload, registrationPayload, authProvidersPayload] = await Promise.all([
-        clientFetchJSON("/api/bff/admin/accounts"),
-        clientFetchJSON("/api/bff/admin/settings/registration"),
-        clientFetchJSON("/api/bff/admin/settings/auth-providers")
-      ]);
+      const { accounts: accountsPayload, registration: registrationPayload, authProviders: authProvidersPayload } =
+        await loadAdminAccessSettingsPayloads();
       if (requestId !== latestLoadRequestRef.current) {
         return;
       }
@@ -95,6 +104,8 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       }
       setError(loadError instanceof Error ? loadError.message : accountMessages.loadError);
       setRawAccounts(null);
+      setRawRegistration(null);
+      setRawAuthProviders(null);
     } finally {
       if (requestId === latestLoadRequestRef.current) {
         setLoading(false);
@@ -105,6 +116,21 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   useEffect(() => {
     void loadData();
   }, [loadData, route]);
+
+  const loadState = resolveAdminPageLoadState({
+    loading,
+    error,
+    hasData: rawAccounts !== null && rawRegistration !== null && rawAuthProviders !== null
+  });
+
+  useEffect(() => {
+    if (route === "/admin/accounts" || route === "/admin/roles" || route === "/admin/roles/new") {
+      openOverlay({ kind: "detail", entity: "accountDetail", entityId: selectedAccountId });
+      return;
+    }
+
+    closeOverlay();
+  }, [closeOverlay, openOverlay, route, selectedAccountId]);
 
   useEffect(() => {
     setSettingsDraft({
@@ -257,19 +283,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     setError("");
     setMessage("");
     try {
-      await Promise.all([
-        clientFetchJSON("/api/bff/admin/settings/registration", {
-          method: "POST",
-          body: {
-            allow_registration: settingsDraft.allowRegistration,
-            marketplace_public_access: settingsDraft.marketplacePublicAccess
-          }
-        }),
-        clientFetchJSON("/api/bff/admin/settings/auth-providers", {
-          method: "POST",
-          body: { auth_providers: settingsDraft.enabledProviders }
-        })
-      ]);
+      await saveAdminAccessSettings(settingsDraft);
       setMessage(accountMessages.saveSettingsSuccess);
       await loadData();
     } catch (actionError) {
@@ -277,6 +291,18 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     } finally {
       setBusyAction("");
     }
+  }
+
+  if (loadState !== "ready") {
+    return (
+      <AdminPageLoadStateFrame
+        eyebrow={messages.adminCommon.adminEyebrow}
+        title={meta.title}
+        description={meta.description}
+        error={loadState === "error" ? error : undefined}
+        actions={<Button onClick={() => void loadData()}>{loading ? messages.adminCommon.refreshing : messages.adminCommon.refresh}</Button>}
+      />
+    );
   }
 
   return (
@@ -296,13 +322,18 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       roleSummary={overview.roleSummary}
       accountEditor={accountEditor}
       roleEditor={roleEditor}
+      detailDrawerOpen={overlay?.entity === "accountDetail"}
       settingsDraft={settingsDraft}
       onRefresh={() => void loadData()}
-      onSelectAccount={(accountId) => setSelectedAccountId(accountId)}
+      onSelectAccount={(accountId) => {
+        setSelectedAccountId(accountId);
+        openOverlay({ kind: "detail", entity: "accountDetail", entityId: accountId });
+      }}
       onSearchQueryChange={setSearchQuery}
       onStatusFilterChange={(value) => setStatusFilter(value as "all" | "active" | "disabled")}
       onAccountEditorChange={updateAccountEditor}
       onRoleEditorChange={updateRoleEditor}
+      onCloseDetailDrawer={closeOverlay}
       onSettingsDraftChange={(patch) => setSettingsDraft((current) => ({ ...current, ...patch }))}
       onToggleProvider={(provider) =>
         setSettingsDraft((current) => ({

@@ -134,6 +134,8 @@ export interface WorkspaceMessages {
   actionOpenImports: string;
   actionOpenRepositoryIntake: string;
   actionOpenPolicyView: string;
+  actionOpenDetails: string;
+  actionClosePanel: string;
   actionOpenSkillDetail: string;
   sectionRecentActivityTitle: string;
   sectionRecentActivityDescription: string;

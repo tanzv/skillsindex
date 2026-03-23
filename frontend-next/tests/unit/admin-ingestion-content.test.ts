@@ -4,10 +4,11 @@ import { describe, expect, it } from "vitest";
 
 import { AdminIngestionContent } from "@/src/features/adminIngestion/AdminIngestionContent";
 import { ProtectedI18nProvider } from "@/src/features/protected/i18n/ProtectedI18nProvider";
-import type { AdminIngestionRoute } from "@/src/features/adminIngestion/model";
+import type { AdminIngestionOverlayState } from "@/src/features/adminIngestion/AdminIngestionViewProps";
+import type { AdminIngestionRoute } from "@/src/lib/routing/adminRouteRegistry";
 import { createProtectedPageTestMessages } from "./protected-page-test-messages";
 
-function renderAdminIngestionRoute(route: AdminIngestionRoute) {
+function renderAdminIngestionRoute(route: AdminIngestionRoute, overlay: AdminIngestionOverlayState | null = null) {
   return renderToStaticMarkup(
     createElement(
       ProtectedI18nProvider,
@@ -77,6 +78,8 @@ function renderAdminIngestionRoute(route: AdminIngestionRoute) {
             uploadingArchiveAction: "Uploading...",
             importSkillmpAction: "Import SkillMP",
             submittingSkillmpAction: "Submitting...",
+            openDetailAction: "Open Details",
+            closePanelAction: "Close Panel",
             retryAction: "Retry",
             retryingAction: "Retrying...",
             cancelAction: "Cancel",
@@ -90,7 +93,44 @@ function renderAdminIngestionRoute(route: AdminIngestionRoute) {
             targetLabelTemplate: "Target {targetId}",
             syncedCountTemplate: "Synced {count}",
             failedCountTemplate: "Failed {count}",
-            valueNotAvailable: "n/a"
+            valueNotAvailable: "n/a",
+            valueEnabled: "Enabled",
+            valueDisabled: "Disabled",
+            valueUnnamedSkill: "Unnamed skill",
+            valueNoDescription: "No description",
+            valueUnknownOwner: "Unknown owner",
+            valueUnknown: "Unknown",
+            sourceTypeManual: "Manual",
+            sourceTypeRepository: "Repository",
+            sourceTypeUpload: "Upload",
+            sourceTypeSkillmp: "SkillMP",
+            visibilityPublic: "Public",
+            visibilityPrivate: "Private",
+            visibilityOrganization: "Organization",
+            statusPending: "Pending",
+            statusRunning: "Running",
+            statusFailed: "Failed",
+            statusCanceled: "Canceled",
+            statusSuccess: "Success",
+            statusUnknown: "Unknown",
+            triggerManual: "Manual",
+            triggerSchedule: "Schedule",
+            triggerScheduler: "Scheduler",
+            scopeRepository: "Repository",
+            jobTypeImportArchive: "Import archive",
+            jobTypeImportUpload: "Import upload",
+            jobTypeImportSkillmp: "Import SkillMP",
+            metricManualSkills: "Manual Skills",
+            metricPublicSkills: "Public Skills",
+            metricPrivateSkills: "Private Skills",
+            metricRepositorySkills: "Repository Skills",
+            metricSyncRuns: "Sync Runs",
+            metricFailedRuns: "Failed Runs",
+            metricScheduler: "Scheduler",
+            metricArchiveImports: "Archive Imports",
+            metricSkillmpImports: "SkillMP Imports",
+            metricImportJobs: "Import Jobs",
+            metricFailedJobs: "Failed Jobs"
           }
         })
       },
@@ -102,6 +142,8 @@ function renderAdminIngestionRoute(route: AdminIngestionRoute) {
         error: "",
         message: "",
         metrics: [{ label: "Inventory", value: "2" }],
+        overlay,
+        onCloseOverlay: () => undefined,
         onRefresh: () => undefined,
         manualView: {
           draft: {
@@ -123,9 +165,20 @@ function renderAdminIngestionRoute(route: AdminIngestionRoute) {
               updatedAt: "2026-03-16T08:00:00Z"
             }
           ],
+          selectedSkill: {
+            id: 11,
+            name: "Manual Skill",
+            description: "Manual description",
+            sourceType: "manual",
+            visibility: "private",
+            ownerUsername: "ops.lead",
+            updatedAt: "2026-03-16T08:00:00Z"
+          },
           busyAction: "",
           onDraftChange: () => undefined,
-          onSubmit: () => undefined
+          onSubmit: () => undefined,
+          onOpenCreate: () => undefined,
+          onOpenSkillDetail: () => undefined
         },
         repositoryView: {
           draft: {
@@ -147,6 +200,15 @@ function renderAdminIngestionRoute(route: AdminIngestionRoute) {
               updatedAt: "2026-03-16T08:00:00Z"
             }
           ],
+          selectedSkill: {
+            id: 21,
+            name: "Repository Skill",
+            description: "Repository description",
+            sourceType: "repository",
+            visibility: "public",
+            ownerUsername: "repo.bot",
+            updatedAt: "2026-03-16T08:00:00Z"
+          },
           policy: {
             enabled: true,
             interval: "15m",
@@ -164,11 +226,24 @@ function renderAdminIngestionRoute(route: AdminIngestionRoute) {
               startedAt: "2026-03-16T08:10:00Z"
             }
           ],
+          selectedSyncRun: {
+            id: 41,
+            trigger: "schedule",
+            scope: "repository",
+            status: "success",
+            failed: 0,
+            synced: 12,
+            startedAt: "2026-03-16T08:10:00Z"
+          },
           busyAction: "",
           onDraftChange: () => undefined,
           onPolicyChange: () => undefined,
           onSubmit: () => undefined,
-          onSavePolicy: () => undefined
+          onSavePolicy: () => undefined,
+          onOpenRepositoryIntake: () => undefined,
+          onOpenPolicy: () => undefined,
+          onOpenSkillDetail: () => undefined,
+          onOpenSyncRunDetail: () => undefined
         },
         importsView: {
           draft: {
@@ -194,6 +269,15 @@ function renderAdminIngestionRoute(route: AdminIngestionRoute) {
               updatedAt: "2026-03-16T08:00:00Z"
             }
           ],
+          selectedSkill: {
+            id: 31,
+            name: "Imported Skill",
+            description: "Imported description",
+            sourceType: "upload",
+            visibility: "private",
+            ownerUsername: "import.bot",
+            updatedAt: "2026-03-16T08:00:00Z"
+          },
           jobs: [
             {
               id: 81,
@@ -205,12 +289,25 @@ function renderAdminIngestionRoute(route: AdminIngestionRoute) {
               updatedAt: "2026-03-16T08:01:00Z"
             }
           ],
+          selectedJob: {
+            id: 81,
+            jobType: "import_archive",
+            status: "failed",
+            targetSkillId: 31,
+            errorMessage: "archive parse failed",
+            createdAt: "2026-03-16T08:00:00Z",
+            updatedAt: "2026-03-16T08:01:00Z"
+          },
           busyAction: "",
           onDraftChange: () => undefined,
           onArchiveFileChange: () => undefined,
           onSubmitArchive: () => undefined,
           onSubmitSkillMP: () => undefined,
-          onRunJobAction: () => undefined
+          onRunJobAction: () => undefined,
+          onOpenArchiveImport: () => undefined,
+          onOpenSkillMPImport: () => undefined,
+          onOpenSkillDetail: () => undefined,
+          onOpenJobDetail: () => undefined
         }
       })
     )
@@ -218,32 +315,58 @@ function renderAdminIngestionRoute(route: AdminIngestionRoute) {
 }
 
 describe("admin ingestion content", () => {
-  it("renders the manual route as authoring plus manual inventory", () => {
+  it("renders the manual route with inventory and create trigger while keeping the page context inline", () => {
     const markup = renderAdminIngestionRoute("/admin/ingestion/manual");
 
-    expect(markup).toContain("Manual Authoring");
     expect(markup).toContain("Manual Inventory");
+    expect(markup).toContain("Create Manual Skill");
     expect(markup).toContain("Publishing Guardrails");
-    expect(markup).not.toContain("Scheduler Policy");
+    expect(markup).not.toContain('role="dialog"');
   });
 
-  it("renders the repository route as intake, inventory, policy, and sync evidence", () => {
+  it("renders the repository route with intake and policy triggers plus sync evidence", () => {
     const markup = renderAdminIngestionRoute("/admin/ingestion/repository");
 
-    expect(markup).toContain("Repository Intake");
     expect(markup).toContain("Repository Inventory");
-    expect(markup).toContain("Scheduler Policy");
+    expect(markup).toContain("Start Repository Intake");
+    expect(markup).toContain("Save Policy");
     expect(markup).toContain("Recent Sync Runs");
-    expect(markup).not.toContain("Import Jobs");
   });
 
-  it("renders the imports route as source forms plus import jobs", () => {
+  it("renders the imports route with source triggers and import jobs", () => {
     const markup = renderAdminIngestionRoute("/admin/records/imports");
 
     expect(markup).toContain("Archive Import");
-    expect(markup).toContain("SkillMP Import");
+    expect(markup).toContain("Import SkillMP");
     expect(markup).toContain("Imported Inventory");
     expect(markup).toContain("Import Jobs");
-    expect(markup).toContain("Selected archive: archive-42.zip");
+  });
+
+  it("renders the create drawer contract when a create overlay is active", () => {
+    const markup = renderAdminIngestionRoute("/admin/ingestion/manual", {
+      open: true,
+      kind: "create",
+      entity: "manualForm",
+      entityId: null
+    });
+
+    expect(markup).toContain('role="dialog"');
+    expect(markup).toContain("Close Panel");
+    expect(markup).toContain("Name");
+    expect(markup).toContain("Content");
+  });
+
+  it("renders the import job detail drawer when a job overlay is active", () => {
+    const markup = renderAdminIngestionRoute("/admin/records/imports", {
+      open: true,
+      kind: "detail",
+      entity: "importJobDetail",
+      entityId: 81
+    });
+
+    expect(markup).toContain('role="dialog"');
+    expect(markup).toContain("Job #81");
+    expect(markup).toContain("archive parse failed");
+    expect(markup).toContain("Retry");
   });
 });

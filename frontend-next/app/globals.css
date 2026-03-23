@@ -1,53 +1,4 @@
 @import "tailwindcss";
-@import "./public-marketplace-theme.css";
-@import "./public-marketplace-shell-header.css";
-@import "./public-marketplace-shell.css";
-@import "./public-marketplace-primitives.css";
-@import "./public-marketplace-home.css";
-@import "./public-marketplace-home-hero.css";
-@import "./public-marketplace-home-deck-card.css";
-@import "./public-marketplace-home-landing-theme.css";
-@import "./public-marketplace-home-baseline.css";
-@import "./public-marketplace-home-auto-load.css";
-@import "./public-marketplace-home-topbar-baseline.css";
-@import "./public-marketplace-home-search-baseline.css";
-@import "./public-marketplace-layout.css";
-@import "./public-marketplace-controls.css";
-@import "./public-marketplace-support.css";
-@import "./public-marketplace-categories.css";
-@import "./public-marketplace-category-collections.css";
-@import "./public-marketplace-category-showcase.css";
-@import "./public-marketplace-category-hub.css";
-@import "./public-marketplace-section-topbar.css";
-@import "./public-marketplace-category-skill-card.css";
-@import "./public-marketplace-ranking.css";
-@import "./public-skill-detail.css";
-@import "./public-skill-detail-loading.css";
-@import "./public-skill-detail-overview.css";
-@import "./public-skill-detail-light-theme.css";
-@import "./public-skill-detail-light.css";
-@import "./public-skill-detail-content.css";
-@import "./public-skill-detail-content-lists.css";
-@import "./public-skill-detail-resources.css";
-@import "./public-skill-detail-resources-browser.css";
-@import "./public-skill-detail-directory.css";
-@import "./public-skill-detail-sidebar.css";
-@import "./public-skill-detail-topbar.css";
-@import "./protected-theme.css";
-@import "./workspace-shell.css";
-@import "./workspace-topbar.css";
-@import "./workspace-topbar-shell.css";
-@import "./workspace-topbar-controls.css";
-@import "./workspace-topbar-overflow.css";
-@import "./workspace-overview.css";
-@import "./account-shell.css";
-@import "./account-center.css";
-@import "./admin-shell.css";
-@import "./admin-overview.css";
-@import "./protected-shell-layout.css";
-@import "./protected-shell.css";
-@import "./protected-shell-account.css";
-@import "./protected-content-theme.css";
 
 :root {
   color-scheme: dark;
@@ -86,7 +37,7 @@ html:has(body > .admin-shell-root[data-protected-theme="dark"]),
 body:has(.admin-shell-root[data-protected-theme="dark"]),
 html:has(body > .account-shell-root[data-protected-theme="dark"]),
 body:has(.account-shell-root[data-protected-theme="dark"]) {
-  background: #0c1324;
+  background: #101010;
 }
 
 a {

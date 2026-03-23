@@ -1,10 +1,8 @@
-import { AdminEmptyBlock, AdminInsetBlock } from "@/src/components/admin/AdminPrimitives";
+import { AdminEmptyBlock, AdminInsetBlock, AdminSectionCard, AdminSelectableRecordCard } from "@/src/components/admin/AdminPrimitives";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
-import { Select } from "@/src/components/ui/select";
-import { Textarea } from "@/src/components/ui/textarea";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
@@ -87,12 +85,12 @@ export function ModerationQueueCard({
   payload,
   loading,
   selectedCase,
-  onSelectCase
+  onOpenCaseDetail
 }: {
   payload: ModerationCasesPayload;
   loading: boolean;
   selectedCase: ModerationCaseItem | null;
-  onSelectCase: (caseId: number) => void;
+  onOpenCaseDetail: (caseId: number) => void;
 }) {
   const { locale, messages } = useProtectedI18n();
   const moderationMessages = messages.adminModeration;
@@ -110,16 +108,10 @@ export function ModerationQueueCard({
       </CardHeader>
       <CardContent className="space-y-3">
         {payload.items.map((item) => (
-          <button
+          <AdminSelectableRecordCard
             key={item.id}
+            selected={item.id === selectedCase?.id}
             data-testid={`moderation-case-card-${item.id}`}
-            type="button"
-            className={`w-full rounded-2xl border p-4 text-left transition ${
-              item.id === selectedCase?.id
-                ? "border-[color:var(--ui-info-border)] bg-[color:var(--ui-info-bg)]"
-                : "border-[color:var(--ui-border)] bg-[color:var(--ui-card-bg)] hover:border-[color:var(--ui-border-strong)] hover:bg-[color:var(--ui-card-muted-bg)]"
-            }`}
-            onClick={() => onSelectCase(item.id)}
           >
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="space-y-2">
@@ -155,9 +147,14 @@ export function ModerationQueueCard({
                   </span>
                 </div>
               </div>
-              <div className="text-xs text-[color:var(--ui-text-muted)]">{item.action || moderationMessages.queueNoAction}</div>
+              <div className="flex flex-col items-end gap-2">
+                <div className="text-xs text-[color:var(--ui-text-muted)]">{item.action || moderationMessages.queueNoAction}</div>
+                <Button size="sm" variant="outline" onClick={() => onOpenCaseDetail(item.id)}>
+                  {moderationMessages.openCaseDetailAction}
+                </Button>
+              </div>
             </div>
-          </button>
+          </AdminSelectableRecordCard>
         ))}
 
         {!payload.items.length && !loading ? <AdminEmptyBlock>{moderationMessages.queueEmpty}</AdminEmptyBlock> : null}
@@ -166,7 +163,66 @@ export function ModerationQueueCard({
   );
 }
 
+export function CreateModerationTriggerCard({
+  loading,
+  busyAction,
+  onOpen
+}: {
+  loading: boolean;
+  busyAction: string;
+  onOpen: () => void;
+}) {
+  const { messages } = useProtectedI18n();
+  const moderationMessages = messages.adminModeration;
+
+  return (
+    <AdminSectionCard
+      title={moderationMessages.createTitle}
+      description={moderationMessages.createDescription}
+      contentClassName="space-y-3"
+    >
+      <Button onClick={onOpen} disabled={Boolean(busyAction) || loading}>
+        {moderationMessages.openCreateCaseAction}
+      </Button>
+    </AdminSectionCard>
+  );
+}
+
 export function SelectedModerationCaseCard({
+  selectedCase,
+  reasonSummary,
+  onOpenDetail
+}: {
+  selectedCase: ModerationCaseItem | null;
+  reasonSummary: Array<{ reason: string; count: number }>;
+  onOpenDetail?: () => void;
+}) {
+  const { messages } = useProtectedI18n();
+  const moderationMessages = messages.adminModeration;
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-1">
+            <CardTitle>{moderationMessages.selectedCaseTitle}</CardTitle>
+            <CardDescription>{moderationMessages.selectedCaseDescription}</CardDescription>
+          </div>
+          {onOpenDetail ? (
+            <Button size="sm" variant="outline" onClick={onOpenDetail}>
+              {moderationMessages.openCaseDetailAction}
+            </Button>
+          ) : null}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm text-[color:var(--ui-text-secondary)]">
+        <SelectedModerationCaseSummary selectedCase={selectedCase} reasonSummary={reasonSummary} />
+      </CardContent>
+    </Card>
+  );
+}
+
+export function SelectedModerationCaseSummary({
   selectedCase,
   reasonSummary
 }: {
@@ -177,179 +233,37 @@ export function SelectedModerationCaseCard({
   const moderationMessages = messages.adminModeration;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{moderationMessages.selectedCaseTitle}</CardTitle>
-        <CardDescription>{moderationMessages.selectedCaseDescription}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm text-[color:var(--ui-text-secondary)]">
+    <div className="space-y-3 text-sm text-[color:var(--ui-text-secondary)]">
+      <AdminInsetBlock>
+        <div className="font-semibold text-[color:var(--ui-text-primary)]">
+          {selectedCase ? formatProtectedMessage(moderationMessages.queueCasePrefix, { caseId: selectedCase.id }) : moderationMessages.noSelection}
+        </div>
+        <div className="mt-1">
+          {moderationMessages.targetLabel}: {selectedCase?.targetType || moderationMessages.notAvailable}
+        </div>
+        <div className="mt-1">
+          {moderationMessages.reasonLabel}: {selectedCase?.reasonCode || moderationMessages.notAvailable}
+        </div>
+        <div className="mt-1">
+          {moderationMessages.resolverLabel}: {selectedCase?.resolverUserId || moderationMessages.notAvailable}
+        </div>
+        <div className="mt-1">
+          {moderationMessages.updatedLabel}:{" "}
+          {selectedCase ? formatDateTime(selectedCase.updatedAt, locale, moderationMessages.notAvailable) : moderationMessages.notAvailable}
+        </div>
+      </AdminInsetBlock>
+      {selectedCase?.reasonDetail ? (
         <AdminInsetBlock>
-          <div className="font-semibold text-[color:var(--ui-text-primary)]">
-            {selectedCase ? formatProtectedMessage(moderationMessages.queueCasePrefix, { caseId: selectedCase.id }) : moderationMessages.noSelection}
-          </div>
-          <div className="mt-1">
-            {moderationMessages.targetLabel}: {selectedCase?.targetType || moderationMessages.notAvailable}
-          </div>
-          <div className="mt-1">
-            {moderationMessages.reasonLabel}: {selectedCase?.reasonCode || moderationMessages.notAvailable}
-          </div>
-          <div className="mt-1">
-            {moderationMessages.resolverLabel}: {selectedCase?.resolverUserId || moderationMessages.notAvailable}
-          </div>
-          <div className="mt-1">
-            {moderationMessages.updatedLabel}:{" "}
-            {selectedCase ? formatDateTime(selectedCase.updatedAt, locale, moderationMessages.notAvailable) : moderationMessages.notAvailable}
-          </div>
+          <div className="font-semibold text-[color:var(--ui-text-primary)]">{moderationMessages.reportedDetailTitle}</div>
+          <div className="mt-1">{selectedCase.reasonDetail}</div>
         </AdminInsetBlock>
-        {selectedCase?.reasonDetail ? (
-          <AdminInsetBlock>
-            <div className="font-semibold text-[color:var(--ui-text-primary)]">{moderationMessages.reportedDetailTitle}</div>
-            <div className="mt-1">{selectedCase.reasonDetail}</div>
-          </AdminInsetBlock>
-        ) : null}
-        {reasonSummary.map((item) => (
-          <AdminInsetBlock key={item.reason} className="flex items-center justify-between">
-            <span>{item.reason}</span>
-            <span className="font-semibold text-[color:var(--ui-text-primary)]">{item.count}</span>
-          </AdminInsetBlock>
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
-
-export function CreateModerationCaseCard({
-  createDraft,
-  busyAction,
-  onCreateDraftChange,
-  onCreateCase
-}: {
-  createDraft: {
-    reporterUserId: string;
-    targetType: string;
-    skillId: string;
-    commentId: string;
-    reasonCode: string;
-    reasonDetail: string;
-  };
-  busyAction: string;
-  onCreateDraftChange: (patch: Partial<CreateModerationCaseCardProps["createDraft"]>) => void;
-  onCreateCase: () => void;
-}) {
-  const { messages } = useProtectedI18n();
-  const moderationMessages = messages.adminModeration;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{moderationMessages.createTitle}</CardTitle>
-        <CardDescription>{moderationMessages.createDescription}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <Input
-          aria-label={moderationMessages.reporterUserIdLabel}
-          value={createDraft.reporterUserId}
-          placeholder={moderationMessages.reporterUserIdPlaceholder}
-          onChange={(event) => onCreateDraftChange({ reporterUserId: event.target.value })}
-        />
-        <Select aria-label={moderationMessages.targetTypeLabel} value={createDraft.targetType} onChange={(event) => onCreateDraftChange({ targetType: event.target.value })}>
-          <option value="skill">{moderationMessages.targetTypeSkill}</option>
-          <option value="comment">{moderationMessages.targetTypeComment}</option>
-        </Select>
-        <div className="grid gap-3 md:grid-cols-2">
-          <Input
-            aria-label={moderationMessages.skillIdLabel}
-            value={createDraft.skillId}
-            placeholder={moderationMessages.skillIdPlaceholder}
-            onChange={(event) => onCreateDraftChange({ skillId: event.target.value })}
-          />
-          <Input
-            aria-label={moderationMessages.commentIdLabel}
-            value={createDraft.commentId}
-            placeholder={moderationMessages.commentIdPlaceholder}
-            onChange={(event) => onCreateDraftChange({ commentId: event.target.value })}
-          />
-        </div>
-        <Input
-          aria-label={moderationMessages.reasonCodeLabel}
-          value={createDraft.reasonCode}
-          placeholder={moderationMessages.reasonCodePlaceholder}
-          onChange={(event) => onCreateDraftChange({ reasonCode: event.target.value })}
-        />
-        <Textarea
-          aria-label={moderationMessages.reasonDetailLabel}
-          className="min-h-24"
-          value={createDraft.reasonDetail}
-          placeholder={moderationMessages.reasonDetailPlaceholder}
-          onChange={(event) => onCreateDraftChange({ reasonDetail: event.target.value })}
-        />
-        <Button onClick={onCreateCase} disabled={Boolean(busyAction)}>
-          {busyAction === "create-case" ? moderationMessages.creatingAction : moderationMessages.createAction}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-type CreateModerationCaseCardProps = Parameters<typeof CreateModerationCaseCard>[0];
-
-export function ModerationDispositionCard({
-  resolveDraft,
-  busyAction,
-  selectedCase,
-  onResolveDraftChange,
-  onResolveCase,
-  onRejectCase
-}: {
-  resolveDraft: {
-    action: string;
-    resolutionNote: string;
-    rejectionNote: string;
-  };
-  busyAction: string;
-  selectedCase: ModerationCaseItem | null;
-  onResolveDraftChange: (patch: Partial<{ action: string; resolutionNote: string; rejectionNote: string }>) => void;
-  onResolveCase: () => void;
-  onRejectCase: () => void;
-}) {
-  const { messages } = useProtectedI18n();
-  const moderationMessages = messages.adminModeration;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{moderationMessages.dispositionTitle}</CardTitle>
-        <CardDescription>{moderationMessages.dispositionDescription}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <Select aria-label={moderationMessages.resolutionActionLabel} value={resolveDraft.action} onChange={(event) => onResolveDraftChange({ action: event.target.value })}>
-          <option value="flagged">{moderationMessages.resolutionActionFlagged}</option>
-          <option value="hidden">{moderationMessages.resolutionActionHidden}</option>
-          <option value="deleted">{moderationMessages.resolutionActionDeleted}</option>
-        </Select>
-        <Textarea
-          aria-label={moderationMessages.resolutionNoteLabel}
-          className="min-h-24"
-          value={resolveDraft.resolutionNote}
-          placeholder={moderationMessages.resolutionNotePlaceholder}
-          onChange={(event) => onResolveDraftChange({ resolutionNote: event.target.value })}
-        />
-        <Textarea
-          aria-label={moderationMessages.rejectionNoteLabel}
-          className="min-h-24"
-          value={resolveDraft.rejectionNote}
-          placeholder={moderationMessages.rejectionNotePlaceholder}
-          onChange={(event) => onResolveDraftChange({ rejectionNote: event.target.value })}
-        />
-        <div className="flex flex-wrap gap-3">
-          <Button onClick={onResolveCase} disabled={Boolean(busyAction) || !selectedCase}>
-            {busyAction === "resolve-case" ? moderationMessages.resolvingAction : moderationMessages.resolveAction}
-          </Button>
-          <Button variant="outline" onClick={onRejectCase} disabled={Boolean(busyAction) || !selectedCase}>
-            {busyAction === "reject-case" ? moderationMessages.rejectingAction : moderationMessages.rejectAction}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      ) : null}
+      {reasonSummary.map((item) => (
+        <AdminInsetBlock key={item.reason} className="flex items-center justify-between">
+          <span>{item.reason}</span>
+          <span className="font-semibold text-[color:var(--ui-text-primary)]">{item.count}</span>
+        </AdminInsetBlock>
+      ))}
+    </div>
   );
 }

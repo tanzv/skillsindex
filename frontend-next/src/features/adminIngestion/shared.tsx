@@ -2,24 +2,37 @@
 
 import type { ReactNode } from "react";
 
-import { AdminEmptyBlock, AdminMessageBanner, AdminMetricGrid } from "@/src/components/admin/AdminPrimitives";
-import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
+import {
+  AdminOverlayMetaList,
+  AdminOverlaySection
+} from "@/src/components/admin/AdminOverlaySurface";
+import { AdminEmptyBlock, AdminInsetBlock, AdminMessageBanner, AdminMetricGrid } from "@/src/components/admin/AdminPrimitives";
 import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import {
+  canCancelImportJob,
+  canRetryImportJob,
   formatAdminIngestionDate,
+  type ImportJobItem,
   type ImportsDraft,
   type ManualDraft,
   type RepositoryDraft,
-  type SkillInventoryItem
+  type SkillInventoryItem,
+  type SyncRunItem
 } from "./model";
 import {
   resolveIngestionDescription,
+  resolveIngestionJobTypeLabel,
   resolveIngestionOwnerLabel,
+  resolveIngestionScopeLabel,
   resolveIngestionSkillName,
   resolveIngestionSourceTypeLabel,
+  resolveIngestionStatusLabel,
+  resolveIngestionTriggerLabel,
   resolveIngestionVisibilityLabel
 } from "./display";
 
@@ -58,16 +71,44 @@ export function IngestionMessage({ message }: { message: string }) {
   return <AdminMessageBanner message={message} />;
 }
 
+export function IngestionTriggerCard({
+  title,
+  description,
+  actionLabel,
+  onAction
+}: {
+  title: string;
+  description: string;
+  actionLabel: string;
+  onAction: () => void;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button onClick={onAction}>{actionLabel}</Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function SkillInventoryList({
   title,
   description,
   items,
-  emptyText
+  emptyText,
+  actionLabel,
+  onOpenItem
 }: {
   title: string;
   description?: string;
   items: SkillInventoryItem[];
   emptyText: string;
+  actionLabel?: string;
+  onOpenItem?: (skillId: number) => void;
 }) {
   const { locale, messages } = useProtectedI18n();
   const ingestionMessages = messages.adminIngestion;
@@ -115,6 +156,11 @@ export function SkillInventoryList({
                     </span>
                   </div>
                 </div>
+                {onOpenItem && actionLabel ? (
+                  <Button size="sm" variant="outline" onClick={() => onOpenItem(item.id)}>
+                    {actionLabel}
+                  </Button>
+                ) : null}
               </div>
             </div>
           ))
@@ -123,6 +169,134 @@ export function SkillInventoryList({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+export function IngestionSkillDetail({ item }: { item: SkillInventoryItem }) {
+  const { locale, messages } = useProtectedI18n();
+  const ingestionMessages = messages.adminIngestion;
+
+  return (
+    <div className="space-y-4">
+      <AdminOverlaySection
+        title={resolveIngestionSkillName(item.name, ingestionMessages)}
+        description={resolveIngestionDescription(item.description, ingestionMessages)}
+      >
+        <AdminOverlayMetaList
+          items={[
+            {
+              label: ingestionMessages.visibilityLabel,
+              value: resolveIngestionVisibilityLabel(item.visibility, ingestionMessages)
+            },
+            {
+              label: "Owner",
+              value: resolveIngestionOwnerLabel(item.ownerUsername, ingestionMessages)
+            },
+            {
+              label: "Source",
+              value: resolveIngestionSourceTypeLabel(item.sourceType, ingestionMessages)
+            },
+            {
+              label: "Updated",
+              value: formatAdminIngestionDate(item.updatedAt, locale, ingestionMessages.valueNotAvailable)
+            }
+          ]}
+        />
+      </AdminOverlaySection>
+    </div>
+  );
+}
+
+export function IngestionSyncRunDetail({ run }: { run: SyncRunItem }) {
+  const { locale, messages } = useProtectedI18n();
+  const ingestionMessages = messages.adminIngestion;
+
+  return (
+    <div className="space-y-4">
+      <AdminOverlaySection
+        title={formatProtectedMessage(ingestionMessages.runLabelTemplate, { runId: run.id })}
+        description={resolveIngestionStatusLabel(run.status, ingestionMessages)}
+      >
+        <AdminOverlayMetaList
+          items={[
+            {
+              label: "Trigger",
+              value: resolveIngestionTriggerLabel(run.trigger, ingestionMessages)
+            },
+            {
+              label: "Scope",
+              value: resolveIngestionScopeLabel(run.scope, ingestionMessages)
+            },
+            {
+              label: "Synced",
+              value: formatProtectedMessage(ingestionMessages.syncedCountTemplate, { count: run.synced })
+            },
+            {
+              label: "Failed",
+              value: formatProtectedMessage(ingestionMessages.failedCountTemplate, { count: run.failed })
+            },
+            {
+              label: "Started",
+              value: formatAdminIngestionDate(run.startedAt, locale, ingestionMessages.valueNotAvailable)
+            }
+          ]}
+        />
+      </AdminOverlaySection>
+    </div>
+  );
+}
+
+export function IngestionImportJobDetail({
+  job,
+  busyAction,
+  onRunJobAction
+}: {
+  job: ImportJobItem;
+  busyAction: string;
+  onRunJobAction: (jobId: number, action: "retry" | "cancel") => void;
+}) {
+  const { locale, messages } = useProtectedI18n();
+  const ingestionMessages = messages.adminIngestion;
+
+  return (
+    <div className="space-y-4">
+      <AdminOverlaySection
+        title={formatProtectedMessage(ingestionMessages.jobLabelTemplate, { jobId: job.id })}
+        description={resolveIngestionStatusLabel(job.status, ingestionMessages)}
+      >
+        <AdminOverlayMetaList
+          items={[
+            {
+              label: "Job Type",
+              value: resolveIngestionJobTypeLabel(job.jobType, ingestionMessages)
+            },
+            {
+              label: "Target",
+              value: formatProtectedMessage(ingestionMessages.targetLabelTemplate, {
+                targetId: job.targetSkillId || ingestionMessages.valueNotAvailable
+              })
+            },
+            {
+              label: "Updated",
+              value: formatAdminIngestionDate(job.updatedAt || job.createdAt, locale, ingestionMessages.valueNotAvailable)
+            }
+          ]}
+        />
+        {job.errorMessage ? <AdminInsetBlock>{job.errorMessage}</AdminInsetBlock> : null}
+      </AdminOverlaySection>
+      <div className="flex flex-wrap gap-3">
+        {canRetryImportJob(job) ? (
+          <Button size="sm" variant="outline" onClick={() => onRunJobAction(job.id, "retry")} disabled={Boolean(busyAction)}>
+            {busyAction === `retry-${job.id}` ? ingestionMessages.retryingAction : ingestionMessages.retryAction}
+          </Button>
+        ) : null}
+        {canCancelImportJob(job) ? (
+          <Button size="sm" variant="outline" onClick={() => onRunJobAction(job.id, "cancel")} disabled={Boolean(busyAction)}>
+            {busyAction === `cancel-${job.id}` ? ingestionMessages.cancelingAction : ingestionMessages.cancelAction}
+          </Button>
+        ) : null}
+      </div>
+    </div>
   );
 }
 

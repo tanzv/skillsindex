@@ -31,6 +31,8 @@ export interface AdminCatalogMessages {
   resetFiltersAction: string;
   inspectAction: string;
   selectedAction: string;
+  openDetailAction: string;
+  closePanelAction: string;
   skillsInventoryTitle: string;
   skillsInventoryDescription: string;
   skillsEmpty: string;
@@ -178,6 +180,8 @@ export const adminCatalogMessageKeyMap = {
   resetFiltersAction: "admin_catalog_reset_filters_action",
   inspectAction: "admin_catalog_inspect_action",
   selectedAction: "admin_catalog_selected_action",
+  openDetailAction: "admin_catalog_open_detail_action",
+  closePanelAction: "admin_catalog_close_panel_action",
   skillsInventoryTitle: "admin_catalog_skills_inventory_title",
   skillsInventoryDescription: "admin_catalog_skills_inventory_description",
   skillsEmpty: "admin_catalog_skills_empty",

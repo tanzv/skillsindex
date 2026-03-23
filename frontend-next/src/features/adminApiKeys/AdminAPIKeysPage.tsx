@@ -2,20 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { AdminEmptyBlock, AdminMessageBanner, AdminMetaChipList } from "@/src/components/admin/AdminPrimitives";
-import { ErrorState } from "@/src/components/shared/ErrorState";
-import { PageHeader } from "@/src/components/shared/PageHeader";
-import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
-import { Badge } from "@/src/components/ui/badge";
+import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Input } from "@/src/components/ui/input";
-import { Select } from "@/src/components/ui/select";
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
+import { useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
-import { resolveApiKeyStatusLabel, resolveApiKeyStatusTone } from "@/src/lib/apiKeyDisplay";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
-import { buildAdminAPIKeyOverview, buildKeyMeta, normalizeAdminAPIKeysPayload } from "./model";
+import { AdminAPIKeysContent } from "./AdminAPIKeysContent";
+import { buildAdminAPIKeyOverview, normalizeAdminAPIKeysPayload, resolveSelectedAdminAPIKey } from "./model";
 
 function buildPath(filters: { owner: string; status: string }) {
   const params = new URLSearchParams();
@@ -30,8 +25,7 @@ function buildPath(filters: { owner: string; status: string }) {
 }
 
 export function AdminAPIKeysPage() {
-  const { locale, messages } = useProtectedI18n();
-  const commonMessages = messages.adminCommon;
+  const { messages } = useProtectedI18n();
   const apiKeyMessages = messages.adminApiKeys;
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
@@ -48,6 +42,7 @@ export function AdminAPIKeysPage() {
   });
   const [scopeDrafts, setScopeDrafts] = useState<Record<number, string>>({});
   const [plaintextSecret, setPlaintextSecret] = useState("");
+  const { overlay, openOverlay, closeOverlay } = useAdminOverlayState<"apiKeyCreate" | "apiKeyDetail">();
 
   const payload = useMemo(() => normalizeAdminAPIKeysPayload(rawPayload), [rawPayload]);
   const overview = useMemo(
@@ -67,6 +62,10 @@ export function AdminAPIKeysPage() {
       apiKeyMessages.ownerUnknown,
       payload
     ]
+  );
+  const selectedItem = useMemo(
+    () => resolveSelectedAdminAPIKey(payload.items, overlay?.entity === "apiKeyDetail" ? Number(overlay.entityId || 0) : null),
+    [overlay, payload.items]
   );
 
   const loadData = useCallback(async () => {
@@ -93,6 +92,14 @@ export function AdminAPIKeysPage() {
   useEffect(() => {
     void loadData();
   }, [loadData]);
+
+  const loadState = resolveAdminPageLoadState({ loading, error, hasData: rawPayload !== null });
+
+  useEffect(() => {
+    if (overlay?.entity === "apiKeyDetail" && !selectedItem) {
+      closeOverlay();
+    }
+  }, [closeOverlay, overlay, selectedItem]);
 
   function clearFeedback() {
     setError("");
@@ -126,6 +133,7 @@ export function AdminAPIKeysPage() {
         ownerUserId: "",
         scopes: ""
       });
+      closeOverlay();
       await loadData();
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : apiKeyMessages.createError);
@@ -185,194 +193,50 @@ export function AdminAPIKeysPage() {
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow={commonMessages.adminEyebrow}
+  if (loadState !== "ready") {
+    return (
+      <AdminPageLoadStateFrame
+        eyebrow={messages.adminCommon.adminEyebrow}
         title={apiKeyMessages.pageTitle}
         description={apiKeyMessages.pageDescription}
-        actions={<Button onClick={() => void loadData()}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>}
+        error={loadState === "error" ? error : undefined}
+        actions={<Button onClick={() => void loadData()}>{loading ? messages.adminCommon.refreshing : messages.adminCommon.refresh}</Button>}
       />
+    );
+  }
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {overview.metrics.map((metric) => (
-          <Card key={metric.label}>
-            <CardHeader className="gap-2 p-5">
-              <CardDescription className="text-[11px] uppercase tracking-[0.16em] text-[color:var(--ui-text-muted)]">
-                {metric.label}
-              </CardDescription>
-              <CardTitle className="text-base">{metric.value}</CardTitle>
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
-
-      {error ? <ErrorState description={error} /> : null}
-      {message ? <AdminMessageBanner message={message} /> : null}
-      {plaintextSecret ? (
-        <div className="rounded-2xl border border-[color:var(--ui-success-border)] bg-[color:var(--ui-success-bg)] px-4 py-3 text-sm text-[color:var(--ui-success-text)]">
-          {formatProtectedMessage(apiKeyMessages.plaintextSecretTemplate, { plaintextSecret })}
-        </div>
-      ) : null}
-
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{apiKeyMessages.inventoryTitle}</CardTitle>
-              <CardDescription>{apiKeyMessages.inventoryDescription}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-3 md:grid-cols-[1fr_180px_auto]">
-                <Input
-                  aria-label={apiKeyMessages.filterOwnerAriaLabel}
-                  value={filters.owner}
-                  placeholder={apiKeyMessages.filterOwnerPlaceholder}
-                  onChange={(event) => setFilters((current) => ({ ...current, owner: event.target.value }))}
-                />
-                <Select
-                  aria-label={apiKeyMessages.filterStatusAriaLabel}
-                  value={filters.status}
-                  onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
-                >
-                  <option value="all">{apiKeyMessages.filterStatusOptionAll}</option>
-                  <option value="active">{apiKeyMessages.filterStatusOptionActive}</option>
-                  <option value="revoked">{apiKeyMessages.filterStatusOptionRevoked}</option>
-                  <option value="expired">{apiKeyMessages.filterStatusOptionExpired}</option>
-                </Select>
-                <Button variant="outline" onClick={() => setFilters({ owner: "", status: "all" })}>
-                  {commonMessages.clear}
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                {payload.items.map((item) => (
-                  <div
-                    key={item.id}
-                    data-testid={`admin-apikey-card-${item.id}`}
-                    className="rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-bg)] p-4"
-                  >
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">
-                              {item.name || apiKeyMessages.unnamedKey}
-                            </span>
-                            <Badge variant={resolveApiKeyStatusTone(item.status)}>
-                              {resolveApiKeyStatusLabel(item.status, apiKeyMessages)}
-                            </Badge>
-                            <Badge variant="outline">{item.ownerUsername || apiKeyMessages.ownerUnknown}</Badge>
-                          </div>
-                          <div className="text-sm text-[color:var(--ui-text-secondary)]">{item.purpose || apiKeyMessages.noPurpose}</div>
-                          <AdminMetaChipList
-                            items={buildKeyMeta(item, locale, {
-                              valueNotAvailable: apiKeyMessages.valueNotAvailable,
-                              metaPrefixTemplate: apiKeyMessages.metaPrefixTemplate,
-                              metaCreatedTemplate: apiKeyMessages.metaCreatedTemplate,
-                              metaUpdatedTemplate: apiKeyMessages.metaUpdatedTemplate,
-                              metaLastUsedTemplate: apiKeyMessages.metaLastUsedTemplate
-                            })}
-                          />
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Button size="sm" variant="outline" onClick={() => void rotateKey(item.id)} disabled={Boolean(busyAction)}>
-                            {busyAction === `rotate-${item.id}` ? apiKeyMessages.rotatingAction : apiKeyMessages.rotateAction}
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => void revokeKey(item.id)} disabled={Boolean(busyAction)}>
-                            {busyAction === `revoke-${item.id}` ? apiKeyMessages.revokingAction : apiKeyMessages.revokeAction}
-                          </Button>
-                        </div>
-                      </div>
-
-                      <Input
-                        aria-label={apiKeyMessages.scopeInputAriaLabel}
-                        value={scopeDrafts[item.id] || ""}
-                        placeholder={apiKeyMessages.scopeInputPlaceholder}
-                        onChange={(event) =>
-                          setScopeDrafts((current) => ({
-                            ...current,
-                            [item.id]: event.target.value
-                          }))
-                        }
-                      />
-                      <Button size="sm" onClick={() => void updateScopes(item.id)} disabled={Boolean(busyAction)}>
-                        {busyAction === `scopes-${item.id}` ? apiKeyMessages.savingScopesAction : apiKeyMessages.applyScopesAction}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-
-                {!payload.items.length && !loading ? (
-                  <AdminEmptyBlock>{apiKeyMessages.inventoryEmpty}</AdminEmptyBlock>
-                ) : null}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{apiKeyMessages.createTitle}</CardTitle>
-              <CardDescription>{apiKeyMessages.createDescription}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Input
-                aria-label={apiKeyMessages.createNameAriaLabel}
-                value={createDraft.name}
-                placeholder={apiKeyMessages.createNamePlaceholder}
-                onChange={(event) => setCreateDraft((current) => ({ ...current, name: event.target.value }))}
-              />
-              <Input
-                aria-label={apiKeyMessages.createPurposeAriaLabel}
-                value={createDraft.purpose}
-                placeholder={apiKeyMessages.createPurposePlaceholder}
-                onChange={(event) => setCreateDraft((current) => ({ ...current, purpose: event.target.value }))}
-              />
-              <Input
-                aria-label={apiKeyMessages.createOwnerUserIdAriaLabel}
-                value={createDraft.ownerUserId}
-                placeholder={apiKeyMessages.createOwnerUserIdPlaceholder}
-                onChange={(event) => setCreateDraft((current) => ({ ...current, ownerUserId: event.target.value }))}
-              />
-              <Input
-                aria-label={apiKeyMessages.createExpiresInDaysAriaLabel}
-                value={createDraft.expiresInDays}
-                placeholder={apiKeyMessages.createExpiresInDaysPlaceholder}
-                onChange={(event) => setCreateDraft((current) => ({ ...current, expiresInDays: event.target.value }))}
-              />
-              <Input
-                aria-label={apiKeyMessages.createScopesAriaLabel}
-                value={createDraft.scopes}
-                placeholder={apiKeyMessages.createScopesPlaceholder}
-                onChange={(event) => setCreateDraft((current) => ({ ...current, scopes: event.target.value }))}
-              />
-              <Button onClick={() => void createKey()} disabled={Boolean(busyAction)}>
-                {busyAction === "create-key" ? apiKeyMessages.creatingAction : apiKeyMessages.createAction}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{apiKeyMessages.ownerSummaryTitle}</CardTitle>
-              <CardDescription>{apiKeyMessages.ownerSummaryDescription}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {overview.ownerSummary.map((item) => (
-                <div
-                  key={item.owner}
-                  className="flex items-center justify-between rounded-2xl bg-[color:var(--ui-card-muted-bg)] px-4 py-3"
-                >
-                  <span className="text-sm text-[color:var(--ui-text-secondary)]">{item.owner}</span>
-                  <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">{item.count}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+  return (
+    <AdminAPIKeysContent
+      loading={loading}
+      busyAction={busyAction}
+      error={error}
+      message={message}
+      plaintextSecret={plaintextSecret}
+      payload={payload}
+      overview={overview}
+      filters={filters}
+      createDraft={createDraft}
+      scopeDrafts={scopeDrafts}
+      selectedItem={selectedItem}
+      onRefresh={() => void loadData()}
+      onFiltersChange={(patch) => setFilters((current) => ({ ...current, ...patch }))}
+      onResetFilters={() => setFilters({ owner: "", status: "all" })}
+      onCreateDraftChange={(patch) => setCreateDraft((current) => ({ ...current, ...patch }))}
+      onScopeDraftChange={(keyId, value) =>
+        setScopeDrafts((current) => ({
+          ...current,
+          [keyId]: value
+        }))
+      }
+      createDrawerOpen={overlay?.entity === "apiKeyCreate"}
+      onOpenCreateDrawer={() => openOverlay({ kind: "create", entity: "apiKeyCreate" })}
+      onCloseCreateDrawer={closeOverlay}
+      onOpenDetail={(keyId) => openOverlay({ kind: "detail", entity: "apiKeyDetail", entityId: keyId })}
+      onCloseDetail={closeOverlay}
+      onCreateKey={() => void createKey()}
+      onRotateKey={(keyId) => void rotateKey(keyId)}
+      onRevokeKey={(keyId) => void revokeKey(keyId)}
+      onUpdateScopes={(keyId) => void updateScopes(keyId)}
+    />
   );
 }

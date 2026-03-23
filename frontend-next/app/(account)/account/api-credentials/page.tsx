@@ -1,5 +1,5 @@
-import { AccountCenterPage } from "@/src/features/accountCenter/AccountCenterPage";
+import { renderAccountRoute } from "@/src/features/accountCenter/renderAccountRoute";
 
-export default function AccountAPICredentialsPage() {
-  return <AccountCenterPage route="/account/api-credentials" />;
+export default async function AccountAPICredentialsPage() {
+  return renderAccountRoute("/account/api-credentials");
 }

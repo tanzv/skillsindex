@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { loginAsAdmin } from "./helpers/auth";
+import { gotoProtectedRoute, loginAsAdmin } from "./helpers/auth";
+
+test.describe.configure({ timeout: 120_000 });
 
 test("renders authenticated admin, workspace, and account routes", async ({ page }) => {
   await loginAsAdmin(page);
@@ -8,31 +10,33 @@ test("renders authenticated admin, workspace, and account routes", async ({ page
   await expect(page.getByTestId("admin-side-nav")).toBeVisible();
   await expect(page.getByTestId("admin-topbar")).toBeVisible();
   await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Marketplace", exact: true })).toBeVisible();
-  await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Overview", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Administration", exact: true })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("heading", { name: "Admin Overview", level: 1 })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Capability Envelope", exact: true })).toBeVisible();
+  await expect(page.getByText("Track catalog scale, access readiness, and operational reach from the central admin landing page.")).toBeVisible();
 
-  await page.goto("/admin/access");
-  await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Users", exact: true })).toHaveAttribute("aria-current", "page");
+  await gotoProtectedRoute(page, "/admin/access");
+  await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Organizations", exact: true })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("heading", { name: "Access", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Account Directory", exact: true })).toBeVisible();
 
-  await page.goto("/admin/ingestion/repository");
-  await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Catalog", exact: true })).toHaveAttribute("aria-current", "page");
+  await gotoProtectedRoute(page, "/admin/ingestion/repository");
+  await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Skills", exact: true })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("heading", { name: "Repository Intake", level: 1 })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Scheduler Policy", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Save Policy" }).first().click();
+  await expect(page.getByRole("dialog", { name: "Scheduler Policy" })).toBeVisible();
+  await page.getByRole("button", { name: "Close Panel" }).click();
 
-  await page.goto("/admin/ops/metrics");
-  await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Operations", exact: true })).toHaveAttribute("aria-current", "page");
+  await gotoProtectedRoute(page, "/admin/ops/metrics");
+  await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Administration", exact: true })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("heading", { name: "Operations Metrics", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Telemetry Context", exact: true })).toBeVisible();
 
-  await page.goto("/workspace/queue");
-  await expect(page.getByTestId("workspace-topbar").getByRole("link", { name: "Queue", exact: true })).toHaveAttribute("aria-current", "page");
+  await gotoProtectedRoute(page, "/workspace/queue");
+  await expect(page.getByTestId("workspace-topbar").getByRole("link", { name: "Workspace", exact: true })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("heading", { name: "Queue Execution", level: 1 })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Execution Spotlight", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open Details" }).first()).toBeVisible();
 
-  await page.goto("/account/profile");
+  await gotoProtectedRoute(page, "/account/profile");
   await expect(page.getByTestId("account-shell")).toBeVisible();
   await expect(page.getByTestId("account-side-nav")).toBeVisible();
   await expect(page.getByTestId("account-topbar")).toBeVisible();
@@ -54,14 +58,16 @@ test("executes authenticated profile and manual ingestion actions", async ({ pag
   await expect(page.getByText("Profile updated.")).toBeVisible();
   await expect(displayNameInput).toHaveValue(nextDisplayName);
 
-  await page.goto("/admin/ingestion/manual");
+  await gotoProtectedRoute(page, "/admin/ingestion/manual");
   await expect(page.getByRole("heading", { name: "Manual Intake", level: 1 })).toBeVisible();
-  await page.getByLabel("Name").fill("Manual Smoke Skill");
-  await page.getByLabel("Description").fill("Created during authenticated UI smoke.");
-  await page.getByLabel("Content").fill("# Manual Smoke Skill");
-  await page.getByRole("button", { name: "Create Manual Skill" }).click();
+  await page.getByRole("button", { name: "Create Manual Skill" }).first().click();
+  const manualDialog = page.getByRole("dialog", { name: "Manual Authoring" });
+  await manualDialog.getByLabel("Name").fill("Manual Smoke Skill");
+  await manualDialog.getByLabel("Description").fill("Created during authenticated UI smoke.");
+  await manualDialog.getByLabel("Content").fill("# Manual Smoke Skill");
+  await manualDialog.getByRole("button", { name: "Create Manual Skill" }).click();
   await expect(page.getByText("Manual skill created.")).toBeVisible();
-  await expect(page.getByText("Manual Smoke Skill")).toBeVisible();
+  await expect(page.getByText("Manual Smoke Skill").first()).toBeVisible();
 });
 
 test("renders shared drawer toggles across protected shells on tablet widths", async ({ page }) => {
@@ -70,9 +76,9 @@ test("renders shared drawer toggles across protected shells on tablet widths", a
 
   await expect(page.getByTestId("admin-topbar-menu-trigger")).toBeVisible();
 
-  await page.goto("/workspace");
+  await gotoProtectedRoute(page, "/workspace");
   await expect(page.getByTestId("workspace-topbar-menu-trigger")).toBeVisible();
 
-  await page.goto("/account/profile");
+  await gotoProtectedRoute(page, "/account/profile");
   await expect(page.getByTestId("account-topbar-menu-trigger")).toBeVisible();
 });

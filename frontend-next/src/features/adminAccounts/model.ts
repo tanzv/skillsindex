@@ -1,34 +1,27 @@
+import type { AdminAccountManagementRoute } from "@/src/lib/routing/adminRouteRegistry";
+import {
+  buildAdminRoleSummary,
+  normalizeAdminAccountsPayload,
+  normalizeAdminAccountStatus,
+  normalizeAdminAuthProvidersPayload,
+  normalizeAdminRegistrationPayload,
+  normalizeAdminRoleName,
+  type AdminNormalizedAccountItem,
+  type AdminNormalizedAccountsPayload,
+  type AdminNormalizedAuthProvidersPayload,
+  type AdminNormalizedRegistrationPayload
+} from "@/src/lib/admin/adminAccountSettingsModel";
 import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
 
-import { asArray, asBoolean, asNumber, asObject, asString, formatDateTime } from "../adminGovernance/shared";
+import { asString, formatDateTime } from "../adminGovernance/shared";
 
-export type AdminAccountsRoute = "/admin/accounts" | "/admin/accounts/new" | "/admin/roles" | "/admin/roles/new";
+export type AdminAccountsRoute = AdminAccountManagementRoute;
 export type AccountStatusFilter = "all" | "active" | "disabled";
 
-export interface AdminAccountItem {
-  id: number;
-  username: string;
-  role: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  forceLogoutAt: string;
-}
-
-export interface AdminAccountsPayload {
-  total: number;
-  items: AdminAccountItem[];
-}
-
-export interface RegistrationPayload {
-  allowRegistration: boolean;
-  marketplacePublicAccess: boolean;
-}
-
-export interface AuthProvidersPayload {
-  authProviders: string[];
-  availableAuthProviders: string[];
-}
+export type AdminAccountItem = AdminNormalizedAccountItem;
+export type AdminAccountsPayload = AdminNormalizedAccountsPayload;
+export type RegistrationPayload = AdminNormalizedRegistrationPayload;
+export type AuthProvidersPayload = AdminNormalizedAuthProvidersPayload;
 
 export interface AccountsOverview {
   metrics: Array<{ label: string; value: string }>;
@@ -51,60 +44,23 @@ interface AccountTableMetaLabels {
 }
 
 export function normalizeAccountsPayload(payload: unknown): AdminAccountsPayload {
-  const record = asObject(payload);
-  const items = asArray<Record<string, unknown>>(record.items);
-  return {
-    total: asNumber(record.total) || items.length,
-    items: items.map((item) => ({
-      id: asNumber(item.id),
-      username: asString(item.username) || "unknown",
-      role: asString(item.role) || "member",
-      status: asString(item.status) || "unknown",
-      createdAt: asString(item.created_at),
-      updatedAt: asString(item.updated_at),
-      forceLogoutAt: asString(item.force_logout_at)
-    }))
-  };
+  return normalizeAdminAccountsPayload(payload);
 }
 
 export function normalizeRegistrationPayload(payload: unknown): RegistrationPayload {
-  const record = asObject(payload);
-  return {
-    allowRegistration: asBoolean(record.allow_registration),
-    marketplacePublicAccess: record.marketplace_public_access !== false
-  };
-}
-
-function dedupeStringList(values: unknown[]): string[] {
-  const seen = new Set<string>();
-  const normalized: string[] = [];
-  values.forEach((value) => {
-    const nextValue = asString(value).toLowerCase();
-    if (!nextValue || seen.has(nextValue)) {
-      return;
-    }
-    seen.add(nextValue);
-    normalized.push(nextValue);
-  });
-  return normalized;
+  return normalizeAdminRegistrationPayload(payload);
 }
 
 export function normalizeAuthProvidersPayload(payload: unknown): AuthProvidersPayload {
-  const record = asObject(payload);
-  const authProviders = dedupeStringList(asArray(record.auth_providers));
-  const availableAuthProviders = dedupeStringList(asArray(record.available_auth_providers));
-  return {
-    authProviders,
-    availableAuthProviders: availableAuthProviders.length ? availableAuthProviders : authProviders
-  };
+  return normalizeAdminAuthProvidersPayload(payload);
 }
 
 export function normalizeAccountStatus(value: string): string {
-  return asString(value).toLowerCase() || "unknown";
+  return normalizeAdminAccountStatus(value);
 }
 
 export function normalizeRoleName(value: string): string {
-  return asString(value).toLowerCase() || "member";
+  return normalizeAdminRoleName(value);
 }
 
 export function resolveRoleTargetUserId(roleEditorUserId: string, selectedAccountId: number | null): number | null {
@@ -115,6 +71,23 @@ export function resolveRoleTargetUserId(roleEditorUserId: string, selectedAccoun
   }
 
   return Number.isFinite(selectedAccountId) && selectedAccountId !== null && selectedAccountId > 0 ? selectedAccountId : null;
+}
+
+export function resolveSelectedAdminAccount<TAccount extends AdminAccountItem>(
+  allAccounts: TAccount[],
+  visibleAccounts: TAccount[],
+  selectedAccountId: number | null
+): TAccount | null {
+  if (!visibleAccounts.length) {
+    return null;
+  }
+
+  return (
+    visibleAccounts.find((account) => account.id === selectedAccountId) ||
+    visibleAccounts[0] ||
+    allAccounts.find((account) => account.id === selectedAccountId) ||
+    null
+  );
 }
 
 export function sortAccountsByUpdatedAt<TAccount extends AdminAccountItem>(accounts: TAccount[]): TAccount[] {
@@ -140,15 +113,7 @@ export function filterAccounts<TAccount extends AdminAccountItem>(accounts: TAcc
 }
 
 export function buildRoleSummary(accounts: AdminAccountItem[]): Array<{ role: string; count: number }> {
-  const roleMap = accounts.reduce<Map<string, number>>((accumulator, account) => {
-    const role = normalizeRoleName(account.role);
-    accumulator.set(role, (accumulator.get(role) || 0) + 1);
-    return accumulator;
-  }, new Map<string, number>());
-
-  return Array.from(roleMap.entries())
-    .map(([role, count]) => ({ role, count }))
-    .sort((left, right) => right.count - left.count || left.role.localeCompare(right.role));
+  return buildAdminRoleSummary(accounts);
 }
 
 export function buildAccountsOverview(

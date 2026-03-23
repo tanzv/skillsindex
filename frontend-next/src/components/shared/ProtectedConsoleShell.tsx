@@ -1,20 +1,21 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 
+import {
+  persistBrowserThemePreference,
+  resolveBrowserThemePreference,
+  type SharedThemePreference
+} from "@/src/lib/theme/sharedThemePreference";
 import { cn } from "@/src/lib/utils";
-
-type ProtectedThemePreference = "light" | "dark";
-
-const protectedThemeStorageKey = "skillsindex.protected.theme";
 
 interface ProtectedConsoleShellHeaderControls {
   isSidebarOpen: boolean;
   openSidebar: () => void;
   closeSidebar: () => void;
   toggleSidebar: () => void;
-  theme: ProtectedThemePreference;
-  setTheme: (nextTheme: ProtectedThemePreference) => void;
+  theme: SharedThemePreference;
+  setTheme: (nextTheme: SharedThemePreference) => void;
 }
 
 interface ProtectedConsoleShellProps {
@@ -23,9 +24,11 @@ interface ProtectedConsoleShellProps {
   sideNavTestId: string;
   renderHeader: (controls: ProtectedConsoleShellHeaderControls) => ReactNode;
   sidebar: ReactNode;
-  children: ReactNode;
+  children?: ReactNode;
   mainClassName?: string;
 }
+
+const useSynchronizedLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export function ProtectedConsoleShell({
   scope,
@@ -38,24 +41,24 @@ export function ProtectedConsoleShell({
 }: ProtectedConsoleShellProps) {
   const frameClassName = `${scope}-frame`;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState<ProtectedThemePreference>(() => {
-    if (typeof window === "undefined") {
-      return "light";
-    }
-
-    const storedTheme = window.localStorage.getItem(protectedThemeStorageKey);
-    return storedTheme === "dark" || storedTheme === "light" ? storedTheme : "light";
-  });
+  const [theme, setTheme] = useState<SharedThemePreference>("dark");
+  const [hasResolvedThemePreference, setHasResolvedThemePreference] = useState(false);
   const drawerNavTestId = `${sideNavTestId}-drawer`;
   const drawerPanelId = `${shellTestId}-drawer-panel`;
 
+  useSynchronizedLayoutEffect(() => {
+    const resolvedTheme = resolveBrowserThemePreference();
+    setTheme((previousTheme) => (previousTheme === resolvedTheme ? previousTheme : resolvedTheme));
+    setHasResolvedThemePreference(true);
+  }, []);
+
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (!hasResolvedThemePreference) {
       return;
     }
 
-    window.localStorage.setItem(protectedThemeStorageKey, theme);
-  }, [theme]);
+    persistBrowserThemePreference(theme);
+  }, [hasResolvedThemePreference, theme]);
 
   useEffect(() => {
     if (!isSidebarOpen) {

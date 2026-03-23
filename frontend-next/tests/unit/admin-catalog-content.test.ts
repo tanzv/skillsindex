@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { AdminCatalogContent } from "@/src/features/adminCatalog/AdminCatalogContent";
 import { ProtectedI18nProvider } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import type { AdminCatalogRoute, AdminCatalogViewModel } from "@/src/features/adminCatalog/model";
+import styles from "@/src/features/adminCatalog/AdminCatalogSurface.module.scss";
 import { createProtectedPageTestMessages } from "./protected-page-test-messages";
 
 function createViewModel(route: AdminCatalogRoute): AdminCatalogViewModel {
@@ -121,6 +122,8 @@ function renderCatalogRoute(route: AdminCatalogRoute) {
             resetFiltersAction: "Reset",
             inspectAction: "Inspect",
             selectedAction: "Selected",
+            openDetailAction: "Open Details",
+            closePanelAction: "Close Panel",
             skillsInventoryTitle: "Governed Inventory",
             skillsInventoryDescription: "Use this route as the searchable catalog list, then inspect one governed skill at a time.",
             skillsEmpty: "No governed skills were returned by the backend.",
@@ -198,30 +201,30 @@ function renderCatalogRoute(route: AdminCatalogRoute) {
 }
 
 describe("admin catalog content", () => {
-  it("renders the skills route as governed inventory plus selected detail", () => {
+  it("renders the skills route as governed inventory with explicit detail triggers", () => {
     const markup = renderCatalogRoute("/admin/skills");
 
     expect(markup).toContain("Governed Inventory");
-    expect(markup).toContain("Selected Skill");
-    expect(markup).toContain("Open Skill Detail");
+    expect(markup).toContain("Open Details");
     expect(markup).toContain("Sync now");
+    expect(markup).toContain(styles.splitLayout);
+    expect(markup).toContain(styles.rowLayout);
   });
 
   it("renders the jobs route as execution queue with row actions", () => {
     const markup = renderCatalogRoute("/admin/jobs");
 
     expect(markup).toContain("Execution Queue");
-    expect(markup).toContain("Selected Job");
+    expect(markup).toContain("Open Details");
     expect(markup).toContain("Retry");
     expect(markup).toContain("Cancel");
   });
 
-  it("renders the sync run route as history plus selected run detail", () => {
+  it("renders the sync run route as history with drawer entry actions", () => {
     const markup = renderCatalogRoute("/admin/sync-jobs");
 
     expect(markup).toContain("Run History");
-    expect(markup).toContain("Selected Sync Run");
-    expect(markup).toContain("Open Sync Policy");
+    expect(markup).toContain("Open Details");
   });
 
   it("renders the policy route as editor plus posture summary", () => {

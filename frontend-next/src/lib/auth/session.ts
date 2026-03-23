@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { headers } from "next/headers";
 
 import { serverFetchJSON } from "../http/serverFetch";
@@ -19,7 +20,7 @@ export function requireAuthenticatedSession(context: SessionContext): SessionUse
   return context.user;
 }
 
-export async function getServerSessionContext(): Promise<SessionContext> {
+export const getServerSessionContext = cache(async (): Promise<SessionContext> => {
   try {
     const requestHeaders = new Headers(await headers());
     const payload = await serverFetchJSON<RawSessionContext>("/api/v1/auth/me", {
@@ -30,4 +31,4 @@ export async function getServerSessionContext(): Promise<SessionContext> {
   } catch {
     return normalizeSessionContext(null);
   }
-}
+});

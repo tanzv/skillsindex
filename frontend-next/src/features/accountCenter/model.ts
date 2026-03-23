@@ -1,7 +1,10 @@
+import {
+  accountRouteBySection,
+  accountSectionByRoute,
+  type AccountSection
+} from "@/src/lib/routing/accountRouteMeta";
 import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
-
-export type AccountRoute = "/account/profile" | "/account/security" | "/account/sessions" | "/account/api-credentials";
-export type AccountSection = "profile" | "security" | "sessions" | "credentials";
+import type { AccountRoute } from "@/src/lib/routing/routes";
 export type AccountRevokeMode = "keep" | "revoke";
 export type AccountAPIKeyStatus = "active" | "revoked" | "expired";
 
@@ -80,19 +83,8 @@ export interface AccountAPIKeySecretState {
   plaintextKey: string;
 }
 
-export const accountSectionByRoute: Record<AccountRoute, AccountSection> = {
-  "/account/profile": "profile",
-  "/account/security": "security",
-  "/account/sessions": "sessions",
-  "/account/api-credentials": "credentials"
-};
-
-export const accountRouteBySection: Record<AccountSection, AccountRoute> = {
-  profile: "/account/profile",
-  security: "/account/security",
-  sessions: "/account/sessions",
-  credentials: "/account/api-credentials"
-};
+export { accountRouteBySection, accountSectionByRoute };
+export type { AccountRoute, AccountSection };
 
 export function formatAccountDate(value: string | null | undefined, locale: PublicLocale = "en", fallback = "n/a"): string {
   if (!value) {
@@ -122,7 +114,7 @@ export function profileCompletenessScore(profile: AccountProfilePayload | null):
 
 export function buildAccountProfileDraft(payload: AccountProfilePayload | null): AccountProfileDraft {
   return {
-    displayName: payload?.profile.display_name || payload?.user.displayName || "",
+    displayName: payload?.profile.display_name || payload?.user.displayName || payload?.user.username || "",
     avatarURL: payload?.profile.avatar_url || "",
     bio: payload?.profile.bio || ""
   };

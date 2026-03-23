@@ -1,4 +1,11 @@
 import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
+import {
+  adminSyncJobsRoute,
+  marketplaceHomeRoute,
+  workspaceQueueRoute,
+  workspaceRunbookRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
+import { buildPublicSkillDetailRoute } from "@/src/lib/routing/publicRouteBuilders";
 import type { SessionContext } from "@/src/lib/schemas/session";
 
 import { formatWorkspaceMessage } from "./messages";
@@ -180,7 +187,7 @@ export function buildExecutionSpotlightSection(snapshot: WorkspaceSnapshot, mess
           description: messages.sectionExecutionSpotlightEmptyDetail
         }
       ],
-      actions: [{ label: messages.actionOpenQueue, href: "/workspace/queue", variant: "default" }]
+      actions: [{ label: messages.actionOpenQueue, href: workspaceQueueRoute, variant: "default" }]
     };
   }
 
@@ -218,8 +225,8 @@ export function buildExecutionSpotlightSection(snapshot: WorkspaceSnapshot, mess
     ],
     badges: spotlight.tags,
     actions: [
-      { label: messages.actionOpenQueue, href: "/workspace/queue", variant: "default" },
-      { label: messages.actionOpenRunbook, href: "/workspace/runbook", variant: "outline" }
+      { label: messages.actionOpenQueue, href: workspaceQueueRoute, variant: "default" },
+      { label: messages.actionOpenRunbook, href: workspaceRunbookRoute, variant: "outline" }
     ]
   };
 }
@@ -268,8 +275,12 @@ export function buildQueueSpotlightSection(snapshot: WorkspaceSnapshot, messages
         ],
     badges: spotlight ? spotlight.tags : undefined,
     actions: [
-      { label: messages.actionOpenSkillDetail, href: spotlight ? `/skills/${spotlight.id}` : "/", variant: "default" },
-      { label: messages.quickActionOpenSyncJobs, href: "/admin/sync-jobs", variant: "outline" }
+      {
+        label: messages.actionOpenSkillDetail,
+        href: spotlight ? buildPublicSkillDetailRoute(spotlight.id) : marketplaceHomeRoute,
+        variant: "default"
+      },
+      { label: messages.quickActionOpenSyncJobs, href: adminSyncJobsRoute, variant: "outline" }
     ]
   };
 }
@@ -382,6 +393,6 @@ export function buildRunbookResponseScriptSection(
           `workspace observe --skill ${runbookEntry.id} --channel ${runbookEntry.category.toLowerCase()}`
         ].join("\n")
       : messages.sectionResponseScriptNoQueueCode,
-    actions: [{ label: messages.actionOpenQueue, href: "/workspace/queue", variant: "outline" }]
+    actions: [{ label: messages.actionOpenQueue, href: workspaceQueueRoute, variant: "outline" }]
   };
 }

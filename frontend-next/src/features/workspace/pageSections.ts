@@ -1,4 +1,5 @@
 import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
+import type { WorkspaceRoute } from "@/src/lib/routing/routes";
 import type { SessionContext } from "@/src/lib/schemas/session";
 
 import {
@@ -12,17 +13,26 @@ import {
 } from "./pageSectionRouteBuilders";
 import type { WorkspaceRoutePath, WorkspaceSnapshot } from "./types";
 
-export function buildRouteSections(
+type WorkspaceRouteSectionsBuilder = (
   session: SessionContext,
   snapshot: WorkspaceSnapshot,
   messages: WorkspaceMessages
-): Record<WorkspaceRoutePath, WorkspaceRouteSections> {
-  return {
-    "/workspace": buildOverviewRouteSections(session, snapshot, messages),
-    "/workspace/activity": buildActivityRouteSections(session, snapshot, messages),
-    "/workspace/queue": buildQueueRouteSections(session, snapshot, messages),
-    "/workspace/policy": buildPolicyRouteSections(session, snapshot, messages),
-    "/workspace/runbook": buildRunbookRouteSections(session, snapshot, messages),
-    "/workspace/actions": buildActionsRouteSections(session, snapshot, messages)
-  };
+) => WorkspaceRouteSections;
+
+const workspaceRouteSectionBuilders: Record<WorkspaceRoute, WorkspaceRouteSectionsBuilder> = {
+  "/workspace": buildOverviewRouteSections,
+  "/workspace/activity": buildActivityRouteSections,
+  "/workspace/queue": buildQueueRouteSections,
+  "/workspace/policy": buildPolicyRouteSections,
+  "/workspace/runbook": buildRunbookRouteSections,
+  "/workspace/actions": buildActionsRouteSections
+};
+
+export function resolveRouteSections(
+  route: WorkspaceRoutePath,
+  session: SessionContext,
+  snapshot: WorkspaceSnapshot,
+  messages: WorkspaceMessages
+): WorkspaceRouteSections {
+  return workspaceRouteSectionBuilders[route](session, snapshot, messages);
 }

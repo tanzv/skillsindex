@@ -36,17 +36,17 @@ function renderPage() {
 }
 
 describe("admin overview page", () => {
-  it("renders localized overview sections", () => {
+  it("defers overview sections until live data loads", () => {
     const markup = renderPage();
 
     expect(markup).toContain("Admin Overview");
     expect(markup).toContain("Platform control summary.");
-    expect(markup).toContain("Distribution");
-    expect(markup).toContain("Navigation");
-    expect(markup).toContain("Capability Envelope");
-    expect(markup).toContain("Operational Readiness");
-    expect(markup).toContain("Open Intake");
-    expect(markup).toContain("Open Alerts");
     expect(markup).toContain("Refreshing...");
+    expect(markup).not.toContain("Distribution");
+    expect(markup).not.toContain("Navigation");
+    expect(markup).not.toContain("Capability Envelope");
+    expect(markup).not.toContain("Operational Readiness");
+    expect(markup).not.toContain("Open Intake");
+    expect(markup).not.toContain("Open Alerts");
   });
 });

@@ -136,6 +136,8 @@ export const workspaceMessageKeyMap = {
   actionOpenImports: "workspace_action_open_imports",
   actionOpenRepositoryIntake: "workspace_action_open_repository_intake",
   actionOpenPolicyView: "workspace_action_open_policy_view",
+  actionOpenDetails: "workspace_action_open_details",
+  actionClosePanel: "workspace_action_close_panel",
   actionOpenSkillDetail: "workspace_action_open_skill_detail",
   sectionRecentActivityTitle: "workspace_section_recent_activity_title",
   sectionRecentActivityDescription: "workspace_section_recent_activity_description",

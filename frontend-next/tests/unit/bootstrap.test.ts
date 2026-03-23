@@ -17,6 +17,8 @@ describe("frontend-next bootstrap", () => {
 
     expect(packageJSON.scripts).toMatchObject({
       dev: "next dev --webpack",
+      "dev:turbopack": "next dev",
+      "dev:webpack": "next dev --webpack",
       build: "next build --webpack",
       start: "next start",
       lint: "eslint .",
@@ -52,6 +54,9 @@ describe("frontend-next bootstrap", () => {
   it("defines the route groups, middleware, and auth entrypoints for the migrated app", async () => {
     const requiredFiles = [
       "proxy.ts",
+      "app/loading.tsx",
+      "app/not-found.tsx",
+      "app/global-error.tsx",
       "app/login/page.tsx",
       "app/(public)/layout.tsx",
       "app/(public)/page.tsx",

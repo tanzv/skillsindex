@@ -1,3 +1,4 @@
+import { workspaceRunbookRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 import type { WorkspaceMessages } from "./protectedPageMessages.workspace.types";
 
 export const workspaceMessageFallbacks = {
@@ -127,7 +128,7 @@ export const workspaceMessageFallbacks = {
   sectionExecutionSpotlightQualityScoreLabel: "Quality Score",
   sectionExecutionSpotlightQualityScoreDescriptionTemplate: "{count} stars captured in the current catalog snapshot.",
   sectionExecutionSpotlightNextRouteLabel: "Next Route",
-  sectionExecutionSpotlightNextRouteValue: "/workspace/runbook",
+  sectionExecutionSpotlightNextRouteValue: workspaceRunbookRoute,
   sectionExecutionSpotlightNextRouteDescription: "Jump into the response script or inspect the full execution queue.",
   actionOpenQueue: "Open Queue",
   actionOpenRunbook: "Open Runbook",
@@ -136,6 +137,8 @@ export const workspaceMessageFallbacks = {
   actionOpenImports: "Open Imports",
   actionOpenRepositoryIntake: "Open Repository Intake",
   actionOpenPolicyView: "Open Policy View",
+  actionOpenDetails: "Open Details",
+  actionClosePanel: "Close Panel",
   actionOpenSkillDetail: "Open Skill Detail",
   sectionRecentActivityTitle: "Recent Activity",
   sectionRecentActivityDescription: "The latest skill changes and queue movement in this workspace.",

@@ -133,3 +133,14 @@ export function buildOrganizationsOverview(
       .sort((left, right) => right.count - left.count || left.role.localeCompare(right.role))
   };
 }
+
+export function resolveSelectedOrganizationMember(
+  members: OrganizationMemberItem[],
+  selectedMemberUserId: number | null
+): OrganizationMemberItem | null {
+  if (selectedMemberUserId === null) {
+    return null;
+  }
+
+  return members.find((member) => member.userId === selectedMemberUserId) || null;
+}

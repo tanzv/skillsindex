@@ -1,0 +1,197 @@
+@mixin sidebar-scope-tokens($shell-prefix) {
+  --sidebar-panel-bg: var(--protected-sidebar-panel-bg, var(--#{$shell-prefix}-panel-bg, var(--ui-card-bg)));
+  --sidebar-panel-border: var(--protected-sidebar-panel-border, var(--#{$shell-prefix}-panel-border, var(--ui-border)));
+  --sidebar-panel-shadow: var(--protected-sidebar-panel-shadow, var(--#{$shell-prefix}-panel-shadow, none));
+  --sidebar-title-color: var(--protected-sidebar-title-color, var(--#{$shell-prefix}-text-muted, var(--ui-text-muted)));
+  --sidebar-copy-color: var(--protected-sidebar-copy-color, var(--#{$shell-prefix}-text-secondary, var(--ui-text-secondary)));
+  --sidebar-group-title-color: var(--protected-sidebar-group-title-color, var(--ui-text-muted));
+  --sidebar-link-bg: var(--protected-sidebar-link-bg, var(--#{$shell-prefix}-link-bg, var(--ui-card-bg)));
+  --sidebar-link-bg-hover: var(--protected-sidebar-link-bg-hover, var(--#{$shell-prefix}-link-bg-hover, var(--ui-card-muted-bg)));
+  --sidebar-link-bg-active: var(--protected-sidebar-link-bg-active, var(--#{$shell-prefix}-link-bg-active, var(--ui-card-highlight-bg)));
+  --sidebar-link-text: var(--protected-sidebar-link-text, var(--#{$shell-prefix}-text-secondary, var(--ui-text-secondary)));
+  --sidebar-link-text-active: var(--protected-sidebar-link-text-active, var(--#{$shell-prefix}-text, var(--ui-text-primary)));
+  --sidebar-link-divider: var(--protected-sidebar-link-divider, var(--#{$shell-prefix}-link-border, var(--ui-border)));
+  --sidebar-link-note: var(--protected-sidebar-link-note, var(--#{$shell-prefix}-link-note, var(--ui-text-muted)));
+}
+
+.panel {
+  --sidebar-panel-bg: var(--ui-card-bg);
+  --sidebar-panel-border: var(--ui-border);
+  --sidebar-panel-shadow: none;
+  --sidebar-title-color: var(--ui-text-muted);
+  --sidebar-copy-color: var(--ui-text-secondary);
+  --sidebar-group-title-color: var(--ui-text-muted);
+  --sidebar-link-bg: var(--ui-card-bg);
+  --sidebar-link-bg-hover: var(--ui-card-muted-bg);
+  --sidebar-link-bg-active: var(--ui-card-highlight-bg);
+  --sidebar-link-text: var(--ui-text-secondary);
+  --sidebar-link-text-active: var(--ui-text-primary);
+  --sidebar-link-divider: var(--ui-border);
+  --sidebar-link-note: var(--ui-text-muted);
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--sidebar-panel-border);
+  border-radius: 16px;
+  background: var(--sidebar-panel-bg);
+  box-shadow: var(--sidebar-panel-shadow);
+  overflow: hidden;
+
+  &[data-scope="admin-shell"] {
+    @include sidebar-scope-tokens("admin-shell");
+  }
+
+  &[data-scope="workspace-shell"] {
+    @include sidebar-scope-tokens("workspace-shell");
+  }
+
+  &[data-scope="account-shell"] {
+    @include sidebar-scope-tokens("account-shell");
+  }
+
+  .panelTitle {
+    margin: 0;
+    color: var(--sidebar-title-color);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  .panelCopy {
+    margin: 0;
+    color: var(--sidebar-copy-color);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .groupList {
+    display: grid;
+    min-width: 0;
+    gap: 0;
+
+    > .link {
+      position: relative;
+
+      + .link::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 16px;
+        right: 16px;
+        border-top: 1px solid var(--sidebar-link-divider);
+      }
+    }
+  }
+
+  .link {
+    display: grid;
+    min-width: 0;
+    min-height: 36px;
+    align-items: start;
+    gap: 4px;
+    padding: 12px 16px;
+    border: 0;
+    border-radius: 0;
+    background: var(--sidebar-link-bg);
+    color: var(--sidebar-link-text);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+    text-decoration: none;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease,
+      outline-color 120ms ease;
+
+    &:hover {
+      background: var(--sidebar-link-bg-hover);
+      color: var(--sidebar-link-text-active);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ui-focus-ring);
+      outline-offset: -2px;
+    }
+
+    &.is-active {
+      background: var(--sidebar-link-bg-active);
+      color: var(--sidebar-link-text-active);
+    }
+
+    &:hover .linkNote,
+    &.is-active .linkNote {
+      color: var(--sidebar-copy-color);
+    }
+  }
+
+  .linkBody {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+  }
+
+  .linkLabel {
+    min-width: 0;
+    color: inherit;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .linkNote {
+    display: block;
+    min-width: 0;
+    color: var(--sidebar-link-note);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+}
+
+.header {
+  display: grid;
+  gap: 6px;
+}
+
+.groups {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+  min-height: 0;
+  align-content: start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.group {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0 8px;
+}
+
+.groupTitle {
+  margin: 0;
+  padding-left: 16px;
+  color: var(--sidebar-group-title-color);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}

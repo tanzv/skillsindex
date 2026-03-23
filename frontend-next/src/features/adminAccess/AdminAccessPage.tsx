@@ -2,37 +2,25 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import {
-  AdminEmptyBlock,
-  AdminFilterBar,
-  AdminInsetBlock,
-  AdminMetaChipList,
-  AdminPageScaffold,
-  AdminRecordCard,
-  AdminSectionCard,
-  AdminToggleField
-} from "@/src/components/admin/AdminPrimitives";
-import { Badge } from "@/src/components/ui/badge";
+import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
 import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
-import { clientFetchJSON } from "@/src/lib/http/clientFetch";
-import { resolveAccountRoleLabel, resolveAccountStatusLabel, resolveAccountUsernameLabel } from "@/src/lib/accountDisplay";
-import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
+import { loadAdminAccessSettingsPayloads, saveAdminAccessSettings } from "@/src/lib/api/adminAccessSettings";
 
-import { formatDateTime } from "../adminGovernance/shared";
-
-import { buildAccessOverview, buildAdminAccessGovernanceData } from "./model";
+import { AdminAccessContent } from "./AdminAccessContent";
+import { buildAccessOverview, buildAdminAccessGovernanceData, resolveSelectedAccessAccount } from "./model";
 
 export function AdminAccessPage() {
-  const { locale, messages } = useProtectedI18n();
-  const commonMessages = messages.adminCommon;
+  const { messages } = useProtectedI18n();
   const accessMessages = messages.adminAccess;
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [keyword, setKeyword] = useState("");
+  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
+  const [policyDrawerOpen, setPolicyDrawerOpen] = useState(false);
+  const [accountDrawerOpen, setAccountDrawerOpen] = useState(false);
   const [rawAccounts, setRawAccounts] = useState<unknown>(null);
   const [rawRegistration, setRawRegistration] = useState<unknown>(null);
   const [rawAuthProviders, setRawAuthProviders] = useState<unknown>(null);
@@ -75,16 +63,16 @@ export function AdminAccessPage() {
     }
     return data.accounts.filter((item) => [item.username, item.role, item.status, String(item.id)].some((value) => value.toLowerCase().includes(search)));
   }, [data.accounts, keyword]);
+  const selectedAccount = useMemo(
+    () => resolveSelectedAccessAccount(data.accounts, selectedAccountId),
+    [data.accounts, selectedAccountId]
+  );
 
   const loadData = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const [accounts, registration, authProviders] = await Promise.all([
-        clientFetchJSON("/api/bff/admin/accounts"),
-        clientFetchJSON("/api/bff/admin/settings/registration"),
-        clientFetchJSON("/api/bff/admin/settings/auth-providers")
-      ]);
+      const { accounts, registration, authProviders } = await loadAdminAccessSettingsPayloads();
       setRawAccounts(accounts);
       setRawRegistration(registration);
       setRawAuthProviders(authProviders);
@@ -102,6 +90,12 @@ export function AdminAccessPage() {
     void loadData();
   }, [loadData]);
 
+  const loadState = resolveAdminPageLoadState({
+    loading,
+    error,
+    hasData: rawAccounts !== null && rawRegistration !== null && rawAuthProviders !== null
+  });
+
   useEffect(() => {
     setSettingsDraft({
       allowRegistration: data.allowRegistration,
@@ -110,26 +104,19 @@ export function AdminAccessPage() {
     });
   }, [data.allowRegistration, data.enabledProviders, data.marketplacePublicAccess]);
 
+  useEffect(() => {
+    if (selectedAccountId !== null && !selectedAccount) {
+      setSelectedAccountId(null);
+      setAccountDrawerOpen(false);
+    }
+  }, [selectedAccount, selectedAccountId]);
+
   async function saveAccessSettings() {
     setBusyAction("save-settings");
     setError("");
     setMessage("");
     try {
-      await Promise.all([
-        clientFetchJSON("/api/bff/admin/settings/registration", {
-          method: "POST",
-          body: {
-            allow_registration: settingsDraft.allowRegistration,
-            marketplace_public_access: settingsDraft.marketplacePublicAccess
-          }
-        }),
-        clientFetchJSON("/api/bff/admin/settings/auth-providers", {
-          method: "POST",
-          body: {
-            auth_providers: settingsDraft.enabledProviders
-          }
-        })
-      ]);
+      await saveAdminAccessSettings(settingsDraft);
       setMessage(accessMessages.saveSuccess);
       await loadData();
     } catch (actionError) {
@@ -148,154 +135,45 @@ export function AdminAccessPage() {
     }));
   }
 
+  if (loadState !== "ready") {
+    return (
+      <AdminPageLoadStateFrame
+        eyebrow={messages.adminCommon.adminEyebrow}
+        title={accessMessages.pageTitle}
+        description={accessMessages.pageDescription}
+        error={loadState === "error" ? error : undefined}
+        actions={<Button onClick={() => void loadData()}>{loading ? messages.adminCommon.refreshing : messages.adminCommon.refresh}</Button>}
+      />
+    );
+  }
+
   return (
-    <AdminPageScaffold
-      eyebrow={commonMessages.adminEyebrow}
-      title={accessMessages.pageTitle}
-      description={accessMessages.pageDescription}
-      actions={<Button onClick={() => void loadData()}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>}
-      metrics={overview.metrics}
+    <AdminAccessContent
+      loading={loading}
+      busyAction={busyAction}
       error={error}
       message={message}
-    >
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="space-y-6">
-          <AdminSectionCard title={accessMessages.directoryTitle} description={accessMessages.directoryDescription}>
-              <AdminFilterBar className="md:grid-cols-[1fr_auto]">
-                <Input
-                  aria-label={accessMessages.searchLabel}
-                  value={keyword}
-                  placeholder={accessMessages.searchPlaceholder}
-                  onChange={(event) => setKeyword(event.target.value)}
-                />
-                <Button variant="outline" onClick={() => setKeyword("")}>
-                  {commonMessages.clear}
-                </Button>
-              </AdminFilterBar>
-
-              <div className="space-y-3">
-                {filteredAccounts.map((account) => (
-                  <AdminRecordCard key={account.id} data-testid={`admin-access-account-${account.id}`}>
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">
-                            {resolveAccountUsernameLabel(account.username, accessMessages)} #{account.id}
-                          </span>
-                          <Badge variant={account.status.toLowerCase() === "active" ? "soft" : "outline"}>
-                            {resolveAccountStatusLabel(account.status, accessMessages)}
-                          </Badge>
-                          <Badge variant="outline">{resolveAccountRoleLabel(account.role, accessMessages)}</Badge>
-                        </div>
-                        <AdminMetaChipList
-                          items={[
-                            `${accessMessages.createdPrefix} ${formatDateTime(account.createdAt, locale, accessMessages.notAvailable)}`,
-                            `${accessMessages.updatedPrefix} ${formatDateTime(account.updatedAt, locale, accessMessages.notAvailable)}`,
-                            ...(account.forceLogoutAt
-                              ? [
-                                  `${accessMessages.forceSignOutPrefix} ${formatDateTime(
-                                    account.forceLogoutAt,
-                                    locale,
-                                    accessMessages.notAvailable
-                                  )}`
-                                ]
-                              : [])
-                          ]}
-                        />
-                      </div>
-                    </div>
-                  </AdminRecordCard>
-                ))}
-
-                {!filteredAccounts.length && !loading ? (
-                  <AdminEmptyBlock>{accessMessages.directoryEmpty}</AdminEmptyBlock>
-                ) : null}
-              </div>
-          </AdminSectionCard>
-        </div>
-
-        <div className="space-y-6">
-          <AdminSectionCard title={accessMessages.policyTitle} description={accessMessages.policyDescription}>
-              <AdminToggleField
-                ariaLabel={accessMessages.allowRegistrationLabel}
-                label={accessMessages.allowRegistrationLabel}
-                checked={settingsDraft.allowRegistration}
-                onChange={(checked) => setSettingsDraft((current) => ({ ...current, allowRegistration: checked }))}
-              />
-              <AdminToggleField
-                ariaLabel={accessMessages.marketplacePublicAccessLabel}
-                label={accessMessages.marketplacePublicAccessLabel}
-                checked={settingsDraft.marketplacePublicAccess}
-                onChange={(checked) => setSettingsDraft((current) => ({ ...current, marketplacePublicAccess: checked }))}
-              />
-              <Button onClick={() => void saveAccessSettings()} disabled={Boolean(busyAction)}>
-                {busyAction === "save-settings" ? accessMessages.savingAction : accessMessages.saveAction}
-              </Button>
-          </AdminSectionCard>
-
-          <AdminSectionCard
-            title={accessMessages.providersTitle}
-            description={accessMessages.providersDescription}
-            contentClassName="space-y-3"
-          >
-              {data.availableProviders.map((provider) => (
-                <label
-                  key={provider}
-                  className="flex items-center gap-3 rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] px-4 py-3 text-sm text-[color:var(--ui-text-secondary)]"
-                >
-                  <input
-                    aria-label={formatProtectedMessage(accessMessages.providerAriaLabel, { provider })}
-                    type="checkbox"
-                    checked={settingsDraft.enabledProviders.includes(provider)}
-                    onChange={() => toggleProvider(provider)}
-                  />
-                  <span>{provider}</span>
-                </label>
-              ))}
-          </AdminSectionCard>
-
-          <AdminSectionCard
-            title={accessMessages.snapshotTitle}
-            description={accessMessages.snapshotDescription}
-            contentClassName="space-y-3"
-          >
-              <div className="flex flex-wrap gap-2">
-                <Badge variant={data.allowRegistration ? "soft" : "outline"}>
-                  {data.allowRegistration ? accessMessages.registrationEnabled : accessMessages.registrationDisabled}
-                </Badge>
-                <Badge variant={data.marketplacePublicAccess ? "soft" : "outline"}>
-                  {data.marketplacePublicAccess ? accessMessages.marketplacePublic : accessMessages.marketplacePrivate}
-                </Badge>
-                {data.enabledProviders.map((provider) => (
-                  <Badge key={provider} variant="outline">
-                    {provider}
-                  </Badge>
-                ))}
-              </div>
-              <AdminInsetBlock>
-                {accessMessages.availableProvidersLabel}
-                <div className="mt-1 font-semibold text-[color:var(--ui-text-primary)]">
-                  {data.availableProviders.length ? data.availableProviders.join(", ") : accessMessages.notAvailable}
-                </div>
-              </AdminInsetBlock>
-          </AdminSectionCard>
-
-          <AdminSectionCard
-            title={accessMessages.roleSummaryTitle}
-            description={accessMessages.roleSummaryDescription}
-            contentClassName="space-y-3"
-          >
-              {overview.roleSummary.map((item) => (
-                <AdminInsetBlock key={item.role} className="flex items-center justify-between">
-                  <span className="text-sm text-[color:var(--ui-text-secondary)]">
-                    {resolveAccountRoleLabel(item.role, accessMessages)}
-                  </span>
-                  <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">{item.count}</span>
-                </AdminInsetBlock>
-              ))}
-          </AdminSectionCard>
-        </div>
-      </div>
-    </AdminPageScaffold>
+      keyword={keyword}
+      data={data}
+      overview={overview}
+      filteredAccounts={filteredAccounts}
+      selectedAccount={selectedAccount}
+      policyDrawerOpen={policyDrawerOpen}
+      accountDrawerOpen={accountDrawerOpen}
+      settingsDraft={settingsDraft}
+      onRefresh={() => void loadData()}
+      onKeywordChange={setKeyword}
+      onClearKeyword={() => setKeyword("")}
+      onOpenPolicyDrawer={() => setPolicyDrawerOpen(true)}
+      onClosePolicyDrawer={() => setPolicyDrawerOpen(false)}
+      onOpenAccountDrawer={(accountId) => {
+        setSelectedAccountId(accountId);
+        setAccountDrawerOpen(true);
+      }}
+      onCloseAccountDrawer={() => setAccountDrawerOpen(false)}
+      onToggleProvider={toggleProvider}
+      onSettingsDraftChange={(patch) => setSettingsDraft((current) => ({ ...current, ...patch }))}
+      onSavePolicy={() => void saveAccessSettings()}
+    />
   );
 }

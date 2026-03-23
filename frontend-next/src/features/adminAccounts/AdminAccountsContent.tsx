@@ -1,8 +1,10 @@
 import { AdminEmptyBlock, AdminFilterBar, AdminPageScaffold, AdminSectionCard } from "@/src/components/admin/AdminPrimitives";
+import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Select } from "@/src/components/ui/select";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
+import { resolveAdminAccountsPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 
 import {
   type AdminAccountItem,
@@ -19,34 +21,6 @@ import {
   RoleSummaryPanel,
   SelectedAccountSnapshot
 } from "./AdminAccountsPanels";
-
-function resolveRouteMeta(route: AdminAccountsRoute, messages: ReturnType<typeof useProtectedI18n>["messages"]["adminAccounts"]) {
-  if (route === "/admin/accounts") {
-    return {
-      title: messages.routeAccountsTitle,
-      description: messages.routeAccountsDescription
-    };
-  }
-
-  if (route === "/admin/accounts/new") {
-    return {
-      title: messages.routeProvisioningTitle,
-      description: messages.routeProvisioningDescription
-    };
-  }
-
-  if (route === "/admin/roles") {
-    return {
-      title: messages.routeRolesTitle,
-      description: messages.routeRolesDescription
-    };
-  }
-
-  return {
-    title: messages.routeRoleConfigurationTitle,
-    description: messages.routeRoleConfigurationDescription
-  };
-}
 
 interface AdminAccountsContentProps {
   route: AdminAccountsRoute;
@@ -71,6 +45,7 @@ interface AdminAccountsContentProps {
     userId: string;
     role: string;
   };
+  detailDrawerOpen: boolean;
   settingsDraft: {
     allowRegistration: boolean;
     marketplacePublicAccess: boolean;
@@ -82,6 +57,7 @@ interface AdminAccountsContentProps {
   onStatusFilterChange: (value: string) => void;
   onAccountEditorChange: (patch: Partial<AdminAccountsContentProps["accountEditor"]>) => void;
   onRoleEditorChange: (patch: Partial<AdminAccountsContentProps["roleEditor"]>) => void;
+  onCloseDetailDrawer: () => void;
   onSettingsDraftChange: (patch: Partial<AdminAccountsContentProps["settingsDraft"]>) => void;
   onToggleProvider: (provider: string) => void;
   onApplyAccountStatus: () => void;
@@ -107,6 +83,7 @@ export function AdminAccountsContent({
   roleSummary,
   accountEditor,
   roleEditor,
+  detailDrawerOpen,
   settingsDraft,
   onRefresh,
   onSelectAccount,
@@ -114,6 +91,7 @@ export function AdminAccountsContent({
   onStatusFilterChange,
   onAccountEditorChange,
   onRoleEditorChange,
+  onCloseDetailDrawer,
   onSettingsDraftChange,
   onToggleProvider,
   onApplyAccountStatus,
@@ -125,10 +103,11 @@ export function AdminAccountsContent({
   const { messages } = useProtectedI18n();
   const commonMessages = messages.adminCommon;
   const accountMessages = messages.adminAccounts;
-  const meta = resolveRouteMeta(route, accountMessages);
+  const meta = resolveAdminAccountsPageRouteMeta(route, accountMessages);
   const showRolePanel = route === "/admin/roles" || route === "/admin/roles/new";
   const showSettingsPanel = route === "/admin/accounts/new";
   const showAccountActionsPanel = route === "/admin/accounts";
+  const showDetailDrawer = showAccountActionsPanel || showRolePanel;
   const showDirectoryControls = route !== "/admin/accounts/new";
 
   const directoryTitle = showSettingsPanel
@@ -209,17 +188,6 @@ export function AdminAccountsContent({
         </div>
 
         <div className="space-y-6">
-          {(showAccountActionsPanel || showRolePanel) ? <SelectedAccountSnapshot account={selectedAccount} /> : null}
-          {showAccountActionsPanel ? (
-            <AccountActionsPanel
-              accountEditor={accountEditor}
-              busyAction={busyAction}
-              selectedAccount={selectedAccount}
-              onAccountEditorChange={onAccountEditorChange}
-              onApplyAccountStatus={onApplyAccountStatus}
-              onResetPassword={onResetPassword}
-            />
-          ) : null}
           {showSettingsPanel ? (
             <ProvisioningPolicyPanel
               registration={registration}
@@ -232,6 +200,35 @@ export function AdminAccountsContent({
             />
           ) : null}
           {showRolePanel ? (
+            route === "/admin/roles/new" ? <RolePlaybookPanel /> : null
+          ) : null}
+          <RoleSummaryPanel roleSummary={roleSummary} />
+        </div>
+      </div>
+
+      <DetailFormSurface
+        open={showDetailDrawer && detailDrawerOpen && Boolean(selectedAccount)}
+        variant="drawer"
+        size="default"
+        title={showAccountActionsPanel ? accountMessages.actionsTitle : accountMessages.roleAssignmentTitle}
+        description={showAccountActionsPanel ? accountMessages.actionsDescription : accountMessages.roleAssignmentDescription}
+        closeLabel={accountMessages.closePanelAction}
+        onClose={onCloseDetailDrawer}
+      >
+        <div className="space-y-6">
+          <SelectedAccountSnapshot account={selectedAccount} />
+          {showAccountActionsPanel ? (
+            <AccountActionsPanel
+              accountEditor={accountEditor}
+              busyAction={busyAction}
+              selectedAccount={selectedAccount}
+              onAccountEditorChange={onAccountEditorChange}
+              onApplyAccountStatus={onApplyAccountStatus}
+              onForceSignout={onForceSignout}
+              onResetPassword={onResetPassword}
+            />
+          ) : null}
+          {showRolePanel ? (
             <RoleAssignmentPanel
               roleEditor={roleEditor}
               busyAction={busyAction}
@@ -240,10 +237,8 @@ export function AdminAccountsContent({
               onApplyRole={onApplyRole}
             />
           ) : null}
-          {route === "/admin/roles/new" ? <RolePlaybookPanel /> : null}
-          <RoleSummaryPanel roleSummary={roleSummary} />
         </div>
-      </div>
+      </DetailFormSurface>
     </AdminPageScaffold>
   );
 }

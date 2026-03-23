@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import {
+  type AdminOverviewSnapshot,
   buildAdminOverviewCapabilityItems,
   buildAdminOverviewDistribution,
   buildAdminOverviewMetrics,
@@ -21,7 +23,7 @@ export function AdminOverviewPage() {
   const overviewMessages = messages.adminOverview;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [snapshot, setSnapshot] = useState(() => normalizeAdminOverviewPayload(null));
+  const [snapshot, setSnapshot] = useState<AdminOverviewSnapshot | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -30,6 +32,7 @@ export function AdminOverviewPage() {
       const payload = await clientFetchJSON("/api/bff/admin/overview");
       setSnapshot(normalizeAdminOverviewPayload(payload));
     } catch (loadError) {
+      setSnapshot(null);
       setError(loadError instanceof Error ? loadError.message : overviewMessages.loadError);
     } finally {
       setLoading(false);
@@ -40,42 +43,50 @@ export function AdminOverviewPage() {
     void loadData();
   }, [loadData]);
 
+  const loadState = resolveAdminPageLoadState({ loading, error, hasData: snapshot !== null });
+
   const metrics = useMemo(
     () =>
-      buildAdminOverviewMetrics(snapshot, {
-        metricTotalSkillsLabel: overviewMessages.metricTotalSkillsLabel,
-        metricTotalSkillsDescription: overviewMessages.metricTotalSkillsDescription,
-        metricOrganizationsLabel: overviewMessages.metricOrganizationsLabel,
-        metricOrganizationsDescription: overviewMessages.metricOrganizationsDescription,
-        metricAccountsLabel: overviewMessages.metricAccountsLabel,
-        metricAccountsDescription: overviewMessages.metricAccountsDescription,
-        metricManageUsersLabel: overviewMessages.metricManageUsersLabel,
-        metricManageUsersDescription: overviewMessages.metricManageUsersDescription,
-        valueEnabled: overviewMessages.valueEnabled,
-        valueLimited: overviewMessages.valueLimited
-      }),
+      snapshot
+        ? buildAdminOverviewMetrics(snapshot, {
+            metricTotalSkillsLabel: overviewMessages.metricTotalSkillsLabel,
+            metricTotalSkillsDescription: overviewMessages.metricTotalSkillsDescription,
+            metricOrganizationsLabel: overviewMessages.metricOrganizationsLabel,
+            metricOrganizationsDescription: overviewMessages.metricOrganizationsDescription,
+            metricAccountsLabel: overviewMessages.metricAccountsLabel,
+            metricAccountsDescription: overviewMessages.metricAccountsDescription,
+            metricManageUsersLabel: overviewMessages.metricManageUsersLabel,
+            metricManageUsersDescription: overviewMessages.metricManageUsersDescription,
+            valueEnabled: overviewMessages.valueEnabled,
+            valueLimited: overviewMessages.valueLimited
+          })
+        : [],
     [overviewMessages, snapshot]
   );
   const capabilities = useMemo(
     () =>
-      buildAdminOverviewCapabilityItems(snapshot, {
-        capabilityManageUsersLabel: overviewMessages.capabilityManageUsersLabel,
-        capabilityViewAllSkillsLabel: overviewMessages.capabilityViewAllSkillsLabel,
-        capabilityPrivateCoverageLabel: overviewMessages.capabilityPrivateCoverageLabel,
-        capabilitySyncReadyLabel: overviewMessages.capabilitySyncReadyLabel,
-        valueEnabled: overviewMessages.valueEnabled,
-        valueUnavailable: overviewMessages.valueUnavailable,
-        valueScoped: overviewMessages.valueScoped
-      }),
+      snapshot
+        ? buildAdminOverviewCapabilityItems(snapshot, {
+            capabilityManageUsersLabel: overviewMessages.capabilityManageUsersLabel,
+            capabilityViewAllSkillsLabel: overviewMessages.capabilityViewAllSkillsLabel,
+            capabilityPrivateCoverageLabel: overviewMessages.capabilityPrivateCoverageLabel,
+            capabilitySyncReadyLabel: overviewMessages.capabilitySyncReadyLabel,
+            valueEnabled: overviewMessages.valueEnabled,
+            valueUnavailable: overviewMessages.valueUnavailable,
+            valueScoped: overviewMessages.valueScoped
+          })
+        : [],
     [overviewMessages, snapshot]
   );
   const distribution = useMemo(
     () =>
-      buildAdminOverviewDistribution(snapshot, {
-        distributionPublicSkillsLabel: overviewMessages.distributionPublicSkillsLabel,
-        distributionPrivateSkillsLabel: overviewMessages.distributionPrivateSkillsLabel,
-        distributionSyncableSkillsLabel: overviewMessages.distributionSyncableSkillsLabel
-      }),
+      snapshot
+        ? buildAdminOverviewDistribution(snapshot, {
+            distributionPublicSkillsLabel: overviewMessages.distributionPublicSkillsLabel,
+            distributionPrivateSkillsLabel: overviewMessages.distributionPrivateSkillsLabel,
+            distributionSyncableSkillsLabel: overviewMessages.distributionSyncableSkillsLabel
+          })
+        : [],
     [overviewMessages, snapshot]
   );
   const quickLinks = useMemo(
@@ -92,6 +103,22 @@ export function AdminOverviewPage() {
       }),
     [overviewMessages]
   );
+
+  if (loadState !== "ready" || snapshot === null) {
+    return (
+      <AdminPageLoadStateFrame
+        eyebrow={overviewMessages.heroKicker}
+        title={overviewMessages.pageTitle}
+        description={overviewMessages.pageDescription}
+        error={loadState === "error" ? error : undefined}
+        actions={
+          <button type="button" className="admin-overview-action is-primary" onClick={() => void loadData()}>
+            {loading ? commonMessages.refreshing : commonMessages.refresh}
+          </button>
+        }
+      />
+    );
+  }
 
   return (
     <div className="admin-overview-stage" data-testid="admin-overview-stage">

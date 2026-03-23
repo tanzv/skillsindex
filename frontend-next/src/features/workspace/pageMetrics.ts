@@ -1,4 +1,13 @@
 import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
+import {
+  adminOverviewRoute,
+  adminSyncJobsRoute,
+  marketplaceHomeRoute,
+  workspacePolicyRoute,
+  workspaceQueueRoute,
+  workspaceRunbookRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
+import { buildPublicSkillDetailRoute } from "@/src/lib/routing/publicRouteBuilders";
 
 import type { SessionContext } from "@/src/lib/schemas/session";
 
@@ -68,10 +77,10 @@ export function buildSummaryMetrics(
 
 export function buildCommonQuickActions(messages: WorkspaceMessages): WorkspaceAction[] {
   return [
-    { label: messages.quickActionReviewQueue, href: "/workspace/queue", variant: "default" },
-    { label: messages.quickActionOpenPolicy, href: "/workspace/policy", variant: "outline" },
-    { label: messages.quickActionOpenSyncJobs, href: "/admin/sync-jobs", variant: "soft" },
-    { label: messages.quickActionOpenMarketplace, href: "/", variant: "ghost" }
+    { label: messages.quickActionReviewQueue, href: workspaceQueueRoute, variant: "default" },
+    { label: messages.quickActionOpenPolicy, href: workspacePolicyRoute, variant: "outline" },
+    { label: messages.quickActionOpenSyncJobs, href: adminSyncJobsRoute, variant: "soft" },
+    { label: messages.quickActionOpenMarketplace, href: marketplaceHomeRoute, variant: "ghost" }
   ];
 }
 
@@ -79,13 +88,13 @@ export function buildOverviewQuickActions(snapshot: WorkspaceSnapshot, messages:
   const spotlight = snapshot.spotlightEntry;
 
   return [
-    { label: messages.quickActionReviewQueue, href: "/workspace/queue", variant: "default" },
-    { label: messages.quickActionOpenRunbook, href: "/workspace/runbook", variant: "outline" },
+    { label: messages.quickActionReviewQueue, href: workspaceQueueRoute, variant: "default" },
+    { label: messages.quickActionOpenRunbook, href: workspaceRunbookRoute, variant: "outline" },
     {
       label: messages.quickActionInspectFocusSkill,
-      href: spotlight ? `/skills/${spotlight.id}` : "/",
+      href: spotlight ? buildPublicSkillDetailRoute(spotlight.id) : marketplaceHomeRoute,
       variant: "soft"
     },
-    { label: messages.quickActionAdminOverview, href: "/admin/overview", variant: "ghost" }
+    { label: messages.quickActionAdminOverview, href: adminOverviewRoute, variant: "ghost" }
   ];
 }

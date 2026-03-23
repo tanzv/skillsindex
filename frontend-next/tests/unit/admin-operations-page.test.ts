@@ -38,16 +38,16 @@ function renderPage() {
 }
 
 describe("admin operations page", () => {
-  it("renders localized release gates layout", () => {
+  it("defers release gate panels until live data loads", () => {
     const markup = renderPage();
 
     expect(markup).toContain("Release Gates");
     expect(markup).toContain("Validate release readiness.");
-    expect(markup).toContain("Run Gates");
-    expect(markup).toContain("Gate Checks");
-    expect(markup).toContain("Snapshot Summary");
-    expect(markup).toContain("Overall State");
-    expect(markup).toContain("Generated At");
     expect(markup).toContain("Refreshing...");
+    expect(markup).not.toContain("Run Gates");
+    expect(markup).not.toContain("Gate Checks");
+    expect(markup).not.toContain("Snapshot Summary");
+    expect(markup).not.toContain("Overall State");
+    expect(markup).not.toContain("Generated At");
   });
 });

@@ -1,0 +1,74 @@
+.account-shell-root {
+  --protected-shell-sidebar-width: 304px;
+  --account-shell-panel-bg: var(--ui-card-bg);
+  --account-shell-panel-border: var(--ui-border);
+  --account-shell-panel-shadow: none;
+  --account-shell-link-bg: var(--ui-card-bg);
+  --account-shell-link-bg-hover: var(--ui-card-muted-bg);
+  --account-shell-link-bg-active: var(--ui-card-highlight-bg);
+  --account-shell-link-border: var(--ui-border);
+  --account-shell-link-border-hover: var(--ui-border-strong);
+  --account-shell-link-border-active: var(--ui-info-border);
+  --account-shell-link-note: var(--ui-text-muted);
+  --protected-sidebar-panel-bg: var(--account-shell-panel-bg);
+  --protected-sidebar-panel-border: var(--account-shell-panel-border);
+  --protected-sidebar-panel-shadow: var(--account-shell-panel-shadow);
+  --protected-sidebar-title-color: var(--account-shell-text-muted);
+  --protected-sidebar-copy-color: var(--account-shell-text-secondary);
+  --protected-sidebar-group-title-color: var(--ui-text-muted);
+  --protected-sidebar-link-bg: var(--account-shell-link-bg);
+  --protected-sidebar-link-bg-hover: var(--account-shell-link-bg-hover);
+  --protected-sidebar-link-bg-active: var(--account-shell-link-bg-active);
+  --protected-sidebar-link-text: var(--account-shell-text-secondary);
+  --protected-sidebar-link-text-active: var(--account-shell-text);
+  --protected-sidebar-link-divider: var(--account-shell-link-border);
+  --protected-sidebar-link-note: var(--account-shell-link-note);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, var(--protected-shell-hero-primary), transparent 28%),
+    radial-gradient(circle at 78% 0%, var(--protected-shell-hero-secondary), transparent 24%),
+    linear-gradient(180deg, var(--protected-shell-hero-start) 0%, var(--account-shell-bg-alt) 26%, var(--account-shell-bg) 100%);
+  color: var(--account-shell-text);
+}
+
+.account-shell-user-meta,
+.account-shell-chip {
+  display: flex;
+  align-items: center;
+}
+
+.account-shell-user-meta {
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.account-shell-chip {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  justify-content: center;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    color 120ms ease;
+}
+.account-shell-chip {
+  border-color: var(--account-shell-border);
+  background: var(--protected-shell-chip-bg);
+  color: var(--account-shell-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+
+  &.is-primary {
+    border-color: var(--protected-shell-chip-accent-border);
+    background: var(--protected-shell-chip-accent-bg);
+    color: var(--account-shell-text);
+  }
+
+  &.is-mono {
+    font-family: "JetBrains Mono", monospace;
+  }
+}

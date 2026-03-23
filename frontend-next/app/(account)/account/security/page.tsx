@@ -1,5 +1,5 @@
-import { AccountCenterPage } from "@/src/features/accountCenter/AccountCenterPage";
+import { renderAccountRoute } from "@/src/features/accountCenter/renderAccountRoute";
 
-export default function AccountSecurityPage() {
-  return <AccountCenterPage route="/account/security" />;
+export default async function AccountSecurityPage() {
+  return renderAccountRoute("/account/security");
 }

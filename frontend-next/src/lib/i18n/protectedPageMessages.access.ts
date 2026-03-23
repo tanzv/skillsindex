@@ -16,10 +16,12 @@ export interface AdminAccessMessages {
   createdPrefix: string;
   updatedPrefix: string;
   forceSignOutPrefix: string;
+  openAccountDetailAction: string;
   policyTitle: string;
   policyDescription: string;
   allowRegistrationLabel: string;
   marketplacePublicAccessLabel: string;
+  openPolicyPanelAction: string;
   saveAction: string;
   savingAction: string;
   providersTitle: string;
@@ -43,6 +45,12 @@ export interface AdminAccessMessages {
   roleLabelMember: string;
   roleLabelViewer: string;
   roleLabelUnknown: string;
+  selectedAccountTitle: string;
+  selectedAccountDescription: string;
+  noSelection: string;
+  accountStatusLabel: string;
+  accountRoleLabel: string;
+  closePanelAction: string;
   roleSummaryTitle: string;
   roleSummaryDescription: string;
 }
@@ -65,10 +73,12 @@ export const adminAccessMessageKeyMap = {
   createdPrefix: "admin_access_created_prefix",
   updatedPrefix: "admin_access_updated_prefix",
   forceSignOutPrefix: "admin_access_force_sign_out_prefix",
+  openAccountDetailAction: "admin_access_open_account_detail_action",
   policyTitle: "admin_access_policy_title",
   policyDescription: "admin_access_policy_description",
   allowRegistrationLabel: "admin_access_allow_registration_label",
   marketplacePublicAccessLabel: "admin_access_marketplace_public_access_label",
+  openPolicyPanelAction: "admin_access_open_policy_panel_action",
   saveAction: "admin_access_save_action",
   savingAction: "admin_access_saving_action",
   providersTitle: "admin_access_providers_title",
@@ -92,6 +102,12 @@ export const adminAccessMessageKeyMap = {
   roleLabelMember: "admin_access_role_label_member",
   roleLabelViewer: "admin_access_role_label_viewer",
   roleLabelUnknown: "admin_access_role_label_unknown",
+  selectedAccountTitle: "admin_access_selected_account_title",
+  selectedAccountDescription: "admin_access_selected_account_description",
+  noSelection: "admin_access_no_selection",
+  accountStatusLabel: "admin_access_account_status_label",
+  accountRoleLabel: "admin_access_account_role_label",
+  closePanelAction: "admin_access_close_panel_action",
   roleSummaryTitle: "admin_access_role_summary_title",
   roleSummaryDescription: "admin_access_role_summary_description"
 } as const satisfies { [K in keyof AdminAccessMessages]: string };

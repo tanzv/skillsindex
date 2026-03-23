@@ -39,6 +39,7 @@ function createMessages() {
       selectAction: "Select",
       forceSignOutAction: "Force Sign-out",
       forceSignOutBusy: "Applying...",
+      closePanelAction: "Close Panel",
       selectedPanelTitle: "Selected Account",
       selectedPanelDescription: "All status and role actions should be anchored to a visible target account.",
       selectedPanelEmpty: "No account is currently selected.",
@@ -178,6 +179,7 @@ function renderAdminAccountsRoute(route: AdminAccountsRoute) {
           userId: "2",
           role: "admin"
         },
+        detailDrawerOpen: true,
         settingsDraft: {
           allowRegistration: true,
           marketplacePublicAccess: true,
@@ -189,6 +191,7 @@ function renderAdminAccountsRoute(route: AdminAccountsRoute) {
         onStatusFilterChange: () => undefined,
         onAccountEditorChange: () => undefined,
         onRoleEditorChange: () => undefined,
+        onCloseDetailDrawer: () => undefined,
         onSettingsDraftChange: () => undefined,
         onToggleProvider: () => undefined,
         onApplyAccountStatus: () => undefined,
@@ -206,7 +209,7 @@ describe("admin accounts content", () => {
     const markup = renderAdminAccountsRoute("/admin/accounts");
 
     expect(markup).toContain("Account Directory");
-    expect(markup).toContain("Selected Account");
+    expect(markup).toContain('role="dialog"');
     expect(markup).toContain("Account Actions");
     expect(markup).not.toContain("Provisioning Policy");
   });
@@ -223,6 +226,7 @@ describe("admin accounts content", () => {
   it("renders role configuration route with playbook and assignment flow", () => {
     const markup = renderAdminAccountsRoute("/admin/roles/new");
 
+    expect(markup).toContain('role="dialog"');
     expect(markup).toContain("Role Assignment");
     expect(markup).toContain("Role Playbook");
     expect(markup).toContain("Role Summary");

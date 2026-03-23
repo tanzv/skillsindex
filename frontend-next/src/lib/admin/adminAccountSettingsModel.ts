@@ -1,0 +1,133 @@
+export interface AdminNormalizedAccountItem {
+  id: number;
+  username: string;
+  role: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  forceLogoutAt: string;
+}
+
+export interface AdminNormalizedAccountsPayload {
+  total: number;
+  items: AdminNormalizedAccountItem[];
+}
+
+export interface AdminNormalizedRegistrationPayload {
+  allowRegistration: boolean;
+  marketplacePublicAccess: boolean;
+}
+
+export interface AdminNormalizedAuthProvidersPayload {
+  authProviders: string[];
+  availableAuthProviders: string[];
+}
+
+function asObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
+function asArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function asString(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+function asNumber(value: unknown): number {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function asBoolean(value: unknown): boolean {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return normalized === "true" || normalized === "1" || normalized === "yes";
+  }
+
+  if (typeof value === "number") {
+    return value !== 0;
+  }
+
+  return false;
+}
+
+function dedupeStringList(values: unknown[]): string[] {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  values.forEach((value) => {
+    const nextValue = asString(value).toLowerCase();
+    if (!nextValue || seen.has(nextValue)) {
+      return;
+    }
+
+    seen.add(nextValue);
+    normalized.push(nextValue);
+  });
+
+  return normalized;
+}
+
+export function normalizeAdminAccountStatus(value: string): string {
+  return asString(value).toLowerCase() || "unknown";
+}
+
+export function normalizeAdminRoleName(value: string): string {
+  return asString(value).toLowerCase() || "member";
+}
+
+export function normalizeAdminAccountsPayload(payload: unknown): AdminNormalizedAccountsPayload {
+  const record = asObject(payload);
+  const items = asArray<Record<string, unknown>>(record.items);
+
+  return {
+    total: asNumber(record.total) || items.length,
+    items: items.map((item) => ({
+      id: asNumber(item.id),
+      username: asString(item.username) || "unknown",
+      role: asString(item.role) || "member",
+      status: asString(item.status) || "unknown",
+      createdAt: asString(item.created_at),
+      updatedAt: asString(item.updated_at),
+      forceLogoutAt: asString(item.force_logout_at)
+    }))
+  };
+}
+
+export function normalizeAdminRegistrationPayload(payload: unknown): AdminNormalizedRegistrationPayload {
+  const record = asObject(payload);
+
+  return {
+    allowRegistration: asBoolean(record.allow_registration),
+    marketplacePublicAccess: record.marketplace_public_access !== false
+  };
+}
+
+export function normalizeAdminAuthProvidersPayload(payload: unknown): AdminNormalizedAuthProvidersPayload {
+  const record = asObject(payload);
+  const authProviders = dedupeStringList(asArray(record.auth_providers));
+  const availableAuthProviders = dedupeStringList(asArray(record.available_auth_providers));
+
+  return {
+    authProviders,
+    availableAuthProviders: availableAuthProviders.length ? availableAuthProviders : authProviders
+  };
+}
+
+export function buildAdminRoleSummary<TAccount extends { role: string }>(accounts: TAccount[]): Array<{ role: string; count: number }> {
+  const roleMap = accounts.reduce<Map<string, number>>((accumulator, account) => {
+    const role = normalizeAdminRoleName(account.role);
+    accumulator.set(role, (accumulator.get(role) || 0) + 1);
+    return accumulator;
+  }, new Map<string, number>());
+
+  return Array.from(roleMap.entries())
+    .map(([role, count]) => ({ role, count }))
+    .sort((left, right) => right.count - left.count || left.role.localeCompare(right.role));
+}

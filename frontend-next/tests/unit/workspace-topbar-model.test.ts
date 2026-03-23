@@ -7,22 +7,25 @@ import {
 } from "@/src/components/shared/workspaceTopbarModel";
 
 describe("workspace topbar model", () => {
-  it("prioritizes workspace routes but keeps the active workspace route visible", () => {
+  it("keeps registered first-level modules in the header model", () => {
     const model = buildWorkspaceTopbarModel("/workspace/actions", 5);
 
-    expect(model.visibleEntries.map((entry) => entry.label)).toEqual(["Overview", "Activity", "Queue", "Policy", "Actions"]);
-    expect(model.hiddenEntries.map((entry) => entry.label)).toContain("Runbook");
-    expect(model.primaryGroups[0]?.entries.some((entry) => entry.label === "Actions" && entry.active)).toBe(true);
+    expect(model.visibleEntries.map((entry) => entry.label)).toEqual([
+      "Workspace",
+      "Skills",
+      "Organizations",
+      "Administration",
+      "Account"
+    ]);
+    expect(model.hiddenEntries).toHaveLength(0);
+    expect(model.primaryGroups[0]?.entries.some((entry) => entry.label === "Workspace" && entry.active)).toBe(true);
   });
 
-  it("groups hidden entries into marketplace, sections, and system access buckets", () => {
+  it("keeps overflow empty after moving second-level items back to the sidebar", () => {
     const model = buildWorkspaceTopbarModel("/workspace", 5);
-    const hiddenGroupTitles = model.overflow.groups.map((group) => group.title);
 
-    expect(hiddenGroupTitles).toEqual(["Marketplace", "App Sections", "System Access", "Related Hubs"]);
-    expect(model.overflow.groups.find((group) => group.id === "marketplace")?.countLabel).toBe("2");
-    expect(model.overflow.groups.find((group) => group.id === "primary")?.entries.map((entry) => entry.label)).toEqual(["Actions"]);
-    expect(model.overflow.groups.find((group) => group.id === "related-hubs")?.countLabel).toBe("2");
+    expect(model.hiddenEntries).toHaveLength(0);
+    expect(model.overflow.groups).toHaveLength(0);
   });
 
   it("keeps responsive visible counts within the old topbar contract", () => {

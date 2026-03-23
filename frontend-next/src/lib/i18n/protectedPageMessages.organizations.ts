@@ -31,6 +31,7 @@ export interface AdminOrganizationsMessages {
   savingRole: string;
   removeMember: string;
   removingMember: string;
+  openMemberDetailAction: string;
   memberLedgerEmpty: string;
   createTitle: string;
   createDescription: string;
@@ -43,8 +44,11 @@ export interface AdminOrganizationsMessages {
   memberUserIdLabel: string;
   memberUserIdPlaceholder: string;
   memberRoleFieldLabel: string;
+  openMemberAssignmentAction: string;
   saveMemberAction: string;
   savingMemberAction: string;
+  memberDetailDescription: string;
+  closePanelAction: string;
   selectedTitle: string;
   selectedDescription: string;
   noSelection: string;
@@ -98,6 +102,7 @@ export const adminOrganizationsMessageKeyMap = {
   savingRole: "admin_organizations_saving_role",
   removeMember: "admin_organizations_remove_member",
   removingMember: "admin_organizations_removing_member",
+  openMemberDetailAction: "admin_organizations_open_member_detail_action",
   memberLedgerEmpty: "admin_organizations_member_ledger_empty",
   createTitle: "admin_organizations_create_title",
   createDescription: "admin_organizations_create_description",
@@ -110,8 +115,11 @@ export const adminOrganizationsMessageKeyMap = {
   memberUserIdLabel: "admin_organizations_member_user_id_label",
   memberUserIdPlaceholder: "admin_organizations_member_user_id_placeholder",
   memberRoleFieldLabel: "admin_organizations_member_role_field_label",
+  openMemberAssignmentAction: "admin_organizations_open_member_assignment_action",
   saveMemberAction: "admin_organizations_save_member_action",
   savingMemberAction: "admin_organizations_saving_member_action",
+  memberDetailDescription: "admin_organizations_member_detail_description",
+  closePanelAction: "admin_organizations_close_panel_action",
   selectedTitle: "admin_organizations_selected_title",
   selectedDescription: "admin_organizations_selected_description",
   noSelection: "admin_organizations_no_selection",

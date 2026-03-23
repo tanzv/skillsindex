@@ -45,6 +45,7 @@ interface AccountActionsPanelProps {
   selectedAccount: AdminAccountItem | null;
   onAccountEditorChange: (patch: { userId?: string; status?: string; newPassword?: string }) => void;
   onApplyAccountStatus: () => void;
+  onForceSignout: (userId: number) => void;
   onResetPassword: () => void;
 }
 
@@ -54,6 +55,7 @@ export function AccountActionsPanel({
   selectedAccount,
   onAccountEditorChange,
   onApplyAccountStatus,
+  onForceSignout,
   onResetPassword
 }: AccountActionsPanelProps) {
   const { messages } = useProtectedI18n();
@@ -83,6 +85,11 @@ export function AccountActionsPanel({
         <Button onClick={onApplyAccountStatus} disabled={Boolean(busyAction)}>
           {busyAction === "apply-status" ? accountMessages.applyStatusBusy : accountMessages.applyStatusAction}
         </Button>
+        {selectedAccount ? (
+          <Button variant="outline" onClick={() => onForceSignout(selectedAccount.id)} disabled={Boolean(busyAction)}>
+            {busyAction === `force-signout-${selectedAccount.id}` ? accountMessages.forceSignOutBusy : accountMessages.forceSignOutAction}
+          </Button>
+        ) : null}
         <Input
           aria-label={accountMessages.targetPasswordLabel}
           value={accountEditor.newPassword}

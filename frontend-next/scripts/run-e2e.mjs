@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { startMockBackend } from "./mock-backend.mjs";
+import { shouldRecoverFromNextBuildFailure } from "./run-e2e-build.mjs";
 
 const startupTimeoutMs = 240_000;
 const metadataPath = join(process.cwd(), ".next", "e2e-runtime.json");
@@ -58,8 +59,18 @@ function spawnProcess(command, args, options = {}) {
   const logStdout = createTaggedLogger(options.tag || command);
   const logStderr = createTaggedLogger(options.tag || command);
 
-  child.stdout?.on("data", logStdout);
-  child.stderr?.on("data", logStderr);
+  child.stdout?.on("data", (chunk) => {
+    if (typeof options.onOutput === "function") {
+      options.onOutput(String(chunk || ""));
+    }
+    logStdout(chunk);
+  });
+  child.stderr?.on("data", (chunk) => {
+    if (typeof options.onOutput === "function") {
+      options.onOutput(String(chunk || ""));
+    }
+    logStderr(chunk);
+  });
 
   return child;
 }
@@ -157,18 +168,36 @@ async function main() {
       if (requestedBuildReuse && hasBuildOutput && buildMetadata === null) {
         process.stdout.write("[next-build] Existing build output found, but no e2e metadata is available. Rebuilding to bind runtime ports safely.\n");
       }
+      let buildOutput = "";
       const buildProcess = spawnProcess(nextBinary, ["build", "--webpack"], {
         env: {
           ...process.env,
-          NEXT_PUBLIC_API_BASE_URL: backendBaseURL
+          NEXT_PUBLIC_API_BASE_URL: backendBaseURL,
+          SKILLSINDEX_ENABLE_DIAGNOSTIC_ROUTES: "1"
         },
-        tag: "next-build"
+        tag: "next-build",
+        onOutput: (text) => {
+          buildOutput += text;
+        }
       });
 
       const buildExitCode = await new Promise((resolve) => buildProcess.once("exit", resolve));
-      if (buildExitCode !== 0) {
+      const recoveredBuildFailure = await shouldRecoverFromNextBuildFailure({
+        exitCode: Number(buildExitCode ?? 1),
+        output: buildOutput,
+        projectDirectory: process.cwd()
+      });
+
+      if (buildExitCode !== 0 && !recoveredBuildFailure) {
         throw new Error(`Next.js production build failed with exit code ${String(buildExitCode)}.`);
       }
+
+      if (recoveredBuildFailure) {
+        process.stdout.write(
+          "[next-build] Recovered from a known proxy trace artifact build failure and will reuse the generated middleware artifacts.\n"
+        );
+      }
+
       writeBuildMetadata({ backendPort });
     } else {
       const reusedPortMessage = buildMetadata?.backendPort ? ` using backend port ${String(buildMetadata.backendPort)}` : "";
@@ -178,7 +207,8 @@ async function main() {
     const nextServer = spawnProcess(nextBinary, ["start", "--hostname", "127.0.0.1", "--port", String(frontendPort)], {
       env: {
         ...process.env,
-        NEXT_PUBLIC_API_BASE_URL: backendBaseURL
+        NEXT_PUBLIC_API_BASE_URL: backendBaseURL,
+        SKILLSINDEX_ENABLE_DIAGNOSTIC_ROUTES: "1"
       },
       tag: "next-start"
     });

@@ -1,5 +1,8 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
+import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { resolveApiKeyStatusLabel, resolveApiKeyStatusTone } from "@/src/lib/apiKeyDisplay";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
@@ -8,26 +11,43 @@ import type { AccountAPIKeyItem } from "./model";
 import { formatAccountDate } from "./model";
 import { joinScopes, type AccountCredentialsSectionProps } from "./AccountCenterSectionProps";
 
+function resolveSelectedCredential(items: AccountAPIKeyItem[], selectedCredentialId: number | null): AccountAPIKeyItem | null {
+  if (selectedCredentialId === null) {
+    return null;
+  }
+
+  return items.find((credential) => credential.id === selectedCredentialId) || null;
+}
+
+function CredentialMeta({ credential }: { credential: AccountAPIKeyItem }) {
+  const { locale, messages } = useProtectedI18n();
+  const accountMessages = messages.accountCenter;
+
+  return (
+    <div className="account-center-credential-meta">
+      <span className="account-center-badge">{credential.prefix}</span>
+      <span className="account-center-badge">
+        {formatProtectedMessage(accountMessages.credentialCreatedTemplate, {
+          value: formatAccountDate(credential.created_at, locale, accountMessages.valueNotAvailable)
+        })}
+      </span>
+      <span className="account-center-badge">
+        {formatProtectedMessage(accountMessages.credentialLastUsedTemplate, {
+          value: formatAccountDate(credential.last_used_at, locale, accountMessages.valueNotAvailable)
+        })}
+      </span>
+    </div>
+  );
+}
+
 function CredentialInventoryCard({
   credential,
-  loading,
-  saving,
-  credentialScopeDrafts,
-  onCredentialScopeDraftChange,
-  onRotateCredential,
-  onRevokeCredential,
-  onApplyCredentialScopes
+  onOpenDetail
 }: {
   credential: AccountAPIKeyItem;
-  loading: boolean;
-  saving: boolean;
-  credentialScopeDrafts: Record<number, string[]>;
-  onCredentialScopeDraftChange: (keyId: number, rawValue: string) => void;
-  onRotateCredential: (keyId: number) => void;
-  onRevokeCredential: (keyId: number) => void;
-  onApplyCredentialScopes: (keyId: number) => void;
+  onOpenDetail: (credentialId: number) => void;
 }) {
-  const { locale, messages } = useProtectedI18n();
+  const { messages } = useProtectedI18n();
   const accountMessages = messages.accountCenter;
 
   return (
@@ -44,58 +64,14 @@ function CredentialInventoryCard({
               </div>
             </div>
             <p className="account-center-surface-copy">{credential.purpose || accountMessages.credentialNoPurpose}</p>
-            <div className="account-center-credential-meta">
-              <span className="account-center-badge">{credential.prefix}</span>
-              <span className="account-center-badge">
-                {formatProtectedMessage(accountMessages.credentialCreatedTemplate, {
-                  value: formatAccountDate(credential.created_at, locale, accountMessages.valueNotAvailable)
-                })}
-              </span>
-              <span className="account-center-badge">
-                {formatProtectedMessage(accountMessages.credentialLastUsedTemplate, {
-                  value: formatAccountDate(credential.last_used_at, locale, accountMessages.valueNotAvailable)
-                })}
-              </span>
-            </div>
+            <CredentialMeta credential={credential} />
           </div>
 
           <div className="account-center-action-row">
-            <button
-              type="button"
-              className="account-center-action"
-              onClick={() => onRotateCredential(credential.id)}
-              disabled={saving || loading}
-            >
-              {accountMessages.rotateCredentialAction}
-            </button>
-            <button
-              type="button"
-              className="account-center-action"
-              onClick={() => onRevokeCredential(credential.id)}
-              disabled={saving || loading}
-            >
-              {accountMessages.revokeCredentialAction}
+            <button type="button" className="account-center-action" onClick={() => onOpenDetail(credential.id)}>
+              {accountMessages.openCredentialDetailAction}
             </button>
           </div>
-        </div>
-
-        <input
-          className="account-center-field"
-          value={joinScopes(credentialScopeDrafts[credential.id] || credential.scopes)}
-          placeholder={accountMessages.updateScopesPlaceholder}
-          disabled={loading || saving}
-          onChange={(event) => onCredentialScopeDraftChange(credential.id, event.target.value)}
-        />
-
-        <div className="account-center-action-row">
-          <button
-            type="button"
-            className="account-center-action is-primary"
-            onClick={() => onApplyCredentialScopes(credential.id)}
-            disabled={saving || loading}
-          >
-            {accountMessages.applyScopesAction}
-          </button>
         </div>
       </div>
     </div>
@@ -117,6 +93,13 @@ export function AccountCredentialsSection({
 }: AccountCredentialsSectionProps) {
   const { messages } = useProtectedI18n();
   const accountMessages = messages.accountCenter;
+  const credentials = useMemo(() => credentialsPayload?.items || [], [credentialsPayload]);
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+  const [selectedCredentialId, setSelectedCredentialId] = useState<number | null>(null);
+  const selectedCredential = useMemo(
+    () => resolveSelectedCredential(credentials, selectedCredentialId),
+    [credentials, selectedCredentialId]
+  );
 
   return (
     <>
@@ -126,42 +109,13 @@ export function AccountCredentialsSection({
           <p className="account-center-panel-description">{accountMessages.credentialsFactoryDescription}</p>
         </div>
 
-        <div className="account-center-form-grid">
-          <input
-            className="account-center-field"
-            value={credentialDraft.name}
-            placeholder={accountMessages.credentialNamePlaceholder}
-            disabled={loading || saving}
-            onChange={(event) => onCredentialDraftChange({ name: event.target.value })}
-          />
-          <input
-            className="account-center-field"
-            value={credentialDraft.purpose}
-            placeholder={accountMessages.credentialPurposePlaceholder}
-            disabled={loading || saving}
-            onChange={(event) => onCredentialDraftChange({ purpose: event.target.value })}
-          />
-          <input
-            className="account-center-field"
-            type="number"
-            value={String(credentialDraft.expiresInDays)}
-            placeholder={accountMessages.credentialExpiresInDaysPlaceholder}
-            disabled={loading || saving}
-            onChange={(event) => onCredentialDraftChange({ expiresInDays: Number(event.target.value || 0) })}
-          />
-          <input
-            className="account-center-field"
-            value={joinScopes(credentialDraft.scopes)}
-            placeholder={accountMessages.credentialScopesPlaceholder}
-            disabled={loading || saving}
-            onChange={(event) =>
-              onCredentialDraftChange({ scopes: event.target.value.split(",").map((item) => item.trim()).filter(Boolean) })
-            }
-          />
-        </div>
-
         <div className="account-center-action-row">
-          <button type="button" className="account-center-action is-primary" onClick={onCreateCredential} disabled={saving || loading}>
+          <button
+            type="button"
+            className="account-center-action is-primary"
+            onClick={() => setCreateDrawerOpen(true)}
+            disabled={saving || loading}
+          >
             {accountMessages.createCredentialAction}
           </button>
         </div>
@@ -174,21 +128,145 @@ export function AccountCredentialsSection({
         </div>
 
         <div className="account-center-section-stack">
-          {(credentialsPayload?.items || []).map((credential) => (
+          {credentials.map((credential) => (
             <CredentialInventoryCard
               key={credential.id}
               credential={credential}
-              loading={loading}
-              saving={saving}
-              credentialScopeDrafts={credentialScopeDrafts}
-              onCredentialScopeDraftChange={onCredentialScopeDraftChange}
-              onRotateCredential={onRotateCredential}
-              onRevokeCredential={onRevokeCredential}
-              onApplyCredentialScopes={onApplyCredentialScopes}
+              onOpenDetail={(credentialId) => setSelectedCredentialId(credentialId)}
             />
           ))}
         </div>
       </section>
+
+      <DetailFormSurface
+        open={createDrawerOpen}
+        variant="drawer"
+        size="default"
+        title={accountMessages.credentialsFactoryTitle}
+        description={accountMessages.credentialsFactoryDescription}
+        closeLabel={accountMessages.closePanelAction}
+        onClose={() => setCreateDrawerOpen(false)}
+      >
+        <div className="account-center-section-stack">
+          <div className="account-center-form-grid">
+            <input
+              className="account-center-field"
+              value={credentialDraft.name}
+              placeholder={accountMessages.credentialNamePlaceholder}
+              disabled={loading || saving}
+              onChange={(event) => onCredentialDraftChange({ name: event.target.value })}
+            />
+            <input
+              className="account-center-field"
+              value={credentialDraft.purpose}
+              placeholder={accountMessages.credentialPurposePlaceholder}
+              disabled={loading || saving}
+              onChange={(event) => onCredentialDraftChange({ purpose: event.target.value })}
+            />
+            <input
+              className="account-center-field"
+              type="number"
+              value={String(credentialDraft.expiresInDays)}
+              placeholder={accountMessages.credentialExpiresInDaysPlaceholder}
+              disabled={loading || saving}
+              onChange={(event) => onCredentialDraftChange({ expiresInDays: Number(event.target.value || 0) })}
+            />
+            <input
+              className="account-center-field"
+              value={joinScopes(credentialDraft.scopes)}
+              placeholder={accountMessages.credentialScopesPlaceholder}
+              disabled={loading || saving}
+              onChange={(event) =>
+                onCredentialDraftChange({ scopes: event.target.value.split(",").map((item) => item.trim()).filter(Boolean) })
+              }
+            />
+          </div>
+
+          <div className="account-center-action-row">
+            <button
+              type="button"
+              className="account-center-action"
+              onClick={() => setCreateDrawerOpen(false)}
+              disabled={saving || loading}
+            >
+              {accountMessages.closePanelAction}
+            </button>
+            <button
+              type="button"
+              className="account-center-action is-primary"
+              onClick={() => {
+                setCreateDrawerOpen(false);
+                onCreateCredential();
+              }}
+              disabled={saving || loading}
+            >
+              {accountMessages.createCredentialAction}
+            </button>
+          </div>
+        </div>
+      </DetailFormSurface>
+
+      <DetailFormSurface
+        open={Boolean(selectedCredential)}
+        variant="drawer"
+        size="default"
+        title={selectedCredential?.name || accountMessages.credentialsInventoryTitle}
+        description={selectedCredential?.purpose || accountMessages.credentialNoPurpose}
+        closeLabel={accountMessages.closePanelAction}
+        onClose={() => setSelectedCredentialId(null)}
+      >
+        {selectedCredential ? (
+          <div className="account-center-section-stack">
+            <div className="account-center-panel-title-row">
+              <div className="account-center-section-badges">
+                <span className={`account-center-badge ${resolveApiKeyStatusTone(selectedCredential.status) === "soft" ? "is-soft" : ""}`}>
+                  {resolveApiKeyStatusLabel(selectedCredential.status, accountMessages)}
+                </span>
+              </div>
+            </div>
+
+            <CredentialMeta credential={selectedCredential} />
+
+            <input
+              className="account-center-field"
+              value={joinScopes(credentialScopeDrafts[selectedCredential.id] || selectedCredential.scopes)}
+              placeholder={accountMessages.updateScopesPlaceholder}
+              disabled={loading || saving}
+              onChange={(event) => onCredentialScopeDraftChange(selectedCredential.id, event.target.value)}
+            />
+
+            <div className="account-center-action-row">
+              <button
+                type="button"
+                className="account-center-action is-primary"
+                onClick={() => onApplyCredentialScopes(selectedCredential.id)}
+                disabled={saving || loading}
+              >
+                {accountMessages.applyScopesAction}
+              </button>
+            </div>
+
+            <div className="account-center-action-row">
+              <button
+                type="button"
+                className="account-center-action"
+                onClick={() => onRotateCredential(selectedCredential.id)}
+                disabled={saving || loading}
+              >
+                {accountMessages.rotateCredentialAction}
+              </button>
+              <button
+                type="button"
+                className="account-center-action"
+                onClick={() => onRevokeCredential(selectedCredential.id)}
+                disabled={saving || loading}
+              >
+                {accountMessages.revokeCredentialAction}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </DetailFormSurface>
     </>
   );
 }

@@ -159,6 +159,8 @@ function renderAccountRoute(route: AccountRoute) {
             credentialExpiresInDaysPlaceholder: "Expires in days",
             credentialScopesPlaceholder: "Scopes separated by commas",
             createCredentialAction: "Create Credential",
+            openCredentialDetailAction: "Open Details",
+            closePanelAction: "Close Panel",
             credentialsInventoryTitle: "Credential Inventory",
             credentialsInventoryDescription: "Rotate, revoke, or change scopes.",
             credentialNoPurpose: "No purpose",
@@ -264,7 +266,8 @@ describe("account center content", () => {
 
     expect(markup).toContain("Credential Factory");
     expect(markup).toContain("Credential Inventory");
-    expect(markup).toContain("Apply Scopes");
+    expect(markup).toContain("Create Credential");
+    expect(markup).toContain("Open Details");
     expect(markup).toContain("Credential Active");
     expect(markup).toContain("credentials lane");
     expect(markup).not.toContain("Change Password");

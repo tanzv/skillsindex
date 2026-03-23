@@ -1,13 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import type { ReactElement } from "react";
 
 import { Badge } from "@/src/components/ui/badge";
+import {
+  adminSyncJobsRoute,
+  isWorkspaceSurfaceRoute,
+  workspaceQueueRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
+import type { WorkspaceRoute } from "@/src/lib/routing/routes";
 
 import { WorkspaceOverviewGrid, WorkspaceSectionCard } from "./WorkspaceRouteShared";
 import { ActivityFeedView, QueueExecutionView } from "./WorkspaceRouteActivityViews";
-import { QueueDetailPanel, QueueListButton, SectionPanel, useSelectedEntry } from "./WorkspaceRouteViewPrimitives";
+import { WorkspaceEntryDetailDrawer, useWorkspaceEntryDetailState } from "./WorkspaceRouteDetailSurface";
+import { QueueListButton, SectionPanel } from "./WorkspaceRouteViewPrimitives";
 import { buildRunbookResponseScriptSection } from "./pageSectionShared";
 import type { WorkspacePageModel } from "./types";
 
@@ -16,7 +23,10 @@ function PolicyView({ model }: { model: WorkspacePageModel }) {
   const prioritiesSection = model.primarySections.find((section) => section.id === "governance-priorities");
   const reviewPressureSection = model.primarySections.find((section) => section.id === "review-pressure");
   const sourceEntries = model.snapshot.riskWatchlist.length ? model.snapshot.riskWatchlist : model.snapshot.queueEntries.slice(0, 4);
-  const { selectedEntry, setSelectedId } = useSelectedEntry(sourceEntries, sourceEntries[0]?.id);
+  const { selectedEntry, selectedId, setSelectedId, detailOpen, setDetailOpen, openDetail } = useWorkspaceEntryDetailState(
+    sourceEntries,
+    sourceEntries[0]?.id
+  );
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.04fr_0.96fr]">
@@ -30,19 +40,14 @@ function PolicyView({ model }: { model: WorkspacePageModel }) {
               <QueueListButton
                 key={entry.id}
                 entry={entry}
-                active={selectedEntry?.id === entry.id}
+                active={selectedId === entry.id}
                 onSelect={() => setSelectedId(entry.id)}
+                onOpenDetail={() => openDetail(entry.id)}
                 messages={workspaceMessages}
               />
             ))}
           </div>
         </SectionPanel>
-        <QueueDetailPanel
-          entry={selectedEntry}
-          actions={[{ label: workspaceMessages.actionOpenQueue, href: "/workspace/queue", variant: "outline" }]}
-          locale={model.locale}
-          messages={workspaceMessages}
-        />
       </div>
 
       <div className="space-y-6">
@@ -52,6 +57,15 @@ function PolicyView({ model }: { model: WorkspacePageModel }) {
           <WorkspaceSectionCard key={section.id} section={section} />
         ))}
       </div>
+
+      <WorkspaceEntryDetailDrawer
+        open={detailOpen}
+        entry={selectedEntry}
+        locale={model.locale}
+        messages={workspaceMessages}
+        actions={[{ label: workspaceMessages.actionOpenQueue, href: workspaceQueueRoute, variant: "outline" }]}
+        onClose={() => setDetailOpen(false)}
+      />
     </div>
   );
 }
@@ -59,11 +73,11 @@ function PolicyView({ model }: { model: WorkspacePageModel }) {
 function RunbookView({ model }: { model: WorkspacePageModel }) {
   const workspaceMessages = model.messages;
   const targets = model.snapshot.queueEntries.slice(0, 5);
-  const { selectedEntry, setSelectedId } = useSelectedEntry(targets, model.snapshot.runbookEntry?.id);
-
-  const responseScript = useMemo(() => {
-    return buildRunbookResponseScriptSection(selectedEntry, workspaceMessages);
-  }, [selectedEntry, workspaceMessages]);
+  const { selectedEntry, selectedId, setSelectedId, detailOpen, setDetailOpen, openDetail } = useWorkspaceEntryDetailState(
+    targets,
+    model.snapshot.runbookEntry?.id
+  );
+  const responseScript = buildRunbookResponseScriptSection(selectedEntry, workspaceMessages);
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
@@ -77,8 +91,9 @@ function RunbookView({ model }: { model: WorkspacePageModel }) {
               <QueueListButton
                 key={entry.id}
                 entry={entry}
-                active={selectedEntry?.id === entry.id}
+                active={selectedId === entry.id}
                 onSelect={() => setSelectedId(entry.id)}
+                onOpenDetail={() => openDetail(entry.id)}
                 messages={workspaceMessages}
               />
             ))}
@@ -87,11 +102,22 @@ function RunbookView({ model }: { model: WorkspacePageModel }) {
       </div>
 
       <div className="space-y-6">
-        {responseScript ? <WorkspaceSectionCard section={responseScript} /> : null}
         {model.railSections.map((section) => (
           <WorkspaceSectionCard key={section.id} section={section} />
         ))}
       </div>
+
+      <WorkspaceEntryDetailDrawer
+        open={detailOpen}
+        entry={selectedEntry}
+        locale={model.locale}
+        messages={workspaceMessages}
+        actions={[{ label: workspaceMessages.actionOpenQueue, href: workspaceQueueRoute, variant: "outline" }]}
+        description={workspaceMessages.sectionResponseScriptDescription}
+        onClose={() => setDetailOpen(false)}
+      >
+        {responseScript ? <WorkspaceSectionCard section={responseScript} /> : null}
+      </WorkspaceEntryDetailDrawer>
     </div>
   );
 }
@@ -109,7 +135,7 @@ function ActionsView({ model }: { model: WorkspacePageModel }) {
     {
       title: workspaceMessages.panelActionGroupExecutionTitle,
       description: workspaceMessages.panelActionGroupExecutionDescription,
-      actions: model.quickActions.filter((action) => action.href.startsWith("/workspace") || action.href.includes("sync"))
+      actions: model.quickActions.filter((action) => isWorkspaceSurfaceRoute(action.href) || action.href === adminSyncJobsRoute)
     },
     {
       title: workspaceMessages.panelActionGroupConnectedSurfacesTitle,
@@ -169,26 +195,18 @@ function ActionsView({ model }: { model: WorkspacePageModel }) {
   );
 }
 
+type WorkspaceRouteViewRenderer = (props: { model: WorkspacePageModel }) => ReactElement;
+
+const workspaceRouteViewRenderers: Partial<Record<WorkspaceRoute, WorkspaceRouteViewRenderer>> = {
+  "/workspace/activity": ActivityFeedView,
+  "/workspace/queue": QueueExecutionView,
+  "/workspace/policy": PolicyView,
+  "/workspace/runbook": RunbookView,
+  "/workspace/actions": ActionsView
+};
+
 export function WorkspaceRouteContent({ model }: { model: WorkspacePageModel }) {
-  if (model.route === "/workspace/activity") {
-    return <ActivityFeedView model={model} />;
-  }
+  const renderRouteView = workspaceRouteViewRenderers[model.route];
 
-  if (model.route === "/workspace/queue") {
-    return <QueueExecutionView model={model} />;
-  }
-
-  if (model.route === "/workspace/policy") {
-    return <PolicyView model={model} />;
-  }
-
-  if (model.route === "/workspace/runbook") {
-    return <RunbookView model={model} />;
-  }
-
-  if (model.route === "/workspace/actions") {
-    return <ActionsView model={model} />;
-  }
-
-  return <WorkspaceOverviewGrid model={model} />;
+  return renderRouteView ? renderRouteView({ model }) : <WorkspaceOverviewGrid model={model} />;
 }

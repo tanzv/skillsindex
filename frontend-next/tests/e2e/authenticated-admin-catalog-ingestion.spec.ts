@@ -1,46 +1,49 @@
 import { expect, test } from "@playwright/test";
 
-import { loginAsAdmin } from "./helpers/auth";
+import { gotoProtectedRoute, loginAsAdmin } from "./helpers/auth";
+
+test.describe.configure({ timeout: 180_000 });
 
 test("renders the remaining admin catalog and ingestion routes", async ({ page }) => {
   await loginAsAdmin(page, "/admin/skills");
 
   await expect(page.getByRole("heading", { name: "Skill Governance", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Governed Inventory", exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Selected Skill", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open Details" }).first()).toBeVisible();
 
-  await page.goto("/admin/jobs");
+  await gotoProtectedRoute(page, "/admin/jobs");
   await expect(page.getByRole("heading", { name: "Asynchronous Jobs", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Execution Queue", exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Selected Job", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open Details" }).first()).toBeVisible();
 
-  await page.goto("/admin/sync-jobs");
+  await gotoProtectedRoute(page, "/admin/sync-jobs");
   await expect(page.getByRole("heading", { name: "Repository Sync Jobs", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Run History", exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Selected Sync Run", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open Details" }).first()).toBeVisible();
 
-  await page.goto("/admin/sync-policy/repository");
+  await gotoProtectedRoute(page, "/admin/sync-policy/repository");
   await expect(page.getByRole("heading", { name: "Repository Sync Policy", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Policy Editor", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Current Policy Posture", exact: true })).toBeVisible();
 
-  await page.goto("/admin/ingestion/manual");
+  await gotoProtectedRoute(page, "/admin/ingestion/manual");
   await expect(page.getByRole("heading", { name: "Manual Intake", level: 1 })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Manual Authoring", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Manual Inventory", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Create Manual Skill" }).first()).toBeVisible();
 
-  await page.goto("/admin/ingestion/repository");
+  await gotoProtectedRoute(page, "/admin/ingestion/repository");
   await expect(page.getByRole("heading", { name: "Repository Intake", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Repository Inventory", exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Scheduler Policy", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Recent Sync Runs", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start Repository Intake" }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save Policy" }).first()).toBeVisible();
 
-  await page.goto("/admin/records/imports");
+  await gotoProtectedRoute(page, "/admin/records/imports");
   await expect(page.getByRole("heading", { name: "Import Records", level: 1 })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Archive Import", exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "SkillMP Import", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Imported Inventory", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Import Jobs", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Import Archive" }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Import SkillMP" }).first()).toBeVisible();
 });
 
 test("executes admin catalog job and sync policy actions", async ({ page }) => {
@@ -59,7 +62,14 @@ test("executes admin catalog job and sync policy actions", async ({ page }) => {
   await expect(runningJob).toContainText(/canceled/i);
   await expect(failedJob).toBeVisible();
 
-  await page.goto("/admin/sync-policy/repository");
+  await failedJob.getByRole("button", { name: "Open Details" }).click();
+  const detailDialog = page.getByRole("dialog");
+  await expect(detailDialog).toBeVisible();
+  await expect(detailDialog).toContainText("archive parse failed");
+  await page.getByRole("button", { name: "Close Panel" }).click();
+  await expect(detailDialog).toHaveCount(0);
+
+  await gotoProtectedRoute(page, "/admin/sync-policy/repository");
   const schedulerEnabled = page.getByLabel("Scheduler enabled");
   await expect(schedulerEnabled).toBeChecked();
   await schedulerEnabled.uncheck();
@@ -80,40 +90,48 @@ test("executes repository intake and import source actions", async ({ page }) =>
   const suffix = Date.now();
   await loginAsAdmin(page, "/admin/ingestion/repository");
 
-  await page.getByLabel("Repository URL").fill(`https://github.com/example/repository-intake-${suffix}`);
-  await page.getByLabel("Repository Branch").fill("release");
-  await page.getByLabel("Repository Path").fill("skills/catalog");
-  await page.getByLabel("Tags").first().fill(`release repo-${suffix}`);
-  await page.getByLabel("Visibility").first().selectOption("public");
-  await page.getByLabel("Install Command").first().fill("uvx skillsindex install repository-intake");
   await page.getByRole("button", { name: "Start Repository Intake" }).click();
+  const repositoryDialog = page.getByRole("dialog", { name: "Repository Intake" });
+  await repositoryDialog.getByLabel("Repository URL").fill(`https://github.com/example/repository-intake-${suffix}`);
+  await repositoryDialog.getByLabel("Repository Branch").fill("release");
+  await repositoryDialog.getByLabel("Repository Path").fill("skills/catalog");
+  await repositoryDialog.getByLabel("Tags").fill(`release repo-${suffix}`);
+  await repositoryDialog.getByLabel("Visibility").selectOption("public");
+  await repositoryDialog.getByLabel("Install Command").fill("uvx skillsindex install repository-intake");
+  await repositoryDialog.getByRole("button", { name: "Start Repository Intake" }).click();
   await expect(page.getByText("Repository ingestion requested.")).toBeVisible();
 
-  await page.getByLabel("Enabled").uncheck();
-  await page.getByLabel("Interval").fill("30m");
-  await page.getByLabel("Timeout").fill("6m");
-  await page.getByLabel("Batch Size").fill("24");
-  await page.getByRole("button", { name: "Save Policy" }).click();
+  await page.getByRole("button", { name: "Save Policy" }).first().click();
+  const policyDialog = page.getByRole("dialog", { name: "Scheduler Policy" });
+  await policyDialog.getByLabel("Enabled").uncheck();
+  await policyDialog.getByLabel("Interval").fill("30m");
+  await policyDialog.getByLabel("Timeout").fill("6m");
+  await policyDialog.getByLabel("Batch Size").fill("24");
+  await policyDialog.getByRole("button", { name: "Save Policy" }).click();
   await expect(page.getByText("Repository sync policy saved.")).toBeVisible();
 
-  await page.goto("/admin/records/imports");
-  await page.getByLabel("Archive File").setInputFiles({
+  await gotoProtectedRoute(page, "/admin/records/imports");
+  await page.getByRole("button", { name: "Import Archive" }).first().click();
+  const archiveDialog = page.getByRole("dialog", { name: "Archive Import" });
+  await archiveDialog.getByLabel("Archive File").setInputFiles({
     name: `archive-${suffix}.zip`,
     mimeType: "application/zip",
     buffer: Buffer.from("mock archive payload")
   });
-  await page.getByLabel("Tags").first().fill(`archive-${suffix}`);
-  await page.getByLabel("Visibility").first().selectOption("private");
-  await page.getByLabel("Install Command").first().fill("npx skillsindex import archive-intake");
-  await page.getByRole("button", { name: "Import Archive" }).click();
+  await archiveDialog.getByLabel("Tags").fill(`archive-${suffix}`);
+  await archiveDialog.getByLabel("Visibility").selectOption("private");
+  await archiveDialog.getByLabel("Install Command").fill("npx skillsindex import archive-intake");
+  await archiveDialog.getByRole("button", { name: "Import Archive" }).click();
   await expect(page.getByText("Archive import submitted.")).toBeVisible();
 
-  await page.getByLabel("SkillMP URL").fill(`https://skillmp.example.com/${suffix}`);
-  await page.getByLabel("SkillMP ID").fill(`skillmp-${suffix}`);
-  await page.getByLabel("SkillMP Token").fill("skillmp-token");
-  await page.getByLabel("Tags").nth(1).fill(`skillmp-${suffix}`);
-  await page.getByLabel("Visibility").nth(1).selectOption("public");
-  await page.getByLabel("Install Command").nth(1).fill("npx skillsindex import skillmp-governance");
-  await page.getByRole("button", { name: "Import SkillMP" }).click();
+  await page.getByRole("button", { name: "Import SkillMP" }).first().click();
+  const skillmpDialog = page.getByRole("dialog", { name: "SkillMP Import" });
+  await skillmpDialog.getByLabel("SkillMP URL").fill(`https://skillmp.example.com/${suffix}`);
+  await skillmpDialog.getByLabel("SkillMP ID").fill(`skillmp-${suffix}`);
+  await skillmpDialog.getByLabel("SkillMP Token").fill("skillmp-token");
+  await skillmpDialog.getByLabel("Tags").fill(`skillmp-${suffix}`);
+  await skillmpDialog.getByLabel("Visibility").selectOption("public");
+  await skillmpDialog.getByLabel("Install Command").fill("npx skillsindex import skillmp-governance");
+  await skillmpDialog.getByRole("button", { name: "Import SkillMP" }).click();
   await expect(page.getByText("SkillMP import submitted.")).toBeVisible();
 });

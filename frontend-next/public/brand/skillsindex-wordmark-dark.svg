@@ -1,0 +1,53 @@
+<svg width="560" height="72" viewBox="0 0 560 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="skillsindex-panel-dark" x1="9" y1="8" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1A2430"/>
+      <stop offset="1" stop-color="#0F1621"/>
+    </linearGradient>
+    <linearGradient id="skillsindex-accent-dark" x1="38" y1="16" x2="50" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8EE8FF"/>
+      <stop offset="1" stop-color="#35C1FF"/>
+    </linearGradient>
+    <linearGradient id="skillsindex-trail-dark" x1="471" y1="18" x2="552" y2="34" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7DE4FF"/>
+      <stop offset="1" stop-color="#2FB8FF"/>
+    </linearGradient>
+    <mask id="skillsindex-wordmark-mask-dark">
+      <rect width="560" height="72" fill="white"/>
+      <polygon points="112 12 126 12 112 26" fill="black"/>
+      <polygon points="157 12 170 12 157 25" fill="black"/>
+      <polygon points="205 12 219 12 205 26" fill="black"/>
+      <polygon points="252 12 266 12 252 26" fill="black"/>
+      <polygon points="302 12 316 12 302 26" fill="black"/>
+      <polygon points="349 12 363 12 349 26" fill="black"/>
+      <polygon points="397 12 411 12 397 26" fill="black"/>
+      <polygon points="448 12 464 12 448 28" fill="black"/>
+    </mask>
+  </defs>
+
+  <rect x="2" y="6" width="60" height="60" rx="18" fill="#0B1017"/>
+  <rect x="7.5" y="11.5" width="49" height="49" rx="14" fill="url(#skillsindex-panel-dark)" stroke="#2A3646" stroke-opacity="0.7"/>
+  <path
+    d="M18 20H39L34 26H23.5C22.1193 26 21 27.1193 21 28.5C21 29.8807 22.1193 31 23.5 31H31.5C36.1944 31 40 34.8056 40 39.5C40 44.1944 36.1944 48 31.5 48H12L17 42H31.5C32.8807 42 34 40.8807 34 39.5C34 38.1193 32.8807 37 31.5 37H23.5C18.8056 37 15 33.1944 15 28.5C15 23.8056 18.8056 20 23.5 20H18Z"
+    fill="#F8FBFF"
+  />
+  <path d="M39 17H49L43 48H33L39 17Z" fill="url(#skillsindex-accent-dark)"/>
+
+  <g mask="url(#skillsindex-wordmark-mask-dark)">
+    <text
+      x="84"
+      y="47"
+      fill="#111827"
+      font-family="'Arial Narrow', 'Helvetica Neue', Arial, sans-serif"
+      font-size="40"
+      font-stretch="condensed"
+      font-weight="800"
+      letter-spacing="3.8"
+    >
+      SKILLSINDEX
+    </text>
+  </g>
+
+  <path d="M84 57H457" stroke="#111827" stroke-opacity="0.14" stroke-width="2" stroke-linecap="round"/>
+  <path d="M476 18H552L543 31H467L476 18Z" fill="url(#skillsindex-trail-dark)"/>
+</svg>

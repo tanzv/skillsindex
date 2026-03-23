@@ -1,16 +1,17 @@
 "use client";
 
 import { ErrorState } from "@/src/components/shared/ErrorState";
+import type { AdminRenderableWorkbenchRoute } from "@/src/lib/routing/adminRouteRegistry";
 
 import { ConsoleWorkbench } from "./ConsoleWorkbench";
-import { adminWorkbenchDefinitions } from "./definitions";
+import { resolveAdminRenderableWorkbenchDefinition } from "./definitions";
 
 interface AdminWorkbenchPageProps {
-  route: string;
+  route: AdminRenderableWorkbenchRoute;
 }
 
 export function AdminWorkbenchPage({ route }: AdminWorkbenchPageProps) {
-  const definition = adminWorkbenchDefinitions[route];
+  const definition = resolveAdminRenderableWorkbenchDefinition(route);
 
   if (!definition) {
     return <ErrorState title="Unknown admin route" description={`No workbench definition registered for ${route}.`} />;

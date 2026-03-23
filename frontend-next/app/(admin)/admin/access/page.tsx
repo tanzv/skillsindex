@@ -1,5 +1,5 @@
-import { renderAdminRoute } from "@/src/features/admin/renderAdminRoute";
+import { renderAdminPageRoute } from "@/src/features/admin/adminRouteEntry";
 
 export default async function AdminAccessPage() {
-  return renderAdminRoute("/admin/access");
+  return renderAdminPageRoute("/admin/access");
 }

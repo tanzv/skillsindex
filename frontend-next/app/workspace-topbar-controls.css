@@ -1,6 +1,6 @@
-.workspace-shell-topbar-nav-button,
-.workspace-topbar-toggle-icon-button,
-.workspace-topbar-overflow-metric {
+.protected-topbar-nav-button,
+.protected-topbar-overflow-toggle,
+.protected-topbar-overflow-metric {
   min-height: 38px;
   padding: 0 14px;
   border: 1px solid transparent;
@@ -17,7 +17,7 @@
     transform 160ms ease;
 }
 
-.workspace-shell-topbar-nav-button {
+.protected-topbar-nav-button {
   position: relative;
   flex: 0 0 auto;
   align-items: center;
@@ -29,7 +29,7 @@
   white-space: nowrap;
 }
 
-.workspace-shell-topbar-nav-button::after {
+.protected-topbar-nav-button::after {
   content: "";
   position: absolute;
   left: 10px;
@@ -42,8 +42,8 @@
   transition: opacity 160ms ease, background-color 160ms ease;
 }
 
-.workspace-shell-topbar-nav-button:hover,
-.workspace-topbar-toggle-icon-button:hover {
+.protected-topbar-nav-button:hover,
+.protected-topbar-overflow-toggle:hover {
   border-color: var(--protected-shell-interactive-border-hover);
   background: var(--protected-topbar-control-bg-hover);
   color: var(--protected-topbar-control-text-strong);
@@ -51,19 +51,19 @@
   transform: none;
 }
 
-.workspace-shell-topbar-nav-button.is-active {
+.protected-topbar-nav-button.is-active {
   border-color: var(--protected-topbar-control-border-active);
   background: var(--protected-topbar-control-bg-active);
   color: var(--protected-topbar-control-text-active);
   box-shadow: var(--protected-topbar-control-shadow-active);
 }
 
-.workspace-shell-topbar-nav-button.is-active::after {
+.protected-topbar-nav-button.is-active::after {
   background: var(--protected-topbar-control-indicator);
   opacity: 1;
 }
 
-.workspace-shell-topbar-status {
+.protected-topbar-status {
   min-height: 38px;
   padding: 0 12px;
   border: 1px solid var(--protected-topbar-status-border);
@@ -81,7 +81,7 @@
   box-shadow: var(--protected-topbar-status-shadow);
 }
 
-.workspace-topbar-user-trigger {
+.protected-topbar-user-trigger {
   min-height: 40px;
   gap: 10px;
   padding: 4px 10px 4px 4px;
@@ -92,12 +92,12 @@
   box-shadow: var(--protected-topbar-user-shadow);
 }
 
-.workspace-topbar-user-trigger:hover {
+.protected-topbar-user-trigger:hover {
   border-color: var(--protected-topbar-user-border-hover);
   background: var(--protected-topbar-user-bg-hover);
 }
 
-.workspace-topbar-avatar {
+.protected-topbar-avatar {
   width: 30px;
   height: 30px;
   border-radius: 999px;
@@ -112,35 +112,35 @@
   box-shadow: var(--protected-topbar-avatar-shadow);
 }
 
-.workspace-topbar-user-meta {
+.protected-topbar-user-meta {
   min-width: 0;
   display: grid;
   gap: 2px;
 }
 
-.workspace-topbar-user-meta strong,
-.workspace-topbar-user-meta small {
+.protected-topbar-user-meta strong,
+.protected-topbar-user-meta small {
   max-width: 148px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.workspace-topbar-user-meta strong {
+.protected-topbar-user-meta strong {
   color: var(--workspace-shell-text);
   font-size: 11px;
   line-height: 1.1;
   font-weight: 700;
 }
 
-.workspace-topbar-user-meta small {
+.protected-topbar-user-meta small {
   color: var(--workspace-shell-text-secondary);
   font-size: 9px;
   line-height: 1.1;
   font-weight: 600;
 }
 
-.workspace-topbar-user-chip {
+.protected-topbar-user-chip {
   min-height: 22px;
   padding: 0 8px;
   border-radius: 999px;
@@ -155,13 +155,13 @@
   align-items: center;
 }
 
-.workspace-topbar-user-icon {
+.protected-topbar-user-icon {
   width: 14px;
   height: 14px;
   color: var(--protected-topbar-user-icon);
 }
 
-.workspace-topbar-primary-inline-toggle {
+.protected-topbar-overflow-toggle-group {
   position: relative;
   flex: 0 0 auto;
   display: inline-flex;
@@ -170,7 +170,7 @@
   margin-left: auto;
 }
 
-.workspace-topbar-toggle-icon-button {
+.protected-topbar-overflow-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -184,20 +184,20 @@
   cursor: pointer;
 }
 
-.workspace-topbar-toggle-icon-button.is-expanded {
+.protected-topbar-overflow-toggle.is-expanded {
   border-color: var(--protected-topbar-control-border-active);
   background: var(--protected-topbar-control-bg-active);
   color: var(--protected-topbar-control-text-active);
   box-shadow: var(--protected-topbar-control-shadow-active);
 }
 
-.workspace-topbar-toggle-button-content {
+.protected-topbar-overflow-toggle-content {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.workspace-topbar-toggle-glyph-shell {
+.protected-topbar-overflow-toggle-glyph-shell {
   width: 18px;
   height: 18px;
   display: inline-flex;
@@ -205,23 +205,23 @@
   justify-content: center;
 }
 
-.workspace-topbar-toggle-panel-icon,
-.workspace-topbar-toggle-icon {
+.protected-topbar-overflow-toggle-panel-icon,
+.protected-topbar-overflow-toggle-icon {
   width: 14px;
   height: 14px;
 }
 
-.workspace-topbar-toggle-icon {
+.protected-topbar-overflow-toggle-icon {
   width: 13px;
   height: 13px;
   transition: transform 160ms ease;
 }
 
-.workspace-topbar-toggle-icon-button.is-expanded .workspace-topbar-toggle-icon {
+.protected-topbar-overflow-toggle.is-expanded .protected-topbar-overflow-toggle-icon {
   transform: rotate(180deg);
 }
 
-.workspace-topbar-toggle-badge {
+.protected-topbar-overflow-toggle-badge {
   min-width: 18px;
   height: 18px;
   padding: 0 4px;
@@ -232,7 +232,7 @@
   justify-content: center;
 }
 
-.workspace-topbar-toggle-badge-count {
+.protected-topbar-overflow-toggle-badge-count {
   color: var(--protected-topbar-control-text-active);
   font-family: "JetBrains Mono", monospace;
   font-size: 9px;

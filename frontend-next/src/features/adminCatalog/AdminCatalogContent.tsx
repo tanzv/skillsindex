@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/src/components/ui/card";
 
 import type { AdminCatalogRoute, AdminCatalogViewModel, RepositorySyncPolicy } from "./model";
 import { JobsView, PolicyView, QueryFilters, SkillsView, SyncRunsView } from "./AdminCatalogViews";
+import styles from "./AdminCatalogSurface.module.scss";
 
 interface AdminCatalogContentProps {
   route: AdminCatalogRoute;
@@ -74,8 +75,8 @@ export function AdminCatalogContent({
       />
 
       {loading ? (
-        <Card>
-          <CardContent className="p-6 text-sm text-[color:var(--ui-text-secondary)]">{catalogMessages.loadingData}</CardContent>
+        <Card className={styles.sectionCard}>
+          <CardContent className={styles.loadingCardContent}>{catalogMessages.loadingData}</CardContent>
         </Card>
       ) : null}
 

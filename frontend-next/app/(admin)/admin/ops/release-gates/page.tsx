@@ -1,5 +1,5 @@
-import { renderAdminRoute } from "@/src/features/admin/renderAdminRoute";
+import { renderAdminPageRoute } from "@/src/features/admin/adminRouteEntry";
 
 export default async function AdminOpsReleaseGatesPage() {
-  return renderAdminRoute("/admin/ops/release-gates");
+  return renderAdminPageRoute("/admin/ops/release-gates");
 }

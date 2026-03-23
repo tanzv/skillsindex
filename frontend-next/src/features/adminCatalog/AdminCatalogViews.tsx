@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 import { AdminEmptyBlock } from "@/src/components/admin/AdminPrimitives";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
@@ -9,7 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src
 import { Input as TextInput } from "@/src/components/ui/input";
 
 import type { AdminCatalogRow, AdminCatalogViewModel, RepositorySyncPolicy } from "./model";
-import { DetailCard, RowSelectionButton, SidePanels, useSelectedRow } from "./AdminCatalogShared";
+import { CatalogDetailDrawer, RowSelectionButton, SidePanels, useSelectedRow } from "./AdminCatalogShared";
+import styles from "./AdminCatalogSurface.module.scss";
 
 export { QueryFilters } from "./AdminCatalogShared";
 
@@ -27,16 +29,17 @@ export function SkillsView({
   const { messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
   const { selectedRow, selectedRowId, setSelectedRowId } = useSelectedRow(rows);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
+    <div className={styles.splitLayout}>
+      <div className={styles.column}>
+        <Card className={styles.sectionCard}>
+          <CardHeader className={styles.sectionHeader}>
             <CardTitle>{adminCatalogMessages.skillsInventoryTitle}</CardTitle>
-            <CardDescription>{adminCatalogMessages.skillsInventoryDescription}</CardDescription>
+            <CardDescription className={styles.sectionDescription}>{adminCatalogMessages.skillsInventoryDescription}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className={styles.listCardContent}>
             {rows.map((row) => (
               <RowSelectionButton
                 key={row.id}
@@ -45,6 +48,16 @@ export function SkillsView({
                 buttonLabel={adminCatalogMessages.inspectAction}
                 onSelect={() => setSelectedRowId(row.id)}
               >
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedRowId(row.id);
+                    setDetailDrawerOpen(true);
+                  }}
+                >
+                  {adminCatalogMessages.openDetailAction}
+                </Button>
                 {row.syncable ? (
                   <Button size="sm" variant="outline" onClick={() => onSyncSkill(row.id)} disabled={Boolean(busyAction)}>
                     {busyAction === `sync-skill-${row.id}` ? adminCatalogMessages.syncingAction : adminCatalogMessages.syncNowAction}
@@ -57,32 +70,34 @@ export function SkillsView({
         </Card>
       </div>
 
-      <div className="space-y-6">
-        <DetailCard
-          title={adminCatalogMessages.selectedSkillTitle}
-          description={adminCatalogMessages.selectedSkillDescription}
-          row={selectedRow}
-          emptyText={adminCatalogMessages.selectedSkillEmpty}
-          actions={
-            selectedRow ? (
-              <>
-                {selectedRow.syncable ? (
-                  <Button variant="outline" onClick={() => onSyncSkill(selectedRow.id)} disabled={Boolean(busyAction)}>
-                    {busyAction === `sync-skill-${selectedRow.id}` ? adminCatalogMessages.syncingAction : adminCatalogMessages.syncNowAction}
-                  </Button>
-                ) : null}
-                <Button asChild>
-                  <Link href={`/skills/${selectedRow.id}`}>{adminCatalogMessages.openSkillDetailAction}</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/admin/ingestion/repository">{adminCatalogMessages.openIntakeAction}</Link>
-                </Button>
-              </>
-            ) : null
-          }
-        />
+      <div className={styles.column}>
         <SidePanels panels={sidePanels} />
       </div>
+
+      <CatalogDetailDrawer
+        open={detailDrawerOpen}
+        row={selectedRow}
+        description={adminCatalogMessages.selectedSkillDescription}
+        closeLabel={adminCatalogMessages.closePanelAction}
+        onClose={() => setDetailDrawerOpen(false)}
+        actions={
+          selectedRow ? (
+            <>
+              {selectedRow.syncable ? (
+                <Button variant="outline" onClick={() => onSyncSkill(selectedRow.id)} disabled={Boolean(busyAction)}>
+                  {busyAction === `sync-skill-${selectedRow.id}` ? adminCatalogMessages.syncingAction : adminCatalogMessages.syncNowAction}
+                </Button>
+              ) : null}
+              <Button asChild>
+                <Link href={`/skills/${selectedRow.id}`}>{adminCatalogMessages.openSkillDetailAction}</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/admin/ingestion/repository">{adminCatalogMessages.openIntakeAction}</Link>
+              </Button>
+            </>
+          ) : null
+        }
+      />
     </div>
   );
 }
@@ -101,16 +116,17 @@ export function JobsView({
   const { messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
   const { selectedRow, selectedRowId, setSelectedRowId } = useSelectedRow(rows);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
+    <div className={styles.splitLayout}>
+      <div className={styles.column}>
+        <Card className={styles.sectionCard}>
+          <CardHeader className={styles.sectionHeader}>
             <CardTitle>{adminCatalogMessages.jobsQueueTitle}</CardTitle>
-            <CardDescription>{adminCatalogMessages.jobsQueueDescription}</CardDescription>
+            <CardDescription className={styles.sectionDescription}>{adminCatalogMessages.jobsQueueDescription}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className={styles.listCardContent}>
             {rows.map((row) => {
               const normalized = row.status.toLowerCase();
               const canRetry = normalized.includes("failed") || normalized.includes("canceled");
@@ -124,6 +140,16 @@ export function JobsView({
                   buttonLabel={adminCatalogMessages.inspectAction}
                   onSelect={() => setSelectedRowId(row.id)}
                 >
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedRowId(row.id);
+                      setDetailDrawerOpen(true);
+                    }}
+                  >
+                    {adminCatalogMessages.openDetailAction}
+                  </Button>
                   {canRetry ? (
                     <Button size="sm" variant="outline" onClick={() => onRunJobAction(row.id, "retry")} disabled={Boolean(busyAction)}>
                       {busyAction === `retry-${row.id}` ? adminCatalogMessages.retryingAction : adminCatalogMessages.retryAction}
@@ -142,41 +168,43 @@ export function JobsView({
         </Card>
       </div>
 
-      <div className="space-y-6">
-        <DetailCard
-          title={adminCatalogMessages.selectedJobTitle}
-          description={adminCatalogMessages.selectedJobDescription}
-          row={selectedRow}
-          emptyText={adminCatalogMessages.selectedJobEmpty}
-          actions={
-            selectedRow ? (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => onRunJobAction(selectedRow.id, "retry")}
-                  disabled={
-                    Boolean(busyAction) ||
-                    (!selectedRow.status.toLowerCase().includes("failed") && !selectedRow.status.toLowerCase().includes("canceled"))
-                  }
-                >
-                  {adminCatalogMessages.retrySelectedAction}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => onRunJobAction(selectedRow.id, "cancel")}
-                  disabled={
-                    Boolean(busyAction) ||
-                    (!selectedRow.status.toLowerCase().includes("running") && !selectedRow.status.toLowerCase().includes("pending"))
-                  }
-                >
-                  {adminCatalogMessages.cancelSelectedAction}
-                </Button>
-              </>
-            ) : null
-          }
-        />
+      <div className={styles.column}>
         <SidePanels panels={sidePanels} />
       </div>
+
+      <CatalogDetailDrawer
+        open={detailDrawerOpen}
+        row={selectedRow}
+        description={adminCatalogMessages.selectedJobDescription}
+        closeLabel={adminCatalogMessages.closePanelAction}
+        onClose={() => setDetailDrawerOpen(false)}
+        actions={
+          selectedRow ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => onRunJobAction(selectedRow.id, "retry")}
+                disabled={
+                  Boolean(busyAction) ||
+                  (!selectedRow.status.toLowerCase().includes("failed") && !selectedRow.status.toLowerCase().includes("canceled"))
+                }
+              >
+                {adminCatalogMessages.retrySelectedAction}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => onRunJobAction(selectedRow.id, "cancel")}
+                disabled={
+                  Boolean(busyAction) ||
+                  (!selectedRow.status.toLowerCase().includes("running") && !selectedRow.status.toLowerCase().includes("pending"))
+                }
+              >
+                {adminCatalogMessages.cancelSelectedAction}
+              </Button>
+            </>
+          ) : null
+        }
+      />
     </div>
   );
 }
@@ -191,16 +219,17 @@ export function SyncRunsView({
   const { messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
   const { selectedRow, selectedRowId, setSelectedRowId } = useSelectedRow(rows);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.04fr_0.96fr]">
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
+    <div className={styles.compactSplitLayout}>
+      <div className={styles.column}>
+        <Card className={styles.sectionCard}>
+          <CardHeader className={styles.sectionHeader}>
             <CardTitle>{adminCatalogMessages.syncRunsTitle}</CardTitle>
-            <CardDescription>{adminCatalogMessages.syncRunsDescription}</CardDescription>
+            <CardDescription className={styles.sectionDescription}>{adminCatalogMessages.syncRunsDescription}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className={styles.listCardContent}>
             {rows.map((row) => (
               <RowSelectionButton
                 key={row.id}
@@ -208,29 +237,42 @@ export function SyncRunsView({
                 selected={selectedRowId === row.id}
                 buttonLabel={adminCatalogMessages.inspectAction}
                 onSelect={() => setSelectedRowId(row.id)}
-              />
+              >
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedRowId(row.id);
+                    setDetailDrawerOpen(true);
+                  }}
+                >
+                  {adminCatalogMessages.openDetailAction}
+                </Button>
+              </RowSelectionButton>
             ))}
             {!rows.length ? <AdminEmptyBlock>{adminCatalogMessages.syncRunsEmpty}</AdminEmptyBlock> : null}
           </CardContent>
         </Card>
       </div>
 
-      <div className="space-y-6">
-        <DetailCard
-          title={adminCatalogMessages.selectedSyncRunTitle}
-          description={adminCatalogMessages.selectedSyncRunDescription}
-          row={selectedRow}
-          emptyText={adminCatalogMessages.selectedSyncRunEmpty}
-          actions={
-            selectedRow ? (
-              <Button asChild variant="outline">
-                <Link href="/admin/sync-policy/repository">{adminCatalogMessages.openSyncPolicyAction}</Link>
-              </Button>
-            ) : null
-          }
-        />
+      <div className={styles.column}>
         <SidePanels panels={sidePanels} />
       </div>
+
+      <CatalogDetailDrawer
+        open={detailDrawerOpen}
+        row={selectedRow}
+        description={adminCatalogMessages.selectedSyncRunDescription}
+        closeLabel={adminCatalogMessages.closePanelAction}
+        onClose={() => setDetailDrawerOpen(false)}
+        actions={
+          selectedRow ? (
+            <Button asChild variant="outline">
+              <Link href="/admin/sync-policy/repository">{adminCatalogMessages.openSyncPolicyAction}</Link>
+            </Button>
+          ) : null
+        }
+      />
     </div>
   );
 }
@@ -255,15 +297,15 @@ export function PolicyView({
   const { messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
+    <div className={styles.compactSplitLayout}>
+      <div className={styles.column}>
+        <Card className={styles.sectionCard}>
+          <CardHeader className={styles.sectionHeader}>
             <CardTitle>{adminCatalogMessages.policyEditorTitle}</CardTitle>
-            <CardDescription>{adminCatalogMessages.policyEditorDescription}</CardDescription>
+            <CardDescription className={styles.sectionDescription}>{adminCatalogMessages.policyEditorDescription}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <label className="flex items-center gap-3 rounded-xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] px-3 py-3 text-sm text-[color:var(--ui-text-secondary)]">
+          <CardContent className={styles.detailContent}>
+            <label className={styles.policyToggle}>
               <input
                 aria-label={adminCatalogMessages.schedulerEnabledLabel}
                 type="checkbox"
@@ -291,7 +333,7 @@ export function PolicyView({
               placeholder={adminCatalogMessages.batchSizePlaceholder}
               onChange={(event) => onPolicyDraftChange({ batchSize: Number(event.target.value) || 0 })}
             />
-            <div className="flex flex-wrap gap-3">
+            <div className={styles.policyActions}>
               <Button onClick={onSavePolicy} disabled={busyAction === "save-policy"}>
                 {busyAction === "save-policy" ? adminCatalogMessages.savingPolicyAction : adminCatalogMessages.savePolicyAction}
               </Button>
@@ -302,19 +344,16 @@ export function PolicyView({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        <Card className={styles.sectionCard}>
+          <CardHeader className={styles.sectionHeaderCompact}>
             <CardTitle>{adminCatalogMessages.policyPostureTitle}</CardTitle>
-            <CardDescription>{adminCatalogMessages.policyPostureDescription}</CardDescription>
+            <CardDescription className={styles.sectionDescription}>{adminCatalogMessages.policyPostureDescription}</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-2">
+          <CardContent className={styles.policyMetricGrid}>
             {metrics.map((metric) => (
-              <div
-                key={metric.label}
-                className="rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] px-4 py-3"
-              >
-                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--ui-text-muted)]">{metric.label}</div>
-                <div className="mt-2 text-sm font-semibold text-[color:var(--ui-text-primary)]">{metric.value}</div>
+              <div key={metric.label} className={styles.policyMetricItem}>
+                <div className={styles.policyMetricLabel}>{metric.label}</div>
+                <div className={styles.policyMetricValue}>{metric.value}</div>
               </div>
             ))}
           </CardContent>

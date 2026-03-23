@@ -1,0 +1,89 @@
+.panel {
+  background: var(--ui-card-bg);
+}
+
+.panelDrawer {
+  max-width: min(100vw, 44rem);
+}
+
+.panelModal {
+  width: min(100%, 34rem);
+}
+
+.body {
+  display: grid;
+  gap: 16px;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  width: 100%;
+}
+
+.section {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--ui-border);
+  border-radius: 20px;
+  background: var(--ui-card-muted-bg);
+}
+
+.sectionHeader {
+  display: grid;
+  gap: 6px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ui-text-primary);
+}
+
+.sectionDescription {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--ui-text-secondary);
+}
+
+.sectionBody {
+  display: grid;
+  gap: 12px;
+}
+
+.metaList {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.metaRow {
+  display: grid;
+  gap: 4px;
+}
+
+.metaLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-text-muted);
+}
+
+.metaValue {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ui-text-primary);
+}
+
+.confirmBody {
+  display: grid;
+  gap: 12px;
+  color: var(--ui-text-secondary);
+}

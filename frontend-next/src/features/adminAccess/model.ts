@@ -1,14 +1,13 @@
-import { asArray, asBoolean, asNumber, asObject, asString } from "../adminGovernance/shared";
+import {
+  buildAdminRoleSummary,
+  normalizeAdminAccountsPayload,
+  normalizeAdminAccountStatus,
+  normalizeAdminAuthProvidersPayload,
+  normalizeAdminRegistrationPayload,
+  type AdminNormalizedAccountItem
+} from "@/src/lib/admin/adminAccountSettingsModel";
 
-export interface AccessAccountItem {
-  id: number;
-  username: string;
-  role: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  forceLogoutAt: string;
-}
+export type AccessAccountItem = AdminNormalizedAccountItem;
 
 export interface AdminAccessGovernanceData {
   accounts: AccessAccountItem[];
@@ -24,6 +23,17 @@ export interface AccessOverview {
   roleSummary: Array<{ role: string; count: number }>;
 }
 
+export function resolveSelectedAccessAccount(
+  accounts: AccessAccountItem[],
+  selectedAccountId: number | null
+): AccessAccountItem | null {
+  if (selectedAccountId === null) {
+    return null;
+  }
+
+  return accounts.find((account) => account.id === selectedAccountId) || null;
+}
+
 interface AccessMetricLabels {
   accounts: string;
   disabled: string;
@@ -31,47 +41,22 @@ interface AccessMetricLabels {
   pendingSignOut: string;
 }
 
-function toStringArray(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.map((item) => asString(item)).filter(Boolean);
-  }
-
-  const raw = asString(value);
-  if (!raw) {
-    return [];
-  }
-
-  return raw
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
 export function buildAdminAccessGovernanceData(payloads: {
   accounts: unknown;
   registration: unknown;
   authProviders: unknown;
 }): AdminAccessGovernanceData {
-  const accountsSource = asObject(payloads.accounts);
-  const registrationSource = asObject(payloads.registration);
-  const providersSource = asObject(payloads.authProviders);
-  const accountItems = asArray<Record<string, unknown>>(accountsSource.items);
+  const accounts = normalizeAdminAccountsPayload(payloads.accounts);
+  const registration = normalizeAdminRegistrationPayload(payloads.registration);
+  const authProviders = normalizeAdminAuthProvidersPayload(payloads.authProviders);
 
   return {
-    accounts: accountItems.map((item) => ({
-      id: asNumber(item.id),
-      username: asString(item.username) || "unknown",
-      role: asString(item.role) || "member",
-      status: asString(item.status) || "unknown",
-      createdAt: asString(item.created_at),
-      updatedAt: asString(item.updated_at),
-      forceLogoutAt: asString(item.force_logout_at)
-    })),
-    accountsTotal: asNumber(accountsSource.total) || accountItems.length,
-    allowRegistration: asBoolean(registrationSource.allow_registration),
-    marketplacePublicAccess: asBoolean(registrationSource.marketplace_public_access),
-    enabledProviders: toStringArray(providersSource.auth_providers),
-    availableProviders: toStringArray(providersSource.available_auth_providers)
+    accounts: accounts.items,
+    accountsTotal: accounts.total,
+    allowRegistration: registration.allowRegistration,
+    marketplacePublicAccess: registration.marketplacePublicAccess,
+    enabledProviders: authProviders.authProviders,
+    availableProviders: authProviders.availableAuthProviders
   };
 }
 
@@ -84,13 +69,8 @@ export function buildAccessOverview(
     pendingSignOut: "Pending Sign-out"
   }
 ): AccessOverview {
-  const disabledAccounts = data.accounts.filter((item) => item.status.toLowerCase() === "disabled").length;
+  const disabledAccounts = data.accounts.filter((item) => normalizeAdminAccountStatus(item.status) === "disabled").length;
   const forceLogoutPending = data.accounts.filter((item) => item.forceLogoutAt).length;
-  const roleMap = data.accounts.reduce<Map<string, number>>((accumulator, item) => {
-    const role = item.role || "member";
-    accumulator.set(role, (accumulator.get(role) || 0) + 1);
-    return accumulator;
-  }, new Map<string, number>());
 
   return {
     metrics: [
@@ -99,8 +79,6 @@ export function buildAccessOverview(
       { label: labels.enabledProviders, value: String(data.enabledProviders.length) },
       { label: labels.pendingSignOut, value: String(forceLogoutPending) }
     ],
-    roleSummary: Array.from(roleMap.entries())
-      .map(([role, count]) => ({ role, count }))
-      .sort((left, right) => right.count - left.count || left.role.localeCompare(right.role))
+    roleSummary: buildAdminRoleSummary(data.accounts)
   };
 }

@@ -1,16 +1,27 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { buildWorkspaceNavigationItems, buildWorkspaceRelatedLinks } from "@/src/lib/routing/workspaceNavigation";
 import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
 import type { SessionContext } from "@/src/lib/schemas/session";
-import { cn } from "@/src/lib/utils";
-import { type ProtectedTopbarMessages, type WorkspaceShellMessages } from "@/src/lib/i18n/protectedMessages";
+import {
+  type AdminNavigationMessages,
+  type ProtectedTopbarMessages,
+  type WorkspaceShellMessages
+} from "@/src/lib/i18n/protectedMessages";
+import {
+  buildWorkspaceShellNavigationRegistry,
+  buildProtectedTopbarConfigFromRegistry,
+  resolveProtectedBrandSubtitle,
+  resolveProtectedNavigationSidebarState
+} from "@/src/lib/navigation/protectedNavigationRegistry";
+import { marketplaceHomeRoute } from "@/src/lib/routing/protectedSurfaceLinks";
+import { buildMarketplaceHrefForTheme } from "@/src/lib/theme/sharedThemePreference";
 
-import { WorkspaceTopbar } from "./WorkspaceTopbar";
+import { buildAccountCenterMenuConfig } from "./protectedTopbarConfigs";
+import { ProtectedSectionSidebar } from "./ProtectedSectionSidebar";
+import { ProtectedTopbar } from "./ProtectedTopbar";
 import { ProtectedConsoleShell } from "./ProtectedConsoleShell";
 
 interface WorkspaceShellProps {
@@ -19,29 +30,20 @@ interface WorkspaceShellProps {
   workspaceMessages: WorkspaceMessages;
   messages: {
     shell: WorkspaceShellMessages;
+    navigation: AdminNavigationMessages;
     topbar: ProtectedTopbarMessages;
   };
 }
 
-function matchesAppNav(pathname: string, href: string, matchPrefixes?: string[]) {
-  const prefixes = matchPrefixes || [href];
-  return prefixes.some((prefix) => (prefix === "/" ? pathname === "/" : pathname === prefix || pathname.startsWith(`${prefix}/`)));
-}
-
-function matchesWorkspaceRoute(pathname: string, href: string) {
-  if (href === "/workspace") {
-    return pathname === href;
-  }
-
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
 export function WorkspaceShell({ children, session, workspaceMessages, messages }: WorkspaceShellProps) {
   const pathname = usePathname();
-  const workspaceNavigationItems = buildWorkspaceNavigationItems(workspaceMessages);
-  const workspaceRelatedLinks = buildWorkspaceRelatedLinks(workspaceMessages);
-  const activeWorkspaceItem = workspaceNavigationItems.find((item) => matchesWorkspaceRoute(pathname, item.href)) || workspaceNavigationItems[0];
-  const brandSubtitle = activeWorkspaceItem.description || `${activeWorkspaceItem.label} ${messages.shell.brandSubtitleSuffix}`;
+  const registry = buildWorkspaceShellNavigationRegistry({
+    adminNavigation: messages.navigation,
+    workspacePage: workspaceMessages,
+    workspaceShell: messages.shell
+  });
+  const sidebarState = resolveProtectedNavigationSidebarState(pathname, registry);
+  const brandSubtitle = resolveProtectedBrandSubtitle(pathname, registry, messages.shell.brandSubtitleSuffix);
 
   return (
     <ProtectedConsoleShell
@@ -50,13 +52,30 @@ export function WorkspaceShell({ children, session, workspaceMessages, messages 
       shellTestId="workspace-shell"
       sideNavTestId="workspace-side-nav"
       renderHeader={({ openSidebar, isSidebarOpen, theme, setTheme }) => (
-        <WorkspaceTopbar
+        <ProtectedTopbar
           pathname={pathname}
           session={session}
           brandTitle="SkillsIndex"
           brandSubtitle={brandSubtitle}
+          brandHref={sidebarState.activeModule.topLevel.href}
+          config={buildProtectedTopbarConfigFromRegistry(
+            pathname,
+            registry,
+            {
+              primaryGroupLabel: workspaceMessages.topbarPrimaryGroupLabel,
+              primaryGroupTag: workspaceMessages.topbarPrimaryGroupTag,
+              overflowTitle: workspaceMessages.topbarOverflowTitle,
+              overflowHint: workspaceMessages.topbarOverflowHint,
+              overflowPrimaryTitle: workspaceMessages.topbarOverflowAppSectionsTitle
+            },
+            messages.topbar
+          )}
+          accountCenterMenu={buildAccountCenterMenuConfig(messages.topbar)}
+          dataTestId="workspace-topbar"
+          navigationAriaLabel={messages.topbar.navigationAriaLabelWorkspace}
           messages={messages.topbar}
-          workspaceMessages={workspaceMessages}
+          utilityLink={{ href: buildMarketplaceHrefForTheme(theme, marketplaceHomeRoute), label: messages.topbar.marketplaceLinkLabel }}
+          accountMenuTriggerVariant="avatar"
           theme={theme}
           onThemeChange={setTheme}
           onOpenNavigation={openSidebar}
@@ -66,49 +85,25 @@ export function WorkspaceShell({ children, session, workspaceMessages, messages 
           navigationToggleExpanded={isSidebarOpen}
         />
       )}
-      sidebar={
-        <>
-          <section className="workspace-shell-panel">
-            <p className="workspace-shell-panel-title">{messages.shell.deckTitle}</p>
-            <p className="workspace-shell-panel-copy">
-              {messages.shell.deckDescription}
-            </p>
-            <div className="workspace-shell-side-list">
-              {workspaceNavigationItems.map((item) => {
-                const isActive = matchesWorkspaceRoute(pathname, item.href);
-
-                return (
-                  <Link key={item.href} href={item.href} className={cn("workspace-shell-side-link", isActive && "is-active")}>
-                    <span>{item.label}</span>
-                    <span className="workspace-shell-side-link-note">
-                      {item.description || item.label}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-
-          <section className="workspace-shell-panel">
-            <p className="workspace-shell-panel-title">{messages.shell.connectedSurfacesTitle}</p>
-            <p className="workspace-shell-panel-copy">
-              {messages.shell.connectedSurfacesDescription}
-            </p>
-            <div className="workspace-shell-side-list" data-testid="workspace-related-nav">
-              {workspaceRelatedLinks.map((item) => {
-                const isActive = matchesAppNav(pathname, item.href, item.href === "/" ? ["/", "/search", "/results"] : undefined);
-
-                return (
-                  <Link key={item.href} href={item.href} className={cn("workspace-shell-side-link", isActive && "is-active")}>
-                    <span>{item.label}</span>
-                    <span className="workspace-shell-side-link-note">{item.description || item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-        </>
-      }
+      sidebar={(
+        <ProtectedSectionSidebar
+          scope="workspace-shell"
+          title={sidebarState.activeModule.sidebar.title}
+          description={sidebarState.activeModule.sidebar.description}
+          groups={sidebarState.groups.map((group) => ({
+            id: group.id,
+            title: group.title,
+            items: group.items.map((item) => ({
+              id: item.id,
+              href: item.href,
+              label: item.label,
+              note: item.description || item.label,
+              active: item.active
+            }))
+          }))}
+          dataTestId="workspace-secondary-sidebar"
+        />
+      )}
       mainClassName="workspace-shell-main"
     >
       {children}

@@ -1,165 +1,54 @@
-import type { AccountShellMessages, AdminNavigationMessages, ProtectedTopbarMessages } from "@/src/lib/i18n/protectedMessages";
-import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
-import { buildAdminNavigationGroups } from "@/src/lib/routing/adminNavigation";
-import { buildWorkspaceNavigationItems } from "@/src/lib/routing/workspaceNavigation";
+import {
+  adminNavigationMessageFallbacks,
+  type AccountShellMessages,
+  type AdminNavigationMessages,
+  type ProtectedTopbarMessages,
+  type WorkspaceShellMessages
+} from "@/src/lib/i18n/protectedMessages";
+import { workspaceMessageFallbacks, type WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
+import {
+  accountApiCredentialsRoute,
+  accountProfileRoute,
+  accountSecurityRoute,
+  accountSessionsRoute,
+  adminAccessRoute,
+  adminIntegrationsRoute,
+  adminOrganizationsRoute,
+  adminOverviewRoute,
+  adminReleaseGatesRoute,
+  adminRolesRoute,
+  workspaceOverviewRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
+import {
+  buildAccountShellNavigationRegistry,
+  buildAdminShellNavigationRegistry,
+  buildWorkspaceShellNavigationRegistry,
+  buildProtectedTopbarConfigFromRegistry
+} from "@/src/lib/navigation/protectedNavigationRegistry";
 
-import type { ProtectedTopbarConfig, ProtectedTopbarEntrySeed } from "./protectedTopbarModel";
+import type {
+  AccountCenterMenuConfig,
+  AccountCenterMenuEntry,
+  AccountCenterMenuEntryKind,
+  AccountCenterMenuIcon,
+  AccountCenterMenuSection
+} from "./accountCenterMenu.types";
 
-export type AccountCenterMenuIcon = "profile" | "security" | "sessions" | "credentials" | "link";
-
-export interface AccountCenterMenuEntry {
-  id: string;
-  href: string;
-  label: string;
-  icon: AccountCenterMenuIcon;
-}
-
-export interface AccountCenterMenuSection {
-  id: string;
-  title: string;
-  entries: AccountCenterMenuEntry[];
-}
-
-export interface AccountCenterMenuConfig {
-  sections: AccountCenterMenuSection[];
-}
-
-const sharedOverflowGroupOrder = ["marketplace", "primary", "system-access", "related-hubs"];
-
-function buildSharedQuickEntries(messages: ProtectedTopbarMessages): ProtectedTopbarEntrySeed[] {
-  return [
-    {
-      id: "/categories",
-      href: "/categories",
-      label: messages.quickCategoriesLabel,
-      description: messages.quickCategoriesDescription,
-      kind: "quick",
-      overflowGroupId: "marketplace",
-      matchPrefixes: ["/categories"]
-    },
-    {
-      id: "/rankings",
-      href: "/rankings",
-      label: messages.quickTopLabel,
-      description: messages.quickTopDescription,
-      kind: "quick",
-      overflowGroupId: "marketplace",
-      matchPrefixes: ["/rankings"]
-    },
-    {
-      id: "/governance",
-      href: "/governance",
-      label: messages.quickGovernanceLabel,
-      description: messages.quickGovernanceDescription,
-      kind: "quick",
-      overflowGroupId: "related-hubs",
-      matchPrefixes: ["/governance"]
-    },
-    {
-      id: "/docs",
-      href: "/docs",
-      label: messages.quickDocsLabel,
-      description: messages.quickDocsDescription,
-      kind: "quick",
-      overflowGroupId: "related-hubs",
-      matchPrefixes: ["/docs", "/about"]
-    }
-  ];
-}
-
-function buildProtectedWorkbenchPrimaryGroups(
-  messages: AdminNavigationMessages
-): ProtectedTopbarConfig["primaryGroups"] {
-  return [
-    {
-      id: "protected-workbench-primary-group",
-      label: messages.topbarPrimaryGroupLabel,
-      tagLabel: messages.topbarPrimaryGroupTag,
-      kind: "primary"
-    },
-    {
-      id: "protected-workbench-quick-group",
-      label: messages.topbarQuickGroupLabel,
-      tagLabel: messages.topbarQuickGroupTag,
-      kind: "quick"
-    }
-  ];
-}
-
-function buildProtectedWorkbenchHubEntries(messages: AdminNavigationMessages): ProtectedTopbarEntrySeed[] {
-  const adminNavigationGroups = buildAdminNavigationGroups(messages);
-
-  return [
-    {
-      id: "hub-workspace",
-      href: "/workspace",
-      label: messages.hubWorkspaceLabel,
-      description: messages.hubWorkspaceDescription,
-      kind: "primary",
-      overflowGroupId: "primary",
-      matchPrefixes: ["/workspace", "/workspace/activity", "/workspace/queue", "/workspace/policy", "/workspace/runbook", "/workspace/actions"]
-    },
-    {
-      id: "hub-overview",
-      href: "/admin/overview",
-      label: messages.groupOverviewLabel,
-      description: messages.itemOverviewDescription,
-      kind: "primary",
-      overflowGroupId: "primary",
-      matchPrefixes: ["/admin/overview"]
-    },
-    {
-      id: "hub-catalog",
-      href: "/admin/ingestion/manual",
-      label: messages.groupCatalogLabel,
-      description: messages.itemRepositoryIntakeDescription,
-      kind: "primary",
-      overflowGroupId: "primary",
-      matchPrefixes: resolveAdminMatchPrefixes(adminNavigationGroups, "catalog", ["/admin/ingestion/manual"])
-    },
-    {
-      id: "hub-operations",
-      href: "/admin/ops/metrics",
-      label: messages.groupOperationsLabel,
-      description: messages.itemOpsMetricsDescription,
-      kind: "primary",
-      overflowGroupId: "primary",
-      matchPrefixes: resolveAdminMatchPrefixes(adminNavigationGroups, "operations", ["/admin/ops/metrics"])
-    },
-    {
-      id: "hub-users",
-      href: "/admin/accounts",
-      label: messages.groupUsersLabel,
-      description: messages.itemAccountsDescription,
-      kind: "primary",
-      overflowGroupId: "primary",
-      matchPrefixes: resolveAdminMatchPrefixes(adminNavigationGroups, "users", ["/admin/accounts"])
-    },
-    {
-      id: "hub-security",
-      href: "/admin/apikeys",
-      label: messages.groupSecurityLabel,
-      description: messages.itemApiKeysDescription,
-      kind: "primary",
-      overflowGroupId: "primary",
-      matchPrefixes: resolveAdminMatchPrefixes(adminNavigationGroups, "security", ["/admin/apikeys"])
-    },
-    {
-      id: "hub-account",
-      href: "/account/profile",
-      label: messages.hubAccountLabel,
-      description: messages.hubAccountDescription,
-      kind: "primary",
-      overflowGroupId: "primary",
-      matchPrefixes: ["/account"]
-    }
-  ];
-}
-
-function buildOverflowMetricLabels(messages: ProtectedTopbarMessages) {
+function createAccountEntry(
+  id: string,
+  href: string,
+  label: string,
+  icon: AccountCenterMenuIcon,
+  description: string,
+  kind: AccountCenterMenuEntryKind = "account"
+): AccountCenterMenuEntry {
   return {
-    visible: messages.overflowVisibleMetricLabel,
-    hidden: messages.overflowHiddenMetricLabel
+    id,
+    href,
+    label,
+    icon,
+    description,
+    kind
   };
 }
 
@@ -174,30 +63,34 @@ export function buildAccountCenterMenuConfig(
         id: "account-center",
         title: messages.accountMenuNavigationTitle,
         entries: [
-          {
-            id: "account-profile",
-            href: "/account/profile",
-            label: messages.accountMenuProfileLabel,
-            icon: "profile"
-          },
-          {
-            id: "account-security",
-            href: "/account/security",
-            label: messages.accountMenuSecurityLabel,
-            icon: "security"
-          },
-          {
-            id: "account-sessions",
-            href: "/account/sessions",
-            label: messages.accountMenuSessionsLabel,
-            icon: "sessions"
-          },
-          {
-            id: "account-api-credentials",
-            href: "/account/api-credentials",
-            label: messages.accountMenuApiCredentialsLabel,
-            icon: "credentials"
-          }
+          createAccountEntry(
+            "account-profile",
+            accountProfileRoute,
+            messages.accountMenuProfileLabel,
+            "profile",
+            "Review personal identity, display name, avatar, and public profile details."
+          ),
+          createAccountEntry(
+            "account-security",
+            accountSecurityRoute,
+            messages.accountMenuSecurityLabel,
+            "security",
+            "Update password posture, revoke risky access, and keep sign-in hygiene aligned."
+          ),
+          createAccountEntry(
+            "account-sessions",
+            accountSessionsRoute,
+            messages.accountMenuSessionsLabel,
+            "sessions",
+            "Inspect active devices, session age, and revoke stale session access when needed."
+          ),
+          createAccountEntry(
+            "account-api-credentials",
+            accountApiCredentialsRoute,
+            messages.accountMenuApiCredentialsLabel,
+            "credentials",
+            "Create, rotate, and retire scoped personal API credentials without leaving the protected shell."
+          )
         ]
       }
     ]
@@ -211,154 +104,135 @@ export function buildAdminAccountCenterMenuConfig(
   return buildAccountCenterMenuConfig(topbarMessages, [
     {
       id: "admin-identity-services",
-      title: navigationMessages.groupUsersLabel,
+      title: navigationMessages.itemOrganizationsLabel,
       entries: [
-        {
-          id: "admin-access",
-          href: "/admin/access",
-          label: navigationMessages.itemAccessLabel,
-          icon: "security"
-        },
-        {
-          id: "admin-roles",
-          href: "/admin/roles",
-          label: navigationMessages.itemRolesLabel,
-          icon: "link"
-        },
-        {
-          id: "admin-organizations",
-          href: "/admin/organizations",
-          label: navigationMessages.itemOrganizationsLabel,
-          icon: "link"
-        }
+        createAccountEntry(
+          "admin-access",
+          adminAccessRoute,
+          navigationMessages.itemAccessLabel,
+          "security",
+          navigationMessages.itemAccessDescription,
+          "admin"
+        ),
+        createAccountEntry(
+          "admin-roles",
+          adminRolesRoute,
+          navigationMessages.itemRolesLabel,
+          "link",
+          navigationMessages.itemRolesDescription,
+          "admin"
+        ),
+        createAccountEntry(
+          "admin-organizations",
+          adminOrganizationsRoute,
+          navigationMessages.itemOrganizationsLabel,
+          "link",
+          navigationMessages.itemOrganizationsDescription,
+          "admin"
+        )
       ]
     },
     {
       id: "admin-runtime-services",
-      title: navigationMessages.groupOperationsLabel,
+      title: navigationMessages.moduleAdministrationLabel,
       entries: [
-        {
-          id: "admin-integrations",
-          href: "/admin/integrations",
-          label: navigationMessages.itemIntegrationsLabel,
-          icon: "link"
-        },
-        {
-          id: "admin-release-gates",
-          href: "/admin/ops/release-gates",
-          label: navigationMessages.itemReleaseGatesLabel,
-          icon: "link"
-        }
+        createAccountEntry(
+          "admin-integrations",
+          adminIntegrationsRoute,
+          navigationMessages.itemIntegrationsLabel,
+          "link",
+          navigationMessages.itemIntegrationsDescription,
+          "admin"
+        ),
+        createAccountEntry(
+          "admin-release-gates",
+          adminReleaseGatesRoute,
+          navigationMessages.itemReleaseGatesLabel,
+          "link",
+          navigationMessages.itemReleaseGatesDescription,
+          "admin"
+        )
       ]
     }
   ]);
 }
 
-function resolveAdminMatchPrefixes(groups: ReturnType<typeof buildAdminNavigationGroups>, id: string, fallback: string[]) {
-  return groups.find((group) => group.id === id)?.items.map((item) => item.href) || fallback;
+interface TopbarRegistryOptions {
+  navigationMessages?: AdminNavigationMessages;
+  workspaceMessages?: WorkspaceMessages;
+  workspaceShellMessages?: WorkspaceShellMessages;
+  accountShellMessages?: AccountShellMessages;
+}
+
+function buildRegistryOptions(options: TopbarRegistryOptions) {
+  return {
+    adminNavigation: options.navigationMessages || adminNavigationMessageFallbacks,
+    workspacePage: options.workspaceMessages || workspaceMessageFallbacks,
+    workspaceShell: options.workspaceShellMessages,
+    accountShell: options.accountShellMessages
+  };
 }
 
 export function buildAdminProtectedTopbarConfig(
   navigationMessages: AdminNavigationMessages,
-  topbarMessages: ProtectedTopbarMessages
-): ProtectedTopbarConfig {
-  return {
-    entries: [...buildProtectedWorkbenchHubEntries(navigationMessages), ...buildSharedQuickEntries(topbarMessages)],
-    primaryGroups: buildProtectedWorkbenchPrimaryGroups(navigationMessages),
-    overflowGroupTitles: {
-      primary: navigationMessages.topbarOverflowPrimaryTitle,
-      "related-hubs": navigationMessages.topbarOverflowRelatedTitle,
-      marketplace: navigationMessages.topbarOverflowMarketplaceTitle
+  topbarMessages: ProtectedTopbarMessages,
+  workspaceMessages: WorkspaceMessages = workspaceMessageFallbacks
+) {
+  return buildProtectedTopbarConfigFromRegistry(
+    adminOverviewRoute,
+    buildAdminShellNavigationRegistry(buildRegistryOptions({ navigationMessages, workspaceMessages })),
+    {
+      primaryGroupLabel: navigationMessages.topbarPrimaryGroupLabel,
+      primaryGroupTag: navigationMessages.topbarPrimaryGroupTag,
+      overflowTitle: navigationMessages.topbarOverflowTitle,
+      overflowHint: navigationMessages.topbarOverflowHint,
+      overflowPrimaryTitle: navigationMessages.topbarOverflowPrimaryTitle
     },
-    overflowGroupOrder: ["primary", "related-hubs", "marketplace"],
-    overflowTitle: navigationMessages.topbarOverflowTitle,
-    overflowHint: navigationMessages.topbarOverflowHint,
-    overflowMetricLabels: buildOverflowMetricLabels(topbarMessages)
-  };
+    topbarMessages
+  );
 }
 
 export function buildAccountProtectedTopbarConfig(
   navigationMessages: AdminNavigationMessages,
   shellMessages: AccountShellMessages,
-  topbarMessages: ProtectedTopbarMessages
-): ProtectedTopbarConfig {
-  return {
-    entries: [...buildProtectedWorkbenchHubEntries(navigationMessages), ...buildSharedQuickEntries(topbarMessages)],
-    primaryGroups: buildProtectedWorkbenchPrimaryGroups(navigationMessages),
-    overflowGroupTitles: {
-      primary: navigationMessages.topbarOverflowPrimaryTitle,
-      "related-hubs": navigationMessages.topbarOverflowRelatedTitle,
-      marketplace: navigationMessages.topbarOverflowMarketplaceTitle
+  topbarMessages: ProtectedTopbarMessages,
+  workspaceMessages: WorkspaceMessages = workspaceMessageFallbacks
+) {
+  return buildProtectedTopbarConfigFromRegistry(
+    accountProfileRoute,
+    buildAccountShellNavigationRegistry(
+      buildRegistryOptions({
+        navigationMessages,
+        workspaceMessages,
+        accountShellMessages: shellMessages
+      })
+    ),
+    {
+      primaryGroupLabel: navigationMessages.topbarPrimaryGroupLabel,
+      primaryGroupTag: navigationMessages.topbarPrimaryGroupTag,
+      overflowTitle: shellMessages.topbarOverflowTitle,
+      overflowHint: shellMessages.topbarOverflowHint,
+      overflowPrimaryTitle: navigationMessages.topbarOverflowPrimaryTitle
     },
-    overflowGroupOrder: ["primary", "related-hubs", "marketplace"],
-    overflowTitle: shellMessages.topbarOverflowTitle,
-    overflowHint: shellMessages.topbarOverflowHint,
-    overflowMetricLabels: buildOverflowMetricLabels(topbarMessages)
-  };
+    topbarMessages
+  );
 }
 
 export function buildWorkspaceProtectedTopbarConfig(
-  messages: WorkspaceMessages,
-  topbarMessages: ProtectedTopbarMessages
-): ProtectedTopbarConfig {
-  const workspaceNavigationItems = buildWorkspaceNavigationItems(messages);
-
-  return {
-    entries: [
-      ...workspaceNavigationItems.map((item) => ({
-        id: item.href,
-        href: item.href,
-        label: item.label,
-        description: item.description || item.label,
-        kind: "primary" as const,
-        overflowGroupId: "primary",
-        exactMatch: item.href === "/workspace",
-        matchPrefixes: [item.href]
-      })),
-      {
-        id: "/admin/overview",
-        href: "/admin/overview",
-        label: messages.relatedAdminLabel,
-        description: messages.relatedAdminDescription,
-        kind: "access",
-        overflowGroupId: "system-access",
-        matchPrefixes: ["/admin"]
-      },
-      {
-        id: "/account/profile",
-        href: "/account/profile",
-        label: messages.relatedAccountLabel,
-        description: messages.relatedAccountDescription,
-        kind: "access",
-        overflowGroupId: "system-access",
-        matchPrefixes: ["/account"]
-      },
-      ...buildSharedQuickEntries(topbarMessages)
-    ],
-    primaryGroups: [
-      { id: "protected-primary-group", label: messages.topbarPrimaryGroupLabel, tagLabel: messages.topbarPrimaryGroupTag, kind: "primary" },
-      {
-        id: "protected-access-group",
-        label: messages.topbarSystemAccessGroupLabel,
-        tagLabel: messages.topbarSystemAccessGroupTag,
-        kind: "access"
-      },
-      {
-        id: "protected-quick-group",
-        label: messages.topbarGlobalLinksGroupLabel,
-        tagLabel: messages.topbarGlobalLinksGroupTag,
-        kind: "quick"
-      }
-    ],
-    overflowGroupTitles: {
-      marketplace: messages.topbarOverflowMarketplaceTitle,
-      primary: messages.topbarOverflowAppSectionsTitle,
-      "system-access": messages.topbarOverflowSystemAccessTitle,
-      "related-hubs": messages.topbarOverflowRelatedHubsTitle
+  workspaceMessages: WorkspaceMessages,
+  topbarMessages: ProtectedTopbarMessages,
+  navigationMessages: AdminNavigationMessages = adminNavigationMessageFallbacks
+) {
+  return buildProtectedTopbarConfigFromRegistry(
+    workspaceOverviewRoute,
+    buildWorkspaceShellNavigationRegistry(buildRegistryOptions({ navigationMessages, workspaceMessages })),
+    {
+      primaryGroupLabel: workspaceMessages.topbarPrimaryGroupLabel,
+      primaryGroupTag: workspaceMessages.topbarPrimaryGroupTag,
+      overflowTitle: workspaceMessages.topbarOverflowTitle,
+      overflowHint: workspaceMessages.topbarOverflowHint,
+      overflowPrimaryTitle: workspaceMessages.topbarOverflowAppSectionsTitle
     },
-    overflowGroupOrder: sharedOverflowGroupOrder,
-    overflowTitle: messages.topbarOverflowTitle,
-    overflowHint: messages.topbarOverflowHint,
-    overflowMetricLabels: buildOverflowMetricLabels(topbarMessages)
-  };
+    topbarMessages
+  );
 }

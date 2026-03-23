@@ -1,0 +1,219 @@
+.primaryNav {
+  min-width: 0;
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.primaryShell {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  padding: 3px;
+  border: 1px solid var(--protected-topbar-nav-shell-border);
+  border-radius: 16px;
+  background: var(--protected-topbar-nav-shell-bg);
+  box-shadow: var(--protected-topbar-nav-shell-shadow);
+}
+
+.primaryGroups {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.primaryGroup {
+  position: relative;
+  min-width: 0;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+}
+
+.primaryGroup + .primaryGroup {
+  margin-left: 0;
+  padding-left: 8px;
+}
+
+.primaryGroupLabel {
+  display: none;
+}
+
+.navButton,
+.utilityLink,
+.overflowToggle {
+  min-height: 38px;
+  border: 1px solid var(--protected-shell-border);
+  border-radius: 12px;
+  background: var(--protected-shell-interactive-bg);
+  color: var(--protected-shell-text-secondary);
+  box-shadow: none;
+}
+
+.navButton,
+.utilityLink {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 0 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease;
+}
+
+.navButton::after,
+.utilityLink::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 5px;
+  height: 2px;
+  border-radius: 999px;
+  background: transparent;
+  opacity: 0;
+  transition: opacity 160ms ease, background-color 160ms ease;
+}
+
+.navButtonLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: inherit;
+  min-height: 16px;
+}
+
+.navButton:hover,
+.utilityLink:hover,
+.overflowToggle:hover {
+  border-color: var(--protected-shell-interactive-border-hover);
+  background: var(--protected-topbar-control-bg-hover);
+  color: var(--protected-shell-text);
+  box-shadow: var(--protected-topbar-control-shadow-hover);
+}
+
+.navButtonActive,
+.overflowToggleExpanded {
+  border-color: var(--protected-topbar-control-border-active);
+  background: var(--protected-topbar-control-bg-active);
+  color: var(--protected-topbar-control-text-active);
+  box-shadow: var(--protected-topbar-control-shadow-active);
+}
+
+.navButtonActive::after {
+  background: var(--protected-topbar-control-indicator);
+  opacity: 1;
+}
+
+.overflowToggleGroup {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.overflowToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  gap: 0;
+  padding-inline: 10px;
+  color: var(--protected-topbar-toggle-text);
+  cursor: pointer;
+}
+
+.overflowToggleContent {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.overflowToggleGlyphShell {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overflowTogglePanelIcon,
+.overflowToggleIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.overflowToggleIcon {
+  width: 13px;
+  height: 13px;
+  transition: transform 160ms ease;
+}
+
+.overflowToggleExpanded .overflowToggleIcon {
+  transform: rotate(180deg);
+}
+
+.overflowToggleBadge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--protected-topbar-toggle-badge-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overflowToggleBadgeCount {
+  color: var(--protected-topbar-control-text-active);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.navButton:focus-visible,
+.utilityLink:focus-visible,
+.overflowToggle:focus-visible {
+  outline: 2px solid var(--ui-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1240px) {
+  .utilityLink {
+    display: none;
+  }
+}
+
+@media (max-width: 780px) {
+  .primaryShell {
+    width: 100%;
+  }
+
+  .primaryGroups {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .primaryGroups::-webkit-scrollbar {
+    display: none;
+  }
+}

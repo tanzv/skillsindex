@@ -119,4 +119,12 @@ export function buildKeyMeta(
   ];
 }
 
+export function resolveSelectedAdminAPIKey(items: AdminAPIKeyItem[], selectedKeyId: number | null): AdminAPIKeyItem | null {
+  if (selectedKeyId === null) {
+    return null;
+  }
+
+  return items.find((item) => item.id === selectedKeyId) || null;
+}
+
 export type { AdminApiKeysMessages as AdminAPIKeysMessages };

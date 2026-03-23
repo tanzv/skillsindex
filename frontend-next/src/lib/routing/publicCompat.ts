@@ -1,3 +1,12 @@
+import {
+  canonicalPublicRoutePrefixes,
+  compatibilityPublicRoutePrefixes,
+  publicCompareRoute,
+  publicRankingsRoute,
+  publicResultsRoute,
+  publicSearchRoute
+} from "./publicRouteRegistry";
+
 export interface PublicRoutePrefixState {
   prefix: string;
   corePath: string;
@@ -9,23 +18,6 @@ export interface PublicLinkTarget {
   href: string;
   as?: string;
 }
-
-const canonicalPublicRoutePrefixes = [
-  "/",
-  "/results",
-  "/categories",
-  "/rankings",
-  "/rollout",
-  "/timeline",
-  "/governance",
-  "/docs",
-  "/about",
-  "/login",
-  "/skills",
-  "/states"
-] as const;
-
-const compatibilityPublicRoutePrefixes = ["/search", "/compare"] as const;
 
 function normalizePath(pathname: string): string {
   const trimmed = String(pathname || "").trim();
@@ -205,12 +197,12 @@ export function buildPublicRouteCompatibilityRedirect(pathname: string, search =
   const { prefix, corePath } = splitPublicPathPrefix(pathname);
   const normalizedSearch = normalizeSearch(search);
 
-  if (corePath === "/search") {
-    return `${withPublicPathPrefix(prefix, "/results")}${normalizedSearch}`;
+  if (corePath === publicSearchRoute) {
+    return `${withPublicPathPrefix(prefix, publicResultsRoute)}${normalizedSearch}`;
   }
 
-  if (corePath === "/compare") {
-    return `${withPublicPathPrefix(prefix, "/rankings")}${normalizedSearch}`;
+  if (corePath === publicCompareRoute) {
+    return `${withPublicPathPrefix(prefix, publicRankingsRoute)}${normalizedSearch}`;
   }
 
   return null;

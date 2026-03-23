@@ -1,10 +1,10 @@
 "use client";
 
 import { AdminEmptyBlock } from "@/src/components/admin/AdminPrimitives";
-import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import {
@@ -40,7 +40,13 @@ export function ManualGuidanceCard() {
   );
 }
 
-export function RecentSyncRunsCard({ syncRuns }: { syncRuns: SyncRunItem[] }) {
+export function RecentSyncRunsCard({
+  syncRuns,
+  onOpenDetail
+}: {
+  syncRuns: SyncRunItem[];
+  onOpenDetail?: (runId: number) => void;
+}) {
   const { locale, messages } = useProtectedI18n();
   const ingestionMessages = messages.adminIngestion;
 
@@ -62,29 +68,38 @@ export function RecentSyncRunsCard({ syncRuns }: { syncRuns: SyncRunItem[] }) {
               key={run.id}
               className="rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-bg)] p-4"
             >
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">
-                    {formatProtectedMessage(ingestionMessages.runLabelTemplate, { runId: run.id })}
-                  </span>
-                  <Badge variant={toneForStatus(run.status)}>{resolveIngestionStatusLabel(run.status, ingestionMessages)}</Badge>
-                </div>
-                <div className="flex flex-wrap gap-2 text-xs text-[color:var(--ui-text-secondary)]">
-                  <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
-                    {resolveIngestionTriggerLabel(run.trigger, ingestionMessages)}
-                  </span>
-                  <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
-                    {resolveIngestionScopeLabel(run.scope, ingestionMessages)}
-                  </span>
-                  <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
-                    {formatProtectedMessage(ingestionMessages.syncedCountTemplate, { count: run.synced })}
-                  </span>
-                  <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
-                    {formatProtectedMessage(ingestionMessages.failedCountTemplate, { count: run.failed })}
-                  </span>
-                  <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
-                    {formatAdminIngestionDate(run.startedAt, locale, ingestionMessages.valueNotAvailable)}
-                  </span>
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-semibold text-[color:var(--ui-text-primary)]">
+                        {formatProtectedMessage(ingestionMessages.runLabelTemplate, { runId: run.id })}
+                      </span>
+                      <Badge variant={toneForStatus(run.status)}>{resolveIngestionStatusLabel(run.status, ingestionMessages)}</Badge>
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs text-[color:var(--ui-text-secondary)]">
+                      <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
+                        {resolveIngestionTriggerLabel(run.trigger, ingestionMessages)}
+                      </span>
+                      <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
+                        {resolveIngestionScopeLabel(run.scope, ingestionMessages)}
+                      </span>
+                      <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
+                        {formatProtectedMessage(ingestionMessages.syncedCountTemplate, { count: run.synced })}
+                      </span>
+                      <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
+                        {formatProtectedMessage(ingestionMessages.failedCountTemplate, { count: run.failed })}
+                      </span>
+                      <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
+                        {formatAdminIngestionDate(run.startedAt, locale, ingestionMessages.valueNotAvailable)}
+                      </span>
+                    </div>
+                  </div>
+                  {onOpenDetail ? (
+                    <Button size="sm" variant="outline" onClick={() => onOpenDetail(run.id)}>
+                      {ingestionMessages.openDetailAction}
+                    </Button>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -100,11 +115,13 @@ export function RecentSyncRunsCard({ syncRuns }: { syncRuns: SyncRunItem[] }) {
 export function ImportJobsCard({
   jobs,
   busyAction,
-  onRunJobAction
+  onRunJobAction,
+  onOpenDetail
 }: {
   jobs: ImportJobItem[];
   busyAction: string;
   onRunJobAction: (jobId: number, action: "retry" | "cancel") => void;
+  onOpenDetail?: (jobId: number) => void;
 }) {
   const { locale, messages } = useProtectedI18n();
   const ingestionMessages = messages.adminIngestion;
@@ -137,6 +154,11 @@ export function ImportJobsCard({
                     <Badge variant={toneForStatus(job.status)}>{resolveIngestionStatusLabel(job.status, ingestionMessages)}</Badge>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    {onOpenDetail ? (
+                      <Button size="sm" variant="outline" onClick={() => onOpenDetail(job.id)}>
+                        {ingestionMessages.openDetailAction}
+                      </Button>
+                    ) : null}
                     {canRetryImportJob(job) ? (
                       <Button size="sm" variant="outline" onClick={() => onRunJobAction(job.id, "retry")} disabled={Boolean(busyAction)}>
                         {busyAction === `retry-${job.id}` ? ingestionMessages.retryingAction : ingestionMessages.retryAction}

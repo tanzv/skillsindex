@@ -1,23 +1,31 @@
 import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
+import { publicGovernanceRoute } from "@/src/lib/routing/publicRouteRegistry";
+import {
+  accountProfileRoute,
+  adminOverviewRoute,
+  marketplaceHomeRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
+import {
+  listWorkspaceRouteEntries,
+  resolveWorkspaceNavigationDescription,
+  resolveWorkspaceNavigationLabel
+} from "@/src/lib/routing/workspaceRouteMeta";
 
 import type { NavigationLink } from "./adminNavigation";
 
 export function buildWorkspaceNavigationItems(messages: WorkspaceMessages): NavigationLink[] {
-  return [
-    { href: "/workspace", label: messages.navOverviewLabel, description: messages.navOverviewDescription },
-    { href: "/workspace/activity", label: messages.navActivityLabel, description: messages.navActivityDescription },
-    { href: "/workspace/queue", label: messages.navQueueLabel, description: messages.navQueueDescription },
-    { href: "/workspace/policy", label: messages.navPolicyLabel, description: messages.navPolicyDescription },
-    { href: "/workspace/runbook", label: messages.navRunbookLabel, description: messages.navRunbookDescription },
-    { href: "/workspace/actions", label: messages.navActionsLabel, description: messages.navActionsDescription }
-  ];
+  return listWorkspaceRouteEntries().map((route) => ({
+    href: route,
+    label: resolveWorkspaceNavigationLabel(route, messages),
+    description: resolveWorkspaceNavigationDescription(route, messages)
+  }));
 }
 
 export function buildWorkspaceRelatedLinks(messages: WorkspaceMessages): NavigationLink[] {
   return [
-    { href: "/", label: messages.relatedMarketplaceLabel, description: messages.relatedMarketplaceDescription },
-    { href: "/admin/overview", label: messages.relatedAdminLabel, description: messages.relatedAdminDescription },
-    { href: "/account/profile", label: messages.relatedAccountLabel, description: messages.relatedAccountDescription },
-    { href: "/governance", label: messages.relatedGovernanceLabel, description: messages.relatedGovernanceDescription }
+    { href: marketplaceHomeRoute, label: messages.relatedMarketplaceLabel, description: messages.relatedMarketplaceDescription },
+    { href: adminOverviewRoute, label: messages.relatedAdminLabel, description: messages.relatedAdminDescription },
+    { href: accountProfileRoute, label: messages.relatedAccountLabel, description: messages.relatedAccountDescription },
+    { href: publicGovernanceRoute, label: messages.relatedGovernanceLabel, description: messages.relatedGovernanceDescription }
   ];
 }

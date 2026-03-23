@@ -1,9 +1,11 @@
+import { workspaceOverviewRoute } from "../routing/protectedSurfaceLinks";
 import { isProtectedRoute } from "../routing/routes";
+import { publicAnonymousRoutePrefixes, publicLoginRoute } from "../routing/publicRouteRegistry";
 
 export const sessionCookieName = "skillsindex_session";
-export const defaultAuthenticatedRedirect = "/workspace";
+export const defaultAuthenticatedRedirect = workspaceOverviewRoute;
 
-const anonymousRoutePrefixes = ["/", "/search", "/results", "/categories", "/skills", "/compare", "/rankings", "/rollout", "/timeline", "/governance", "/states", "/docs", "/login", "/about"];
+const anonymousRoutePrefixes = publicAnonymousRoutePrefixes;
 const internalBypassPrefixes = ["/_next", "/api/bff", "/favicon.ico", "/robots.txt", "/sitemap.xml"];
 
 function parseCookieHeader(headers: Headers): Map<string, string> {
@@ -59,5 +61,5 @@ export function shouldAllowAnonymousAccess(pathname: string): boolean {
 }
 
 export function shouldRedirectAuthenticatedUser(pathname: string): boolean {
-  return pathname === "/login";
+  return pathname === publicLoginRoute;
 }

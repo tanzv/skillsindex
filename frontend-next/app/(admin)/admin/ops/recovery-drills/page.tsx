@@ -1,5 +1,5 @@
-import { renderAdminRoute } from "@/src/features/admin/renderAdminRoute";
+import { renderAdminPageRoute } from "@/src/features/admin/adminRouteEntry";
 
 export default async function AdminOpsRecoveryDrillsPage() {
-  return renderAdminRoute("/admin/ops/recovery-drills");
+  return renderAdminPageRoute("/admin/ops/recovery-drills");
 }

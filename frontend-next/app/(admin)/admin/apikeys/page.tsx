@@ -1,5 +1,5 @@
-import { renderAdminRoute } from "@/src/features/admin/renderAdminRoute";
+import { renderAdminPageRoute } from "@/src/features/admin/adminRouteEntry";
 
 export default async function AdminAPIKeysPage() {
-  return renderAdminRoute("/admin/apikeys");
+  return renderAdminPageRoute("/admin/apikeys");
 }

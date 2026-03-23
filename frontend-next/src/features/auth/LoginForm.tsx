@@ -1,12 +1,16 @@
 "use client";
 
 import { Globe2, Languages, MoonStar, SunMedium } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useMemo, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 
+import { resolveBrandWordmarkAlt, resolveBrandWordmarkSrc } from "@/src/components/shared/brandWordmark";
+import { useThemeAwareFavicon } from "@/src/components/shared/themeAwareFavicon";
 import { LoginCredentialsCard } from "@/src/features/auth/LoginCredentialsCard";
 import { resolveLoginErrorMessage } from "@/src/features/auth/loginErrorMessage";
 import { LoginInfoPanel } from "@/src/features/auth/LoginInfoPanel";
+import type { LoginInfoPanelModel } from "@/src/features/auth/loginInfoPanelModel";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import type { PublicAuthMessages } from "@/src/lib/i18n/publicAuthMessages";
 import {
@@ -14,13 +18,15 @@ import {
   publicLocaleStorageKey,
   type PublicLocale
 } from "@/src/lib/i18n/publicLocale";
+import { workspaceOverviewRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 import { cn } from "@/src/lib/utils";
 
-import styles from "./LoginForm.module.css";
+import styles from "./LoginForm.module.scss";
 
 interface LoginFormProps {
   redirectTarget: string;
   initialLocale: PublicLocale;
+  infoPanelModel: LoginInfoPanelModel;
   messages: PublicAuthMessages;
 }
 
@@ -34,7 +40,7 @@ interface LoginResponse {
 
 type LoginTheme = "dark" | "light";
 
-export function LoginForm({ redirectTarget, initialLocale, messages }: LoginFormProps) {
+export function LoginForm({ redirectTarget, initialLocale, infoPanelModel, messages }: LoginFormProps) {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -49,21 +55,14 @@ export function LoginForm({ redirectTarget, initialLocale, messages }: LoginForm
     height: typeof window === "undefined" ? 1160 : window.innerHeight
   }));
 
-  const safeRedirectTarget = useMemo(() => {
-    if (!redirectTarget.startsWith("/") || redirectTarget.startsWith("//")) {
-      return "/workspace";
-    }
-
-    return redirectTarget;
-  }, [redirectTarget]);
-
-  const infoItems = useMemo(
-    () => [messages.infoPointOne, messages.infoPointTwo, messages.infoPointThree],
-    [messages.infoPointOne, messages.infoPointThree, messages.infoPointTwo]
-  );
+  const safeRedirectTarget =
+    redirectTarget.startsWith("/") && !redirectTarget.startsWith("//") ? redirectTarget : workspaceOverviewRoute;
   const locale = requestedLocale === null || requestedLocale === initialLocale ? initialLocale : requestedLocale;
   const isVisualBaselineViewport = viewport.width === 512 && viewport.height === 342;
   const visualScale = isVisualBaselineViewport ? viewport.width / 1440 : 1;
+  const wordmarkSrc = resolveBrandWordmarkSrc(theme === "light");
+
+  useThemeAwareFavicon(theme);
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -133,7 +132,13 @@ export function LoginForm({ redirectTarget, initialLocale, messages }: LoginForm
         >
           <header className={styles.topbar} data-testid="login-topbar">
             <div className={styles.topbarBrand}>
-              <span className={styles.topbarBrandMark} aria-hidden="true" />
+              <Image
+                src={wordmarkSrc}
+                alt={resolveBrandWordmarkAlt(messages.brandText)}
+                width={560}
+                height={72}
+                className={styles.topbarBrandWordmark}
+              />
               <span className={styles.topbarBrandText}>{messages.brandText}</span>
             </div>
             <div className={styles.topbarControls}>
@@ -187,17 +192,13 @@ export function LoginForm({ redirectTarget, initialLocale, messages }: LoginForm
 
           <section className={styles.layout}>
             <aside className={styles.infoPanel}>
-              <LoginInfoPanel
-                eyebrow={messages.infoEyebrow}
-                title={messages.infoTitle}
-                lead={messages.infoLead}
-                items={infoItems}
-              />
+              <LoginInfoPanel model={infoPanelModel} />
             </aside>
 
             <section className={styles.formCard}>
               <LoginCredentialsCard
                 messages={messages}
+                theme={theme}
                 username={username}
                 password={password}
                 showPassword={showPassword}

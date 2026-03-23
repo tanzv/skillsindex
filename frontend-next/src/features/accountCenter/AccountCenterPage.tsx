@@ -6,6 +6,7 @@ import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nPro
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { resolveAccountRoleLabel, resolveAccountStatusLabel } from "@/src/lib/accountDisplay";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
+import { resolveAccountRouteMeta } from "@/src/lib/routing/accountRouteMeta";
 
 import {
   buildAccountAPIKeyCreateDraft,
@@ -23,11 +24,14 @@ import {
   sanitizeAccountAPIKeyCreateDraft,
   sanitizeAccountProfileDraft
 } from "./model";
+import { hasRequiredAccountRouteData, loadAccountRouteData } from "./accountRouteDataLoader";
+import { AccountPageLoadStateFrame, resolveAccountPageLoadState } from "./accountPageLoadState";
 import { AccountCenterContent } from "./AccountCenterContent";
 
 export function AccountCenterPage({ route }: { route: AccountRoute }) {
   const { messages } = useProtectedI18n();
   const accountMessages = messages.accountCenter;
+  const routeMeta = useMemo(() => resolveAccountRouteMeta(route, accountMessages), [accountMessages, route]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -81,8 +85,14 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
         label: accountMessages.metricStatus,
         value: resolveAccountStatusLabel(profilePayload?.user.status || "", accountDisplayMessages)
       },
-      { label: accountMessages.metricSessions, value: String(sessionsPayload?.total || 0) },
-      { label: accountMessages.metricCredentials, value: String(credentialsPayload?.total || 0) },
+      {
+        label: accountMessages.metricSessions,
+        value: sessionsPayload ? String(sessionsPayload.total) : accountMessages.valueNotAvailable
+      },
+      {
+        label: accountMessages.metricCredentials,
+        value: credentialsPayload ? String(credentialsPayload.total) : accountMessages.valueNotAvailable
+      },
       { label: accountMessages.metricCompleteness, value: `${completeness}%` }
     ],
     [
@@ -92,39 +102,46 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       accountMessages.metricRole,
       accountMessages.metricSessions,
       accountMessages.metricStatus,
+      accountMessages.valueNotAvailable,
       completeness,
-      credentialsPayload?.total,
       profilePayload?.user.role,
       profilePayload?.user.status,
-      sessionsPayload?.total
+      credentialsPayload,
+      sessionsPayload
     ]
   );
 
-  const loadAll = useCallback(async () => {
+  const loadRouteData = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const [profile, sessions, credentials] = await Promise.all([
-        clientFetchJSON<AccountProfilePayload>("/api/bff/account/profile"),
-        clientFetchJSON<AccountSessionsPayload>("/api/bff/account/sessions"),
-        clientFetchJSON<AccountAPIKeysPayload>("/api/bff/account/apikeys")
-      ]);
-      setProfilePayload(profile);
-      setSessionsPayload(sessions);
-      setCredentialsPayload(credentials);
-      setProfileDraft(buildAccountProfileDraft(profile));
-      setCredentialDraft(buildAccountAPIKeyCreateDraft(credentials));
-      setCredentialScopeDrafts(buildAccountAPIKeyScopeDrafts(credentials));
+      const snapshot = await loadAccountRouteData(route, clientFetchJSON);
+      setProfilePayload(snapshot.profilePayload);
+      setSessionsPayload(snapshot.sessionsPayload);
+      setCredentialsPayload(snapshot.credentialsPayload);
+      setProfileDraft(buildAccountProfileDraft(snapshot.profilePayload));
+      setCredentialDraft(buildAccountAPIKeyCreateDraft(snapshot.credentialsPayload));
+      setCredentialScopeDrafts(buildAccountAPIKeyScopeDrafts(snapshot.credentialsPayload));
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : accountMessages.loadError);
     } finally {
       setLoading(false);
     }
-  }, [accountMessages.loadError]);
+  }, [accountMessages.loadError, route]);
 
   useEffect(() => {
-    void loadAll();
-  }, [loadAll]);
+    void loadRouteData();
+  }, [loadRouteData]);
+
+  const loadState = resolveAccountPageLoadState({
+    loading,
+    error,
+    hasData: hasRequiredAccountRouteData(route, {
+      profilePayload,
+      sessionsPayload,
+      credentialsPayload
+    })
+  });
 
   function clearFeedback() {
     setError("");
@@ -141,7 +158,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
         body: sanitizeAccountProfileDraft(profileDraft)
       });
       setMessage(accountMessages.profileSaveSuccess);
-      await loadAll();
+      await loadRouteData();
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : accountMessages.profileSaveError);
     } finally {
@@ -167,7 +184,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       });
       setPasswordDraft({ currentPassword: "", newPassword: "", revokeOthers: false });
       setMessage(accountMessages.passwordSaveSuccess);
-      await loadAll();
+      await loadRouteData();
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : accountMessages.passwordSaveError);
     } finally {
@@ -181,7 +198,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     try {
       await clientFetchJSON(`/api/bff/account/sessions/${encodeURIComponent(sessionId)}/revoke`, { method: "POST" });
       setMessage(formatProtectedMessage(accountMessages.revokeSessionSuccess, { sessionId }));
-      await loadAll();
+      await loadRouteData();
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : accountMessages.revokeSessionError);
     } finally {
@@ -195,7 +212,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     try {
       await clientFetchJSON("/api/bff/account/sessions/revoke-others", { method: "POST" });
       setMessage(accountMessages.revokeOtherSessionsSuccess);
-      await loadAll();
+      await loadRouteData();
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : accountMessages.revokeOtherSessionsError);
     } finally {
@@ -213,7 +230,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       });
       setLatestCredentialSecret({ action: "created", name: payload.item.name, plaintextKey: payload.plaintext_key });
       setMessage(accountMessages.credentialCreateSuccess);
-      await loadAll();
+      await loadRouteData();
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : accountMessages.credentialCreateError);
     } finally {
@@ -230,7 +247,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       });
       setLatestCredentialSecret({ action: "rotated", name: payload.item.name, plaintextKey: payload.plaintext_key });
       setMessage(formatProtectedMessage(accountMessages.credentialRotateSuccess, { keyId }));
-      await loadAll();
+      await loadRouteData();
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : accountMessages.credentialRotateError);
     } finally {
@@ -244,7 +261,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     try {
       await clientFetchJSON(`/api/bff/account/apikeys/${keyId}/revoke`, { method: "POST" });
       setMessage(formatProtectedMessage(accountMessages.credentialRevokeSuccess, { keyId }));
-      await loadAll();
+      await loadRouteData();
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : accountMessages.credentialRevokeError);
     } finally {
@@ -261,12 +278,33 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
         body: { scopes: credentialScopeDrafts[keyId] || [] }
       });
       setMessage(formatProtectedMessage(accountMessages.credentialScopesSaveSuccess, { keyId }));
-      await loadAll();
+      await loadRouteData();
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : accountMessages.credentialScopesSaveError);
     } finally {
       setSaving(false);
     }
+  }
+
+  if (loadState !== "ready") {
+    return (
+      <AccountPageLoadStateFrame
+        eyebrow={routeMeta.kicker}
+        title={accountMessages.pageTitle}
+        description={routeMeta.description}
+        error={loadState === "error" ? error : undefined}
+        actions={
+          <button
+            type="button"
+            className="account-center-action is-primary"
+            onClick={() => void loadRouteData()}
+            disabled={loading || saving}
+          >
+            {loading ? accountMessages.refreshingAction : accountMessages.refreshAction}
+          </button>
+        }
+      />
+    );
   }
 
   return (
@@ -285,7 +323,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       credentialScopeDrafts={credentialScopeDrafts}
       latestCredentialSecret={latestCredentialSecret}
       passwordDraft={passwordDraft}
-      onRefresh={() => void loadAll()}
+      onRefresh={() => void loadRouteData()}
       onProfileDraftChange={(patch) => setProfileDraft((current) => ({ ...current, ...patch }))}
       onPasswordDraftChange={(patch) => setPasswordDraft((current) => ({ ...current, ...patch }))}
       onCredentialDraftChange={(patch) => setCredentialDraft((current) => ({ ...current, ...patch }))}

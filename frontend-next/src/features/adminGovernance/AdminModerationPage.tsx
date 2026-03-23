@@ -2,22 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { AdminMessageBanner, AdminMetricGrid } from "@/src/components/admin/AdminPrimitives";
-import { ErrorState } from "@/src/components/shared/ErrorState";
-import { PageHeader } from "@/src/components/shared/PageHeader";
+import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
+import { useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
-import {
-  CreateModerationCaseCard,
-  ModerationDispositionCard,
-  ModerationFiltersCard,
-  type ModerationQueryState,
-  ModerationQueueCard,
-  SelectedModerationCaseCard
-} from "./AdminModerationPanels";
+import { AdminModerationContent } from "./AdminModerationContent";
+import type { CreateModerationDraft, ResolveModerationDraft } from "./AdminModerationForms";
+import { type ModerationQueryState } from "./AdminModerationPanels";
 import { buildModerationOverview, normalizeModerationCasesPayload } from "./moderationModel";
 
 function buildPath(query: ModerationQueryState) {
@@ -33,16 +27,16 @@ function buildPath(query: ModerationQueryState) {
 
 export function AdminModerationPage() {
   const { messages } = useProtectedI18n();
-  const commonMessages = messages.adminCommon;
   const moderationMessages = messages.adminModeration;
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [selectedCaseId, setSelectedCaseId] = useState(0);
+  const { overlay, openOverlay, closeOverlay } = useAdminOverlayState<"moderationCreate" | "moderationDetail">();
   const [query, setQuery] = useState<ModerationQueryState>({ status: "", target_type: "", reason_code: "" });
   const [rawPayload, setRawPayload] = useState<unknown>(null);
-  const [createDraft, setCreateDraft] = useState({
+  const [createDraft, setCreateDraft] = useState<CreateModerationDraft>({
     reporterUserId: "",
     targetType: "skill",
     skillId: "",
@@ -50,7 +44,7 @@ export function AdminModerationPage() {
     reasonCode: "",
     reasonDetail: ""
   });
-  const [resolveDraft, setResolveDraft] = useState({ action: "flagged", resolutionNote: "", rejectionNote: "" });
+  const [resolveDraft, setResolveDraft] = useState<ResolveModerationDraft>({ action: "flagged", resolutionNote: "", rejectionNote: "" });
 
   const payload = useMemo(
     () =>
@@ -101,6 +95,14 @@ export function AdminModerationPage() {
     void loadData();
   }, [loadData]);
 
+  const loadState = resolveAdminPageLoadState({ loading, error, hasData: rawPayload !== null });
+
+  useEffect(() => {
+    if (!selectedCase && overlay?.entity === "moderationDetail") {
+      closeOverlay();
+    }
+  }, [closeOverlay, overlay, selectedCase]);
+
   async function createCase() {
     if (!createDraft.reasonCode.trim()) {
       setError(moderationMessages.createReasonRequiredError);
@@ -129,6 +131,7 @@ export function AdminModerationPage() {
         reasonCode: "",
         reasonDetail: ""
       });
+      closeOverlay();
       setMessage(moderationMessages.createSuccess);
       await loadData();
     } catch (actionError) {
@@ -189,54 +192,48 @@ export function AdminModerationPage() {
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow={commonMessages.adminEyebrow}
+  if (loadState !== "ready") {
+    return (
+      <AdminPageLoadStateFrame
+        eyebrow={messages.adminCommon.adminEyebrow}
         title={moderationMessages.pageTitle}
         description={moderationMessages.pageDescription}
-        actions={
-          <>
-        <Button variant="outline" onClick={() => setQuery({ status: "", target_type: "", reason_code: "" })}>
-              {moderationMessages.resetFilters}
-            </Button>
-            <Button onClick={() => void loadData()} disabled={loading}>
-              {loading ? commonMessages.refreshing : commonMessages.refresh}
-            </Button>
-          </>
-        }
+        error={loadState === "error" ? error : undefined}
+        actions={<Button onClick={() => void loadData()}>{loading ? messages.adminCommon.refreshing : messages.adminCommon.refresh}</Button>}
       />
+    );
+  }
 
-      <AdminMetricGrid metrics={overview.metrics} />
-
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="space-y-6">
-          <ModerationFiltersCard query={query} onQueryChange={(patch) => setQuery((current) => ({ ...current, ...patch }))} />
-
-          {error ? <ErrorState description={error} /> : null}
-          {message ? <AdminMessageBanner message={message} /> : null}
-
-          <ModerationQueueCard payload={payload} loading={loading} selectedCase={selectedCase} onSelectCase={setSelectedCaseId} />
-        </div>
-
-        <div className="space-y-6">
-          <SelectedModerationCaseCard selectedCase={selectedCase} reasonSummary={overview.reasonSummary} />
-          <CreateModerationCaseCard
-            createDraft={createDraft}
-            busyAction={busyAction}
-            onCreateDraftChange={(patch) => setCreateDraft((current) => ({ ...current, ...patch }))}
-            onCreateCase={() => void createCase()}
-          />
-          <ModerationDispositionCard
-            resolveDraft={resolveDraft}
-            busyAction={busyAction}
-            selectedCase={selectedCase}
-            onResolveDraftChange={(patch) => setResolveDraft((current) => ({ ...current, ...patch }))}
-            onResolveCase={() => void resolveCase()}
-            onRejectCase={() => void rejectCase()}
-          />
-        </div>
-      </div>
-    </div>
+  return (
+    <AdminModerationContent
+      loading={loading}
+      busyAction={busyAction}
+      error={error}
+      message={message}
+      metrics={overview.metrics}
+      payload={payload}
+      selectedCase={selectedCase}
+      reasonSummary={overview.reasonSummary}
+      query={query}
+      createDraft={createDraft}
+      resolveDraft={resolveDraft}
+      createDrawerOpen={overlay?.entity === "moderationCreate"}
+      detailDrawerOpen={overlay?.entity === "moderationDetail"}
+      onRefresh={() => void loadData()}
+      onResetFilters={() => setQuery({ status: "", target_type: "", reason_code: "" })}
+      onQueryChange={(patch) => setQuery((current) => ({ ...current, ...patch }))}
+      onOpenCreateDrawer={() => openOverlay({ kind: "create", entity: "moderationCreate" })}
+      onCloseCreateDrawer={closeOverlay}
+      onOpenCaseDetail={(caseId) => {
+        setSelectedCaseId(caseId);
+        openOverlay({ kind: "detail", entity: "moderationDetail", entityId: caseId });
+      }}
+      onCloseCaseDetail={closeOverlay}
+      onCreateDraftChange={(patch) => setCreateDraft((current) => ({ ...current, ...patch }))}
+      onResolveDraftChange={(patch) => setResolveDraft((current) => ({ ...current, ...patch }))}
+      onCreateCase={() => void createCase()}
+      onResolveCase={() => void resolveCase()}
+      onRejectCase={() => void rejectCase()}
+    />
   );
 }

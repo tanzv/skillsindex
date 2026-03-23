@@ -3,16 +3,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AdminEmptyBlock, AdminInsetBlock, AdminMessageBanner, AdminMetricGrid, AdminRecordCard } from "@/src/components/admin/AdminPrimitives";
-import { ErrorState } from "@/src/components/shared/ErrorState";
+import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
 import { PageHeader } from "@/src/components/shared/PageHeader";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveAdminOperationsDashboardRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 
 import {
-  type AdminOperationsRoute,
+  type AdminOperationsDashboardRoute,
   buildOpsAlertsOverview,
   buildOpsMetricCards,
   buildOpsReleaseGatesOverview,
@@ -31,39 +32,6 @@ import {
   resolveReleaseGateBadgeLabel,
   resolveReleaseGateCodeLabel
 } from "./display";
-
-type OperationsDashboardRoute = Extract<
-  AdminOperationsRoute,
-  "/admin/ops/metrics" | "/admin/ops/alerts" | "/admin/ops/release-gates"
->;
-
-function resolveDashboardRouteMeta(
-  route: OperationsDashboardRoute,
-  messages: ReturnType<typeof useProtectedI18n>["messages"]["adminOperations"]
-) {
-  switch (route) {
-    case "/admin/ops/alerts":
-      return {
-        title: messages.routeAlertsTitle,
-        description: messages.routeAlertsDescription,
-        endpoint: "/api/bff/admin/ops/alerts"
-      };
-    case "/admin/ops/release-gates":
-      return {
-        title: messages.routeReleaseGatesTitle,
-        description: messages.routeReleaseGatesDescription,
-        endpoint: "/api/bff/admin/ops/release-gates",
-        runEndpoint: "/api/bff/admin/ops/release-gates/run"
-      };
-    case "/admin/ops/metrics":
-    default:
-      return {
-        title: messages.routeMetricsTitle,
-        description: messages.routeMetricsDescription,
-        endpoint: "/api/bff/admin/ops/metrics"
-      };
-  }
-}
 
 function severityClasses(severity: string) {
   const normalized = severity.toLowerCase();
@@ -94,11 +62,11 @@ function formatMetricSeverity(
   }
 }
 
-export function AdminOperationsPage({ route }: { route: OperationsDashboardRoute }) {
+export function AdminOperationsPage({ route }: { route: AdminOperationsDashboardRoute }) {
   const { locale, messages } = useProtectedI18n();
   const commonMessages = messages.adminCommon;
   const operationsMessages = messages.adminOperations;
-  const meta = useMemo(() => resolveDashboardRouteMeta(route, operationsMessages), [operationsMessages, route]);
+  const meta = useMemo(() => resolveAdminOperationsDashboardRouteMeta(route, operationsMessages), [operationsMessages, route]);
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
@@ -135,6 +103,8 @@ export function AdminOperationsPage({ route }: { route: OperationsDashboardRoute
   useEffect(() => {
     void loadData();
   }, [loadData]);
+
+  const loadState = resolveAdminPageLoadState({ loading, error, hasData: rawPayload !== null });
 
   async function runReleaseGates() {
     if (!meta.runEndpoint) {
@@ -188,6 +158,18 @@ export function AdminOperationsPage({ route }: { route: OperationsDashboardRoute
       })
     : null;
 
+  if (loadState !== "ready") {
+    return (
+      <AdminPageLoadStateFrame
+        eyebrow={commonMessages.adminEyebrow}
+        title={meta.title}
+        description={meta.description}
+        error={loadState === "error" ? error : undefined}
+        actions={<Button onClick={() => void loadData()}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -205,8 +187,6 @@ export function AdminOperationsPage({ route }: { route: OperationsDashboardRoute
           </>
         }
       />
-
-      {error ? <ErrorState description={error} /> : null}
       {message ? <AdminMessageBanner message={message} /> : null}
 
       {route === "/admin/ops/metrics" ? (

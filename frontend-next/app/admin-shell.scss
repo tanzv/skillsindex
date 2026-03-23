@@ -1,0 +1,69 @@
+.admin-shell-root {
+  --protected-shell-sidebar-width: 304px;
+  --admin-shell-panel-bg: var(--ui-card-bg);
+  --admin-shell-panel-border: var(--ui-border);
+  --admin-shell-panel-shadow: none;
+  --admin-shell-link-bg: var(--ui-card-bg);
+  --admin-shell-link-bg-hover: color-mix(in srgb, var(--ui-card-muted-bg) 56%, var(--ui-card-bg) 44%);
+  --admin-shell-link-bg-active: color-mix(in srgb, var(--ui-card-highlight-bg) 28%, var(--ui-card-bg) 72%);
+  --admin-shell-link-border: var(--ui-border);
+  --admin-shell-link-border-hover: var(--ui-border-strong);
+  --admin-shell-link-border-active: var(--ui-info-border);
+  --admin-shell-link-note: var(--ui-text-muted);
+  --protected-sidebar-panel-bg: var(--admin-shell-panel-bg);
+  --protected-sidebar-panel-border: var(--admin-shell-panel-border);
+  --protected-sidebar-panel-shadow: var(--admin-shell-panel-shadow);
+  --protected-sidebar-title-color: var(--admin-shell-text-muted);
+  --protected-sidebar-copy-color: var(--admin-shell-text-secondary);
+  --protected-sidebar-group-title-color: var(--ui-text-muted);
+  --protected-sidebar-link-bg: var(--admin-shell-link-bg);
+  --protected-sidebar-link-bg-hover: var(--admin-shell-link-bg-hover);
+  --protected-sidebar-link-bg-active: var(--admin-shell-link-bg-active);
+  --protected-sidebar-link-text: var(--admin-shell-text-secondary);
+  --protected-sidebar-link-text-active: var(--admin-shell-text);
+  --protected-sidebar-link-divider: var(--admin-shell-link-border);
+  --protected-sidebar-link-note: var(--admin-shell-link-note);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, var(--protected-shell-hero-primary), transparent 28%),
+    radial-gradient(circle at 78% 0%, var(--protected-shell-hero-secondary), transparent 24%),
+    linear-gradient(180deg, var(--protected-shell-hero-start) 0%, var(--admin-shell-bg-alt) 26%, var(--admin-shell-bg) 100%);
+  color: var(--admin-shell-text);
+}
+
+.admin-shell-user-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-shell-chip {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 1px solid var(--admin-shell-border);
+  border-radius: 11px;
+  background: var(--protected-shell-chip-bg);
+  color: var(--admin-shell-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    color 120ms ease;
+
+  &.is-primary {
+    border-color: var(--protected-shell-chip-accent-border);
+    background: var(--protected-shell-chip-accent-bg);
+    color: var(--admin-shell-text);
+  }
+
+  &.is-mono {
+    font-family: "JetBrains Mono", monospace;
+  }
+}

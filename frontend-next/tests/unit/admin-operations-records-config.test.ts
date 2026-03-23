@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { buildCreatePayload, getOperationsRecordsRouteMeta, getRecordsFormFields } from "@/src/features/adminOperations/recordsConfig";
+import { buildCreatePayload, getRecordsFormFields } from "@/src/features/adminOperations/records-config";
+import { resolveAdminOperationsRecordsRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 import { createProtectedPageTestMessages } from "./protected-page-test-messages";
 
 const operationsMessages = createProtectedPageTestMessages({
@@ -48,14 +49,14 @@ describe("admin operations records config", () => {
   });
 
   it("builds route meta with localized labels and endpoints", () => {
-    expect(getOperationsRecordsRouteMeta("/admin/ops/recovery-drills", operationsMessages)).toEqual({
+    expect(resolveAdminOperationsRecordsRouteMeta("/admin/ops/recovery-drills", operationsMessages)).toEqual({
       title: "Recovery Drills",
       description: "Track recovery validation runs.",
       endpoint: "/api/bff/admin/ops/recovery-drills",
       createEndpoint: "/api/bff/admin/ops/recovery-drills/run"
     });
 
-    expect(getOperationsRecordsRouteMeta("/admin/ops/backup/plans", operationsMessages)).toEqual({
+    expect(resolveAdminOperationsRecordsRouteMeta("/admin/ops/backup/plans", operationsMessages)).toEqual({
       title: "Backup Plans",
       description: "Manage backup plans.",
       endpoint: "/api/bff/admin/ops/backup/plans",
@@ -96,6 +97,25 @@ describe("admin operations records config", () => {
       retention_days: 45,
       enabled: true,
       note: "Retain evidence"
+    });
+  });
+
+  it("derives empty create payload defaults from the shared field contract", () => {
+    expect(buildCreatePayload("/admin/ops/releases", {})).toEqual({
+      version: "",
+      environment: "production",
+      change_ticket: "",
+      status: "success",
+      note: ""
+    });
+
+    expect(buildCreatePayload("/admin/ops/backup/plans", {})).toEqual({
+      plan_key: "",
+      backup_type: "full",
+      schedule: "",
+      retention_days: 0,
+      enabled: false,
+      note: ""
     });
   });
 });

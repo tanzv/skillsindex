@@ -78,6 +78,8 @@ export interface AdminNavigationMessages {
   groupOperationsLabel: string;
   groupUsersLabel: string;
   groupSecurityLabel: string;
+  moduleAdministrationLabel: string;
+  moduleAdministrationDescription: string;
   hubWorkspaceLabel: string;
   hubWorkspaceDescription: string;
   hubAccountLabel: string;

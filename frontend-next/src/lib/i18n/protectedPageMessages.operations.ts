@@ -90,8 +90,14 @@ export interface AdminOperationsMessages {
   ledgerTitleSuffix: string;
   ledgerDescription: string;
   noRecords: string;
+  openRecordEntryAction: string;
+  openRecordDetailAction: string;
   recordEntryTitle: string;
   recordEntryDescription: string;
+  recordDetailTitle: string;
+  recordDetailDescription: string;
+  rawRecordDetailTitle: string;
+  closePanelAction: string;
   saveRecordAction: string;
   savingRecordAction: string;
   endpointStatusTitle: string;
@@ -258,8 +264,14 @@ export const adminOperationsMessageKeyMap = {
   ledgerTitleSuffix: "admin_operations_ledger_title_suffix",
   ledgerDescription: "admin_operations_ledger_description",
   noRecords: "admin_operations_no_records",
+  openRecordEntryAction: "admin_operations_open_record_entry_action",
+  openRecordDetailAction: "admin_operations_open_record_detail_action",
   recordEntryTitle: "admin_operations_record_entry_title",
   recordEntryDescription: "admin_operations_record_entry_description",
+  recordDetailTitle: "admin_operations_record_detail_title",
+  recordDetailDescription: "admin_operations_record_detail_description",
+  rawRecordDetailTitle: "admin_operations_raw_record_detail_title",
+  closePanelAction: "admin_operations_close_panel_action",
   saveRecordAction: "admin_operations_save_record_action",
   savingRecordAction: "admin_operations_saving_record_action",
   endpointStatusTitle: "admin_operations_endpoint_status_title",

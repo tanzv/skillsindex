@@ -11,7 +11,7 @@ import type {
   OpsReleaseGateCheckItem,
   OpsReleaseItem
 } from "./types";
-import type { RecordsRoute } from "./recordsConfig";
+import type { RecordsRoute } from "./records-config";
 
 export interface OpsDisplayChip {
   label: string;

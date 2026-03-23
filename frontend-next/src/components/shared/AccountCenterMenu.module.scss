@@ -1,0 +1,398 @@
+$account-menu-transition: 160ms ease;
+%control-surface {
+  min-height: 38px;
+  border: 1px solid var(--protected-shell-border);
+  background: var(--protected-shell-interactive-bg);
+  color: var(--protected-shell-text-secondary);
+  box-shadow: none;
+}
+%section-label {
+  margin: 0;
+  color: var(--protected-shell-text-muted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.accountAnchor {
+  position: relative;
+  flex: 0 0 auto;
+}
+.userTrigger,
+.accountLink,
+.accountLogout,
+.segmentedButton {
+  @extend %control-surface;
+}
+.userTrigger {
+  min-width: 162px;
+  min-height: 44px;
+  padding: 4px 9px 4px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  background: var(--protected-topbar-user-bg);
+  box-shadow: var(--protected-topbar-user-shadow);
+}
+.userTriggerAvatarOnly {
+  min-width: 42px;
+  width: 42px;
+  padding: 0;
+  justify-content: center;
+  gap: 0;
+}
+.userTrigger:hover,
+.accountLink:hover,
+.accountLogout:hover,
+.segmentedButton:hover {
+  border-color: var(--protected-shell-interactive-border-hover);
+  background: var(--protected-shell-interactive-bg-hover);
+  color: var(--protected-shell-text);
+}
+
+.userTrigger:focus-visible,
+.accountLink:focus-visible,
+.accountLogout:focus-visible,
+.segmentedButton:focus-visible {
+  outline: 2px solid var(--ui-focus-ring);
+  outline-offset: 2px;
+}
+.userTriggerExpanded,
+.segmentedButtonActive {
+  border-color: var(--protected-topbar-control-border-active);
+  background: var(--protected-topbar-control-bg-hover);
+  color: var(--protected-shell-text);
+}
+
+.triggerCopy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  flex: 1 1 auto;
+}
+
+.triggerTitle,
+.triggerMeta {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.triggerTitle {
+  color: var(--protected-topbar-user-meta-text);
+  font-size: 11px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.triggerMeta {
+  color: var(--protected-topbar-user-meta-muted);
+  font-size: 9px;
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+.userIcon {
+  width: 12px;
+  height: 12px;
+  color: var(--protected-topbar-user-icon);
+  flex: 0 0 auto;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.avatar,
+.accountAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--protected-topbar-avatar-bg);
+  color: var(--protected-topbar-avatar-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 800;
+  box-shadow: var(--protected-topbar-avatar-shadow);
+  flex: 0 0 auto;
+}
+
+.userTriggerAvatarOnly .avatar {
+  width: 34px;
+  height: 34px;
+  font-size: 11px;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: min(360px, calc(100vw - 24px));
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity 160ms ease, transform 160ms ease, visibility 160ms ease;
+  z-index: 52;
+}
+
+.menuExpanded {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.card {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--protected-topbar-account-card-border);
+  border-radius: 14px;
+  background: var(--protected-topbar-account-card-bg);
+  box-shadow: none;
+}
+
+.summary,
+.actions,
+.preferenceRow,
+.segmentedControl {
+  display: grid;
+  gap: 10px;
+}
+
+.summary {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--protected-topbar-account-section-border);
+  border-radius: 0;
+  background: transparent;
+}
+
+.copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.copy strong,
+.copy small,
+.summaryKicker {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summaryKicker,
+.sectionTitle,
+.preferenceLabel {
+  @extend %section-label;
+}
+
+.summaryKicker {
+  line-height: 1;
+}
+
+.copy strong {
+  color: var(--protected-shell-text);
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.copy small {
+  color: var(--protected-shell-text-secondary);
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.summaryMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.summaryPill,
+.sectionCount {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.summaryPill {
+  min-height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--protected-topbar-account-section-count-bg);
+  color: var(--protected-topbar-account-section-count-text);
+}
+
+.section {
+  display: grid;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.section + .section {
+  border-top: 1px solid var(--protected-topbar-account-section-border);
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sectionCount {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--protected-topbar-account-section-count-bg);
+  color: var(--protected-topbar-account-section-count-text);
+}
+
+.actions {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+
+.accountLink,
+.accountLogout {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 10px 10px 12px;
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
+  line-height: 1.2;
+  border-color: var(--protected-shell-border);
+  border-radius: 10px;
+  background: var(--protected-shell-card-alt);
+  transition:
+    border-color $account-menu-transition,
+    background-color $account-menu-transition,
+    color $account-menu-transition;
+  cursor: pointer;
+  text-align: left;
+}
+
+.iconShell {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--protected-topbar-account-link-icon-bg);
+  color: var(--protected-topbar-account-link-icon-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.linkCopy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  flex: 1 1 auto;
+}
+
+.linkTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--protected-shell-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.linkDescription {
+  color: var(--protected-shell-text-secondary);
+  font-size: 10px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.linkArrow {
+  width: 14px;
+  height: 14px;
+  color: var(--protected-shell-text-muted);
+  flex: 0 0 auto;
+}
+
+.linkIcon,
+.segmentedIcon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.preferenceRow {
+  gap: 8px;
+}
+
+.segmentedControl {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.segmentedButton {
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  line-height: 1.2;
+  border-radius: 8px;
+}
+
+@media (max-width: 780px) {
+  .menu {
+    right: 0;
+    width: min(320px, calc(100vw - 20px));
+  }
+
+  .actions,
+  .segmentedControl {
+    grid-template-columns: 1fr;
+  }
+
+  .userTrigger {
+    min-width: 0;
+  }
+
+  .triggerCopy {
+    display: none;
+  }
+}

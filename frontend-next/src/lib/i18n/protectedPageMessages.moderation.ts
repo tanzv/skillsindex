@@ -33,6 +33,7 @@ export interface AdminModerationMessages {
   queueCommentPrefix: string;
   queueNoAction: string;
   queueEmpty: string;
+  openCaseDetailAction: string;
   selectedCaseTitle: string;
   selectedCaseDescription: string;
   noSelection: string;
@@ -56,6 +57,7 @@ export interface AdminModerationMessages {
   reasonCodePlaceholder: string;
   reasonDetailLabel: string;
   reasonDetailPlaceholder: string;
+  openCreateCaseAction: string;
   createAction: string;
   creatingAction: string;
   dispositionTitle: string;
@@ -72,6 +74,7 @@ export interface AdminModerationMessages {
   resolvingAction: string;
   rejectAction: string;
   rejectingAction: string;
+  closePanelAction: string;
   statusOpen: string;
   statusResolved: string;
   statusRejected: string;
@@ -118,6 +121,7 @@ export const adminModerationMessageKeyMap = {
   queueCommentPrefix: "admin_moderation_queue_comment_prefix",
   queueNoAction: "admin_moderation_queue_no_action",
   queueEmpty: "admin_moderation_queue_empty",
+  openCaseDetailAction: "admin_moderation_open_case_detail_action",
   selectedCaseTitle: "admin_moderation_selected_case_title",
   selectedCaseDescription: "admin_moderation_selected_case_description",
   noSelection: "admin_moderation_no_selection",
@@ -141,6 +145,7 @@ export const adminModerationMessageKeyMap = {
   reasonCodePlaceholder: "admin_moderation_reason_code_placeholder",
   reasonDetailLabel: "admin_moderation_reason_detail_label",
   reasonDetailPlaceholder: "admin_moderation_reason_detail_placeholder",
+  openCreateCaseAction: "admin_moderation_open_create_case_action",
   createAction: "admin_moderation_create_action",
   creatingAction: "admin_moderation_creating_action",
   dispositionTitle: "admin_moderation_disposition_title",
@@ -157,6 +162,7 @@ export const adminModerationMessageKeyMap = {
   resolvingAction: "admin_moderation_resolving_action",
   rejectAction: "admin_moderation_reject_action",
   rejectingAction: "admin_moderation_rejecting_action",
+  closePanelAction: "admin_moderation_close_panel_action",
   statusOpen: "admin_moderation_status_open",
   statusResolved: "admin_moderation_status_resolved",
   statusRejected: "admin_moderation_status_rejected",
