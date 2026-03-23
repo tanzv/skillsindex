@@ -166,3 +166,49 @@ func TestBuildStartupURLUsesAssignedPortForWildcardListener(t *testing.T) {
 		t.Fatalf("startup url should use assigned port, got %s", got)
 	}
 }
+
+func TestResolveStateInitializationOptionsDefaultsToAllEnabled(t *testing.T) {
+	got := resolveStateInitializationOptions(nil)
+
+	if !got.SeedData {
+		t.Fatalf("expected SeedData to default to true")
+	}
+	if !got.DefaultAccount {
+		t.Fatalf("expected DefaultAccount to default to true")
+	}
+	if !got.RegistrationSetting {
+		t.Fatalf("expected RegistrationSetting to default to true")
+	}
+	if !got.RepositorySyncPolicy {
+		t.Fatalf("expected RepositorySyncPolicy to default to true")
+	}
+	if !got.RepositorySyncMirror {
+		t.Fatalf("expected RepositorySyncMirror to default to true")
+	}
+}
+
+func TestResolveStateInitializationOptionsUsesProvidedOverrides(t *testing.T) {
+	got := resolveStateInitializationOptions(&StateInitializationOptions{
+		SeedData:             false,
+		DefaultAccount:       false,
+		RegistrationSetting:  true,
+		RepositorySyncPolicy: false,
+		RepositorySyncMirror: true,
+	})
+
+	if got.SeedData {
+		t.Fatalf("expected SeedData override to be false")
+	}
+	if got.DefaultAccount {
+		t.Fatalf("expected DefaultAccount override to be false")
+	}
+	if !got.RegistrationSetting {
+		t.Fatalf("expected RegistrationSetting override to be true")
+	}
+	if got.RepositorySyncPolicy {
+		t.Fatalf("expected RepositorySyncPolicy override to be false")
+	}
+	if !got.RepositorySyncMirror {
+		t.Fatalf("expected RepositorySyncMirror override to be true")
+	}
+}

@@ -16,6 +16,8 @@ import (
 	"skillsindex/internal/models"
 	"skillsindex/internal/services"
 	"skillsindex/internal/web"
+
+	"gorm.io/gorm"
 )
 
 const defaultCORSOrigin = "http://localhost:5173"
@@ -26,6 +28,16 @@ const defaultTemplateGlob = "web/templates/*.tmpl"
 type RunOptions struct {
 	StartupLabel string
 	ForceAPIOnly bool
+	StateInit    *StateInitializationOptions
+}
+
+// StateInitializationOptions controls which persistent startup tasks are executed.
+type StateInitializationOptions struct {
+	SeedData             bool
+	DefaultAccount       bool
+	RegistrationSetting  bool
+	RepositorySyncPolicy bool
+	RepositorySyncMirror bool
 }
 
 // NormalizeRuntimeConfig applies runtime defaults for a command entrypoint.
@@ -70,6 +82,66 @@ func resolveTemplateGlob(apiOnly bool) string {
 	return defaultTemplateGlob
 }
 
+func resolveStateInitializationOptions(options *StateInitializationOptions) StateInitializationOptions {
+	if options == nil {
+		return StateInitializationOptions{
+			SeedData:             true,
+			DefaultAccount:       true,
+			RegistrationSetting:  true,
+			RepositorySyncPolicy: true,
+			RepositorySyncMirror: true,
+		}
+	}
+	return *options
+}
+
+func initializeRuntimeState(
+	ctx context.Context,
+	runtimeConfig config.Config,
+	options StateInitializationOptions,
+	database *gorm.DB,
+	authService *services.AuthService,
+	settingsService *services.SettingsService,
+	repoSyncPolicyService *services.RepositorySyncPolicyService,
+	syncPolicyRecordService *services.SyncPolicyService,
+) error {
+	if options.SeedData {
+		if err := db.EnsureSeedData(database); err != nil {
+			return fmt.Errorf("failed to seed database: %w", err)
+		}
+	}
+	if options.DefaultAccount {
+		if _, err := authService.EnsureDefaultAccount(
+			ctx,
+			runtimeConfig.AdminUsername,
+			runtimeConfig.AdminPassword,
+			models.NormalizeUserRole(runtimeConfig.AdminRole),
+		); err != nil {
+			return fmt.Errorf("failed to ensure default admin account: %w", err)
+		}
+	}
+	if options.RegistrationSetting {
+		if _, err := settingsService.EnsureBool(ctx, services.SettingAllowRegistration, runtimeConfig.AllowRegistration); err != nil {
+			return fmt.Errorf("failed to initialize allow_registration setting: %w", err)
+		}
+	}
+	if options.RepositorySyncPolicy {
+		if _, err := repoSyncPolicyService.Ensure(ctx); err != nil {
+			return fmt.Errorf("failed to initialize repository sync policy: %w", err)
+		}
+	}
+	if options.RepositorySyncMirror {
+		ensuredPolicy, err := repoSyncPolicyService.Get(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to load initialized repository sync policy: %w", err)
+		}
+		if _, err := syncPolicyRecordService.UpsertRepositoryMirror(ctx, ensuredPolicy, nil); err != nil {
+			return fmt.Errorf("failed to initialize repository sync policy mirror: %w", err)
+		}
+	}
+	return nil
+}
+
 // RunAPIServer bootstraps all dependencies and starts the HTTP API server.
 func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) error {
 	if ctx == nil {
@@ -93,9 +165,6 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 	if err := db.Migrate(database); err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
-	if err := db.EnsureSeedData(database); err != nil {
-		return fmt.Errorf("failed to seed database: %w", err)
-	}
 	sqlDB, err := database.DB()
 	if err != nil {
 		return fmt.Errorf("failed to access sql db handle: %w", err)
@@ -115,24 +184,18 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 		BatchSize: runtimeConfig.RepoSyncBatchSize,
 	})
 	syncPolicyRecordService := services.NewSyncPolicyService(database)
-	if _, err := authService.EnsureDefaultAccount(
+	stateInitOptions := resolveStateInitializationOptions(options.StateInit)
+	if err := initializeRuntimeState(
 		ctx,
-		runtimeConfig.AdminUsername,
-		runtimeConfig.AdminPassword,
-		models.NormalizeUserRole(runtimeConfig.AdminRole),
+		runtimeConfig,
+		stateInitOptions,
+		database,
+		authService,
+		settingsService,
+		repoSyncPolicyService,
+		syncPolicyRecordService,
 	); err != nil {
-		return fmt.Errorf("failed to ensure default admin account: %w", err)
-	}
-	if _, err := settingsService.EnsureBool(ctx, services.SettingAllowRegistration, runtimeConfig.AllowRegistration); err != nil {
-		return fmt.Errorf("failed to initialize allow_registration setting: %w", err)
-	}
-	if _, err := repoSyncPolicyService.Ensure(ctx); err != nil {
-		return fmt.Errorf("failed to initialize repository sync policy: %w", err)
-	}
-	if ensuredPolicy, err := repoSyncPolicyService.Get(ctx); err != nil {
-		return fmt.Errorf("failed to load initialized repository sync policy: %w", err)
-	} else if _, err := syncPolicyRecordService.UpsertRepositoryMirror(ctx, ensuredPolicy, nil); err != nil {
-		return fmt.Errorf("failed to initialize repository sync policy mirror: %w", err)
+		return err
 	}
 
 	sessionService := services.NewSessionService(runtimeConfig.SessionSecret, runtimeConfig.SessionCookieSecure)
