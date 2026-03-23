@@ -18,6 +18,13 @@ export interface AdminNormalizedRegistrationPayload {
   marketplacePublicAccess: boolean;
 }
 
+export interface AdminNormalizedMarketplaceRankingPayload {
+  defaultSort: "stars" | "quality";
+  rankingLimit: number;
+  highlightLimit: number;
+  categoryLeaderLimit: number;
+}
+
 export interface AdminNormalizedAuthProvidersPayload {
   authProviders: string[];
   availableAuthProviders: string[];
@@ -106,6 +113,21 @@ export function normalizeAdminRegistrationPayload(payload: unknown): AdminNormal
   return {
     allowRegistration: asBoolean(record.allow_registration),
     marketplacePublicAccess: record.marketplace_public_access !== false
+  };
+}
+
+export function normalizeAdminMarketplaceRankingPayload(payload: unknown): AdminNormalizedMarketplaceRankingPayload {
+  const record = asObject(payload);
+  const defaultSort = asString(record.default_sort).toLowerCase() === "quality" ? "quality" : "stars";
+  const rankingLimit = Math.max(1, asNumber(record.ranking_limit) || 12);
+  const highlightLimit = Math.min(rankingLimit, Math.max(1, asNumber(record.highlight_limit) || 3));
+  const categoryLeaderLimit = Math.max(1, asNumber(record.category_leader_limit) || 5);
+
+  return {
+    defaultSort,
+    rankingLimit,
+    highlightLimit,
+    categoryLeaderLimit
   };
 }
 

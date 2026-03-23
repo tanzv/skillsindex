@@ -337,6 +337,34 @@ func openAPIPathsAdminOpsDashboard() map[string]any {
 				},
 			},
 		},
+		"/api/v1/admin/settings/marketplace-ranking": map[string]any{
+			"get": map[string]any{
+				"tags":        []string{"dashboard"},
+				"summary":     "Get marketplace ranking policy",
+				"description": "Session endpoint for privileged admins to inspect marketplace rankings defaults and section sizes.",
+				"security":    sessionSecurity(),
+				"responses": map[string]any{
+					"200": jsonResponse("Marketplace ranking policy", "AdminMarketplaceRankingSettingResponse"),
+					"401": jsonResponse("Unauthorized", "ErrorResponse"),
+					"403": jsonResponse("Permission denied", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
+				},
+			},
+			"post": map[string]any{
+				"tags":        []string{"dashboard"},
+				"summary":     "Update marketplace ranking policy",
+				"description": "Session endpoint for privileged admins to update marketplace rankings defaults and section sizes.",
+				"security":    sessionSecurity(),
+				"requestBody": jsonRequestBody("AdminMarketplaceRankingSettingUpdateRequest", true),
+				"responses": map[string]any{
+					"200": jsonResponse("Marketplace ranking policy updated", "AdminMarketplaceRankingSettingResponse"),
+					"400": jsonResponse("Invalid payload", "ErrorResponse"),
+					"401": jsonResponse("Unauthorized", "ErrorResponse"),
+					"403": jsonResponse("Permission denied", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
+				},
+			},
+		},
 	}
 }
 

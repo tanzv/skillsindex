@@ -2,11 +2,22 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
+import {
+  AdminPageLoadStateFrame,
+  resolveAdminPageLoadState,
+} from "@/src/features/admin/adminPageLoadState";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
-import { createAdminOverlayState, useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
-import { loadAdminAccessSettingsPayloads, saveAdminAccessSettings } from "@/src/lib/api/adminAccessSettings";
+import { normalizeAdminMarketplaceRankingPayload } from "@/src/lib/admin/adminAccountSettingsModel";
+import {
+  createAdminOverlayState,
+  useAdminOverlayState,
+} from "@/src/lib/admin/useAdminOverlayState";
+import {
+  loadAdminAccessSettingsPayloads,
+  saveAdminAccessSettings,
+  type SaveAdminAccessSettingsInput,
+} from "@/src/lib/api/adminAccessSettings";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 import { resolveAdminAccountsPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
@@ -23,65 +34,109 @@ import {
   resolveSelectedAdminAccount,
   resolveRoleTargetUserId,
   normalizeRegistrationPayload,
-  sortAccountsByUpdatedAt
+  sortAccountsByUpdatedAt,
 } from "./model";
 
 export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   const { messages } = useProtectedI18n();
   const accountMessages = messages.adminAccounts;
-  const meta = useMemo(() => resolveAdminAccountsPageRouteMeta(route, accountMessages), [accountMessages, route]);
+  const meta = useMemo(
+    () => resolveAdminAccountsPageRouteMeta(route, accountMessages),
+    [accountMessages, route],
+  );
   const latestLoadRequestRef = useRef(0);
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "disabled">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "disabled"
+  >("all");
   const [rawAccounts, setRawAccounts] = useState<unknown>(null);
   const [rawRegistration, setRawRegistration] = useState<unknown>(null);
+  const [rawMarketplaceRanking, setRawMarketplaceRanking] =
+    useState<unknown>(null);
   const [rawAuthProviders, setRawAuthProviders] = useState<unknown>(null);
-  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
-  const { overlay, openOverlay, closeOverlay } = useAdminOverlayState<"accountDetail">(
-    route === "/admin/accounts" || route === "/admin/roles" || route === "/admin/roles/new"
-      ? createAdminOverlayState({ kind: "detail", entity: "accountDetail" })
-      : null
+  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(
+    null,
   );
-  const [accountEditor, setAccountEditor] = useState({ userId: "", status: "active", newPassword: "" });
+  const { overlay, openOverlay, closeOverlay } =
+    useAdminOverlayState<"accountDetail">(
+      route === "/admin/accounts" ||
+        route === "/admin/roles" ||
+        route === "/admin/roles/new"
+        ? createAdminOverlayState({ kind: "detail", entity: "accountDetail" })
+        : null,
+    );
+  const [accountEditor, setAccountEditor] = useState({
+    userId: "",
+    status: "active",
+    newPassword: "",
+  });
   const [roleEditor, setRoleEditor] = useState({ userId: "", role: "member" });
   const accountEditorRef = useRef(accountEditor);
   const roleEditorRef = useRef(roleEditor);
-  const [settingsDraft, setSettingsDraft] = useState({
-    allowRegistration: false,
-    marketplacePublicAccess: true,
-    enabledProviders: [] as string[]
-  });
+  const [settingsDraft, setSettingsDraft] =
+    useState<SaveAdminAccessSettingsInput>({
+      allowRegistration: false,
+      marketplacePublicAccess: true,
+      rankingDefaultSort: "stars",
+      rankingLimit: 12,
+      highlightLimit: 3,
+      categoryLeaderLimit: 5,
+      enabledProviders: [],
+    });
 
-  const accounts = useMemo(() => normalizeAccountsPayload(rawAccounts), [rawAccounts]);
-  const registration = useMemo(() => normalizeRegistrationPayload(rawRegistration), [rawRegistration]);
-  const authProviders = useMemo(() => normalizeAuthProvidersPayload(rawAuthProviders), [rawAuthProviders]);
+  const accounts = useMemo(
+    () => normalizeAccountsPayload(rawAccounts),
+    [rawAccounts],
+  );
+  const registration = useMemo(
+    () => normalizeRegistrationPayload(rawRegistration),
+    [rawRegistration],
+  );
+  const marketplaceRanking = useMemo(
+    () => normalizeAdminMarketplaceRankingPayload(rawMarketplaceRanking),
+    [rawMarketplaceRanking],
+  );
+  const authProviders = useMemo(
+    () => normalizeAuthProvidersPayload(rawAuthProviders),
+    [rawAuthProviders],
+  );
   const overview = useMemo(
     () =>
       buildAccountsOverview(accounts, {
         totalAccounts: accountMessages.metricTotalAccounts,
         loadedAccounts: accountMessages.metricLoadedAccounts,
         activeAccounts: accountMessages.metricActiveAccounts,
-        disabledAccounts: accountMessages.metricDisabledAccounts
+        disabledAccounts: accountMessages.metricDisabledAccounts,
       }),
     [
       accountMessages.metricActiveAccounts,
       accountMessages.metricDisabledAccounts,
       accountMessages.metricLoadedAccounts,
       accountMessages.metricTotalAccounts,
-      accounts
-    ]
+      accounts,
+    ],
   );
   const filteredAccounts = useMemo(
-    () => filterAccounts(sortAccountsByUpdatedAt(accounts.items), searchQuery, statusFilter),
-    [accounts.items, searchQuery, statusFilter]
+    () =>
+      filterAccounts(
+        sortAccountsByUpdatedAt(accounts.items),
+        searchQuery,
+        statusFilter,
+      ),
+    [accounts.items, searchQuery, statusFilter],
   );
   const selectedAccount = useMemo(
-    () => resolveSelectedAdminAccount(accounts.items, filteredAccounts, selectedAccountId),
-    [accounts.items, filteredAccounts, selectedAccountId]
+    () =>
+      resolveSelectedAdminAccount(
+        accounts.items,
+        filteredAccounts,
+        selectedAccountId,
+      ),
+    [accounts.items, filteredAccounts, selectedAccountId],
   );
 
   const loadData = useCallback(async () => {
@@ -90,21 +145,31 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     setLoading(true);
     setError("");
     try {
-      const { accounts: accountsPayload, registration: registrationPayload, authProviders: authProvidersPayload } =
-        await loadAdminAccessSettingsPayloads();
+      const {
+        accounts: accountsPayload,
+        registration: registrationPayload,
+        marketplaceRanking: marketplaceRankingPayload,
+        authProviders: authProvidersPayload,
+      } = await loadAdminAccessSettingsPayloads();
       if (requestId !== latestLoadRequestRef.current) {
         return;
       }
       setRawAccounts(accountsPayload);
       setRawRegistration(registrationPayload);
+      setRawMarketplaceRanking(marketplaceRankingPayload);
       setRawAuthProviders(authProvidersPayload);
     } catch (loadError) {
       if (requestId !== latestLoadRequestRef.current) {
         return;
       }
-      setError(loadError instanceof Error ? loadError.message : accountMessages.loadError);
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : accountMessages.loadError,
+      );
       setRawAccounts(null);
       setRawRegistration(null);
+      setRawMarketplaceRanking(null);
       setRawAuthProviders(null);
     } finally {
       if (requestId === latestLoadRequestRef.current) {
@@ -120,12 +185,24 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   const loadState = resolveAdminPageLoadState({
     loading,
     error,
-    hasData: rawAccounts !== null && rawRegistration !== null && rawAuthProviders !== null
+    hasData:
+      rawAccounts !== null &&
+      rawRegistration !== null &&
+      rawMarketplaceRanking !== null &&
+      rawAuthProviders !== null,
   });
 
   useEffect(() => {
-    if (route === "/admin/accounts" || route === "/admin/roles" || route === "/admin/roles/new") {
-      openOverlay({ kind: "detail", entity: "accountDetail", entityId: selectedAccountId });
+    if (
+      route === "/admin/accounts" ||
+      route === "/admin/roles" ||
+      route === "/admin/roles/new"
+    ) {
+      openOverlay({
+        kind: "detail",
+        entity: "accountDetail",
+        entityId: selectedAccountId,
+      });
       return;
     }
 
@@ -133,12 +210,25 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   }, [closeOverlay, openOverlay, route, selectedAccountId]);
 
   useEffect(() => {
-    setSettingsDraft({
+    const nextSettingsDraft: SaveAdminAccessSettingsInput = {
       allowRegistration: registration.allowRegistration,
       marketplacePublicAccess: registration.marketplacePublicAccess,
-      enabledProviders: [...authProviders.authProviders]
-    });
-  }, [authProviders.authProviders, registration.allowRegistration, registration.marketplacePublicAccess]);
+      rankingDefaultSort: marketplaceRanking.defaultSort,
+      rankingLimit: marketplaceRanking.rankingLimit,
+      highlightLimit: marketplaceRanking.highlightLimit,
+      categoryLeaderLimit: marketplaceRanking.categoryLeaderLimit,
+      enabledProviders: [...authProviders.authProviders],
+    };
+    setSettingsDraft(nextSettingsDraft);
+  }, [
+    authProviders.authProviders,
+    marketplaceRanking.categoryLeaderLimit,
+    marketplaceRanking.defaultSort,
+    marketplaceRanking.highlightLimit,
+    marketplaceRanking.rankingLimit,
+    registration.allowRegistration,
+    registration.marketplacePublicAccess,
+  ]);
 
   useEffect(() => {
     if (!selectedAccount) {
@@ -146,7 +236,9 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       return;
     }
 
-    setSelectedAccountId((current) => (current === selectedAccount.id ? current : selectedAccount.id));
+    setSelectedAccountId((current) =>
+      current === selectedAccount.id ? current : selectedAccount.id,
+    );
   }, [selectedAccount]);
 
   useEffect(() => {
@@ -155,14 +247,17 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     }
 
     const nextUserId = String(selectedAccount.id);
-    const nextStatus = normalizeAccountStatus(selectedAccount.status) === "disabled" ? "disabled" : "active";
+    const nextStatus =
+      normalizeAccountStatus(selectedAccount.status) === "disabled"
+        ? "disabled"
+        : "active";
     const nextRole = normalizeRoleName(selectedAccount.role);
 
     if (accountEditorRef.current.userId !== nextUserId) {
       const nextAccountEditor = {
         ...accountEditorRef.current,
         userId: nextUserId,
-        status: nextStatus
+        status: nextStatus,
       };
       accountEditorRef.current = nextAccountEditor;
       setAccountEditor(nextAccountEditor);
@@ -172,7 +267,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       const nextRoleEditor = {
         ...roleEditorRef.current,
         userId: nextUserId,
-        role: nextRole
+        role: nextRole,
       };
       roleEditorRef.current = nextRoleEditor;
       setRoleEditor(nextRoleEditor);
@@ -204,12 +299,18 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     try {
       await clientFetchJSON(`/api/bff/admin/accounts/${userId}/status`, {
         method: "POST",
-        body: { status }
+        body: { status },
       });
-      setMessage(formatProtectedMessage(accountMessages.applyStatusSuccess, { userId }));
+      setMessage(
+        formatProtectedMessage(accountMessages.applyStatusSuccess, { userId }),
+      );
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accountMessages.applyStatusError);
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : accountMessages.applyStatusError,
+      );
     } finally {
       setBusyAction("");
     }
@@ -220,11 +321,19 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     setError("");
     setMessage("");
     try {
-      await clientFetchJSON(`/api/bff/admin/accounts/${userId}/force-signout`, { method: "POST" });
-      setMessage(formatProtectedMessage(accountMessages.forceSignOutSuccess, { userId }));
+      await clientFetchJSON(`/api/bff/admin/accounts/${userId}/force-signout`, {
+        method: "POST",
+      });
+      setMessage(
+        formatProtectedMessage(accountMessages.forceSignOutSuccess, { userId }),
+      );
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accountMessages.forceSignOutError);
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : accountMessages.forceSignOutError,
+      );
     } finally {
       setBusyAction("");
     }
@@ -241,14 +350,25 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     setError("");
     setMessage("");
     try {
-      await clientFetchJSON(`/api/bff/admin/accounts/${userId}/password-reset`, {
-        method: "POST",
-        body: { new_password: newPassword }
-      });
-      setMessage(formatProtectedMessage(accountMessages.resetPasswordSuccess, { userId }));
+      await clientFetchJSON(
+        `/api/bff/admin/accounts/${userId}/password-reset`,
+        {
+          method: "POST",
+          body: { new_password: newPassword },
+        },
+      );
+      setMessage(
+        formatProtectedMessage(accountMessages.resetPasswordSuccess, {
+          userId,
+        }),
+      );
       updateAccountEditor({ newPassword: "" });
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accountMessages.resetPasswordError);
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : accountMessages.resetPasswordError,
+      );
     } finally {
       setBusyAction("");
     }
@@ -256,7 +376,10 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
 
   async function applyRole() {
     const { userId: draftUserId, role } = roleEditor;
-    const userId = resolveRoleTargetUserId(draftUserId, selectedAccount?.id ?? null);
+    const userId = resolveRoleTargetUserId(
+      draftUserId,
+      selectedAccount?.id ?? null,
+    );
     if (userId === null) {
       setError(accountMessages.invalidUserIdError);
       return;
@@ -267,12 +390,18 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     try {
       await clientFetchJSON(`/api/bff/admin/users/${userId}/role`, {
         method: "POST",
-        body: { role }
+        body: { role },
       });
-      setMessage(formatProtectedMessage(accountMessages.applyRoleSuccess, { userId }));
+      setMessage(
+        formatProtectedMessage(accountMessages.applyRoleSuccess, { userId }),
+      );
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accountMessages.applyRoleError);
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : accountMessages.applyRoleError,
+      );
     } finally {
       setBusyAction("");
     }
@@ -287,7 +416,11 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       setMessage(accountMessages.saveSettingsSuccess);
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accountMessages.saveSettingsError);
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : accountMessages.saveSettingsError,
+      );
     } finally {
       setBusyAction("");
     }
@@ -300,7 +433,13 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
         title={meta.title}
         description={meta.description}
         error={loadState === "error" ? error : undefined}
-        actions={<Button onClick={() => void loadData()}>{loading ? messages.adminCommon.refreshing : messages.adminCommon.refresh}</Button>}
+        actions={
+          <Button onClick={() => void loadData()}>
+            {loading
+              ? messages.adminCommon.refreshing
+              : messages.adminCommon.refresh}
+          </Button>
+        }
       />
     );
   }
@@ -327,20 +466,28 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       onRefresh={() => void loadData()}
       onSelectAccount={(accountId) => {
         setSelectedAccountId(accountId);
-        openOverlay({ kind: "detail", entity: "accountDetail", entityId: accountId });
+        openOverlay({
+          kind: "detail",
+          entity: "accountDetail",
+          entityId: accountId,
+        });
       }}
       onSearchQueryChange={setSearchQuery}
-      onStatusFilterChange={(value) => setStatusFilter(value as "all" | "active" | "disabled")}
+      onStatusFilterChange={(value) =>
+        setStatusFilter(value as "all" | "active" | "disabled")
+      }
       onAccountEditorChange={updateAccountEditor}
       onRoleEditorChange={updateRoleEditor}
       onCloseDetailDrawer={closeOverlay}
-      onSettingsDraftChange={(patch) => setSettingsDraft((current) => ({ ...current, ...patch }))}
+      onSettingsDraftChange={(patch) =>
+        setSettingsDraft((current) => ({ ...current, ...patch }))
+      }
       onToggleProvider={(provider) =>
         setSettingsDraft((current) => ({
           ...current,
           enabledProviders: current.enabledProviders.includes(provider)
             ? current.enabledProviders.filter((item) => item !== provider)
-            : [...current.enabledProviders, provider]
+            : [...current.enabledProviders, provider],
         }))
       }
       onApplyAccountStatus={() => void applyAccountStatus()}

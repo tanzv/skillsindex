@@ -78,6 +78,8 @@ func (a *App) registerAdminSyncGovernanceRoutes(r chi.Router) {
 func (a *App) registerAdminAccessRoutes(r chi.Router) {
 	r.Get("/api/v1/admin/settings/registration", a.handleAPIAdminRegistrationSetting)
 	r.Post("/api/v1/admin/settings/registration", a.handleAPIAdminRegistrationSettingUpdate)
+	r.Get("/api/v1/admin/settings/marketplace-ranking", a.handleAPIAdminMarketplaceRankingSetting)
+	r.Post("/api/v1/admin/settings/marketplace-ranking", a.handleAPIAdminMarketplaceRankingSettingUpdate)
 	r.Get("/api/v1/admin/settings/auth-providers", a.handleAPIAdminAuthProvidersSetting)
 	r.Post("/api/v1/admin/settings/auth-providers", a.handleAPIAdminAuthProvidersSettingUpdate)
 	r.Get("/api/v1/admin/accounts", a.handleAPIAdminAccounts)

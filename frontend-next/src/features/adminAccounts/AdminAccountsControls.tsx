@@ -165,12 +165,20 @@ interface ProvisioningPolicyPanelProps {
   settingsDraft: {
     allowRegistration: boolean;
     marketplacePublicAccess: boolean;
+    rankingDefaultSort: "stars" | "quality";
+    rankingLimit: number;
+    highlightLimit: number;
+    categoryLeaderLimit: number;
     enabledProviders: string[];
   };
   busyAction: string;
   onSettingsDraftChange: (patch: {
     allowRegistration?: boolean;
     marketplacePublicAccess?: boolean;
+    rankingDefaultSort?: "stars" | "quality";
+    rankingLimit?: number;
+    highlightLimit?: number;
+    categoryLeaderLimit?: number;
     enabledProviders?: string[];
   }) => void;
   onToggleProvider: (provider: string) => void;

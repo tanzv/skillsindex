@@ -126,11 +126,24 @@ export function AccessPolicyForm({
   settingsDraft: {
     allowRegistration: boolean;
     marketplacePublicAccess: boolean;
+    rankingDefaultSort: "stars" | "quality";
+    rankingLimit: number;
+    highlightLimit: number;
+    categoryLeaderLimit: number;
     enabledProviders: string[];
   };
   busyAction: string;
   onToggleProvider: (provider: string) => void;
-  onSettingsDraftChange: (patch: Partial<{ allowRegistration: boolean; marketplacePublicAccess: boolean }>) => void;
+  onSettingsDraftChange: (
+    patch: Partial<{
+      allowRegistration: boolean;
+      marketplacePublicAccess: boolean;
+      rankingDefaultSort: "stars" | "quality";
+      rankingLimit: number;
+      highlightLimit: number;
+      categoryLeaderLimit: number;
+    }>
+  ) => void;
   onSave: () => void;
 }) {
   const { messages } = useProtectedI18n();
@@ -169,6 +182,61 @@ export function AccessPolicyForm({
             <span>{provider}</span>
           </label>
         ))}
+      </div>
+
+      <div className="space-y-3">
+        <div className="space-y-1">
+          <div className="text-sm font-semibold text-[color:var(--ui-text-primary)]">{accessMessages.marketplaceRankingTitle}</div>
+          <p className="text-sm text-[color:var(--ui-text-secondary)]">{accessMessages.marketplaceRankingDescription}</p>
+        </div>
+
+        <label className="space-y-2 text-sm text-[color:var(--ui-text-secondary)]">
+          <span className="font-medium text-[color:var(--ui-text-primary)]">{accessMessages.rankingDefaultSortLabel}</span>
+          <select
+            aria-label={accessMessages.rankingDefaultSortLabel}
+            className="w-full rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-bg)] px-4 py-3 text-sm text-[color:var(--ui-text-primary)]"
+            value={settingsDraft.rankingDefaultSort}
+            onChange={(event) =>
+              onSettingsDraftChange({ rankingDefaultSort: event.target.value === "quality" ? "quality" : "stars" })
+            }
+          >
+            <option value="stars">{accessMessages.rankingDefaultSortStars}</option>
+            <option value="quality">{accessMessages.rankingDefaultSortQuality}</option>
+          </select>
+        </label>
+
+        <div className="grid gap-3 md:grid-cols-3">
+          <label className="space-y-2 text-sm text-[color:var(--ui-text-secondary)]">
+            <span className="font-medium text-[color:var(--ui-text-primary)]">{accessMessages.rankingLimitLabel}</span>
+            <Input
+              aria-label={accessMessages.rankingLimitLabel}
+              type="number"
+              min={1}
+              value={String(settingsDraft.rankingLimit)}
+              onChange={(event) => onSettingsDraftChange({ rankingLimit: Number(event.target.value) || 1 })}
+            />
+          </label>
+          <label className="space-y-2 text-sm text-[color:var(--ui-text-secondary)]">
+            <span className="font-medium text-[color:var(--ui-text-primary)]">{accessMessages.highlightLimitLabel}</span>
+            <Input
+              aria-label={accessMessages.highlightLimitLabel}
+              type="number"
+              min={1}
+              value={String(settingsDraft.highlightLimit)}
+              onChange={(event) => onSettingsDraftChange({ highlightLimit: Number(event.target.value) || 1 })}
+            />
+          </label>
+          <label className="space-y-2 text-sm text-[color:var(--ui-text-secondary)]">
+            <span className="font-medium text-[color:var(--ui-text-primary)]">{accessMessages.categoryLeaderLimitLabel}</span>
+            <Input
+              aria-label={accessMessages.categoryLeaderLimitLabel}
+              type="number"
+              min={1}
+              value={String(settingsDraft.categoryLeaderLimit)}
+              onChange={(event) => onSettingsDraftChange({ categoryLeaderLimit: Number(event.target.value) || 1 })}
+            />
+          </label>
+        </div>
       </div>
 
       <AccessSnapshotPanel data={data} />
@@ -213,6 +281,26 @@ export function AccessSnapshotPanel({
           {data.availableProviders.length ? data.availableProviders.join(", ") : accessMessages.notAvailable}
         </div>
       </AdminInsetBlock>
+      <div className="grid gap-3 md:grid-cols-2">
+        <AdminInsetBlock>
+          {accessMessages.rankingDefaultSortLabel}
+          <div className="mt-1 font-semibold text-[color:var(--ui-text-primary)]">
+            {data.rankingDefaultSort === "quality" ? accessMessages.rankingDefaultSortQuality : accessMessages.rankingDefaultSortStars}
+          </div>
+        </AdminInsetBlock>
+        <AdminInsetBlock>
+          {accessMessages.rankingLimitLabel}
+          <div className="mt-1 font-semibold text-[color:var(--ui-text-primary)]">{data.rankingLimit}</div>
+        </AdminInsetBlock>
+        <AdminInsetBlock>
+          {accessMessages.highlightLimitLabel}
+          <div className="mt-1 font-semibold text-[color:var(--ui-text-primary)]">{data.highlightLimit}</div>
+        </AdminInsetBlock>
+        <AdminInsetBlock>
+          {accessMessages.categoryLeaderLimitLabel}
+          <div className="mt-1 font-semibold text-[color:var(--ui-text-primary)]">{data.categoryLeaderLimit}</div>
+        </AdminInsetBlock>
+      </div>
     </AdminSectionCard>
   );
 }
@@ -281,4 +369,3 @@ export function SelectedAccessAccountSummary({
     </div>
   );
 }
-

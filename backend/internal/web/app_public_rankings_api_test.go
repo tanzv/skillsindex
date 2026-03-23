@@ -64,8 +64,20 @@ func TestHandleAPIPublicRankingsReturnsBackendOwnedRankingPayload(t *testing.T) 
 	}); err != nil {
 		t.Fatalf("failed to create private hidden skill: %v", err)
 	}
+	if err := app.settingsService.Set(context.Background(), services.SettingMarketplaceRankingDefaultSort, "quality"); err != nil {
+		t.Fatalf("failed to seed ranking default sort: %v", err)
+	}
+	if err := app.settingsService.SetInt(context.Background(), services.SettingMarketplaceRankingLimit, 3); err != nil {
+		t.Fatalf("failed to seed ranking limit: %v", err)
+	}
+	if err := app.settingsService.SetInt(context.Background(), services.SettingMarketplaceRankingHighlightLimit, 2); err != nil {
+		t.Fatalf("failed to seed highlight limit: %v", err)
+	}
+	if err := app.settingsService.SetInt(context.Background(), services.SettingMarketplaceRankingCategoryLeaderLimit, 1); err != nil {
+		t.Fatalf("failed to seed category leader limit: %v", err)
+	}
 
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/rankings?sort=quality", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/rankings", nil)
 	req.Header.Set("Accept", "application/json")
 	recorder := httptest.NewRecorder()
 
@@ -109,14 +121,14 @@ func TestHandleAPIPublicRankingsReturnsBackendOwnedRankingPayload(t *testing.T) 
 	if payload.Sort != "quality" {
 		t.Fatalf("unexpected ranking sort: got=%s want=quality", payload.Sort)
 	}
-	if len(payload.RankedItems) < 3 {
-		t.Fatalf("expected ranked items payload, got=%d", len(payload.RankedItems))
+	if len(payload.RankedItems) != 3 {
+		t.Fatalf("expected ranked items payload to honor ranking limit, got=%d", len(payload.RankedItems))
 	}
 	if payload.RankedItems[0].ID != qualityLeader.ID {
 		t.Fatalf("expected quality leader first: got=%d want=%d", payload.RankedItems[0].ID, qualityLeader.ID)
 	}
-	if len(payload.Highlights) == 0 {
-		t.Fatalf("expected highlight payload to be populated")
+	if len(payload.Highlights) != 2 {
+		t.Fatalf("expected highlight payload to honor highlight limit, got=%d", len(payload.Highlights))
 	}
 	if payload.Summary.TotalCompared != len(payload.RankedItems) {
 		t.Fatalf("summary should reflect ranked item count: got=%d want=%d", payload.Summary.TotalCompared, len(payload.RankedItems))
@@ -124,8 +136,8 @@ func TestHandleAPIPublicRankingsReturnsBackendOwnedRankingPayload(t *testing.T) 
 	if payload.Summary.TopQuality < 9.8 {
 		t.Fatalf("expected top quality to include the strongest skill: got=%.1f", payload.Summary.TopQuality)
 	}
-	if len(payload.CategoryLeaders) == 0 {
-		t.Fatalf("expected category leaders payload to be populated")
+	if len(payload.CategoryLeaders) != 1 {
+		t.Fatalf("expected category leaders payload to honor category leader limit, got=%d", len(payload.CategoryLeaders))
 	}
 	for _, item := range payload.RankedItems {
 		if item.Name == "Seed Hidden Leader" || item.Name == "Private Hidden Leader" {

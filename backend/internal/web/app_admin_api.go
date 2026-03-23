@@ -46,13 +46,15 @@ type apiAdminOverviewResponse struct {
 }
 
 type apiAdminAccountItem struct {
-	ID            uint       `json:"id"`
-	Username      string     `json:"username"`
-	Role          string     `json:"role"`
-	Status        string     `json:"status"`
-	CreatedAt     time.Time  `json:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at"`
-	ForceLogoutAt *time.Time `json:"force_logout_at,omitempty"`
+	ID             uint       `json:"id"`
+	Username       string     `json:"username"`
+	Role           string     `json:"role"`
+	Status         string     `json:"status"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
+	ForceLogoutAt  *time.Time `json:"force_logout_at,omitempty"`
+	LastSeenAt     *time.Time `json:"last_seen_at,omitempty"`
+	ActiveSessions int        `json:"active_session_count"`
 }
 
 type apiOrganizationItem struct {
@@ -301,6 +303,32 @@ func parseBoolSettingValue(raw any) (bool, bool) {
 		return false, false
 	default:
 		return false, false
+	}
+}
+
+func parseIntSettingValue(raw any) (int, bool) {
+	switch value := raw.(type) {
+	case float64:
+		if value != float64(int(value)) {
+			return 0, false
+		}
+		return int(value), true
+	case int:
+		return value, true
+	case int64:
+		return int(value), true
+	case string:
+		clean := strings.TrimSpace(value)
+		if clean == "" {
+			return 0, false
+		}
+		parsed, err := strconv.Atoi(clean)
+		if err != nil {
+			return 0, false
+		}
+		return parsed, true
+	default:
+		return 0, false
 	}
 }
 

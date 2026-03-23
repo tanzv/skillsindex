@@ -27,7 +27,7 @@ func setupAccessSettingsTestApp(t *testing.T) *App {
 	if err := db.AutoMigrate(&models.SystemSetting{}); err != nil {
 		t.Fatalf("failed to migrate sqlite db: %v", err)
 	}
-	if err := db.AutoMigrate(&models.User{}, &models.Skill{}, &models.Tag{}, &models.SkillTag{}, &models.SyncPolicy{}, &models.SyncJobRun{}, &models.AsyncJob{}, &models.SkillVersion{}, &models.AuditLog{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.UserSession{}, &models.Skill{}, &models.Tag{}, &models.SkillTag{}, &models.SyncPolicy{}, &models.SyncJobRun{}, &models.AsyncJob{}, &models.SkillVersion{}, &models.AuditLog{}); err != nil {
 		t.Fatalf("failed to migrate sqlite db for sync jobs, async jobs, and audit logs: %v", err)
 	}
 	settingsSvc := services.NewSettingsService(db)
@@ -36,6 +36,7 @@ func setupAccessSettingsTestApp(t *testing.T) *App {
 	auditSvc := services.NewAuditService(db)
 	return &App{
 		authService:     services.NewAuthService(db),
+		userSessionSvc:  services.NewUserSessionService(db),
 		skillService:    services.NewSkillService(db),
 		settingsService: settingsSvc,
 		syncPolicyService: services.NewRepositorySyncPolicyService(settingsSvc, services.RepositorySyncPolicy{
@@ -45,13 +46,13 @@ func setupAccessSettingsTestApp(t *testing.T) *App {
 			BatchSize: 20,
 		}),
 		syncPolicyRecordSvc: services.NewSyncPolicyService(db),
-		syncJobSvc:        syncJobSvc,
-		asyncJobSvc:       asyncJobSvc,
-		skillVersionSvc:   services.NewSkillVersionService(db),
-		auditService:      auditSvc,
-		syncGovernanceSvc: services.NewSyncGovernanceService(asyncJobSvc, syncJobSvc, nil, auditSvc),
-		opsService:        services.NewOpsService(db),
-		allowRegistration: true,
+		syncJobSvc:          syncJobSvc,
+		asyncJobSvc:         asyncJobSvc,
+		skillVersionSvc:     services.NewSkillVersionService(db),
+		auditService:        auditSvc,
+		syncGovernanceSvc:   services.NewSyncGovernanceService(asyncJobSvc, syncJobSvc, nil, auditSvc),
+		opsService:          services.NewOpsService(db),
+		allowRegistration:   true,
 	}
 }
 

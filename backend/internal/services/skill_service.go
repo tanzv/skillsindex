@@ -91,9 +91,21 @@ type PublicSearchResult struct {
 
 // PublicRankingInput defines the request shape for public ranking data.
 type PublicRankingInput struct {
-	SortBy string
-	Limit  int
+	SortBy              string
+	Limit               int
+	HighlightLimit      int
+	CategoryLeaderLimit int
 }
+
+const (
+	DefaultMarketplaceRankingSort           = "stars"
+	DefaultMarketplaceRankingLimit          = 12
+	DefaultMarketplaceRankingHighlightLimit = 3
+	DefaultMarketplaceCategoryLeaderLimit   = 5
+	MaxMarketplaceRankingLimit              = 50
+	MaxMarketplaceRankingHighlightLimit     = 12
+	MaxMarketplaceCategoryLeaderLimit       = 12
+)
 
 // PublicRankingSummary stores aggregate metrics for one ranking view.
 type PublicRankingSummary struct {

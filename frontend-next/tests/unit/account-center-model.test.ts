@@ -134,12 +134,22 @@ describe("admin access model", () => {
         ]
       },
       registration: { allow_registration: true, marketplace_public_access: false },
+      marketplaceRanking: {
+        default_sort: "quality",
+        ranking_limit: 18,
+        highlight_limit: 4,
+        category_leader_limit: 2
+      },
       authProviders: { auth_providers: ["password", "sso"], available_auth_providers: ["password", "sso", "oidc"] }
     });
 
     expect(data.enabledProviders).toEqual(["password", "sso"]);
     expect(data.accountsTotal).toBe(2);
     expect(data.marketplacePublicAccess).toBe(false);
+    expect(data.rankingDefaultSort).toBe("quality");
+    expect(data.rankingLimit).toBe(18);
+    expect(data.highlightLimit).toBe(4);
+    expect(data.categoryLeaderLimit).toBe(2);
 
     const overview = buildAccessOverview(data);
     expect(overview.metrics).toEqual(

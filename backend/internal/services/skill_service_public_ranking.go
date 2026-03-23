@@ -15,10 +15,29 @@ import (
 func (s *SkillService) BuildPublicRanking(ctx context.Context, input PublicRankingInput) (PublicRankingResult, error) {
 	limit := input.Limit
 	if limit <= 0 {
-		limit = 12
+		limit = DefaultMarketplaceRankingLimit
 	}
-	if limit > 50 {
-		limit = 50
+	if limit > MaxMarketplaceRankingLimit {
+		limit = MaxMarketplaceRankingLimit
+	}
+
+	highlightLimit := input.HighlightLimit
+	if highlightLimit <= 0 {
+		highlightLimit = DefaultMarketplaceRankingHighlightLimit
+	}
+	if highlightLimit > limit {
+		highlightLimit = limit
+	}
+	if highlightLimit > MaxMarketplaceRankingHighlightLimit {
+		highlightLimit = MaxMarketplaceRankingHighlightLimit
+	}
+
+	categoryLeaderLimit := input.CategoryLeaderLimit
+	if categoryLeaderLimit <= 0 {
+		categoryLeaderLimit = DefaultMarketplaceCategoryLeaderLimit
+	}
+	if categoryLeaderLimit > MaxMarketplaceCategoryLeaderLimit {
+		categoryLeaderLimit = MaxMarketplaceCategoryLeaderLimit
 	}
 
 	sortBy := strings.TrimSpace(strings.ToLower(input.SortBy))
@@ -26,7 +45,7 @@ func (s *SkillService) BuildPublicRanking(ctx context.Context, input PublicRanki
 	case "quality":
 		sortBy = "quality"
 	default:
-		sortBy = "stars"
+		sortBy = DefaultMarketplaceRankingSort
 	}
 
 	query := applyMarketplacePublicScope(
@@ -46,8 +65,8 @@ func (s *SkillService) BuildPublicRanking(ctx context.Context, input PublicRanki
 		return PublicRankingResult{}, fmt.Errorf("failed to query public ranking skills: %w", err)
 	}
 
-	highlights := sliceSkills(rankedItems, 0, 3)
-	listItems := sliceSkills(rankedItems, 3, 12)
+	highlights := sliceSkills(rankedItems, 0, highlightLimit)
+	listItems := sliceSkills(rankedItems, highlightLimit, limit)
 
 	return PublicRankingResult{
 		SortBy:          sortBy,
@@ -55,7 +74,7 @@ func (s *SkillService) BuildPublicRanking(ctx context.Context, input PublicRanki
 		Highlights:      highlights,
 		ListItems:       listItems,
 		Summary:         buildPublicRankingSummary(rankedItems),
-		CategoryLeaders: buildPublicRankingCategoryLeaders(rankedItems),
+		CategoryLeaders: buildPublicRankingCategoryLeaders(rankedItems, categoryLeaderLimit),
 	}, nil
 }
 
@@ -209,9 +228,13 @@ func buildPublicRankingSummary(items []models.Skill) PublicRankingSummary {
 	}
 }
 
-func buildPublicRankingCategoryLeaders(items []models.Skill) []PublicRankingCategoryLeader {
+func buildPublicRankingCategoryLeaders(items []models.Skill, limit int) []PublicRankingCategoryLeader {
 	type bucket struct {
 		items []models.Skill
+	}
+
+	if limit <= 0 {
+		limit = DefaultMarketplaceCategoryLeaderLimit
 	}
 
 	buckets := make(map[string]bucket)
@@ -255,8 +278,8 @@ func buildPublicRankingCategoryLeaders(items []models.Skill) []PublicRankingCate
 		return leaders[i].CategorySlug < leaders[j].CategorySlug
 	})
 
-	if len(leaders) > 5 {
-		leaders = leaders[:5]
+	if len(leaders) > limit {
+		leaders = leaders[:limit]
 	}
 	return leaders
 }

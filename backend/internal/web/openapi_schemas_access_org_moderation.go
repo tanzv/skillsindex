@@ -14,13 +14,15 @@ func openAPISchemasAccessOrgModeration() map[string]any {
 		"AdminAccountItem": map[string]any{
 			"type": "object",
 			"properties": map[string]any{
-				"id":              map[string]any{"type": "integer"},
-				"username":        map[string]any{"type": "string"},
-				"role":            map[string]any{"type": "string"},
-				"status":          map[string]any{"type": "string"},
-				"created_at":      map[string]any{"type": "string", "format": "date-time"},
-				"updated_at":      map[string]any{"type": "string", "format": "date-time"},
-				"force_logout_at": map[string]any{"type": "string", "format": "date-time"},
+				"id":                   map[string]any{"type": "integer"},
+				"username":             map[string]any{"type": "string"},
+				"role":                 map[string]any{"type": "string"},
+				"status":               map[string]any{"type": "string"},
+				"created_at":           map[string]any{"type": "string", "format": "date-time"},
+				"updated_at":           map[string]any{"type": "string", "format": "date-time"},
+				"force_logout_at":      map[string]any{"type": "string", "format": "date-time"},
+				"last_seen_at":         map[string]any{"type": "string", "format": "date-time"},
+				"active_session_count": map[string]any{"type": "integer"},
 			},
 		},
 		"AdminAccountsResponse": map[string]any{
@@ -44,6 +46,25 @@ func openAPISchemasAccessOrgModeration() map[string]any {
 			"properties": map[string]any{
 				"allow_registration":        map[string]any{"type": "boolean"},
 				"marketplace_public_access": map[string]any{"type": "boolean"},
+			},
+		},
+		"AdminMarketplaceRankingSettingResponse": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"ok":                    map[string]any{"type": "boolean"},
+				"default_sort":          map[string]any{"type": "string"},
+				"ranking_limit":         map[string]any{"type": "integer"},
+				"highlight_limit":       map[string]any{"type": "integer"},
+				"category_leader_limit": map[string]any{"type": "integer"},
+			},
+		},
+		"AdminMarketplaceRankingSettingUpdateRequest": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"default_sort":          map[string]any{"type": "string"},
+				"ranking_limit":         map[string]any{"type": "integer"},
+				"highlight_limit":       map[string]any{"type": "integer"},
+				"category_leader_limit": map[string]any{"type": "integer"},
 			},
 		},
 		"AdminAuthProvidersSettingResponse": map[string]any{

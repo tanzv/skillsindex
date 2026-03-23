@@ -27,6 +27,14 @@ export interface AdminAccessMessages {
   providersTitle: string;
   providersDescription: string;
   providerAriaLabel: string;
+  marketplaceRankingTitle: string;
+  marketplaceRankingDescription: string;
+  rankingDefaultSortLabel: string;
+  rankingDefaultSortStars: string;
+  rankingDefaultSortQuality: string;
+  rankingLimitLabel: string;
+  highlightLimitLabel: string;
+  categoryLeaderLimitLabel: string;
   snapshotTitle: string;
   snapshotDescription: string;
   registrationEnabled: string;
@@ -84,6 +92,14 @@ export const adminAccessMessageKeyMap = {
   providersTitle: "admin_access_providers_title",
   providersDescription: "admin_access_providers_description",
   providerAriaLabel: "admin_access_provider_aria_label",
+  marketplaceRankingTitle: "admin_access_marketplace_ranking_title",
+  marketplaceRankingDescription: "admin_access_marketplace_ranking_description",
+  rankingDefaultSortLabel: "admin_access_ranking_default_sort_label",
+  rankingDefaultSortStars: "admin_access_ranking_default_sort_stars",
+  rankingDefaultSortQuality: "admin_access_ranking_default_sort_quality",
+  rankingLimitLabel: "admin_access_ranking_limit_label",
+  highlightLimitLabel: "admin_access_highlight_limit_label",
+  categoryLeaderLimitLabel: "admin_access_category_leader_limit_label",
   snapshotTitle: "admin_access_snapshot_title",
   snapshotDescription: "admin_access_snapshot_description",
   registrationEnabled: "admin_access_registration_enabled",

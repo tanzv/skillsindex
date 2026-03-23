@@ -5,7 +5,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
-import { loadAdminAccessSettingsPayloads, saveAdminAccessSettings } from "@/src/lib/api/adminAccessSettings";
+import {
+  loadAdminAccessSettingsPayloads,
+  saveAdminAccessSettings,
+  type SaveAdminAccessSettingsInput,
+} from "@/src/lib/api/adminAccessSettings";
 
 import { AdminAccessContent } from "./AdminAccessContent";
 import { buildAccessOverview, buildAdminAccessGovernanceData, resolveSelectedAccessAccount } from "./model";
@@ -23,11 +27,16 @@ export function AdminAccessPage() {
   const [accountDrawerOpen, setAccountDrawerOpen] = useState(false);
   const [rawAccounts, setRawAccounts] = useState<unknown>(null);
   const [rawRegistration, setRawRegistration] = useState<unknown>(null);
+  const [rawMarketplaceRanking, setRawMarketplaceRanking] = useState<unknown>(null);
   const [rawAuthProviders, setRawAuthProviders] = useState<unknown>(null);
-  const [settingsDraft, setSettingsDraft] = useState({
+  const [settingsDraft, setSettingsDraft] = useState<SaveAdminAccessSettingsInput>({
     allowRegistration: false,
     marketplacePublicAccess: false,
-    enabledProviders: [] as string[]
+    rankingDefaultSort: "stars",
+    rankingLimit: 12,
+    highlightLimit: 3,
+    categoryLeaderLimit: 5,
+    enabledProviders: [],
   });
 
   const data = useMemo(
@@ -35,9 +44,10 @@ export function AdminAccessPage() {
       buildAdminAccessGovernanceData({
         accounts: rawAccounts,
         registration: rawRegistration,
+        marketplaceRanking: rawMarketplaceRanking,
         authProviders: rawAuthProviders
       }),
-    [rawAccounts, rawAuthProviders, rawRegistration]
+    [rawAccounts, rawAuthProviders, rawMarketplaceRanking, rawRegistration]
   );
   const overview = useMemo(
     () =>
@@ -72,14 +82,16 @@ export function AdminAccessPage() {
     setLoading(true);
     setError("");
     try {
-      const { accounts, registration, authProviders } = await loadAdminAccessSettingsPayloads();
+      const { accounts, registration, marketplaceRanking, authProviders } = await loadAdminAccessSettingsPayloads();
       setRawAccounts(accounts);
       setRawRegistration(registration);
+      setRawMarketplaceRanking(marketplaceRanking);
       setRawAuthProviders(authProviders);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : accessMessages.loadError);
       setRawAccounts(null);
       setRawRegistration(null);
+      setRawMarketplaceRanking(null);
       setRawAuthProviders(null);
     } finally {
       setLoading(false);
@@ -93,16 +105,28 @@ export function AdminAccessPage() {
   const loadState = resolveAdminPageLoadState({
     loading,
     error,
-    hasData: rawAccounts !== null && rawRegistration !== null && rawAuthProviders !== null
+    hasData: rawAccounts !== null && rawRegistration !== null && rawMarketplaceRanking !== null && rawAuthProviders !== null
   });
 
   useEffect(() => {
     setSettingsDraft({
       allowRegistration: data.allowRegistration,
       marketplacePublicAccess: data.marketplacePublicAccess,
+      rankingDefaultSort: data.rankingDefaultSort,
+      rankingLimit: data.rankingLimit,
+      highlightLimit: data.highlightLimit,
+      categoryLeaderLimit: data.categoryLeaderLimit,
       enabledProviders: [...data.enabledProviders]
     });
-  }, [data.allowRegistration, data.enabledProviders, data.marketplacePublicAccess]);
+  }, [
+    data.allowRegistration,
+    data.categoryLeaderLimit,
+    data.enabledProviders,
+    data.highlightLimit,
+    data.marketplacePublicAccess,
+    data.rankingDefaultSort,
+    data.rankingLimit
+  ]);
 
   useEffect(() => {
     if (selectedAccountId !== null && !selectedAccount) {

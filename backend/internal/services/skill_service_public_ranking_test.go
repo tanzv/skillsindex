@@ -362,4 +362,23 @@ func TestBuildPublicRankingReturnsDeterministicSections(t *testing.T) {
 	if qualityRanking.RankedItems[1].ID != delta.ID {
 		t.Fatalf("quality ranking should keep older equal-quality item second: got=%d want=%d", qualityRanking.RankedItems[1].ID, delta.ID)
 	}
+
+	customRanking, err := svc.BuildPublicRanking(ctx, PublicRankingInput{
+		SortBy:              "stars",
+		Limit:               4,
+		HighlightLimit:      2,
+		CategoryLeaderLimit: 1,
+	})
+	if err != nil {
+		t.Fatalf("failed to build custom ranking: %v", err)
+	}
+	if len(customRanking.Highlights) != 2 {
+		t.Fatalf("unexpected custom highlight count: got=%d want=2", len(customRanking.Highlights))
+	}
+	if len(customRanking.ListItems) != 2 {
+		t.Fatalf("unexpected custom list item count: got=%d want=2", len(customRanking.ListItems))
+	}
+	if len(customRanking.CategoryLeaders) != 1 {
+		t.Fatalf("unexpected custom category leader count: got=%d want=1", len(customRanking.CategoryLeaders))
+	}
 }

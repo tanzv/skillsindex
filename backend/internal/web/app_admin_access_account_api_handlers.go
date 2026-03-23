@@ -9,6 +9,34 @@ import (
 	"skillsindex/internal/services"
 )
 
+func parseOptionalAdminAccountRoleFilter(raw string) (*models.UserRole, bool) {
+	normalized := strings.ToLower(strings.TrimSpace(raw))
+	if normalized == "" {
+		return nil, true
+	}
+	switch normalized {
+	case string(models.RoleViewer), string(models.RoleMember), string(models.RoleAdmin), string(models.RoleSuperAdmin):
+		role := models.UserRole(normalized)
+		return &role, true
+	default:
+		return nil, false
+	}
+}
+
+func parseOptionalAdminAccountStatusFilter(raw string) (*models.UserStatus, bool) {
+	normalized := strings.ToLower(strings.TrimSpace(raw))
+	if normalized == "" {
+		return nil, true
+	}
+	switch normalized {
+	case string(models.UserStatusActive), string(models.UserStatusDisabled):
+		status := models.UserStatus(normalized)
+		return &status, true
+	default:
+		return nil, false
+	}
+}
+
 func requireAdminUserManagementAPI(w http.ResponseWriter, r *http.Request) (*models.User, bool) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
@@ -42,7 +70,22 @@ func (a *App) handleAPIAdminAccounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accounts, err := a.authService.ListUsers(r.Context())
+	role, ok := parseOptionalAdminAccountRoleFilter(r.URL.Query().Get("role"))
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_role"})
+		return
+	}
+	status, ok := parseOptionalAdminAccountStatusFilter(r.URL.Query().Get("status"))
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_status"})
+		return
+	}
+
+	accounts, err := a.authService.ListUsersWithInput(r.Context(), services.ListUsersInput{
+		Query:  strings.TrimSpace(r.URL.Query().Get("q")),
+		Role:   role,
+		Status: status,
+	})
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
 		return
@@ -50,13 +93,15 @@ func (a *App) handleAPIAdminAccounts(w http.ResponseWriter, r *http.Request) {
 	items := make([]apiAdminAccountItem, 0, len(accounts))
 	for _, account := range accounts {
 		items = append(items, apiAdminAccountItem{
-			ID:            account.ID,
-			Username:      account.Username,
-			Role:          string(account.EffectiveRole()),
-			Status:        userStatusValue(account),
-			CreatedAt:     account.CreatedAt,
-			UpdatedAt:     account.UpdatedAt,
-			ForceLogoutAt: account.ForceLogoutAt,
+			ID:             account.User.ID,
+			Username:       account.User.Username,
+			Role:           string(account.User.EffectiveRole()),
+			Status:         userStatusValue(account.User),
+			CreatedAt:      account.User.CreatedAt,
+			UpdatedAt:      account.User.UpdatedAt,
+			ForceLogoutAt:  account.User.ForceLogoutAt,
+			LastSeenAt:     account.LastSeenAt,
+			ActiveSessions: account.ActiveSessionCount,
 		})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": items, "total": len(items)})

@@ -155,6 +155,34 @@ func initializeRuntimeState(
 		if _, err := settingsService.EnsureBool(ctx, services.SettingAllowRegistration, runtimeConfig.AllowRegistration); err != nil {
 			return fmt.Errorf("failed to initialize allow_registration setting: %w", err)
 		}
+		if _, err := settingsService.Ensure(
+			ctx,
+			services.SettingMarketplaceRankingDefaultSort,
+			services.DefaultMarketplaceRankingSort,
+		); err != nil {
+			return fmt.Errorf("failed to initialize marketplace_ranking_default_sort setting: %w", err)
+		}
+		if _, err := settingsService.EnsureInt(
+			ctx,
+			services.SettingMarketplaceRankingLimit,
+			services.DefaultMarketplaceRankingLimit,
+		); err != nil {
+			return fmt.Errorf("failed to initialize marketplace_ranking_limit setting: %w", err)
+		}
+		if _, err := settingsService.EnsureInt(
+			ctx,
+			services.SettingMarketplaceRankingHighlightLimit,
+			services.DefaultMarketplaceRankingHighlightLimit,
+		); err != nil {
+			return fmt.Errorf("failed to initialize marketplace_ranking_highlight_limit setting: %w", err)
+		}
+		if _, err := settingsService.EnsureInt(
+			ctx,
+			services.SettingMarketplaceRankingCategoryLeaderLimit,
+			services.DefaultMarketplaceCategoryLeaderLimit,
+		); err != nil {
+			return fmt.Errorf("failed to initialize marketplace_ranking_category_leader_limit setting: %w", err)
+		}
 	}
 	if options.RepositorySyncPolicy {
 		if _, err := repoSyncPolicyService.Ensure(ctx); err != nil {

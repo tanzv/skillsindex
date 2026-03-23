@@ -8,8 +8,14 @@ func openAPIPathsAdminAccess() map[string]any {
 				"summary":     "List accounts for administration",
 				"description": "Session endpoint. Super admin only.",
 				"security":    sessionSecurity(),
+				"parameters": []map[string]any{
+					queryParam("q", "string", false, "Optional username keyword filter"),
+					queryParam("role", "string", false, "Optional role filter"),
+					queryParam("status", "string", false, "Optional status filter"),
+				},
 				"responses": map[string]any{
 					"200": jsonResponse("Account list", "AdminAccountsResponse"),
+					"400": jsonResponse("Invalid query parameters", "ErrorResponse"),
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
 					"403": jsonResponse("Permission denied", "ErrorResponse"),
 				},

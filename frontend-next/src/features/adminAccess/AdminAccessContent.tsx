@@ -30,6 +30,10 @@ interface AdminAccessContentProps {
   settingsDraft: {
     allowRegistration: boolean;
     marketplacePublicAccess: boolean;
+    rankingDefaultSort: "stars" | "quality";
+    rankingLimit: number;
+    highlightLimit: number;
+    categoryLeaderLimit: number;
     enabledProviders: string[];
   };
   onRefresh: () => void;
@@ -40,7 +44,16 @@ interface AdminAccessContentProps {
   onOpenAccountDrawer: (accountId: number) => void;
   onCloseAccountDrawer: () => void;
   onToggleProvider: (provider: string) => void;
-  onSettingsDraftChange: (patch: Partial<{ allowRegistration: boolean; marketplacePublicAccess: boolean }>) => void;
+  onSettingsDraftChange: (
+    patch: Partial<{
+      allowRegistration: boolean;
+      marketplacePublicAccess: boolean;
+      rankingDefaultSort: "stars" | "quality";
+      rankingLimit: number;
+      highlightLimit: number;
+      categoryLeaderLimit: number;
+    }>
+  ) => void;
   onSavePolicy: () => void;
 }
 

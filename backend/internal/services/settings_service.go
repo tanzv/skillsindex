@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"skillsindex/internal/models"
@@ -17,6 +18,14 @@ const (
 	SettingAllowRegistration = "allow_registration"
 	// SettingMarketplacePublicAccess controls whether marketplace routes can be accessed anonymously.
 	SettingMarketplacePublicAccess = "marketplace_public_access"
+	// SettingMarketplaceRankingDefaultSort controls the default public rankings sort.
+	SettingMarketplaceRankingDefaultSort = "marketplace_ranking_default_sort"
+	// SettingMarketplaceRankingLimit controls the number of ranked items returned by the public rankings endpoint.
+	SettingMarketplaceRankingLimit = "marketplace_ranking_limit"
+	// SettingMarketplaceRankingHighlightLimit controls the number of highlight cards in the public rankings payload.
+	SettingMarketplaceRankingHighlightLimit = "marketplace_ranking_highlight_limit"
+	// SettingMarketplaceRankingCategoryLeaderLimit controls the number of category leader cards in the public rankings payload.
+	SettingMarketplaceRankingCategoryLeaderLimit = "marketplace_ranking_category_leader_limit"
 	// SettingAuthEnabledProviders controls which third-party auth providers are visible on auth pages.
 	SettingAuthEnabledProviders = "auth_enabled_providers"
 	// SettingUserCenterPermissionOverrides stores per-user permissions for user center operations.
@@ -134,6 +143,45 @@ func (s *SettingsService) SetBool(ctx context.Context, key string, value bool) e
 	return s.Set(ctx, key, formatSettingBool(value))
 }
 
+// EnsureInt initializes an integer setting only if not present.
+func (s *SettingsService) EnsureInt(ctx context.Context, key string, defaultValue int) (int, error) {
+	cleanKey, err := normalizeSettingKey(key)
+	if err != nil {
+		return 0, err
+	}
+
+	var setting models.SystemSetting
+	queryErr := s.db.WithContext(ctx).First(&setting, "key = ?", cleanKey).Error
+	if queryErr == nil {
+		parsed, _ := parseSettingInt(setting.Value, defaultValue)
+		return parsed, nil
+	}
+	if !errors.Is(queryErr, gorm.ErrRecordNotFound) {
+		return 0, fmt.Errorf("failed to query system setting: %w", queryErr)
+	}
+
+	value := formatSettingInt(defaultValue)
+	if err := s.Set(ctx, cleanKey, value); err != nil {
+		return 0, err
+	}
+	return defaultValue, nil
+}
+
+// GetInt returns setting value as integer, falling back when invalid or missing.
+func (s *SettingsService) GetInt(ctx context.Context, key string, defaultValue int) (int, error) {
+	raw, err := s.Get(ctx, key, formatSettingInt(defaultValue))
+	if err != nil {
+		return defaultValue, err
+	}
+	parsed, _ := parseSettingInt(raw, defaultValue)
+	return parsed, nil
+}
+
+// SetInt persists an integer setting value.
+func (s *SettingsService) SetInt(ctx context.Context, key string, value int) error {
+	return s.Set(ctx, key, formatSettingInt(value))
+}
+
 func normalizeSettingKey(key string) (string, error) {
 	clean := strings.ToLower(strings.TrimSpace(key))
 	if clean == "" {
@@ -152,6 +200,10 @@ func formatSettingBool(value bool) string {
 	return "false"
 }
 
+func formatSettingInt(value int) string {
+	return strconv.Itoa(value)
+}
+
 func parseSettingBool(raw string, defaultValue bool) (bool, bool) {
 	switch strings.ToLower(strings.TrimSpace(raw)) {
 	case "1", "true", "yes", "on", "enabled":
@@ -161,4 +213,16 @@ func parseSettingBool(raw string, defaultValue bool) (bool, bool) {
 	default:
 		return defaultValue, false
 	}
+}
+
+func parseSettingInt(raw string, defaultValue int) (int, bool) {
+	clean := strings.TrimSpace(raw)
+	if clean == "" {
+		return defaultValue, false
+	}
+	value, err := strconv.Atoi(clean)
+	if err != nil {
+		return defaultValue, false
+	}
+	return value, true
 }

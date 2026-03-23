@@ -3,6 +3,7 @@ import {
   normalizeAdminAccountsPayload,
   normalizeAdminAccountStatus,
   normalizeAdminAuthProvidersPayload,
+  normalizeAdminMarketplaceRankingPayload,
   normalizeAdminRegistrationPayload,
   type AdminNormalizedAccountItem
 } from "@/src/lib/admin/adminAccountSettingsModel";
@@ -14,6 +15,10 @@ export interface AdminAccessGovernanceData {
   accountsTotal: number;
   allowRegistration: boolean;
   marketplacePublicAccess: boolean;
+  rankingDefaultSort: "stars" | "quality";
+  rankingLimit: number;
+  highlightLimit: number;
+  categoryLeaderLimit: number;
   enabledProviders: string[];
   availableProviders: string[];
 }
@@ -44,10 +49,12 @@ interface AccessMetricLabels {
 export function buildAdminAccessGovernanceData(payloads: {
   accounts: unknown;
   registration: unknown;
+  marketplaceRanking: unknown;
   authProviders: unknown;
 }): AdminAccessGovernanceData {
   const accounts = normalizeAdminAccountsPayload(payloads.accounts);
   const registration = normalizeAdminRegistrationPayload(payloads.registration);
+  const marketplaceRanking = normalizeAdminMarketplaceRankingPayload(payloads.marketplaceRanking);
   const authProviders = normalizeAdminAuthProvidersPayload(payloads.authProviders);
 
   return {
@@ -55,6 +62,10 @@ export function buildAdminAccessGovernanceData(payloads: {
     accountsTotal: accounts.total,
     allowRegistration: registration.allowRegistration,
     marketplacePublicAccess: registration.marketplacePublicAccess,
+    rankingDefaultSort: marketplaceRanking.defaultSort,
+    rankingLimit: marketplaceRanking.rankingLimit,
+    highlightLimit: marketplaceRanking.highlightLimit,
+    categoryLeaderLimit: marketplaceRanking.categoryLeaderLimit,
     enabledProviders: authProviders.authProviders,
     availableProviders: authProviders.availableAuthProviders
   };

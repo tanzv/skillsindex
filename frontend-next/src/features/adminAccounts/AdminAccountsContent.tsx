@@ -49,6 +49,10 @@ interface AdminAccountsContentProps {
   settingsDraft: {
     allowRegistration: boolean;
     marketplacePublicAccess: boolean;
+    rankingDefaultSort: "stars" | "quality";
+    rankingLimit: number;
+    highlightLimit: number;
+    categoryLeaderLimit: number;
     enabledProviders: string[];
   };
   onRefresh: () => void;

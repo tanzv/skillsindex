@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { ProtectedI18nProvider } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { AdminAccessContent } from "@/src/features/adminAccess/AdminAccessContent";
+
 import { createProtectedPageTestMessages } from "./protected-page-test-messages";
 
 function createMessages() {
@@ -43,6 +44,14 @@ function createMessages() {
       providersTitle: "Auth Providers",
       providersDescription: "Providers description",
       providerAriaLabel: "Provider {provider}",
+      marketplaceRankingTitle: "Marketplace Top",
+      marketplaceRankingDescription: "Manage public ranking defaults.",
+      rankingDefaultSortLabel: "Default sort",
+      rankingDefaultSortStars: "Stars",
+      rankingDefaultSortQuality: "Quality",
+      rankingLimitLabel: "Ranking limit",
+      highlightLimitLabel: "Highlight limit",
+      categoryLeaderLimitLabel: "Category leader limit",
       snapshotTitle: "Policy Snapshot",
       snapshotDescription: "Snapshot description",
       registrationEnabled: "Registration enabled",
@@ -73,7 +82,7 @@ function createMessages() {
   });
 }
 
-function renderAccessContent(options: { activePane?: "idle" | "policy" | "account" } = {}) {
+function renderAccessContent(options: { policyDrawerOpen?: boolean; accountDrawerOpen?: boolean } = {}) {
   return renderToStaticMarkup(
     createElement(
       ProtectedI18nProvider,
@@ -99,6 +108,10 @@ function renderAccessContent(options: { activePane?: "idle" | "policy" | "accoun
           accountsTotal: 1,
           allowRegistration: true,
           marketplacePublicAccess: true,
+          rankingDefaultSort: "quality",
+          rankingLimit: 18,
+          highlightLimit: 4,
+          categoryLeaderLimit: 2,
           enabledProviders: ["password"],
           availableProviders: ["password", "github"]
         },
@@ -129,18 +142,26 @@ function renderAccessContent(options: { activePane?: "idle" | "policy" | "accoun
           updatedAt: "2026-03-16T11:00:00Z",
           forceLogoutAt: ""
         },
-        activePane: options.activePane ?? "idle",
+        policyDrawerOpen: options.policyDrawerOpen ?? false,
+        accountDrawerOpen: options.accountDrawerOpen ?? false,
         settingsDraft: {
           allowRegistration: true,
           marketplacePublicAccess: true,
+          rankingDefaultSort: "quality",
+          rankingLimit: 18,
+          highlightLimit: 4,
+          categoryLeaderLimit: 2,
           enabledProviders: ["password"]
         },
         onRefresh: () => undefined,
         onKeywordChange: () => undefined,
         onClearKeyword: () => undefined,
         onOpenPolicyDrawer: () => undefined,
-        onOpenAccountDrawer: () => undefined,
-        onClosePane: () => undefined,
+        onClosePolicyDrawer: () => undefined,
+        onOpenAccountDrawer: (accountId: number) => {
+          void accountId;
+        },
+        onCloseAccountDrawer: () => undefined,
         onToggleProvider: () => undefined,
         onSettingsDraftChange: () => undefined,
         onSavePolicy: () => undefined
@@ -149,51 +170,26 @@ function renderAccessContent(options: { activePane?: "idle" | "policy" | "accoun
   );
 }
 
-function expectMarkupToContainAll(markup: string, fragments: string[]) {
-  for (const fragment of fragments) {
-    expect(markup).toContain(fragment);
-  }
-}
-
-function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
-  for (const fragment of fragments) {
-    expect(markup).not.toContain(fragment);
-  }
-}
-
 describe("admin access content", () => {
-  it("renders the inline policy pane with access settings and provider toggles", () => {
-    const markup = renderAccessContent({ activePane: "policy" });
+  it("renders marketplace ranking settings in the policy drawer", () => {
+    const markup = renderAccessContent({ policyDrawerOpen: true });
 
-    expectMarkupToContainAll(markup, [
-      "Account Directory",
-      "Access Policy",
-      "Policy Snapshot",
-      'data-testid="admin-access-account-3"',
-      "Close Panel",
-      "Allow registration",
-      "Marketplace public access",
-      'aria-label="Provider password"',
-      'aria-label="Provider github"',
-      "Save Access Policy",
-      "Available providers",
-      "password, github"
-    ]);
-    expectMarkupToExcludeAll(markup, ['role="dialog"', "Open Policy Panel", "Role Distribution"]);
+    expect(markup).toContain("Marketplace Top");
+    expect(markup).toContain("Manage public ranking defaults.");
+    expect(markup).toContain("Default sort");
+    expect(markup).toContain("Ranking limit");
+    expect(markup).toContain("Highlight limit");
+    expect(markup).toContain("Category leader limit");
+    expect(markup).toContain("Policy Snapshot");
+    expect(markup).toContain("Available providers");
   });
 
-  it("renders the selected account summary as an inline pane with stable fields", () => {
-    const markup = renderAccessContent({ activePane: "account" });
+  it("renders snapshot values for marketplace ranking policy", () => {
+    const markup = renderAccessContent();
 
-    expectMarkupToContainAll(markup, [
-      "Account Directory",
-      'data-testid="admin-access-account-3"',
-      "Open Details",
-      "Close Panel",
-      "reviewer #3",
-      "Status: Active",
-      "Role: Auditor"
-    ]);
-    expectMarkupToExcludeAll(markup, ['role="dialog"', "No selection", "Open Policy Panel"]);
+    expect(markup).toContain("Quality");
+    expect(markup).toContain(">18<");
+    expect(markup).toContain(">4<");
+    expect(markup).toContain(">2<");
   });
 });

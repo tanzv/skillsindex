@@ -8,12 +8,14 @@ import (
 	"skillsindex/internal/services"
 )
 
-func normalizePublicRankingSort(raw string) string {
+func normalizePublicRankingSort(raw string, defaultSort string) string {
 	switch strings.TrimSpace(strings.ToLower(raw)) {
 	case "quality":
 		return "quality"
-	default:
+	case "stars":
 		return "stars"
+	default:
+		return normalizeMarketplaceRankingSort(defaultSort)
 	}
 }
 
@@ -46,10 +48,21 @@ func (a *App) handleAPIPublicRankings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sortBy := normalizePublicRankingSort(r.URL.Query().Get("sort"))
+	settings, err := a.loadMarketplaceRankingSettings(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{
+			"error":   "settings_query_failed",
+			"message": "Failed to load marketplace ranking settings",
+		})
+		return
+	}
+
+	sortBy := normalizePublicRankingSort(r.URL.Query().Get("sort"), settings.DefaultSort)
 	result, err := a.skillService.BuildPublicRanking(r.Context(), services.PublicRankingInput{
-		SortBy: sortBy,
-		Limit:  12,
+		SortBy:              sortBy,
+		Limit:               settings.RankingLimit,
+		HighlightLimit:      settings.HighlightLimit,
+		CategoryLeaderLimit: settings.CategoryLeaderLimit,
 	})
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{
