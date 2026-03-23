@@ -80,6 +80,30 @@ func TestHandleOpenAPIReadsCurrentPublishedSnapshot(t *testing.T) {
 	}
 }
 
+func TestHandleOpenAPIYAMLReadsCurrentPublishedSnapshotWithResolvedServerURL(t *testing.T) {
+	app := setupOpenAPIRuntimeApp(t, "openapi: 3.0.3\ninfo:\n  title: Runtime Snapshot\n  version: 1.2.3\nservers:\n  - url: http://stale.example.com\n")
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/openapi.yaml", nil)
+	req.Host = "api.example.com"
+	req.Header.Set("X-Forwarded-Proto", "https")
+	recorder := httptest.NewRecorder()
+
+	app.handleOpenAPIYAML(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
+	}
+	body := recorder.Body.String()
+	if !strings.Contains(body, "Runtime Snapshot") {
+		t.Fatalf("expected published snapshot body")
+	}
+	if !strings.Contains(body, "url: https://api.example.com") {
+		t.Fatalf("expected resolved server url in published yaml, got=%s", body)
+	}
+	if strings.Contains(body, "http://stale.example.com") {
+		t.Fatalf("expected stale server url to be replaced, got=%s", body)
+	}
+}
+
 func TestHandleSwaggerDocs(t *testing.T) {
 	app := &App{
 		templates: template.Must(template.New("layout").Parse(`{{define "layout"}}{{.Page}}|{{.Title}}{{end}}`)),

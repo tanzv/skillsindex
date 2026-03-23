@@ -16,7 +16,9 @@ describe("category detail marketplace request query", () => {
         tags: "ops",
         audience: "human"
       })
-    ).toEqual({});
+    ).toEqual({
+      scope: "category_hub"
+    });
   });
 
   it("keeps semantic tags in generic marketplace backend requests", () => {
@@ -71,6 +73,7 @@ describe("category detail marketplace request query", () => {
         mode: "ai"
       })
     ).toEqual({
+      scope: "category_detail",
       category: "operations",
       q: "release gate",
       tags: "ops",
@@ -89,6 +92,7 @@ describe("category detail marketplace request query", () => {
         sort: "stars"
       })
     ).toEqual({
+      scope: "category_detail",
       category_group: "programming-development",
       subcategory_group: "devops-cloud",
       q: "release",

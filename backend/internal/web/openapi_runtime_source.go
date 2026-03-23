@@ -45,6 +45,10 @@ func loadCurrentOpenAPISpec(ctx context.Context, registry *services.APISpecRegis
 	}
 	if len(serverURL) > 0 {
 		spec["servers"] = []map[string]any{{"url": serverURL}}
+		raw, err = marshalOpenAPIYAML(spec)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to marshal current openapi snapshot: %w", err)
+		}
 	}
 	return spec, raw, nil
 }
