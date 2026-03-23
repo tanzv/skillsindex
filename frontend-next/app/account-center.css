@@ -260,7 +260,7 @@
 }
 
 .account-center-side-panel-highlight {
-  background: color-mix(in srgb, var(--ui-info-bg) 82%, var(--protected-shell-panel-surface) 18%);
+  background: var(--protected-shell-panel-highlight-bg);
 }
 
 .account-center-side-panel-highlight .account-center-panel-title-row h2,

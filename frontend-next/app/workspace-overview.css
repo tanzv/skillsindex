@@ -168,11 +168,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 3px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--protected-shell-accent) 88%, transparent) 0%,
-    color-mix(in srgb, var(--protected-shell-text-muted) 72%, transparent) 100%
-  );
+  background: var(--protected-shell-accent-fade-gradient);
 }
 
 .workspace-section-badge {
@@ -217,20 +213,20 @@
 
 .workspace-section-item.is-signal {
   gap: 10px;
-  background: color-mix(in srgb, var(--protected-shell-card-alt) 88%, var(--protected-shell-text) 12%);
+  background: var(--protected-shell-signal-surface);
 }
 
 .workspace-section-item.is-activity {
-  background: color-mix(in srgb, var(--protected-shell-card-alt) 92%, var(--protected-shell-bg) 8%);
+  background: var(--protected-shell-activity-surface);
 }
 
 .workspace-section-item.is-session {
-  background: color-mix(in srgb, var(--ui-info-bg) 72%, var(--protected-shell-card-alt) 28%);
+  background: var(--protected-shell-info-surface);
 }
 
 .workspace-section-card.is-current-session .workspace-section-item.is-session {
   gap: 6px;
-  background: color-mix(in srgb, var(--ui-info-bg) 84%, var(--protected-shell-card-alt) 16%);
+  background: var(--protected-shell-info-surface-strong);
 }
 
 .workspace-section-card.is-current-session .workspace-section-item.is-session .workspace-section-item-row {
@@ -253,7 +249,7 @@
 }
 
 .workspace-section-card.is-execution-spotlight .workspace-section-item {
-  background: color-mix(in srgb, var(--protected-shell-card-alt) 82%, var(--protected-shell-text) 18%);
+  background: var(--protected-shell-emphasis-surface);
 }
 
 .workspace-section-card.is-execution-spotlight .workspace-stage-action-row {

@@ -173,18 +173,14 @@
 .admin-overview-distribution-track {
   height: 8px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--protected-shell-text) 10%, transparent);
+  background: var(--protected-shell-muted-track-bg);
   overflow: hidden;
 }
 
 .admin-overview-distribution-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--protected-shell-accent) 88%, transparent) 0%,
-    color-mix(in srgb, var(--protected-shell-text-muted) 72%, transparent) 100%
-  );
+  background: var(--protected-shell-accent-fade-gradient);
 }
 
 .admin-overview-capability-grid,
