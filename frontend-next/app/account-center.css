@@ -16,14 +16,14 @@
 .account-center-secret,
 .account-center-session-card,
 .account-center-credential-card {
-  border: 1px solid rgba(191, 216, 255, 0.16);
+  border: 1px solid var(--protected-shell-border);
   border-radius: 20px;
 }
 
 .account-center-stage-panel {
   padding: 16px;
-  background: linear-gradient(180deg, rgba(27, 46, 87, 0.96) 0%, rgba(20, 37, 72, 0.96) 100%);
-  box-shadow: 0 18px 40px rgba(4, 10, 23, 0.26);
+  background: var(--protected-shell-panel-surface);
+  box-shadow: var(--protected-shell-panel-shadow);
 }
 
 .account-center-hero {
@@ -34,7 +34,7 @@
 .account-center-kicker,
 .account-center-summary-label,
 .account-center-section-kicker {
-  color: #93b4e8;
+  color: var(--protected-shell-text-muted);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -45,7 +45,7 @@
 .account-center-panel-title-row h2,
 .account-center-panel-title-row h3 {
   margin: 0;
-  color: #eaf2ff;
+  color: var(--protected-shell-text);
 }
 
 .account-center-hero h1 {
@@ -58,7 +58,7 @@
 .account-center-summary-detail,
 .account-center-surface-copy {
   margin: 0;
-  color: #bfd8ff;
+  color: var(--protected-shell-text-secondary);
   font-size: 13px;
   line-height: 1.6;
 }
@@ -79,13 +79,13 @@
 .account-center-badge {
   min-height: 36px;
   padding: 0 14px;
-  border: 1px solid rgba(191, 216, 255, 0.16);
+  border: 1px solid var(--protected-shell-border);
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #bfd8ff;
-  background: rgba(234, 242, 255, 0.05);
+  color: var(--protected-shell-text-secondary);
+  background: var(--protected-shell-interactive-bg);
   font-size: 12px;
   font-weight: 700;
   transition:
@@ -96,16 +96,16 @@
 
 .account-center-action:hover,
 .account-center-tab-link:hover {
-  border-color: rgba(191, 216, 255, 0.28);
-  background: rgba(234, 242, 255, 0.1);
-  color: #eaf2ff;
+  border-color: var(--protected-shell-interactive-border-hover);
+  background: var(--protected-shell-interactive-bg-hover);
+  color: var(--protected-shell-text);
 }
 
 .account-center-action.is-primary,
 .account-center-tab-link.is-active {
-  border-color: rgba(94, 234, 212, 0.28);
-  background: rgba(94, 234, 212, 0.16);
-  color: #eaf2ff;
+  border-color: var(--protected-shell-accent);
+  background: var(--protected-shell-accent);
+  color: var(--protected-shell-accent-contrast);
 }
 
 .account-center-summary-grid {
@@ -114,14 +114,14 @@
 
 .account-center-summary-card {
   padding: 14px;
-  border: 1px solid rgba(191, 216, 255, 0.16);
+  border: 1px solid var(--protected-shell-border);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--protected-shell-card-alt);
 }
 
 .account-center-summary-value {
   margin-top: 10px;
-  color: #eaf2ff;
+  color: var(--protected-shell-text);
   font-size: 26px;
   font-weight: 700;
   line-height: 1;
@@ -139,20 +139,20 @@
 }
 
 .account-center-message.is-error {
-  border-color: rgba(248, 113, 113, 0.32);
-  background: rgba(127, 29, 29, 0.32);
-  color: #fee2e2;
+  border-color: var(--ui-danger-border);
+  background: var(--ui-danger-bg);
+  color: var(--ui-danger-text);
 }
 
 .account-center-message.is-success {
-  border-color: rgba(94, 234, 212, 0.32);
-  background: rgba(6, 78, 59, 0.32);
-  color: #d1fae5;
+  border-color: var(--ui-success-border);
+  background: var(--ui-success-bg);
+  color: var(--ui-success-text);
 }
 
 .account-center-secret {
-  background: rgba(20, 184, 166, 0.22);
-  color: #d7fffb;
+  background: var(--ui-info-bg);
+  color: var(--ui-info-text);
 }
 
 .account-center-stage-grid {
@@ -186,8 +186,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(94, 234, 212, 0.18);
-  color: #eaf2ff;
+  background: var(--protected-shell-accent);
+  color: var(--protected-shell-accent-contrast);
   font-size: 16px;
   font-weight: 700;
 }
@@ -205,22 +205,22 @@
   width: 100%;
   min-height: 44px;
   padding: 0 14px;
-  border: 1px solid rgba(191, 216, 255, 0.18);
+  border: 1px solid var(--protected-shell-border);
   border-radius: 14px;
-  background: rgba(9, 17, 32, 0.34);
-  color: #eaf2ff;
+  background: var(--protected-shell-card-alt);
+  color: var(--protected-shell-text);
   font-size: 14px;
   outline: none;
 }
 
 .account-center-field::placeholder,
 .account-center-textarea::placeholder {
-  color: #93b4e8;
+  color: var(--protected-shell-text-muted);
 }
 
 .account-center-field:focus,
 .account-center-textarea:focus {
-  border-color: rgba(94, 234, 212, 0.42);
+  border-color: var(--protected-shell-accent);
 }
 
 .account-center-textarea {
@@ -233,18 +233,18 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #bfd8ff;
+  color: var(--protected-shell-text-secondary);
   font-size: 14px;
 }
 
 .account-center-checkbox-row input {
-  accent-color: #5eead4;
+  accent-color: var(--protected-shell-accent);
 }
 
 .account-center-session-card,
 .account-center-credential-card {
   padding: 14px;
-  background: rgba(7, 15, 30, 0.18);
+  background: var(--protected-shell-card-alt);
 }
 
 .account-center-badge {
@@ -254,19 +254,19 @@
 }
 
 .account-center-badge.is-soft {
-  border-color: rgba(94, 234, 212, 0.28);
-  background: rgba(94, 234, 212, 0.16);
-  color: #eaf2ff;
+  border-color: var(--protected-shell-accent);
+  background: var(--protected-shell-accent);
+  color: var(--protected-shell-accent-contrast);
 }
 
 .account-center-side-panel-highlight {
-  background: linear-gradient(180deg, rgba(20, 148, 165, 0.92) 0%, rgba(17, 94, 89, 0.92) 100%);
+  background: color-mix(in srgb, var(--ui-info-bg) 82%, var(--protected-shell-panel-surface) 18%);
 }
 
 .account-center-side-panel-highlight .account-center-panel-title-row h2,
 .account-center-side-panel-highlight .account-center-panel-description,
 .account-center-side-panel-highlight .account-center-surface-copy {
-  color: #e6fffb;
+  color: var(--protected-shell-text);
 }
 
 @media (max-width: 1180px) {
