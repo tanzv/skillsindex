@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -19,6 +20,7 @@ import (
 
 const defaultCORSOrigin = "http://localhost:5173"
 const defaultHTTPShutdownTimeout = 10 * time.Second
+const defaultTemplateGlob = "web/templates/*.tmpl"
 
 // RunOptions controls command-level startup behavior.
 type RunOptions struct {
@@ -59,6 +61,13 @@ func LogAPIKeyWarning(logger *log.Logger, cfg config.Config) {
 	if len(cfg.APIKeys) == 0 {
 		logger.Printf("API_KEYS is empty; API routes require database-issued API keys")
 	}
+}
+
+func resolveTemplateGlob(apiOnly bool) string {
+	if apiOnly {
+		return ""
+	}
+	return defaultTemplateGlob
 }
 
 // RunAPIServer bootstraps all dependencies and starts the HTTP API server.
@@ -171,14 +180,6 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 			return repoSyncPolicyService.Get(policyContext)
 		},
 	)
-	scheduler.Start(ctx)
-	log.Printf(
-		"repository sync scheduler initialized bootstrap_enabled=%t interval=%s timeout=%s batch_size=%d",
-		runtimeConfig.RepoSyncEnabled,
-		runtimeConfig.RepoSyncInterval,
-		runtimeConfig.RepoSyncTimeout,
-		runtimeConfig.RepoSyncBatchSize,
-	)
 
 	app, err := web.NewApp(web.AppDependencies{
 		AuthService:           authService,
@@ -210,42 +211,77 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 		APIOnly:               runtimeConfig.APIOnly,
 		CORSAllowedOrigins:    runtimeConfig.CORSAllowedOrigins,
 		APIKeys:               runtimeConfig.APIKeys,
-		TemplateGlob:          "",
+		TemplateGlob:          resolveTemplateGlob(runtimeConfig.APIOnly),
 		StoragePath:           runtimeConfig.StoragePath,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to build web app: %w", err)
 	}
 
+	scheduler.Start(ctx)
+	log.Printf(
+		"repository sync scheduler initialized bootstrap_enabled=%t interval=%s timeout=%s batch_size=%d",
+		runtimeConfig.RepoSyncEnabled,
+		runtimeConfig.RepoSyncInterval,
+		runtimeConfig.RepoSyncTimeout,
+		runtimeConfig.RepoSyncBatchSize,
+	)
+
 	httpServer := &http.Server{
 		Addr:              ":" + runtimeConfig.ServerPort,
 		Handler:           app.Router(),
 		ReadHeaderTimeout: 10 * time.Second,
+	}
+	listener, err := net.Listen("tcp", httpServer.Addr)
+	if err != nil {
+		return fmt.Errorf("failed to listen on %s: %w", httpServer.Addr, err)
 	}
 
 	startupLabel := strings.TrimSpace(options.StartupLabel)
 	if startupLabel == "" {
 		startupLabel = "SkillsIndex is listening at"
 	}
-	fmt.Printf("%s http://localhost:%s\n", startupLabel, runtimeConfig.ServerPort)
-	if err := runHTTPServer(ctx, httpServer, defaultHTTPShutdownTimeout); err != nil {
+	fmt.Printf("%s %s\n", startupLabel, buildStartupURL(listener))
+	if err := runHTTPServer(ctx, httpServer, listener, defaultHTTPShutdownTimeout); err != nil {
 		return fmt.Errorf("server failed: %w", err)
 	}
 	return nil
 }
 
 type managedHTTPServer interface {
-	ListenAndServe() error
+	Serve(net.Listener) error
 	Shutdown(context.Context) error
 }
 
-func runHTTPServer(ctx context.Context, server managedHTTPServer, shutdownTimeout time.Duration) error {
+func buildStartupURL(listener net.Listener) string {
+	if listener == nil {
+		return "http://localhost"
+	}
+	host, port, err := net.SplitHostPort(listener.Addr().String())
+	if err != nil {
+		return "http://" + listener.Addr().String()
+	}
+	if host == "" || host == "::" || host == "0.0.0.0" {
+		host = "localhost"
+	}
+	return fmt.Sprintf("http://%s:%s", host, port)
+}
+
+func runHTTPServer(ctx context.Context, server managedHTTPServer, listener net.Listener, shutdownTimeout time.Duration) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	if listener == nil {
+		return fmt.Errorf("listener is required")
+	}
+	defer func() {
+		if closeErr := listener.Close(); closeErr != nil && !errors.Is(closeErr, net.ErrClosed) {
+			log.Printf("failed to close listener: %v", closeErr)
+		}
+	}()
 	errCh := make(chan error, 1)
 	go func() {
-		errCh <- server.ListenAndServe()
+		errCh <- server.Serve(listener)
 	}()
 
 	select {

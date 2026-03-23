@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"bytes"
 	"log"
+	"net"
 	"strings"
 	"testing"
 
@@ -131,5 +132,37 @@ func TestLogAPIKeyWarningSkipsWhenConfigured(t *testing.T) {
 
 	if output.Len() != 0 {
 		t.Fatalf("expected no warning log when api keys are configured")
+	}
+}
+
+func TestResolveTemplateGlobUsesWebTemplatesWhenNotAPIOnly(t *testing.T) {
+	got := resolveTemplateGlob(false)
+
+	if got != "web/templates/*.tmpl" {
+		t.Fatalf("unexpected template glob: %s", got)
+	}
+}
+
+func TestResolveTemplateGlobSkipsTemplatesInAPIOnlyMode(t *testing.T) {
+	got := resolveTemplateGlob(true)
+
+	if got != "" {
+		t.Fatalf("expected empty template glob in api-only mode, got %s", got)
+	}
+}
+
+func TestBuildStartupURLUsesAssignedPortForWildcardListener(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("failed to allocate listener: %v", err)
+	}
+	defer listener.Close()
+
+	got := buildStartupURL(listener)
+	if !strings.HasPrefix(got, "http://127.0.0.1:") {
+		t.Fatalf("unexpected startup url: %s", got)
+	}
+	if strings.HasSuffix(got, ":0") {
+		t.Fatalf("startup url should use assigned port, got %s", got)
 	}
 }

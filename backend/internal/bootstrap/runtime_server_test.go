@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"testing"
 	"time"
@@ -25,7 +26,7 @@ func newFakeHTTPServer(listenError error, shutdownError error) *fakeHTTPServer {
 	}
 }
 
-func (f *fakeHTTPServer) ListenAndServe() error {
+func (f *fakeHTTPServer) Serve(net.Listener) error {
 	select {
 	case f.listenStarted <- struct{}{}:
 	default:
@@ -45,8 +46,10 @@ func (f *fakeHTTPServer) Shutdown(context.Context) error {
 
 func TestRunHTTPServerReturnsListenError(t *testing.T) {
 	fake := newFakeHTTPServer(errors.New("listen failed"), nil)
+	listener := newTestListener(t)
+	defer listener.Close()
 
-	err := runHTTPServer(context.Background(), fake, 50*time.Millisecond)
+	err := runHTTPServer(context.Background(), fake, listener, 50*time.Millisecond)
 	if err == nil {
 		t.Fatalf("expected listen error")
 	}
@@ -54,8 +57,10 @@ func TestRunHTTPServerReturnsListenError(t *testing.T) {
 
 func TestRunHTTPServerReturnsNilOnServerClosed(t *testing.T) {
 	fake := newFakeHTTPServer(http.ErrServerClosed, nil)
+	listener := newTestListener(t)
+	defer listener.Close()
 
-	err := runHTTPServer(context.Background(), fake, 50*time.Millisecond)
+	err := runHTTPServer(context.Background(), fake, listener, 50*time.Millisecond)
 	if err != nil {
 		t.Fatalf("expected nil error when server closes: %v", err)
 	}
@@ -64,10 +69,12 @@ func TestRunHTTPServerReturnsNilOnServerClosed(t *testing.T) {
 func TestRunHTTPServerShutsDownOnContextCancel(t *testing.T) {
 	fake := newFakeHTTPServer(nil, nil)
 	ctx, cancel := context.WithCancel(context.Background())
+	listener := newTestListener(t)
+	defer listener.Close()
 
 	done := make(chan error, 1)
 	go func() {
-		done <- runHTTPServer(ctx, fake, 50*time.Millisecond)
+		done <- runHTTPServer(ctx, fake, listener, 50*time.Millisecond)
 	}()
 
 	select {
@@ -90,4 +97,14 @@ func TestRunHTTPServerShutsDownOnContextCancel(t *testing.T) {
 	if fake.shutdownCalls != 1 {
 		t.Fatalf("expected one shutdown call, got %d", fake.shutdownCalls)
 	}
+}
+
+func newTestListener(t *testing.T) net.Listener {
+	t.Helper()
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("failed to create test listener: %v", err)
+	}
+	return listener
 }
