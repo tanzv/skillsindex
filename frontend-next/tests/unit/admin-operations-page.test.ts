@@ -37,17 +37,34 @@ function renderPage() {
   );
 }
 
+function expectMarkupToContainAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).toContain(fragment);
+  }
+}
+
+function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).not.toContain(fragment);
+  }
+}
+
 describe("admin operations page", () => {
-  it("defers release gate panels until live data loads", () => {
+  it("renders the release-gates load-state contract until live data becomes ready", () => {
     const markup = renderPage();
 
-    expect(markup).toContain("Release Gates");
-    expect(markup).toContain("Validate release readiness.");
-    expect(markup).toContain("Refreshing...");
-    expect(markup).not.toContain("Run Gates");
-    expect(markup).not.toContain("Gate Checks");
-    expect(markup).not.toContain("Snapshot Summary");
-    expect(markup).not.toContain("Overall State");
-    expect(markup).not.toContain("Generated At");
+    expectMarkupToContainAll(markup, [
+      "Admin",
+      "Release Gates",
+      "Validate release readiness.",
+      "Refreshing..."
+    ]);
+    expectMarkupToExcludeAll(markup, [
+      "Run Gates",
+      "Gate Checks",
+      "Snapshot Summary",
+      "Overall State",
+      "Generated At"
+    ]);
   });
 });

@@ -104,8 +104,7 @@ function createMessages() {
 }
 
 function renderModerationContent(options: {
-  createDrawerOpen?: boolean;
-  detailDrawerOpen?: boolean;
+  activePane?: "idle" | "create" | "detail";
 } = {}) {
   return renderToStaticMarkup(
     createElement(
@@ -172,15 +171,13 @@ function renderModerationContent(options: {
           resolutionNote: "",
           rejectionNote: ""
         },
-        createDrawerOpen: options.createDrawerOpen ?? false,
-        detailDrawerOpen: options.detailDrawerOpen ?? false,
+        activePane: options.activePane ?? "idle",
         onRefresh: () => undefined,
         onResetFilters: () => undefined,
         onQueryChange: () => undefined,
         onOpenCreateDrawer: () => undefined,
-        onCloseCreateDrawer: () => undefined,
         onOpenCaseDetail: () => undefined,
-        onCloseCaseDetail: () => undefined,
+        onClosePane: () => undefined,
         onCreateDraftChange: () => undefined,
         onResolveDraftChange: () => undefined,
         onCreateCase: () => undefined,
@@ -191,22 +188,53 @@ function renderModerationContent(options: {
   );
 }
 
-describe("admin moderation content", () => {
-  it("renders create case drawer flow", () => {
-    const markup = renderModerationContent({ createDrawerOpen: true });
+function expectMarkupToContainAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).toContain(fragment);
+  }
+}
 
-    expect(markup).toContain("Moderation Queue");
-    expect(markup).toContain("Open Create Case");
-    expect(markup).toContain('role="dialog"');
-    expect(markup).toContain("Case reporter user ID");
+function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).not.toContain(fragment);
+  }
+}
+
+describe("admin moderation content", () => {
+  it("renders the inline create case pane with form controls", () => {
+    const markup = renderModerationContent({ activePane: "create" });
+
+    expectMarkupToContainAll(markup, [
+      "Moderation Queue",
+      'data-testid="moderation-case-card-61"',
+      'data-testid="admin-moderation-create-pane"',
+      "Create Case",
+      "Close Panel",
+      'aria-label="Case reporter user ID"',
+      'aria-label="Case target type"',
+      'aria-label="Case skill ID"',
+      'aria-label="Case comment ID"',
+      'aria-label="Case reason code"',
+      'aria-label="Case reason detail"'
+    ]);
+    expectMarkupToExcludeAll(markup, ['role="dialog"', "Open Create Case"]);
   });
 
-  it("renders selected case detail drawer flow", () => {
-    const markup = renderModerationContent({ detailDrawerOpen: true });
+  it("renders the inline detail pane with disposition controls", () => {
+    const markup = renderModerationContent({ activePane: "detail" });
 
-    expect(markup).toContain('role="dialog"');
-    expect(markup).toContain("Case #61");
-    expect(markup).toContain("Resolution note");
-    expect(markup).toContain("Reject Case");
+    expectMarkupToContainAll(markup, [
+      "Moderation Queue",
+      'data-testid="moderation-case-card-61"',
+      'data-testid="admin-moderation-detail-pane"',
+      "Case #61",
+      "Close Panel",
+      'aria-label="Resolution action"',
+      'aria-label="Resolution note"',
+      'aria-label="Rejection note"',
+      "Resolve Case",
+      "Reject Case"
+    ]);
+    expectMarkupToExcludeAll(markup, ['role="dialog"', "Open Create Case"]);
   });
 });

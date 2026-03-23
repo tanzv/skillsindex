@@ -128,7 +128,7 @@ function renderIntegrationsContent() {
           enabled: true,
           updatedAt: "2026-03-12T08:00:00Z"
         },
-        detailDrawerOpen: true,
+        detailPaneOpen: true,
         overview: {
           metrics: [
             { label: "Total Connectors", value: "2" },
@@ -145,7 +145,7 @@ function renderIntegrationsContent() {
         onConnectorFilterChange: () => undefined,
         onToggleConnectorFilter: () => undefined,
         onOpenConnectorDetail: () => undefined,
-        onCloseDetailDrawer: () => undefined
+        onCloseDetailPane: () => undefined
       })
     )
   );
@@ -176,11 +176,12 @@ describe("admin integrations content", () => {
 
     expect(markup).toContain("Connector Inventory");
     expect(markup).toContain("Open Details");
-    expect(markup).toContain('role="dialog"');
-    expect(markup).toContain('aria-label="Close Panel"');
+    expect(markup).toContain('data-testid="admin-integrations-detail-pane"');
+    expect(markup).toContain("Close Panel");
     expect(markup).toContain("GitHub App");
     expect(markup).toContain("Provider: github");
     expect(markup).toContain("Base URL: https://api.github.com");
     expect(markup).toContain("Description");
+    expect(markup).not.toContain('role="dialog"');
   });
 });

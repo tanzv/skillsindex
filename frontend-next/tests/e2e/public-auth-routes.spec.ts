@@ -19,6 +19,15 @@ test("renders the login route with the prototype-aligned auth layout", async ({ 
   await expect(page.getByTestId("login-form-card")).toBeVisible();
   await expect(page.getByTestId("login-form-brand")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Account Sign In" })).toBeVisible();
+  await expect(page.getByTestId("login-provider-list")).toBeVisible();
+  await expect(page.getByTestId("login-provider-dingtalk")).toHaveAttribute(
+    "href",
+    "/auth/dingtalk/start?redirect=%2Fadmin%2Foverview"
+  );
+  await expect(page.getByTestId("login-provider-feishu")).toHaveAttribute(
+    "href",
+    "/auth/sso/start/feishu?redirect=%2Fadmin%2Foverview"
+  );
   await expect(page.getByTestId("login-username-input")).toBeVisible();
   await expect(page.getByTestId("login-password-input")).toBeVisible();
   await expect(page.getByRole("button", { name: "Sign In" })).toBeVisible();

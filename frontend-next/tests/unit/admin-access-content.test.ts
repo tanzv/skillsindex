@@ -73,7 +73,7 @@ function createMessages() {
   });
 }
 
-function renderAccessContent(options: { policyDrawerOpen?: boolean; accountDrawerOpen?: boolean } = {}) {
+function renderAccessContent(options: { activePane?: "idle" | "policy" | "account" } = {}) {
   return renderToStaticMarkup(
     createElement(
       ProtectedI18nProvider,
@@ -129,8 +129,7 @@ function renderAccessContent(options: { policyDrawerOpen?: boolean; accountDrawe
           updatedAt: "2026-03-16T11:00:00Z",
           forceLogoutAt: ""
         },
-        policyDrawerOpen: options.policyDrawerOpen ?? false,
-        accountDrawerOpen: options.accountDrawerOpen ?? false,
+        activePane: options.activePane ?? "idle",
         settingsDraft: {
           allowRegistration: true,
           marketplacePublicAccess: true,
@@ -140,9 +139,8 @@ function renderAccessContent(options: { policyDrawerOpen?: boolean; accountDrawe
         onKeywordChange: () => undefined,
         onClearKeyword: () => undefined,
         onOpenPolicyDrawer: () => undefined,
-        onClosePolicyDrawer: () => undefined,
         onOpenAccountDrawer: () => undefined,
-        onCloseAccountDrawer: () => undefined,
+        onClosePane: () => undefined,
         onToggleProvider: () => undefined,
         onSettingsDraftChange: () => undefined,
         onSavePolicy: () => undefined
@@ -151,22 +149,51 @@ function renderAccessContent(options: { policyDrawerOpen?: boolean; accountDrawe
   );
 }
 
-describe("admin access content", () => {
-  it("renders policy drawer flow", () => {
-    const markup = renderAccessContent({ policyDrawerOpen: true });
+function expectMarkupToContainAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).toContain(fragment);
+  }
+}
 
-    expect(markup).toContain("Account Directory");
-    expect(markup).toContain("Open Policy Panel");
-    expect(markup).toContain('role="dialog"');
-    expect(markup).toContain("Allow registration");
+function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).not.toContain(fragment);
+  }
+}
+
+describe("admin access content", () => {
+  it("renders the inline policy pane with access settings and provider toggles", () => {
+    const markup = renderAccessContent({ activePane: "policy" });
+
+    expectMarkupToContainAll(markup, [
+      "Account Directory",
+      "Access Policy",
+      "Policy Snapshot",
+      'data-testid="admin-access-account-3"',
+      "Close Panel",
+      "Allow registration",
+      "Marketplace public access",
+      'aria-label="Provider password"',
+      'aria-label="Provider github"',
+      "Save Access Policy",
+      "Available providers",
+      "password, github"
+    ]);
+    expectMarkupToExcludeAll(markup, ['role="dialog"', "Open Policy Panel", "Role Distribution"]);
   });
 
-  it("renders account detail drawer flow", () => {
-    const markup = renderAccessContent({ accountDrawerOpen: true });
+  it("renders the selected account summary as an inline pane with stable fields", () => {
+    const markup = renderAccessContent({ activePane: "account" });
 
-    expect(markup).toContain('role="dialog"');
-    expect(markup).toContain("reviewer #3");
-    expect(markup).toContain("Status");
-    expect(markup).toContain("Role");
+    expectMarkupToContainAll(markup, [
+      "Account Directory",
+      'data-testid="admin-access-account-3"',
+      "Open Details",
+      "Close Panel",
+      "reviewer #3",
+      "Status: Active",
+      "Role: Auditor"
+    ]);
+    expectMarkupToExcludeAll(markup, ['role="dialog"', "No selection", "Open Policy Panel"]);
   });
 });

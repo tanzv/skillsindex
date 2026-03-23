@@ -87,8 +87,7 @@ function createMessages() {
 }
 
 function renderOrganizationsContent(options: {
-  createDrawerOpen?: boolean;
-  memberDrawerOpen?: boolean;
+  activePane?: "idle" | "create" | "memberAssign" | "memberDetail";
   selectedMember?: {
     organizationId: number;
     userId: number;
@@ -156,15 +155,13 @@ function renderOrganizationsContent(options: {
         newOrganizationName: "Reliability Guild",
         targetUserId: "3",
         targetRole: "admin",
-        createDrawerOpen: options.createDrawerOpen ?? false,
-        memberDrawerOpen: options.memberDrawerOpen ?? false,
+        activePane: options.activePane ?? "idle",
         onRefresh: () => undefined,
         onSelectOrganization: () => undefined,
         onOpenCreateDrawer: () => undefined,
-        onCloseCreateDrawer: () => undefined,
         onOpenMemberAssignmentDrawer: () => undefined,
         onOpenMemberDetailDrawer: () => undefined,
-        onCloseMemberDrawer: () => undefined,
+        onClosePane: () => undefined,
         onNewOrganizationNameChange: () => undefined,
         onTargetUserIdChange: () => undefined,
         onTargetRoleChange: () => undefined,
@@ -178,20 +175,42 @@ function renderOrganizationsContent(options: {
   );
 }
 
-describe("admin organizations content", () => {
-  it("renders drawer-based member assignment flow", () => {
-    const markup = renderOrganizationsContent({ memberDrawerOpen: true, selectedMember: null });
+function expectMarkupToContainAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).toContain(fragment);
+  }
+}
 
-    expect(markup).toContain("Organization Directory");
-    expect(markup).toContain("Member Ledger");
-    expect(markup).toContain("Assign Member");
-    expect(markup).toContain('role="dialog"');
-    expect(markup).toContain("Organization member user ID");
+function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).not.toContain(fragment);
+  }
+}
+
+describe("admin organizations content", () => {
+  it("renders the member assignment work pane with organization summary and form controls", () => {
+    const markup = renderOrganizationsContent({ activePane: "memberAssign", selectedMember: null });
+
+    expectMarkupToContainAll(markup, [
+      "Organization Directory",
+      "Member Ledger",
+      "Platform Engineering",
+      'data-testid="organization-member-card-3"',
+      'data-testid="admin-organizations-member-pane"',
+      "Member Assignment",
+      "Assign a user to the selected organization.",
+      "Close Panel",
+      "Slug: platform",
+      'aria-label="Organization member user ID"',
+      'aria-label="Organization member role"',
+      "Save Member"
+    ]);
+    expectMarkupToExcludeAll(markup, ['role="dialog"']);
   });
 
-  it("renders selected member details inside the drawer", () => {
+  it("renders the selected member detail pane with stable member actions", () => {
     const markup = renderOrganizationsContent({
-      memberDrawerOpen: true,
+      activePane: "memberDetail",
       selectedMember: {
         organizationId: 7,
         userId: 3,
@@ -204,9 +223,18 @@ describe("admin organizations content", () => {
       }
     });
 
-    expect(markup).toContain('role="dialog"');
-    expect(markup).toContain("reviewer #3");
-    expect(markup).toContain("Apply Role");
-    expect(markup).toContain("Remove");
+    expectMarkupToContainAll(markup, [
+      "Organization Directory",
+      "Member Ledger",
+      'data-testid="organization-member-card-3"',
+      'data-testid="admin-organizations-member-pane"',
+      'data-testid="organization-member-detail-3"',
+      "reviewer #3",
+      "Close Panel",
+      'aria-label="Member role"',
+      "Apply Role",
+      "Remove"
+    ]);
+    expectMarkupToExcludeAll(markup, ['role="dialog"', "No selection"]);
   });
 });

@@ -97,7 +97,7 @@ function createMessages() {
   });
 }
 
-function renderContent() {
+function renderContent(activePane: "idle" | "create" | "detail" = "create") {
   return renderToStaticMarkup(
     createElement(
       ProtectedI18nProvider,
@@ -137,8 +137,7 @@ function renderContent() {
           }
         ],
         draft: { version: "v1.2.3" },
-        createDrawerOpen: true,
-        detailDrawerOpen: true,
+        activePane,
         selectedRecord: {
           index: 0,
           rawValue: null,
@@ -148,10 +147,9 @@ function renderContent() {
           ]
         },
         onRefresh: () => undefined,
-        onOpenCreateDrawer: () => undefined,
-        onCloseCreateDrawer: () => undefined,
-        onOpenDetailDrawer: () => undefined,
-        onCloseDetailDrawer: () => undefined,
+        onOpenCreatePane: () => undefined,
+        onClosePane: () => undefined,
+        onOpenDetailPane: () => undefined,
         onDraftChange: () => undefined,
         onSubmitCreate: () => undefined
       })
@@ -159,17 +157,45 @@ function renderContent() {
   );
 }
 
-describe("admin operations records content", () => {
-  it("renders drawer-based record entry and detail flows", () => {
-    const markup = renderContent();
+function expectMarkupToContainAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).toContain(fragment);
+  }
+}
 
-    expect(markup).toContain("Open Record Entry");
-    expect(markup).toContain("Open Details");
-    expect(markup).toContain('role="dialog"');
-    expect(markup).toContain('aria-label="Close Panel"');
-    expect(markup).toContain("Record Entry");
-    expect(markup).toContain("Record Detail");
-    expect(markup).toContain("Release version");
-    expect(markup).toContain("Release status");
+describe("admin operations records content", () => {
+  it("renders the record entry work pane contract with form fields and ledger context", () => {
+    const markup = renderContent("create");
+
+    expectMarkupToContainAll(markup, [
+      'data-testid="ops-records-ledger"',
+      'data-testid="ops-records-rows"',
+      'data-testid="ops-record-row-0"',
+      "Open Record Entry",
+      "Record Entry",
+      "Create a new record.",
+      'data-testid="admin-ops-record-create-pane"',
+      'data-testid="ops-records-field-version"',
+      'aria-label="Release version"',
+      "Save Record"
+    ]);
+    expect(markup).not.toContain('role="dialog"');
+  });
+
+  it("renders the record detail work pane contract with resolved chips", () => {
+    const markup = renderContent("detail");
+
+    expectMarkupToContainAll(markup, [
+      "Releases Ledger",
+      "Open Details",
+      "Record Detail",
+      "Inspect the selected record without leaving the ledger.",
+      'data-testid="admin-ops-record-detail-pane"',
+      "Release version",
+      "v1.2.3",
+      "Release status",
+      "success"
+    ]);
+    expect(markup).not.toContain('role="dialog"');
   });
 });

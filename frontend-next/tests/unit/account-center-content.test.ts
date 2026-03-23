@@ -240,36 +240,74 @@ function renderAccountRoute(route: AccountRoute) {
   );
 }
 
+function expectMarkupToContainAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).toContain(fragment);
+  }
+}
+
+function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).not.toContain(fragment);
+  }
+}
+
 describe("account center content", () => {
-  it("renders profile route with profile editor only", () => {
+  it("renders the profile route contract with profile editor controls only", () => {
     const markup = renderAccountRoute("/account/profile");
 
-    expect(markup).toContain("Profile");
-    expect(markup).toContain("Save Profile");
-    expect(markup).not.toContain("Change Password");
-    expect(markup).not.toContain("Credential Factory");
-    expect(markup).not.toContain("Session Inventory");
+    expectMarkupToContainAll(markup, [
+      "Profile Workspace",
+      "Profile route description",
+      "Profile",
+      "Display name",
+      "Avatar URL",
+      "Bio",
+      "Save Profile",
+      "Current section: Profile",
+      "profile lane"
+    ]);
+    expectMarkupToExcludeAll(markup, ["Change Password", "Credential Factory", "Session Inventory"]);
   });
 
-  it("renders security route with password and session posture content", () => {
+  it("renders the security route contract with password and session posture content", () => {
     const markup = renderAccountRoute("/account/security");
 
-    expect(markup).toContain("Session Security");
-    expect(markup).toContain("Change Password");
-    expect(markup).toContain("Revoke Other Sessions");
-    expect(markup).toContain("Security Snapshot");
-    expect(markup).not.toContain("Credential Factory");
+    expectMarkupToContainAll(markup, [
+      "Security Workspace",
+      "Security route description",
+      "Session Security",
+      "Current password",
+      "New password",
+      "Revoke other sessions after password change",
+      "Change Password",
+      "Revoke Other Sessions",
+      "Security Snapshot",
+      "Current Session",
+      "Other Active Sessions",
+      "Current section: Security",
+      "security lane"
+    ]);
+    expectMarkupToExcludeAll(markup, ["Credential Factory"]);
   });
 
-  it("renders credentials route with create and inventory sections", () => {
+  it("renders the credentials route contract with create and inventory sections", () => {
     const markup = renderAccountRoute("/account/api-credentials");
 
-    expect(markup).toContain("Credential Factory");
-    expect(markup).toContain("Credential Inventory");
-    expect(markup).toContain("Create Credential");
-    expect(markup).toContain("Open Details");
-    expect(markup).toContain("Credential Active");
-    expect(markup).toContain("credentials lane");
-    expect(markup).not.toContain("Change Password");
+    expectMarkupToContainAll(markup, [
+      "Credentials Workspace",
+      "Credentials route description",
+      "Credential Factory",
+      "Credential Inventory",
+      "Create Credential",
+      "Open Details",
+      "Credential Active",
+      'data-testid="account-credential-card-1"',
+      "Primary CLI",
+      "CLI access",
+      "Current section: Credentials",
+      "credentials lane"
+    ]);
+    expectMarkupToExcludeAll(markup, ["Change Password"]);
   });
 });

@@ -110,7 +110,7 @@ const messages = {
 } as unknown as ProtectedPageMessages;
 
 describe("AdminAPIKeysContent", () => {
-  it("renders in-context detail drawer content for the selected key", () => {
+  it("renders the inline detail pane for the selected key", () => {
     const overview = buildAdminAPIKeyOverview(payload, {
       metricTotalKeys: "Total Keys",
       metricActiveKeys: "Active Keys",
@@ -145,7 +145,7 @@ describe("AdminAPIKeysContent", () => {
           scopeDrafts: {
             7: "skills:read, skills:write"
           },
-          createDrawerOpen: false,
+          activePane: "detail",
           selectedItem: payload.items[0],
           onRefresh: () => {},
           onFiltersChange: () => {},
@@ -153,9 +153,8 @@ describe("AdminAPIKeysContent", () => {
           onCreateDraftChange: () => {},
           onScopeDraftChange: () => {},
           onOpenCreateDrawer: () => {},
-          onCloseCreateDrawer: () => {},
           onOpenDetail: () => {},
-          onCloseDetail: () => {},
+          onClosePane: () => {},
           onCreateKey: () => {},
           onRotateKey: () => {},
           onRevokeKey: () => {},
@@ -165,7 +164,8 @@ describe("AdminAPIKeysContent", () => {
     );
 
     expect(markup).toContain("Open Details");
-    expect(markup).toContain('role="dialog"');
+    expect(markup).toContain('data-testid="admin-apikeys-detail-pane"');
+    expect(markup).not.toContain('role="dialog"');
     expect(markup).toContain("Primary Key");
     expect(markup).toContain("Apply Scopes");
     expect(markup).toContain("Rotate");

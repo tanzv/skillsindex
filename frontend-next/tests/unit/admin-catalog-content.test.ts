@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 import { AdminCatalogContent } from "@/src/features/adminCatalog/AdminCatalogContent";
 import { ProtectedI18nProvider } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import type { AdminCatalogRoute, AdminCatalogViewModel } from "@/src/features/adminCatalog/model";
-import styles from "@/src/features/adminCatalog/AdminCatalogSurface.module.scss";
 import { createProtectedPageTestMessages } from "./protected-page-test-messages";
 
 function createViewModel(route: AdminCatalogRoute): AdminCatalogViewModel {
@@ -200,40 +199,76 @@ function renderCatalogRoute(route: AdminCatalogRoute) {
   );
 }
 
+function expectMarkupToContainAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).toContain(fragment);
+  }
+}
+
+function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).not.toContain(fragment);
+  }
+}
+
 describe("admin catalog content", () => {
-  it("renders the skills route as governed inventory with inline selection details", () => {
+  it("renders the skills route with the inline detail contract and primary skill actions", () => {
     const markup = renderCatalogRoute("/admin/skills");
 
-    expect(markup).toContain("Governed Inventory");
-    expect(markup).toContain("Selected Skill");
-    expect(markup).toContain("Keep governance decisions anchored to one skill at a time instead of scanning anonymous rows.");
-    expect(markup).toContain("Sync now");
-    expect(markup).toContain(styles.splitLayout);
-    expect(markup).toContain(styles.rowLayout);
-    expect(markup).not.toContain('role="dialog"');
+    expectMarkupToContainAll(markup, [
+      "Governed Inventory",
+      "Release Readiness Checklist",
+      'data-testid="admin-catalog-row-11"',
+      'data-testid="admin-skills-inline-detail"',
+      "Selected Skill",
+      "Selected",
+      "Sync now",
+      'href="/skills/11"',
+      'href="/admin/ingestion/repository"'
+    ]);
+    expectMarkupToExcludeAll(markup, ['role="dialog"']);
   });
 
-  it("renders the jobs route as execution queue with row actions", () => {
+  it("renders the jobs route with queue actions while keeping the detail drawer closed by default", () => {
     const markup = renderCatalogRoute("/admin/jobs");
 
-    expect(markup).toContain("Execution Queue");
-    expect(markup).toContain("Open Details");
-    expect(markup).toContain("Retry");
-    expect(markup).toContain("Cancel");
+    expectMarkupToContainAll(markup, [
+      "Execution Queue",
+      "import_archive #81",
+      'data-testid="admin-catalog-row-81"',
+      "Selected",
+      "Open Details",
+      "Retry",
+      "Cancel"
+    ]);
+    expectMarkupToExcludeAll(markup, ['role="dialog"']);
   });
 
-  it("renders the sync run route as history with drawer entry actions", () => {
+  it("renders the sync runs route as a history list with detail entry actions", () => {
     const markup = renderCatalogRoute("/admin/sync-jobs");
 
-    expect(markup).toContain("Run History");
-    expect(markup).toContain("Open Details");
+    expectMarkupToContainAll(markup, [
+      "Run History",
+      "schedule · repository",
+      'data-testid="admin-catalog-row-41"',
+      "Selected",
+      "Open Details"
+    ]);
+    expectMarkupToExcludeAll(markup, ['role="dialog"']);
   });
 
-  it("renders the policy route as editor plus posture summary", () => {
+  it("renders the policy route as a configuration form plus posture summary", () => {
     const markup = renderCatalogRoute("/admin/sync-policy/repository");
 
-    expect(markup).toContain("Policy Editor");
-    expect(markup).toContain("Current Policy Posture");
-    expect(markup).toContain("Save Policy");
+    expectMarkupToContainAll(markup, [
+      "Policy Editor",
+      "Current Policy Posture",
+      'aria-label="Scheduler enabled"',
+      'aria-label="Interval"',
+      'aria-label="Timeout"',
+      'aria-label="Batch Size"',
+      "Save Policy",
+      "Reset Draft"
+    ]);
   });
 });

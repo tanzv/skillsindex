@@ -67,56 +67,80 @@ vi.mock("@/src/features/public/PublicViewerSessionProvider", () => ({
   })
 }));
 
+function renderWebclientAtPath(pathname: string, childLabel: string) {
+  mockResolvedPathname.mockReturnValue(pathname);
+
+  return renderToStaticMarkup(createElement(PublicMarketWebclient, null, createElement("div", null, childLabel)));
+}
+
+function expectMarkupToContainAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).toContain(fragment);
+  }
+}
+
+function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).not.toContain(fragment);
+  }
+}
+
 describe("PublicMarketWebclient initial topbar rendering", () => {
   beforeEach(() => {
     mockResolvedPathname.mockReturnValue("/");
   });
 
-  it("renders marketplace landing controls on the first render for the homepage", () => {
-    const markup = renderToStaticMarkup(createElement(PublicMarketWebclient, null, createElement("div", null, "home")));
+  it("renders the landing route contract with compact marketplace navigation", () => {
+    const markup = renderWebclientAtPath("/", "home");
 
-    expect(markup).toContain('data-marketplace-route-kind="landing"');
-    expect(markup).toContain('data-marketplace-content-width="default"');
-    expect(markup).toContain('data-testid="landing-topbar-nav-categories"');
-    expect(markup).toContain('data-testid="landing-topbar-nav-rankings"');
-    expect(markup).not.toContain(">Docs<");
-    expect(markup).not.toContain(">ZH<");
+    expectMarkupToContainAll(markup, [
+      'data-marketplace-route-kind="landing"',
+      'data-marketplace-content-width="default"',
+      'data-testid="landing-topbar-nav-categories"',
+      'data-testid="landing-topbar-nav-rankings"',
+      "SkillsIndex",
+      'data-marketplace-topbar-slot="actions"',
+      'data-marketplace-topbar-variant="landing"',
+      'aria-hidden="true"'
+    ]);
+    expectMarkupToExcludeAll(markup, [">Docs<", ">ZH<", 'data-testid="search-shell-breadcrumb"']);
   });
 
-  it("renders marketplace section controls on the first render for results routes", () => {
-    mockResolvedPathname.mockReturnValue("/results");
+  it("renders the results route contract with section breadcrumb and search action", () => {
+    const markup = renderWebclientAtPath("/results", "results");
 
-    const markup = renderToStaticMarkup(createElement(PublicMarketWebclient, null, createElement("div", null, "results")));
-
-    expect(markup).toContain('data-marketplace-route-kind="section"');
-    expect(markup).toContain("Results");
-    expect(markup).toContain('data-testid="landing-topbar-nav-categories"');
-    expect(markup).toContain('data-testid="search-shell-breadcrumb"');
-    expect(markup).toContain(">Search Results<");
-    expect(markup).toContain(">Search<");
-    expect(markup).not.toContain(">Docs<");
-    expect(markup).not.toContain(">ZH<");
+    expectMarkupToContainAll(markup, [
+      'data-marketplace-route-kind="section"',
+      'data-marketplace-content-width="default"',
+      "Results",
+      'data-testid="landing-topbar-nav-categories"',
+      'data-testid="search-shell-breadcrumb"',
+      ">Search Results<",
+      ">Search<"
+    ]);
+    expectMarkupToExcludeAll(markup, [">Docs<", ">ZH<"]);
   });
 
-  it("keeps the default public topbar for non-marketplace routes", () => {
-    mockResolvedPathname.mockReturnValue("/docs");
+  it("keeps the narrative route contract for non-marketplace pages", () => {
+    const markup = renderWebclientAtPath("/docs", "docs");
 
-    const markup = renderToStaticMarkup(createElement(PublicMarketWebclient, null, createElement("div", null, "docs")));
-
-    expect(markup).toContain('data-marketplace-route-kind="narrative"');
-    expect(markup).toContain('data-marketplace-content-width="expanded"');
-    expect(markup).toContain(">Docs<");
-    expect(markup).toContain(">ZH<");
-    expect(markup).not.toContain('data-testid="landing-topbar-nav-categories"');
+    expectMarkupToContainAll(markup, [
+      'data-marketplace-route-kind="narrative"',
+      'data-marketplace-content-width="expanded"',
+      ">Docs<",
+      ">ZH<"
+    ]);
+    expectMarkupToExcludeAll(markup, ['data-testid="landing-topbar-nav-categories"', 'data-testid="search-shell-breadcrumb"']);
   });
 
   it("marks skill detail routes as expanded marketplace detail surfaces", () => {
-    mockResolvedPathname.mockReturnValue("/skills/14");
+    const markup = renderWebclientAtPath("/skills/14", "skill detail");
 
-    const markup = renderToStaticMarkup(createElement(PublicMarketWebclient, null, createElement("div", null, "skill detail")));
-
-    expect(markup).toContain('data-marketplace-route-kind="skill-detail"');
-    expect(markup).toContain('data-marketplace-content-width="expanded"');
-    expect(markup).toContain('data-testid="skill-detail-topbar-breadcrumb"');
+    expectMarkupToContainAll(markup, [
+      'data-marketplace-route-kind="skill-detail"',
+      'data-marketplace-content-width="expanded"',
+      'data-testid="skill-detail-topbar-breadcrumb"',
+      "Skill Detail"
+    ]);
   });
 });

@@ -35,18 +35,38 @@ function renderPage() {
   );
 }
 
+function expectMarkupToContainAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).toContain(fragment);
+  }
+}
+
+function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
+  for (const fragment of fragments) {
+    expect(markup).not.toContain(fragment);
+  }
+}
+
 describe("admin overview page", () => {
-  it("defers overview sections until live data loads", () => {
+  it("renders the load-state contract until live overview data becomes ready", () => {
     const markup = renderPage();
 
-    expect(markup).toContain("Admin Overview");
-    expect(markup).toContain("Platform control summary.");
-    expect(markup).toContain("Refreshing...");
-    expect(markup).not.toContain("Distribution");
-    expect(markup).not.toContain("Navigation");
-    expect(markup).not.toContain("Capability Envelope");
-    expect(markup).not.toContain("Operational Readiness");
-    expect(markup).not.toContain("Open Intake");
-    expect(markup).not.toContain("Open Alerts");
+    expectMarkupToContainAll(markup, [
+      "Admin Command",
+      "Admin Overview",
+      "Platform control summary.",
+      "Refreshing..."
+    ]);
+    expectMarkupToExcludeAll(markup, [
+      'data-testid="admin-overview-stage"',
+      'data-testid="admin-overview-actions"',
+      'data-testid="admin-overview-nav-grid"',
+      "Distribution",
+      "Navigation",
+      "Capability Envelope",
+      "Operational Readiness",
+      "Open Intake",
+      "Open Alerts"
+    ]);
   });
 });
