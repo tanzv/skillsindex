@@ -63,6 +63,11 @@ describe("admin route registry", () => {
     });
   });
 
+  it("keeps composite admin routes free from phantom backend endpoints", () => {
+    expect(resolveAdminRouteDefinition("/admin/access")?.endpoint).toBeUndefined();
+    expect(resolveAdminRouteDefinition("/admin/records/imports")?.endpoint).toBeUndefined();
+  });
+
   it("exposes one admin route path list to shared routing consumers", () => {
     expect(adminRoutes).toEqual(adminRoutePaths);
   });

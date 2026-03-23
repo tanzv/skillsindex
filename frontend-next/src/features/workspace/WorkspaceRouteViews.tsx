@@ -16,6 +16,7 @@ import { ActivityFeedView, QueueExecutionView } from "./WorkspaceRouteActivityVi
 import { WorkspaceEntryDetailDrawer, useWorkspaceEntryDetailState } from "./WorkspaceRouteDetailSurface";
 import { QueueListButton, SectionPanel } from "./WorkspaceRouteViewPrimitives";
 import { buildRunbookResponseScriptSection } from "./pageSectionShared";
+import styles from "./WorkspaceRouteSurface.module.scss";
 import type { WorkspacePageModel } from "./types";
 
 function PolicyView({ model }: { model: WorkspacePageModel }) {
@@ -167,14 +168,14 @@ function ActionsView({ model }: { model: WorkspacePageModel }) {
                 <Link
                   key={`${group.title}-${action.href}`}
                   href={action.href}
-                  className="rounded-[24px] border border-zinc-200 bg-white px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+                  className={styles.actionLinkCard}
                 >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-semibold text-zinc-900">{action.label}</span>
+                  <div className={styles.actionLinkBody}>
+                    <div className={styles.actionLinkHeading}>
+                      <span className={styles.actionLinkTitle}>{action.label}</span>
                       <Badge variant="outline">{action.groupTitle || group.title}</Badge>
                     </div>
-                    <p className="text-sm leading-6 text-zinc-600">{action.href}</p>
+                    <p className={styles.actionLinkHref}>{action.href}</p>
                   </div>
                 </Link>
               ))}

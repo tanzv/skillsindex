@@ -59,7 +59,6 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemImportsLabel,
     description: (messages) => messages.itemImportsDescription,
     renderTarget: "ingestion",
-    endpoint: "/api/v1/admin/records/imports",
     quickLink: true
   },
   {
@@ -214,7 +213,6 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemAccessLabel,
     description: (messages) => messages.itemAccessDescription,
     renderTarget: "access",
-    endpoint: "/api/v1/admin/access",
     quickLink: true
   },
   {

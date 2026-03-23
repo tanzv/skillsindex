@@ -14,12 +14,12 @@ export function resolveAccountPageLoadState({
   error: string;
   hasData: boolean;
 }): AccountPageLoadState {
-  if (loading) {
-    return "loading";
-  }
-
   if (hasData) {
     return "ready";
+  }
+
+  if (loading) {
+    return "loading";
   }
 
   if (error) {

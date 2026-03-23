@@ -10,6 +10,7 @@ import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
 import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
 
 import { resolveEntryTone, resolveStatusLabel, useSelectedEntry } from "./WorkspaceRouteViewPrimitives";
+import styles from "./WorkspaceRouteSurface.module.scss";
 import type { WorkspaceAction, WorkspaceQueueEntry } from "./types";
 
 export function useWorkspaceEntryDetailState(entries: WorkspaceQueueEntry[], preferredId?: number | null) {
@@ -74,20 +75,20 @@ export function WorkspaceEntryDetailDrawer({
     >
       {entry ? (
         <div className="space-y-5">
-          <div className="rounded-[24px] border border-zinc-200 bg-white p-5 shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="space-y-3">
+          <div className={styles.detailHero}>
+            <div className={styles.detailHeroHeader}>
+              <div className={styles.detailHeroCopy}>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={resolveEntryTone(entry.status)}>{resolveStatusLabel(entry.status, messages)}</Badge>
-                  <span className="text-xs font-medium uppercase tracking-[0.16em] text-zinc-500">{entry.category}</span>
-                  <span className="text-xs font-medium uppercase tracking-[0.16em] text-zinc-500">{entry.subcategory}</span>
+                  <span className={styles.detailEyebrow}>{entry.category}</span>
+                  <span className={styles.detailEyebrow}>{entry.subcategory}</span>
                 </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-zinc-900">{entry.name}</h3>
-                  <p className="max-w-3xl text-sm leading-6 text-zinc-600">{entry.summary}</p>
+                <div className={styles.detailHeroCopy}>
+                  <h3 className={styles.detailTitle}>{entry.name}</h3>
+                  <p className={styles.detailSummary}>{entry.summary}</p>
                 </div>
               </div>
-              <div className="grid min-w-[220px] gap-3 sm:grid-cols-2">
+              <div className={styles.detailStatGrid}>
                 {[
                   { label: messages.queueDetailOwnerLabel, value: entry.owner },
                   { label: messages.queueDetailQualityLabel, value: entry.qualityScore.toFixed(1) },
@@ -97,15 +98,15 @@ export function WorkspaceEntryDetailDrawer({
                     value: new Date(entry.updatedAt).toLocaleDateString(locale === "zh" ? "zh-CN" : "en-US")
                   }
                 ].map((item) => (
-                  <div key={item.label} className="rounded-2xl bg-zinc-100 px-4 py-3">
-                    <div className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{item.label}</div>
-                    <div className="mt-1 text-sm font-semibold text-zinc-900">{item.value}</div>
+                  <div key={item.label} className={styles.detailStatCard}>
+                    <div className={styles.detailStatLabel}>{item.label}</div>
+                    <div className={styles.detailStatValue}>{item.value}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className={styles.detailTagRow}>
               {entry.tags.length ? (
                 entry.tags.map((tag) => (
                   <Badge key={tag} variant="outline">
@@ -120,7 +121,7 @@ export function WorkspaceEntryDetailDrawer({
 
           {children}
 
-          <div className="flex flex-wrap gap-3">
+          <div className={styles.detailActionRow}>
             <Button asChild>
               <Link href={`/skills/${entry.id}`}>{messages.actionOpenSkillDetail}</Link>
             </Button>

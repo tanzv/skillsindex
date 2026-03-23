@@ -36,11 +36,15 @@ test("covers admin access filtering and catalog read contracts", async ({ page }
   await page.getByRole("button", { name: "Clear" }).click();
   await expect(page.getByTestId("admin-access-account-1")).toBeVisible();
 
-  await page.getByLabel("Allow registration").uncheck();
-  await page.getByLabel("Marketplace public access").uncheck();
-  await page.getByLabel("Provider google").check();
-  await page.getByRole("button", { name: "Save Access Policy" }).click();
+  await page.getByRole("button", { name: "Open Policy Panel" }).click();
+  const policyDialog = page.getByRole("dialog", { name: "Access Policy" });
+  await policyDialog.getByLabel("Allow registration").uncheck();
+  await policyDialog.getByLabel("Marketplace public access").uncheck();
+  await policyDialog.getByLabel("Provider google").check();
+  await policyDialog.getByRole("button", { name: "Save Access Policy" }).click();
   await expect(page.getByText("Access policy updated.")).toBeVisible();
+  await policyDialog.getByRole("button", { name: "Close Panel" }).click();
+  await expect(policyDialog).toHaveCount(0);
 
   await page.getByRole("button", { name: "Refresh" }).click();
   await expect(page.getByText("Registration disabled")).toBeVisible();

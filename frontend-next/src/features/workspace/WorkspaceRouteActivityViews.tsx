@@ -7,6 +7,7 @@ import { WorkspaceSectionCard } from "./WorkspaceRouteShared";
 import { WorkspaceEntryDetailDrawer, useWorkspaceEntryDetailState } from "./WorkspaceRouteDetailSurface";
 import { QueueListButton, SectionPanel } from "./WorkspaceRouteViewPrimitives";
 import { formatWorkspaceMessage } from "./messages";
+import styles from "./WorkspaceRouteSurface.module.scss";
 import type { WorkspacePageModel } from "./types";
 
 export function ActivityFeedView({ model }: { model: WorkspacePageModel }) {
@@ -91,15 +92,15 @@ export function QueueExecutionView({ model }: { model: WorkspacePageModel }) {
           description={workspaceMessages.panelQueueBacklogDescription}
           dataTestId="workspace-queue-backlog"
         >
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className={styles.miniMetricGrid}>
             {[
               { label: workspaceMessages.queueCountRunningLabel, value: model.snapshot.queueCounts.running },
               { label: workspaceMessages.queueCountPendingLabel, value: model.snapshot.queueCounts.pending },
               { label: workspaceMessages.queueCountRiskLabel, value: model.snapshot.queueCounts.risk }
             ].map((item) => (
-              <div key={item.label} className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
-                <div className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{item.label}</div>
-                <div className="mt-1 text-lg font-semibold text-zinc-900">{item.value}</div>
+              <div key={item.label} className={styles.miniMetricCard}>
+                <div className={styles.miniMetricLabel}>{item.label}</div>
+                <div className={styles.miniMetricValue}>{item.value}</div>
               </div>
             ))}
           </div>

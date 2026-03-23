@@ -14,12 +14,12 @@ export function resolveAdminPageLoadState({
   error: string;
   hasData: boolean;
 }): AdminPageLoadState {
-  if (loading) {
-    return "loading";
-  }
-
   if (hasData) {
     return "ready";
+  }
+
+  if (loading) {
+    return "loading";
   }
 
   if (error) {

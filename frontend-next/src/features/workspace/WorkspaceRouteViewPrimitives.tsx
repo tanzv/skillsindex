@@ -9,6 +9,7 @@ import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.wor
 import { cn } from "@/src/lib/utils";
 
 import type { WorkspaceQueueEntry } from "./types";
+import styles from "./WorkspaceRouteSurface.module.scss";
 
 export function resolveEntryTone(status: WorkspaceQueueEntry["status"]) {
   if (status === "risk") {
@@ -107,30 +108,30 @@ export function QueueListButton({
   return (
     <div
       className={cn(
-        "rounded-[24px] border px-4 py-4 transition-colors",
-        active
-          ? "border-zinc-900/20 bg-zinc-900/[0.04] shadow-[0_12px_28px_rgba(15,23,42,0.08)]"
-          : "border-zinc-900/10 bg-white hover:border-zinc-900/18 hover:bg-zinc-50"
+        styles.queueEntryCard,
+        active ? styles.queueEntryCardActive : styles.queueEntryCardIdle
       )}
       data-testid={`workspace-entry-${entry.id}`}
     >
-      <button type="button" onClick={onSelect} className="w-full text-left" aria-pressed={active}>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold text-zinc-900">{entry.name}</span>
-              <Badge variant={resolveEntryTone(entry.status)}>{resolveStatusLabel(entry.status, messages)}</Badge>
+      <button type="button" onClick={onSelect} className={styles.queueEntryButton} aria-pressed={active}>
+        <div className={styles.queueEntryBody}>
+          <div className={styles.queueEntryHeader}>
+            <div className={styles.queueEntryCopy}>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={styles.queueEntryTitle}>{entry.name}</span>
+                <Badge variant={resolveEntryTone(entry.status)}>{resolveStatusLabel(entry.status, messages)}</Badge>
+              </div>
+              <p className={styles.queueEntrySummary}>{entry.summary}</p>
+              <div className={styles.inlineMetaRow}>
+                <span className={styles.inlineMetaPill}>{entry.category}</span>
+                <span className={styles.inlineMetaPill}>{entry.owner}</span>
+                <span className={styles.inlineMetaPill}>
+                  {entry.qualityScore.toFixed(1)} {messages.itemQualitySuffix}
+                </span>
+              </div>
             </div>
-            <p className="text-sm leading-6 text-zinc-600">{entry.summary}</p>
-            <div className="flex flex-wrap gap-2 text-xs text-zinc-600">
-              <span className="rounded-full bg-zinc-100 px-2.5 py-1">{entry.category}</span>
-              <span className="rounded-full bg-zinc-100 px-2.5 py-1">{entry.owner}</span>
-              <span className="rounded-full bg-zinc-100 px-2.5 py-1">
-                {entry.qualityScore.toFixed(1)} {messages.itemQualitySuffix}
-              </span>
-            </div>
+            <div className={styles.queueEntryEyebrow}>{entry.subcategory}</div>
           </div>
-          <div className="text-xs font-medium uppercase tracking-[0.16em] text-zinc-500">{entry.subcategory}</div>
         </div>
       </button>
       <div className="mt-4 flex justify-end">

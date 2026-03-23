@@ -1,0 +1,210 @@
+.queueEntryCard,
+.detailHero,
+.detailStatCard,
+.actionLinkCard,
+.miniMetricCard {
+  border: 1px solid var(--protected-shell-border);
+  background: var(--protected-shell-panel-surface);
+  box-shadow: var(--protected-shell-panel-shadow);
+}
+
+.queueEntryCard,
+.detailHero,
+.actionLinkCard {
+  border-radius: 24px;
+}
+
+.detailStatCard,
+.miniMetricCard {
+  border-radius: 18px;
+  background: var(--protected-shell-card-alt);
+}
+
+.queueEntryCard {
+  padding: 16px;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.queueEntryCardIdle:hover,
+.actionLinkCard:hover {
+  border-color: var(--protected-shell-interactive-border-hover);
+  background: var(--protected-shell-interactive-bg-hover);
+  transform: translateY(-1px);
+}
+
+.queueEntryCardActive {
+  border-color: var(--protected-shell-interactive-border-active);
+  background: color-mix(in srgb, var(--protected-shell-accent) 10%, var(--protected-shell-panel-surface));
+}
+
+.queueEntryButton {
+  width: 100%;
+  text-align: left;
+}
+
+.queueEntryHeader,
+.inlineMetaRow,
+.detailTagRow,
+.detailActionRow,
+.miniMetricGrid,
+.detailStatGrid,
+.actionLinkHeading {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.queueEntryHeader,
+.actionLinkHeading {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.queueEntryBody,
+.queueEntryCopy,
+.detailHero,
+.detailHeroHeader,
+.detailHeroCopy,
+.detailStatCard,
+.actionLinkCard,
+.actionLinkBody,
+.miniMetricCard {
+  display: grid;
+}
+
+.queueEntryBody,
+.detailHero {
+  gap: 16px;
+}
+
+.queueEntryCopy,
+.detailHeroCopy,
+.actionLinkBody {
+  gap: 8px;
+}
+
+.queueEntryTitle,
+.detailTitle,
+.detailStatValue,
+.actionLinkTitle,
+.miniMetricValue {
+  color: var(--protected-shell-text);
+}
+
+.queueEntryTitle,
+.actionLinkTitle {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.detailTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.queueEntrySummary,
+.detailSummary,
+.actionLinkHref {
+  margin: 0;
+  color: var(--protected-shell-text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.queueEntryEyebrow,
+.detailEyebrow,
+.detailStatLabel,
+.miniMetricLabel {
+  color: var(--protected-shell-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.detailEyebrow {
+  font-size: 10px;
+}
+
+.queueEntryEyebrow {
+  margin-left: auto;
+}
+
+.inlineMetaRow,
+.detailTagRow,
+.detailActionRow {
+  gap: 8px;
+}
+
+.inlineMetaPill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--protected-shell-card-alt);
+  color: var(--protected-shell-text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.detailHero {
+  padding: 20px;
+}
+
+.detailHeroHeader {
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+  gap: 16px;
+}
+
+.detailStatGrid,
+.miniMetricGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.detailStatGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.miniMetricGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.detailStatCard,
+.miniMetricCard {
+  gap: 6px;
+  padding: 14px 16px;
+}
+
+.detailStatValue,
+.miniMetricValue {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.actionLinkCard {
+  padding: 16px;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+@media (max-width: 900px) {
+  .detailHeroHeader,
+  .miniMetricGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .detailStatGrid {
+    grid-template-columns: 1fr;
+  }
+}
