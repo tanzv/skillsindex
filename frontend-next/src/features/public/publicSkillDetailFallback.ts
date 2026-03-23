@@ -2,10 +2,12 @@ import type {
   PublicSkillDetailResponse,
   PublicSkillResourceContentResponse,
   PublicSkillResourcesResponse,
-  PublicSkillVersionsResponse
+  PublicSkillVersionsResponse,
 } from "@/src/lib/schemas/public";
-
-import { fallbackSkills, resolvePublicMarketplaceFallbackSkill } from "./publicMarketplaceFallback";
+import {
+  fallbackSkills,
+  resolvePublicMarketplaceFallbackSkill,
+} from "@/src/lib/marketplace/fallbackCatalog";
 
 type FallbackSkill = (typeof fallbackSkills)[number];
 
@@ -30,7 +32,7 @@ function buildFallbackReadmeContent(skill: FallbackSkill): string {
     "## Quick Start",
     `- ${installCommand}`,
     "- Review the local SKILL.md file before execution.",
-    "- Validate workspace access before enabling automation."
+    "- Validate workspace access before enabling automation.",
   ].join("\n");
 }
 
@@ -44,35 +46,46 @@ function buildFallbackChangelogContent(skill: FallbackSkill): string {
     "",
     "## Previous",
     "- Expanded installation guidance for workspace operators.",
-    "- Updated resource metadata for repository alignment."
+    "- Updated resource metadata for repository alignment.",
   ].join("\n");
 }
 
-function buildFallbackResourceFiles(skill: FallbackSkill): FallbackResourceFile[] {
+function buildFallbackResourceFiles(
+  skill: FallbackSkill,
+): FallbackResourceFile[] {
   return [
     {
       name: "SKILL.md",
       display_name: "SKILL.md",
       language: "Markdown",
-      content: skill.content
+      content: skill.content,
     },
     {
       name: "README.md",
       display_name: "README.md",
       language: "Markdown",
-      content: buildFallbackReadmeContent(skill)
+      content: buildFallbackReadmeContent(skill),
     },
     {
       name: "CHANGELOG.md",
       display_name: "CHANGELOG.md",
       language: "Markdown",
-      content: buildFallbackChangelogContent(skill)
-    }
+      content: buildFallbackChangelogContent(skill),
+    },
   ];
 }
 
+export function buildPublicSkillFallbackRelatedSkills(skillId: number) {
+  const skill =
+    resolvePublicMarketplaceFallbackSkill(skillId) || fallbackSkills[0];
+
+  return fallbackSkills.filter((item) => item.id !== skill.id).slice(0, 3);
+}
+
 function buildDetailResponse(skillId: number): PublicSkillDetailResponse {
-  const skill = resolvePublicMarketplaceFallbackSkill(skillId) || fallbackSkills[0];
+  const skill =
+    resolvePublicMarketplaceFallbackSkill(skillId) || fallbackSkills[0];
+  const relatedSkills = buildPublicSkillFallbackRelatedSkills(skill.id);
 
   return {
     skill,
@@ -80,13 +93,13 @@ function buildDetailResponse(skillId: number): PublicSkillDetailResponse {
       favorite_count: Math.max(skill.star_count - 80, 12),
       rating_count: Math.max(skill.star_count - 95, 8),
       rating_average: skill.quality_score,
-      comment_count: 2
+      comment_count: 2,
     },
     viewer_state: {
       can_interact: false,
       favorited: false,
       rated: false,
-      rating: 0
+      rating: 0,
     },
     comments: [
       {
@@ -95,29 +108,32 @@ function buildDetailResponse(skillId: number): PublicSkillDetailResponse {
         display_name: "Ops Lead",
         content: "Useful baseline for release and recovery coordination.",
         created_at: "2026-03-10T09:30:00Z",
-        can_delete: false
+        can_delete: false,
       },
       {
         id: 2,
         username: "platform.owner",
         display_name: "Platform Owner",
-        content: "Good starting point for operational guardrails and follow-up runbooks.",
+        content:
+          "Good starting point for operational guardrails and follow-up runbooks.",
         created_at: "2026-03-11T13:15:00Z",
-        can_delete: false
-      }
+        can_delete: false,
+      },
     ],
-    comments_limit: 80
+    comments_limit: 80,
+    related_skills: relatedSkills,
   };
 }
 
 function buildResourcesResponse(skillId: number): PublicSkillResourcesResponse {
-  const skill = resolvePublicMarketplaceFallbackSkill(skillId) || fallbackSkills[0];
+  const skill =
+    resolvePublicMarketplaceFallbackSkill(skillId) || fallbackSkills[0];
   const files = buildFallbackResourceFiles(skill).map((file) => ({
     name: file.name,
     display_name: file.display_name,
     size_bytes: file.content.length,
     size_label: `${file.content.length} B`,
-    language: file.language
+    language: file.language,
   }));
 
   return {
@@ -130,17 +146,20 @@ function buildResourcesResponse(skillId: number): PublicSkillResourcesResponse {
     install_command: skill.install_command,
     updated_at: skill.updated_at,
     file_count: files.length,
-    files
+    files,
   };
 }
 
 export function buildPublicSkillFallbackResourceContent(
   skillId: number,
-  requestedPath?: string
+  requestedPath?: string,
 ): PublicSkillResourceContentResponse | null {
-  const skill = resolvePublicMarketplaceFallbackSkill(skillId) || fallbackSkills[0];
+  const skill =
+    resolvePublicMarketplaceFallbackSkill(skillId) || fallbackSkills[0];
   const normalizedPath = String(requestedPath || "").trim() || "SKILL.md";
-  const selectedFile = buildFallbackResourceFiles(skill).find((file) => file.name === normalizedPath);
+  const selectedFile = buildFallbackResourceFiles(skill).find(
+    (file) => file.name === normalizedPath,
+  );
 
   if (!selectedFile) {
     return null;
@@ -154,20 +173,25 @@ export function buildPublicSkillFallbackResourceContent(
     size_bytes: selectedFile.content.length,
     size_label: `${selectedFile.content.length} B`,
     content: selectedFile.content,
-    updated_at: skill.updated_at
+    updated_at: skill.updated_at,
   };
 }
 
-function buildResourceContentResponse(skillId: number): PublicSkillResourceContentResponse {
+function buildResourceContentResponse(
+  skillId: number,
+): PublicSkillResourceContentResponse {
   const content = buildPublicSkillFallbackResourceContent(skillId, "SKILL.md");
   if (!content) {
-    throw new Error("Fallback skill preview content for SKILL.md is unavailable.");
+    throw new Error(
+      "Fallback skill preview content for SKILL.md is unavailable.",
+    );
   }
   return content;
 }
 
 function buildVersionsResponse(skillId: number): PublicSkillVersionsResponse {
-  const skill = resolvePublicMarketplaceFallbackSkill(skillId) || fallbackSkills[0];
+  const skill =
+    resolvePublicMarketplaceFallbackSkill(skillId) || fallbackSkills[0];
 
   return {
     items: [
@@ -176,29 +200,31 @@ function buildVersionsResponse(skillId: number): PublicSkillVersionsResponse {
         skill_id: skill.id,
         version_number: 3,
         trigger: "sync",
-        change_summary: "Aligned summary, tags, and rollout guidance with the latest operating model.",
+        change_summary:
+          "Aligned summary, tags, and rollout guidance with the latest operating model.",
         risk_level: "low",
         captured_at: "2026-03-10T08:00:00Z",
         actor_username: "system",
         actor_display_name: "System",
         tags: ["sync", "marketplace"],
-        changed_fields: ["description", "content"]
+        changed_fields: ["description", "content"],
       },
       {
         id: skill.id * 10 + 2,
         skill_id: skill.id,
         version_number: 2,
         trigger: "manual",
-        change_summary: "Expanded installation and execution notes for operators.",
+        change_summary:
+          "Expanded installation and execution notes for operators.",
         risk_level: "medium",
         captured_at: "2026-03-08T14:20:00Z",
         actor_username: "ops.lead",
         actor_display_name: "Ops Lead",
         tags: ["manual"],
-        changed_fields: ["install_command", "content"]
-      }
+        changed_fields: ["install_command", "content"],
+      },
     ],
-    total: 2
+    total: 2,
   };
 }
 
@@ -212,12 +238,15 @@ export function buildPublicSkillDetailFallback(skillId: number): {
   versions: PublicSkillVersionsResponse;
   resourceContent: PublicSkillResourceContentResponse;
 } {
-  const resolvedSkillId = resolvePublicMarketplaceFallbackSkill(skillId)?.id || fallbackSkills[0]?.id || skillId;
+  const resolvedSkillId =
+    resolvePublicMarketplaceFallbackSkill(skillId)?.id ||
+    fallbackSkills[0]?.id ||
+    skillId;
 
   return {
     detail: buildDetailResponse(resolvedSkillId),
     resources: buildResourcesResponse(resolvedSkillId),
     versions: buildVersionsResponse(resolvedSkillId),
-    resourceContent: buildResourceContentResponse(resolvedSkillId)
+    resourceContent: buildResourceContentResponse(resolvedSkillId),
   };
 }

@@ -1,3 +1,5 @@
+import { isPresentationCategorySlug } from "./marketplaceTaxonomy";
+
 export interface MarketplaceRouteSearchParams {
   [key: string]: string | string[] | undefined;
 }
@@ -27,11 +29,7 @@ function copyScalarSearchParams(searchParams: MarketplaceRouteSearchParams): Rec
 export function buildMarketplaceSemanticListingRequestQuery(
   searchParams: MarketplaceRouteSearchParams
 ): Record<string, string> {
-  const requestQuery = copyScalarSearchParams(searchParams);
-
-  delete requestQuery.tags;
-
-  return requestQuery;
+  return copyScalarSearchParams(searchParams);
 }
 
 export function buildCategoryHubMarketplaceRequestQuery(
@@ -64,8 +62,23 @@ export function buildCategoryDetailMarketplaceRequestQuery(
   slug: string,
   searchParams: MarketplaceRouteSearchParams
 ): Record<string, string> {
+  const requestQuery = buildMarketplaceSemanticListingRequestQuery(searchParams);
+  const normalizedSlug = String(slug || "").trim();
+  const normalizedSubcategory = String(requestQuery.subcategory || "").trim();
+
+  if (normalizedSlug && isPresentationCategorySlug(normalizedSlug)) {
+    delete requestQuery.category;
+    delete requestQuery.subcategory;
+
+    return {
+      ...requestQuery,
+      category_group: normalizedSlug,
+      ...(normalizedSubcategory ? { subcategory_group: normalizedSubcategory } : {})
+    };
+  }
+
   return {
-    ...buildMarketplaceSemanticListingRequestQuery(searchParams),
-    category: String(slug || "").trim()
+    ...requestQuery,
+    category: normalizedSlug
   };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
+import { buildPublicMarketplaceFallback } from "@/src/lib/marketplace/fallback";
 
 describe("public marketplace fallback", () => {
   it("filters fallback skills by grouped category, grouped subcategory, and semantic tags", () => {

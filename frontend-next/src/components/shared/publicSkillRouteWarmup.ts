@@ -1,4 +1,5 @@
 import { splitPublicPathPrefix } from "@/src/lib/routing/publicCompat";
+import { publicSkillsRoutePrefix } from "@/src/lib/routing/publicRouteRegistry";
 
 const warmedPublicSkillRoutes = new Set<string>();
 
@@ -23,7 +24,7 @@ export function resolvePublicSkillWarmupTarget(href: string, as?: string): strin
   const normalizedPath = pathname.startsWith("/") ? pathname : `/${pathname}`;
   const { corePath } = splitPublicPathPrefix(normalizedPath);
 
-  return corePath.startsWith("/skills/") ? candidate : null;
+  return corePath.startsWith(`${publicSkillsRoutePrefix}/`) ? candidate : null;
 }
 
 export function shouldObservePublicSkillWarmup(enableViewportWarmup: boolean, route: string | null): boolean {

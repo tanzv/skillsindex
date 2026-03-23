@@ -20,7 +20,13 @@ const messages = {
   stateErrorTitle: "Error State",
   stateErrorDescription: "Error description",
   statePermissionTitle: "Permission Denied",
-  statePermissionDescription: "Permission description"
+  statePermissionDescription: "Permission description",
+  state404Title: "Page Not Found",
+  state404Description: "404 description",
+  state500Title: "Unexpected Application Error",
+  state500Description: "500 description",
+  state503Title: "Service Unavailable",
+  state503Description: "503 description"
 } as PublicMarketplaceMessages;
 
 describe("public page copy models", () => {
@@ -40,13 +46,41 @@ describe("public page copy models", () => {
 
   it("resolves public state descriptors from locale messages and aliases permission route names", () => {
     expect(resolvePublicStateDescriptor(messages, "error")).toEqual({
+      tone: "danger",
       title: "Error State",
-      description: "Error description"
+      description: "Error description",
+      actions: ["retry", "home"]
     });
 
     expect(resolvePublicStateDescriptor(messages, "permission-denied")).toEqual({
+      tone: "warning",
       title: "Permission Denied",
-      description: "Permission description"
+      description: "Permission description",
+      actions: ["home", "search"]
+    });
+
+    expect(resolvePublicStateDescriptor(messages, "not-found")).toEqual({
+      code: "404",
+      tone: "warning",
+      title: "Page Not Found",
+      description: "404 description",
+      actions: ["home", "search"]
+    });
+
+    expect(resolvePublicStateDescriptor(messages, "server-error")).toEqual({
+      code: "500",
+      tone: "danger",
+      title: "Unexpected Application Error",
+      description: "500 description",
+      actions: ["retry", "home"]
+    });
+
+    expect(resolvePublicStateDescriptor(messages, "service-unavailable")).toEqual({
+      code: "503",
+      tone: "danger",
+      title: "Service Unavailable",
+      description: "503 description",
+      actions: ["retry", "home"]
     });
 
     expect(resolvePublicStateDescriptor(messages, "missing")).toBeNull();

@@ -1,15 +1,8 @@
-import { PublicDocsPage } from "@/src/features/public/PublicDocsPage";
 import {
-  loadPublicMarketplaceSnapshotFromRequest,
-  type PublicSnapshotSearchParams
-} from "@/src/lib/api/publicSnapshot.server";
+  renderPublicNarrativeSnapshotRoute,
+  type PublicNarrativeSnapshotRouteProps
+} from "@/src/features/public/publicNarrativeSnapshotRouteEntry";
 
-interface DocsPageProps {
-  searchParams: Promise<PublicSnapshotSearchParams>;
-}
-
-export default async function DocsPage({ searchParams }: DocsPageProps) {
-  const marketplace = await loadPublicMarketplaceSnapshotFromRequest(searchParams);
-
-  return <PublicDocsPage marketplace={marketplace} />;
+export default async function DocsPage({ searchParams }: PublicNarrativeSnapshotRouteProps) {
+  return renderPublicNarrativeSnapshotRoute("docs", searchParams);
 }

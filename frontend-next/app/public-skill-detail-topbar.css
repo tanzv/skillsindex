@@ -244,6 +244,16 @@
 }
 
 @media (max-width: 760px) {
+  .skill-detail-context-bar,
+  .skill-detail-context-bar-top,
+  .skill-detail-context-bar-leading {
+    gap: 8px;
+  }
+
+  .skill-detail-context-summary-row {
+    display: none;
+  }
+
   .skill-detail-context-bar-top {
     grid-template-columns: 1fr;
   }

@@ -114,8 +114,8 @@ describe("marketplaceTopbarSlots", () => {
     });
 
     expect(preset).toEqual({
-      variant: "market",
-      stageLabel: "Skill Detail"
+      variant: "skill-detail",
+      belowContent: expect.anything()
     });
   });
 

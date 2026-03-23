@@ -1,9 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 import { cn } from "@/src/lib/utils";
 import type { PublicMarketplaceMessages } from "@/src/lib/i18n/publicMessages";
+import { resolveBrandWordmarkAlt, resolveBrandWordmarkSrc } from "@/src/components/shared/brandWordmark";
+import { useThemeAwareFavicon } from "@/src/components/shared/themeAwareFavicon";
 
 import { PublicLink } from "./PublicLink";
 import type { PublicTopbarModel } from "./publicShellModel";
@@ -20,6 +23,7 @@ export interface PublicTopbarSlots {
 interface PublicTopbarProps {
   brandTitle: string;
   brandSubtitle: string;
+  isLightTheme: boolean;
   model: PublicTopbarModel;
   messages: Pick<PublicMarketplaceMessages, "shellNavigationAriaLabel" | "themeSwitchAriaLabel" | "localeSwitchAriaLabel">;
   locale: "zh" | "en";
@@ -38,7 +42,10 @@ function resolveButtonClassName(variant: "default" | "primary" | "subtle" | unde
   return "marketplace-topbar-button";
 }
 
-export function PublicTopbar({ brandTitle, brandSubtitle, model, messages, locale, onLocaleChange, slots }: PublicTopbarProps) {
+export function PublicTopbar({ brandTitle, brandSubtitle, isLightTheme, model, messages, locale, onLocaleChange, slots }: PublicTopbarProps) {
+  useThemeAwareFavicon(isLightTheme ? "light" : "dark");
+  const brandWordmarkSrc = resolveBrandWordmarkSrc(isLightTheme);
+
   return (
     <header className="marketplace-topbar-shell">
       <div className="marketplace-topbar">
@@ -47,10 +54,14 @@ export function PublicTopbar({ brandTitle, brandSubtitle, model, messages, local
             slots.brandContent
           ) : (
             <PublicLink href={model.brandHref} className="marketplace-brand">
-              <span className="marketplace-brand-dot" aria-hidden="true">
-                SI
-              </span>
-              <span className="marketplace-brand-copy">
+              <Image
+                src={brandWordmarkSrc}
+                alt={resolveBrandWordmarkAlt(brandTitle)}
+                width={560}
+                height={72}
+                className="marketplace-brand-wordmark"
+              />
+              <span className="marketplace-brand-copy marketplace-brand-copy-accessible">
                 <strong>{brandTitle}</strong>
                 <small>{brandSubtitle}</small>
               </span>

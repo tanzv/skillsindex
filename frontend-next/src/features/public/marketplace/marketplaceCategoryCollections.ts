@@ -1,11 +1,19 @@
+import {
+  humanizeMarketplaceSlug
+} from "@/src/lib/marketplace/taxonomyText";
+import { resolveMarketplaceSkillCategoryLabel } from "@/src/lib/marketplace/taxonomy";
 import type { PublicMarketplaceMessages } from "@/src/lib/i18n/publicMessages";
+import {
+  publicCategoriesRoute,
+  publicRankingsRoute,
+  publicResultsRoute,
+  publicSkillsRoutePrefix
+} from "@/src/lib/routing/publicRouteRegistry";
 import type { MarketplaceSkill, MarketplaceTag } from "@/src/lib/schemas/public";
 
-import { humanizeMarketplaceSlug } from "./marketplaceTaxonomyText";
 import { createMarketplaceSearchHref } from "./searchHistory";
 import type { MarketplaceCategoryHubAudience, MarketplaceCategoryHubModel } from "./marketplaceCategoryHubModel";
 import { formatCompactMarketplaceNumber } from "./marketplaceViewModel";
-import { resolveMarketplaceSkillCategoryLabel } from "./marketplaceTaxonomy";
 
 export interface MarketplaceCategoryCollectionLink {
   key: string;
@@ -122,7 +130,7 @@ function resolveAudienceCollectionCard({
 }: Omit<BuildMarketplaceCategoryCollectionCardsInput, "topTags">): MarketplaceCategoryCollectionCard {
   const prioritizedSkills = hubModel.skillSections[0]?.items.slice(0, 3) || [];
   const leadingSkill = prioritizedSkills[0];
-  const resultsPath = toPublicPath("/results");
+  const resultsPath = toPublicPath(publicResultsRoute);
 
   return {
     key: "audience-priority",
@@ -134,7 +142,7 @@ function resolveAudienceCollectionCard({
     actionVariant: "primary",
     secondaryAction: leadingSkill
       ? {
-          href: `/skills/${leadingSkill.id}`,
+          href: `${publicSkillsRoutePrefix}/${leadingSkill.id}`,
           label: messages.rankingOpenSkillLabel
         }
       : undefined,
@@ -171,11 +179,11 @@ function resolveLeaderCollectionCard({
     key: "category-leaders",
     title: messages.rankingCategoryLeadersTitle,
     description: messages.rankingCategoryLeadersDescription,
-    actionHref: leadingSpotlight ? toPublicPath(`/categories/${leadingSpotlight.slug}`) : toPublicPath("/rankings"),
+    actionHref: leadingSpotlight ? toPublicPath(`${publicCategoriesRoute}/${leadingSpotlight.slug}`) : toPublicPath(publicRankingsRoute),
     actionLabel: messages.shellCategories,
     actionVariant: "primary",
     secondaryAction: {
-      href: toPublicPath("/rankings"),
+      href: toPublicPath(publicRankingsRoute),
       label: messages.shellRankings
     },
     highlight: {
@@ -190,8 +198,8 @@ function resolveLeaderCollectionCard({
     links: rankedSpotlights.map((spotlight) => {
       const primarySubcategory = spotlight.subcategories[0];
       const href = primarySubcategory
-        ? toPublicPath(`/categories/${spotlight.slug}?subcategory=${primarySubcategory.slug}`)
-        : toPublicPath(`/categories/${spotlight.slug}`);
+        ? toPublicPath(`${publicCategoriesRoute}/${spotlight.slug}?subcategory=${primarySubcategory.slug}`)
+        : toPublicPath(`${publicCategoriesRoute}/${spotlight.slug}`);
 
       return {
         key: `leader-bundle-${spotlight.slug}`,
@@ -210,7 +218,7 @@ function resolveTopTagCollectionCard({
   toPublicPath
 }: Omit<BuildMarketplaceCategoryCollectionCardsInput, "audience">): MarketplaceCategoryCollectionCard {
   const prioritizedTags = topTags.slice(0, 5);
-  const resultsPath = toPublicPath("/results");
+  const resultsPath = toPublicPath(publicResultsRoute);
   const uniqueSkills = flattenUniqueHubSkills(hubModel);
   const leadingTag = prioritizedTags[0];
   const leadingSkill = leadingTag ? findLeadingSkillForTag(uniqueSkills, leadingTag.name) : null;
@@ -224,7 +232,7 @@ function resolveTopTagCollectionCard({
     actionVariant: "primary",
     secondaryAction: leadingSkill
       ? {
-          href: `/skills/${leadingSkill.id}`,
+          href: `${publicSkillsRoutePrefix}/${leadingSkill.id}`,
           label: messages.rankingOpenSkillLabel
         }
       : undefined,

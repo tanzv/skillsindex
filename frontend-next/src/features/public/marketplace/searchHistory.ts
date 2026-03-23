@@ -1,3 +1,5 @@
+import { publicResultsRoute } from "@/src/lib/routing/publicRouteRegistry";
+
 export interface MarketplaceRecentSearchEntry {
   route: string;
   query: string;
@@ -17,7 +19,7 @@ const maxRecentSearchEntries = 6;
 function normalizeRoute(route: string): string {
   const trimmed = String(route || "").trim();
   if (!trimmed) {
-    return "/results";
+    return publicResultsRoute;
   }
 
   return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
@@ -46,7 +48,7 @@ function normalizeLegacyEntry(rawValue: unknown): MarketplaceRecentSearchEntry |
   }
 
   return {
-    route: "/results",
+    route: publicResultsRoute,
     query,
     tags: tags || undefined,
     createdAt: new Date(createdAtValue).toISOString()
@@ -75,7 +77,7 @@ export function readMarketplaceRecentSearches(rawValue: string | null | undefine
         }
 
         const query = normalizeQuery("query" in item ? String(item.query || "") : "");
-        const route = normalizeRoute("route" in item ? String(item.route || "") : "/results");
+        const route = normalizeRoute("route" in item ? String(item.route || "") : publicResultsRoute);
         const tags = normalizeTags("tags" in item ? String(item.tags || "") : "");
         const createdAt = "createdAt" in item ? String(item.createdAt || "") : "";
 

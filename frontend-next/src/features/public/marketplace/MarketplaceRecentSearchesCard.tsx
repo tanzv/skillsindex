@@ -1,10 +1,6 @@
 "use client";
 
-import Link from "next/link";
-
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
-import { splitPublicPathPrefix, withPublicPathPrefix } from "@/src/lib/routing/publicCompat";
-import { useResolvedPublicPathname } from "@/src/lib/routing/useResolvedPublicPathname";
 
 import { buildMarketplaceRecentSearchLabel, createMarketplaceSearchHref } from "./searchHistory";
 import { MarketplaceSupportCard } from "./MarketplaceSupportCard";
@@ -15,20 +11,13 @@ interface MarketplaceRecentSearchesCardProps {
   title?: string;
   description?: string;
   emptyHint?: string;
-  fallbackLinks?: Array<{
-    href: string;
-    label: string;
-  }>;
 }
 
 export function MarketplaceRecentSearchesCard({
   title,
   description,
-  emptyHint,
-  fallbackLinks = []
+  emptyHint
 }: MarketplaceRecentSearchesCardProps) {
-  const resolvedPathname = useResolvedPublicPathname();
-  const { prefix } = splitPublicPathPrefix(resolvedPathname);
   const { messages } = usePublicI18n();
   const { entries, clearEntries } = useMarketplaceRecentSearches();
 
@@ -57,15 +46,6 @@ export function MarketplaceRecentSearchesCard({
         ) : (
           <div className="marketplace-empty-state">
             <p>{emptyHint || messages.searchRecentEmpty}</p>
-            {fallbackLinks.length > 0 ? (
-              <div className="marketplace-pill-row">
-                {fallbackLinks.map((item) => (
-                  <Link key={item.href} href={withPublicPathPrefix(prefix, item.href)} className="marketplace-sidebar-chip">
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            ) : null}
           </div>
         )}
       </div>

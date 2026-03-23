@@ -3,16 +3,28 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  MarketplaceHomeTopbarActions
+} from "@/src/features/public/marketplace/MarketplaceHomeTopbar";
+import {
   MarketplaceHomeBrand,
   MarketplaceHomePrimaryNavigation,
-  MarketplaceHomeTopbarActions,
   MarketplaceSectionTopbarActions,
   MarketplaceTopbarStageStatus
-} from "@/src/features/public/marketplace/MarketplaceHomeTopbar";
+} from "@/src/features/public/marketplace/MarketplaceTopbarPrimitives";
 
 const { mockUsePublicViewerSession } = vi.hoisted(() => ({
   mockUsePublicViewerSession: vi.fn(() => ({
     isAuthenticated: false
+  }))
+}));
+
+const { mockUsePublicRouteState } = vi.hoisted(() => ({
+  mockUsePublicRouteState: vi.fn(() => ({
+    corePath: "/",
+    isLightTheme: false,
+    isMobileLayout: false,
+    toPublicPath: (route: string) => route,
+    toPublicLinkTarget: (route: string) => ({ href: route })
   }))
 }));
 
@@ -54,19 +66,20 @@ vi.mock("@/src/features/public/PublicViewerSessionProvider", () => ({
 }));
 
 vi.mock("@/src/lib/routing/usePublicRouteState", () => ({
-  usePublicRouteState: () => ({
-    corePath: "/",
-    isLightTheme: false,
-    isMobileLayout: false,
-    toPublicPath: (route: string) => route,
-    toPublicLinkTarget: (route: string) => ({ href: route })
-  })
+  usePublicRouteState: mockUsePublicRouteState
 }));
 
 describe("MarketplaceHomeTopbar", () => {
   beforeEach(() => {
     mockUsePublicViewerSession.mockReturnValue({
       isAuthenticated: false
+    });
+    mockUsePublicRouteState.mockReturnValue({
+      corePath: "/",
+      isLightTheme: false,
+      isMobileLayout: false,
+      toPublicPath: (route: string) => route,
+      toPublicLinkTarget: (route: string) => ({ href: route })
     });
   });
 
@@ -86,6 +99,38 @@ describe("MarketplaceHomeTopbar", () => {
     expect(markup).toContain("TOP");
     expect(markup).toContain('data-testid="landing-topbar-nav-categories"');
     expect(markup).toContain('data-testid="landing-topbar-nav-rankings"');
+  });
+
+  it("marks categories and compare routes active through the shared public navigation registry", () => {
+    mockUsePublicRouteState.mockReturnValue({
+      corePath: "/categories/operations",
+      isLightTheme: false,
+      isMobileLayout: false,
+      toPublicPath: (route: string) => route,
+      toPublicLinkTarget: (route: string) => ({ href: route })
+    });
+
+    const categoriesMarkup = renderToStaticMarkup(createElement(MarketplaceHomePrimaryNavigation));
+
+    expect(categoriesMarkup).toContain(
+      'href="/categories" class="marketplace-nav-button is-active" aria-current="page" data-testid="landing-topbar-nav-categories"'
+    );
+    expect(categoriesMarkup).toContain('href="/rankings" class="marketplace-nav-button" data-testid="landing-topbar-nav-rankings"');
+
+    mockUsePublicRouteState.mockReturnValue({
+      corePath: "/compare",
+      isLightTheme: false,
+      isMobileLayout: false,
+      toPublicPath: (route: string) => route,
+      toPublicLinkTarget: (route: string) => ({ href: route })
+    });
+
+    const compareMarkup = renderToStaticMarkup(createElement(MarketplaceHomePrimaryNavigation));
+
+    expect(compareMarkup).toContain(
+      'href="/rankings" class="marketplace-nav-button is-active" aria-current="page" data-testid="landing-topbar-nav-rankings"'
+    );
+    expect(compareMarkup).toContain('href="/categories" class="marketplace-nav-button" data-testid="landing-topbar-nav-categories"');
   });
 
   it("renders the signed-out status and sign-in action inside a unified auth cluster", () => {

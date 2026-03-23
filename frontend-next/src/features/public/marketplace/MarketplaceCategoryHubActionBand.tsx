@@ -2,6 +2,11 @@
 
 import { PublicLink } from "@/src/components/shared/PublicLink";
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
+import {
+  publicCategoriesRoute,
+  publicDocsRoute,
+  publicResultsRoute
+} from "@/src/lib/routing/publicRouteRegistry";
 import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
 
 import { MarketplaceChipControlGroup } from "./MarketplaceChipControlGroup";
@@ -28,7 +33,7 @@ export function buildCategoryHubAudienceHref(
     params.set("audience", nextAudience);
   }
 
-  const route = params.toString() ? `/categories?${params.toString()}` : "/categories";
+  const route = params.toString() ? `${publicCategoriesRoute}?${params.toString()}` : publicCategoriesRoute;
   const target = toPublicLinkTarget(route);
   return target.as || target.href;
 }
@@ -94,7 +99,7 @@ export function MarketplaceCategoryHubActionBand({
         </div>
 
         <MarketplaceSearchForm
-          action={toPublicPath("/results")}
+          action={toPublicPath(publicResultsRoute)}
           query={query}
           semanticQuery={semanticQuery}
           placeholder={messages.searchPlaceholder}
@@ -118,7 +123,7 @@ export function MarketplaceCategoryHubActionBand({
           <PublicLink href={submitSkillHref} className="marketplace-topbar-button is-primary" data-testid="category-hub-submit-skill">
             {messages.categoryHubSubmitSkill}
           </PublicLink>
-          <PublicLink href={toPublicPath("/docs")} className="marketplace-topbar-button">
+          <PublicLink href={toPublicPath(publicDocsRoute)} className="marketplace-topbar-button">
             {messages.shellDocs}
           </PublicLink>
         </div>

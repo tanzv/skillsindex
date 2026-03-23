@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildMarketplaceCategoryHubModel } from "@/src/features/public/marketplace/marketplaceCategoryHubModel";
-import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
+import { buildPublicMarketplaceFallback } from "@/src/lib/marketplace/fallback";
 
 describe("marketplace category hub model", () => {
   it("builds the reference-style category rail, skill sections, and category spotlights", () => {

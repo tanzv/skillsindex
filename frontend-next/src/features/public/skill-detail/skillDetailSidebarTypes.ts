@@ -118,7 +118,6 @@ export interface SkillDetailInteractionPanelProps {
   onCommentSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onFavorite: () => void;
   onRate: (score: number) => void;
-  toPublicPath: (route: string) => string;
   workspaceHref: string;
 }
 

@@ -265,7 +265,14 @@ export interface PublicMarketplaceMessages {
   stateErrorDescription: string;
   statePermissionTitle: string;
   statePermissionDescription: string;
-  statePrototypeRoute: string;
+  state404Title: string;
+  state404Description: string;
+  state500Title: string;
+  state500Description: string;
+  state503Title: string;
+  state503Description: string;
+  stateSystemRoute: string;
   stateBackToMarketplace: string;
   stateOpenSearch: string;
+  stateRetry: string;
 }

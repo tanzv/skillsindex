@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
+import { buildPublicMarketplaceFallback } from "@/src/lib/marketplace/fallback";
 import { resolveComparedSkills } from "@/src/features/public/publicCompareModel";
 import type { PublicSkillCompareResponse } from "@/src/lib/schemas/public";
 

@@ -3,7 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import { PublicRankingPage } from "@/src/features/public/PublicRankingPage";
-import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
+
+import { buildPublicRankingResponseFixture } from "./stubs/publicRankingFixture";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -111,10 +112,10 @@ vi.mock("@/src/features/public/marketplace/MarketplaceRecentSearchesCard", () =>
 
 describe("PublicRankingPage", () => {
   it("renders canonical skill detail links for prefixed ranking routes", () => {
-    const marketplace = buildPublicMarketplaceFallback();
+    const ranking = buildPublicRankingResponseFixture("stars");
     const markup = renderToStaticMarkup(
       createElement(PublicRankingPage, {
-        marketplace,
+        ranking,
         sortKey: "stars",
         comparePayload: null,
         leftSkillId: 0,

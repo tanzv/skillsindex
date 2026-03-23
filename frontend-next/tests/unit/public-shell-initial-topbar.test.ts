@@ -2,7 +2,7 @@ import { createElement, type AnchorHTMLAttributes, type ReactNode } from "react"
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { PublicShell } from "@/src/components/shared/PublicShell";
+import { PublicMarketWebclient } from "@/src/features/public/PublicMarketWebclient";
 
 const { mockResolvedPathname } = vi.hoisted(() => ({
   mockResolvedPathname: vi.fn(() => "/")
@@ -67,19 +67,18 @@ vi.mock("@/src/features/public/PublicViewerSessionProvider", () => ({
   })
 }));
 
-describe("PublicShell initial topbar rendering", () => {
+describe("PublicMarketWebclient initial topbar rendering", () => {
   beforeEach(() => {
     mockResolvedPathname.mockReturnValue("/");
   });
 
   it("renders marketplace landing controls on the first render for the homepage", () => {
-    const markup = renderToStaticMarkup(createElement(PublicShell, null, createElement("div", null, "home")));
+    const markup = renderToStaticMarkup(createElement(PublicMarketWebclient, null, createElement("div", null, "home")));
 
     expect(markup).toContain('data-marketplace-route-kind="landing"');
     expect(markup).toContain('data-marketplace-content-width="default"');
     expect(markup).toContain('data-testid="landing-topbar-nav-categories"');
     expect(markup).toContain('data-testid="landing-topbar-nav-rankings"');
-    expect(markup).toContain('data-testid="topbar-theme-switch-dark"');
     expect(markup).not.toContain(">Docs<");
     expect(markup).not.toContain(">ZH<");
   });
@@ -87,7 +86,7 @@ describe("PublicShell initial topbar rendering", () => {
   it("renders marketplace section controls on the first render for results routes", () => {
     mockResolvedPathname.mockReturnValue("/results");
 
-    const markup = renderToStaticMarkup(createElement(PublicShell, null, createElement("div", null, "results")));
+    const markup = renderToStaticMarkup(createElement(PublicMarketWebclient, null, createElement("div", null, "results")));
 
     expect(markup).toContain('data-marketplace-route-kind="section"');
     expect(markup).toContain("Results");
@@ -102,7 +101,7 @@ describe("PublicShell initial topbar rendering", () => {
   it("keeps the default public topbar for non-marketplace routes", () => {
     mockResolvedPathname.mockReturnValue("/docs");
 
-    const markup = renderToStaticMarkup(createElement(PublicShell, null, createElement("div", null, "docs")));
+    const markup = renderToStaticMarkup(createElement(PublicMarketWebclient, null, createElement("div", null, "docs")));
 
     expect(markup).toContain('data-marketplace-route-kind="narrative"');
     expect(markup).toContain('data-marketplace-content-width="expanded"');
@@ -114,9 +113,10 @@ describe("PublicShell initial topbar rendering", () => {
   it("marks skill detail routes as expanded marketplace detail surfaces", () => {
     mockResolvedPathname.mockReturnValue("/skills/14");
 
-    const markup = renderToStaticMarkup(createElement(PublicShell, null, createElement("div", null, "skill detail")));
+    const markup = renderToStaticMarkup(createElement(PublicMarketWebclient, null, createElement("div", null, "skill detail")));
 
     expect(markup).toContain('data-marketplace-route-kind="skill-detail"');
     expect(markup).toContain('data-marketplace-content-width="expanded"');
+    expect(markup).toContain('data-testid="skill-detail-topbar-breadcrumb"');
   });
 });

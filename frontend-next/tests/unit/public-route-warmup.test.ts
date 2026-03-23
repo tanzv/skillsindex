@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   buildPublicMarketplaceWarmupTargets,
   prefetchPublicMarketplaceRoutes,
+  shouldWarmPublicMarketplaceRoutesInDev,
   warmPublicMarketplaceRoutes
 } from "@/src/features/public/marketplace/publicRouteWarmup";
 
@@ -59,5 +60,17 @@ describe("public route warmup", () => {
     expect(prefetchImpl).toHaveBeenNthCalledWith(1, "/login");
     expect(prefetchImpl).toHaveBeenNthCalledWith(2, "/categories");
     expect(prefetchImpl).toHaveBeenNthCalledWith(3, "/rankings");
+  });
+
+  it("keeps dev marketplace route warmup disabled by default", () => {
+    vi.stubEnv("NEXT_PUBLIC_ENABLE_DEV_MARKETPLACE_WARMUP", undefined);
+
+    expect(shouldWarmPublicMarketplaceRoutesInDev()).toBe(false);
+  });
+
+  it("allows dev marketplace route warmup when explicitly enabled", () => {
+    vi.stubEnv("NEXT_PUBLIC_ENABLE_DEV_MARKETPLACE_WARMUP", "true");
+
+    expect(shouldWarmPublicMarketplaceRoutesInDev()).toBe(true);
   });
 });

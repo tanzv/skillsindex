@@ -66,27 +66,31 @@
 
 .marketplace-brand {
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.marketplace-brand-dot {
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--marketplace-brand-dot-background);
-  color: var(--marketplace-brand-dot-text);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+.marketplace-brand-wordmark {
+  width: 176px;
+  height: auto;
+  display: block;
+  flex: 0 0 auto;
 }
 
 .marketplace-brand-copy {
   flex-direction: column;
   gap: 2px;
+}
+
+.marketplace-brand-copy-accessible {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .marketplace-brand-copy strong {
@@ -237,5 +241,9 @@
   .marketplace-shell {
     --marketplace-shell-inline-gutter: 10px;
     --marketplace-topbar-inline-gutter: 10px;
+  }
+
+  .marketplace-brand-wordmark {
+    width: 154px;
   }
 }

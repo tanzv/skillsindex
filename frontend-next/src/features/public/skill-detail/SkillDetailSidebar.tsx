@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 
 import { usePublicViewerSession } from "@/src/features/public/PublicViewerSessionProvider";
 import { usePublicLoginTarget } from "@/src/lib/auth/usePublicLoginTarget";
+import { workspaceOverviewRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 
 import { SkillDetailCommentsPanel } from "./SkillDetailCommentsPanel";
 import { SkillDetailInstallCard } from "./SkillDetailInstallCard";
@@ -19,7 +20,6 @@ interface SkillDetailSidebarProps extends SkillDetailSidebarBaseProps {
   onCommentSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onFavorite: () => void;
   onRate: (score: number) => void;
-  toPublicPath: (route: string) => string;
 }
 
 export function SkillDetailSidebar({
@@ -37,8 +37,7 @@ export function SkillDetailSidebar({
   onCommentDraftChange,
   onCommentSubmit,
   onFavorite,
-  onRate,
-  toPublicPath
+  onRate
 }: SkillDetailSidebarProps) {
   const { isAuthenticated } = usePublicViewerSession();
   const loginTarget = usePublicLoginTarget();
@@ -87,8 +86,7 @@ export function SkillDetailSidebar({
           onCommentSubmit={onCommentSubmit}
           onFavorite={onFavorite}
           onRate={onRate}
-          toPublicPath={toPublicPath}
-          workspaceHref="/workspace"
+          workspaceHref={workspaceOverviewRoute}
         />
       ) : null}
 

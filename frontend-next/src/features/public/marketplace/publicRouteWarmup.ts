@@ -1,4 +1,10 @@
-export const publicMarketplaceWarmupRoutes = ["/categories", "/rankings", "/results"] as const;
+import {
+  publicCategoriesRoute,
+  publicRankingsRoute,
+  publicResultsRoute
+} from "@/src/lib/routing/publicRouteRegistry";
+
+export const publicMarketplaceWarmupRoutes = [publicCategoriesRoute, publicRankingsRoute, publicResultsRoute] as const;
 
 export interface PublicRouteWarmupFetchInit {
   credentials: RequestCredentials;
@@ -7,6 +13,10 @@ export interface PublicRouteWarmupFetchInit {
 
 export type PublicRouteWarmupFetch = (input: string, init: PublicRouteWarmupFetchInit) => Promise<unknown>;
 export type PublicRoutePrefetch = (route: string) => void;
+
+export function shouldWarmPublicMarketplaceRoutesInDev(): boolean {
+  return process.env.NEXT_PUBLIC_ENABLE_DEV_MARKETPLACE_WARMUP === "true";
+}
 
 export function buildPublicMarketplaceWarmupTargets(
   toPublicPath: (route: string) => string,

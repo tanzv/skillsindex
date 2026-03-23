@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import { PublicComparePage } from "@/src/features/public/PublicComparePage";
-import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
+import { buildPublicMarketplaceFallback } from "@/src/lib/marketplace/fallback";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/light/compare"

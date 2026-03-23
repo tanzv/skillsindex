@@ -19,7 +19,7 @@ describe("category detail marketplace request query", () => {
     ).toEqual({});
   });
 
-  it("strips semantic tags from generic marketplace backend requests", () => {
+  it("keeps semantic tags in generic marketplace backend requests", () => {
     expect(
       buildMarketplaceSemanticListingRequestQuery({
         q: "release gate",
@@ -28,6 +28,7 @@ describe("category detail marketplace request query", () => {
       })
     ).toEqual({
       q: "release gate",
+      tags: "ops",
       page: "2"
     });
   });
@@ -60,7 +61,7 @@ describe("category detail marketplace request query", () => {
     ).toEqual({});
   });
 
-  it("keeps category route filters but omits semantic tags from backend requests", () => {
+  it("keeps category route filters and semantic tags in backend requests", () => {
     expect(
       buildCategoryDetailMarketplaceRequestQuery("operations", {
         q: "release gate",
@@ -72,15 +73,27 @@ describe("category detail marketplace request query", () => {
     ).toEqual({
       category: "operations",
       q: "release gate",
+      tags: "ops",
       subcategory: "release",
       sort: "stars",
       mode: "ai"
     });
   });
 
-  it("always pins the active category slug into the backend request", () => {
-    expect(buildCategoryDetailMarketplaceRequestQuery("programming-development", {})).toEqual({
-      category: "programming-development"
+  it("maps presentation taxonomy slugs to grouped backend filters", () => {
+    expect(
+      buildCategoryDetailMarketplaceRequestQuery("programming-development", {
+        subcategory: "devops-cloud",
+        q: "release",
+        tags: "ops",
+        sort: "stars"
+      })
+    ).toEqual({
+      category_group: "programming-development",
+      subcategory_group: "devops-cloud",
+      q: "release",
+      tags: "ops",
+      sort: "stars"
     });
   });
 });

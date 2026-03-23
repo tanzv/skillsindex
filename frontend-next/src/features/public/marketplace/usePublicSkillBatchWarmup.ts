@@ -2,7 +2,10 @@
 
 import { useEffect } from "react";
 
-import { shouldDisableBatchSkillWarmup } from "./publicSkillWarmupPolicy";
+import {
+  shouldDisableBatchSkillWarmup,
+  shouldEnableBatchSkillWarmupForEnvironment
+} from "@/src/lib/marketplace/publicSkillWarmupPolicy";
 import { warmPublicSkillBatchRoutes } from "./publicSkillBatchWarmup";
 
 type IdleCapableWindow = Window & {
@@ -22,7 +25,7 @@ const completedPublicSkillWarmups = new Set<string>();
 
 export function usePublicSkillBatchWarmup(routes: string[]) {
   useEffect(() => {
-    if (process.env.NODE_ENV !== "development" || routes.length === 0) {
+    if (!shouldEnableBatchSkillWarmupForEnvironment(process.env.NODE_ENV) || routes.length === 0) {
       return;
     }
 

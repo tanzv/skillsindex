@@ -3,6 +3,9 @@
 import { useMemo } from "react";
 
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
+import type { PublicMarketplaceLandingSummary } from "@/src/lib/schemas/public";
+
+import { formatCompactMarketplaceNumber } from "./marketplaceViewModel";
 
 const statsTrendBars = [25, 30, 38, 46, 62, 84, 120];
 const statsTrendYAxis = ["6k", "4k", "2k", "0"];
@@ -43,9 +46,15 @@ function buildTrendPathData(bars: number[]) {
   };
 }
 
-export function MarketplaceHomeHero() {
+interface MarketplaceHomeHeroProps {
+  summary: PublicMarketplaceLandingSummary;
+}
+
+export function MarketplaceHomeHero({ summary }: MarketplaceHomeHeroProps) {
   const { messages } = usePublicI18n();
   const trendPathData = useMemo(() => buildTrendPathData(statsTrendBars), []);
+  const secondaryMetricLabel = `${formatCompactMarketplaceNumber(summary.category_count)} ${messages.statCategories} · ${formatCompactMarketplaceNumber(summary.top_tag_count)} ${messages.statTopTags}`;
+  const trendMetricLabel = `${formatCompactMarketplaceNumber(summary.featured_skill_count)} ${messages.landingCuratedTitle} · ${formatCompactMarketplaceNumber(summary.latest_skill_count)} ${messages.landingLatestTitle}`;
 
   return (
     <section
@@ -75,9 +84,11 @@ export function MarketplaceHomeHero() {
         <div className="marketplace-home-hero-metric-card">
           <div className="marketplace-home-hero-metric-label-row">
             <span className="marketplace-home-hero-metric-label">const skills =</span>
-            <strong className="marketplace-home-hero-metric-value">{messages.heroStatsMain}</strong>
+            <strong className="marketplace-home-hero-metric-value" data-testid="landing-hero-primary-metric">
+              {formatCompactMarketplaceNumber(summary.total_skills)}
+            </strong>
           </div>
-          <p className="marketplace-home-hero-metric-note">{`// ${messages.heroStatsSub}`}</p>
+          <p className="marketplace-home-hero-metric-note" data-testid="landing-hero-secondary-metric">{`// ${secondaryMetricLabel}`}</p>
         </div>
       </div>
 
@@ -122,7 +133,9 @@ export function MarketplaceHomeHero() {
             ))}
           </div>
         </div>
-        <p className="marketplace-top-stats-chart-note">{messages.heroStatsTrendLabel}</p>
+        <p className="marketplace-top-stats-chart-note" data-testid="landing-hero-trend-metric">
+          {trendMetricLabel}
+        </p>
       </div>
     </section>
   );

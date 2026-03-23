@@ -1,5 +1,12 @@
 import { buildPublicLoginPath } from "@/src/lib/auth/loginPaths";
 import type { PublicMarketplaceMessages } from "@/src/lib/i18n/publicMessages";
+import {
+  listPublicTopbarNavRegistrations,
+  resolvePublicRouteStage,
+  resolvePublicTopbarNavSection
+} from "@/src/lib/navigation/publicNavigationRegistry";
+import { publicHomeRoute, publicResultsRoute } from "@/src/lib/routing/publicRouteRegistry";
+import { workspaceOverviewRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 import { buildPublicPrefix, withPublicPathPrefix } from "@/src/lib/routing/publicCompat";
 
 export interface PublicTopbarNavItem {
@@ -41,30 +48,22 @@ function resolveCurrentStageLabel(
     "stageLanding" | "stageCategories" | "stageRankings" | "stageSkillDetail" | "stageResults" | "stageAccess" | "stageMarketplace"
   >
 ): string {
-  if (corePath === "/") {
-    return messages.stageLanding;
+  switch (resolvePublicRouteStage(corePath)) {
+    case "landing":
+      return messages.stageLanding;
+    case "categories":
+      return messages.stageCategories;
+    case "rankings":
+      return messages.stageRankings;
+    case "skill-detail":
+      return messages.stageSkillDetail;
+    case "results":
+      return messages.stageResults;
+    case "access":
+      return messages.stageAccess;
+    case "marketplace":
+      return messages.stageMarketplace;
   }
-  if (corePath.startsWith("/categories")) {
-    return messages.stageCategories;
-  }
-  if (corePath === "/rankings" || corePath === "/compare") {
-    return messages.stageRankings;
-  }
-  if (corePath.startsWith("/skills/")) {
-    return messages.stageSkillDetail;
-  }
-  if (corePath === "/results" || corePath === "/search") {
-    return messages.stageResults;
-  }
-  if (corePath === "/login") {
-    return messages.stageAccess;
-  }
-
-  return messages.stageMarketplace;
-}
-
-function isActivePublicNav(corePath: string, matchPrefixes: string[]): boolean {
-  return matchPrefixes.some((matchPrefix) => corePath === matchPrefix || corePath.startsWith(`${matchPrefix}/`));
 }
 
 interface BuildPublicTopbarModelInput {
@@ -81,17 +80,18 @@ interface BuildPublicTopbarModelInput {
 export function buildPublicTopbarModel(input: BuildPublicTopbarModelInput): PublicTopbarModel {
   const stageLabel = resolveCurrentStageLabel(input.corePath, input.messages);
   const utilityLinks: PublicTopbarLinkAction[] = [];
+  const activeNavSection = resolvePublicTopbarNavSection(input.corePath);
 
   if (input.corePath !== "/") {
     utilityLinks.push({
-      href: withPublicPathPrefix(input.prefix, "/results"),
+      href: withPublicPathPrefix(input.prefix, publicResultsRoute),
       label: input.messages.shellSearch,
       variant: "subtle"
     });
   }
 
   utilityLinks.push({
-    href: "/workspace",
+    href: workspaceOverviewRoute,
     label: input.messages.shellWorkspace,
     variant: input.isAuthenticated ? "primary" : "default"
   });
@@ -105,24 +105,17 @@ export function buildPublicTopbarModel(input: BuildPublicTopbarModelInput): Publ
   }
 
   return {
-    brandHref: withPublicPathPrefix(input.prefix, "/"),
-    navItems: [
-      {
-        href: withPublicPathPrefix(input.prefix, "/categories"),
-        label: input.messages.shellCategories,
-        isActive: isActivePublicNav(input.corePath, ["/categories"])
-      },
-      {
-        href: withPublicPathPrefix(input.prefix, "/rankings"),
-        label: input.messages.shellRankings,
-        isActive: isActivePublicNav(input.corePath, ["/rankings", "/compare"])
-      },
-      {
-        href: withPublicPathPrefix(input.prefix, "/docs"),
-        label: input.messages.shellDocs,
-        isActive: isActivePublicNav(input.corePath, ["/docs", "/about", "/rollout", "/timeline", "/governance", "/states"])
-      }
-    ],
+    brandHref: withPublicPathPrefix(input.prefix, publicHomeRoute),
+    navItems: listPublicTopbarNavRegistrations().map((registration) => ({
+      href: withPublicPathPrefix(input.prefix, registration.href),
+      label:
+        registration.id === "categories"
+          ? input.messages.shellCategories
+          : registration.id === "rankings"
+            ? input.messages.shellRankings
+            : input.messages.shellDocs,
+      isActive: activeNavSection === registration.id
+    })),
     statusLabels: [stageLabel, input.isMobileLayout ? input.messages.layoutCompact : input.messages.layoutDesktop],
     utilityLinks,
     themeLinks: [

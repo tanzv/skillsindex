@@ -2,11 +2,20 @@
 
 import { PublicLink } from "@/src/components/shared/PublicLink";
 
-import { PublicShellRegistration } from "@/src/components/shared/PublicShellSlots";
+import { PublicMarketWebclientRegistration } from "@/src/components/shared/PublicMarketWebclientSlots";
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
 import { formatPublicDate } from "@/src/lib/i18n/publicLocale";
+import {
+  resolveMarketplaceSkillCategoryLabel,
+  resolveMarketplaceSkillSubcategoryLabel
+} from "@/src/lib/marketplace/taxonomy";
+import {
+  publicCategoriesRoute,
+  publicHomeRoute,
+  publicSkillsRoutePrefix
+} from "@/src/lib/routing/publicRouteRegistry";
 import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
-import type { PublicMarketplaceResponse, PublicSkillCompareResponse } from "@/src/lib/schemas/public";
+import type { PublicRankingResponse, PublicSkillCompareResponse } from "@/src/lib/schemas/public";
 
 import { MarketplaceRecentSearchesCard } from "./marketplace/MarketplaceRecentSearchesCard";
 import { MarketplaceChipControlGroup } from "./marketplace/MarketplaceChipControlGroup";
@@ -15,25 +24,22 @@ import { MarketplaceCompareForm } from "./marketplace/MarketplaceCompareForm";
 import { MarketplaceCompareSelectionList } from "./marketplace/MarketplaceCompareSelectionList";
 import { MarketplaceResultsStage } from "./marketplace/MarketplaceResultsStage";
 import { MarketplaceSupportCard } from "./marketplace/MarketplaceSupportCard";
-import { buildPublicSkillBatchWarmupTargets } from "./marketplace/publicSkillBatchWarmup";
-import { formatCompactMarketplaceNumber } from "./marketplace/marketplaceViewModel";
 import { MarketplaceTopbarBreadcrumb } from "./marketplace/MarketplaceTopbarBreadcrumb";
+import { formatCompactMarketplaceNumber } from "./marketplace/marketplaceViewModel";
 import { usePublicSkillBatchWarmup } from "./marketplace/usePublicSkillBatchWarmup";
 import { useMarketplaceTopbarSlots } from "./marketplace/useMarketplaceTopbarSlots";
-import { buildPublicRankingModel, type RankingSortKey } from "./publicRankingModel";
-import { resolveMarketplaceSkillCategoryLabel, resolveMarketplaceSkillSubcategoryLabel } from "./marketplace/marketplaceTaxonomy";
-import { resolveComparedSkills } from "./publicCompareModel";
+import { buildPublicRankingPageModel } from "./publicRankingPageModel";
 
 interface PublicRankingPageProps {
-  marketplace: PublicMarketplaceResponse;
-  sortKey: RankingSortKey;
+  ranking: PublicRankingResponse;
+  sortKey: "stars" | "quality";
   comparePayload?: PublicSkillCompareResponse | null;
   leftSkillId?: number;
   rightSkillId?: number;
 }
 
 export function PublicRankingPage({
-  marketplace,
+  ranking,
   sortKey,
   comparePayload = null,
   leftSkillId = 0,
@@ -41,26 +47,15 @@ export function PublicRankingPage({
 }: PublicRankingPageProps) {
   const { locale, messages } = usePublicI18n();
   const { toPublicPath } = usePublicRouteState();
-  const ranking = buildPublicRankingModel(marketplace, sortKey);
-  const skillWarmupTargets = buildPublicSkillBatchWarmupTargets(ranking.highlights.concat(ranking.listItems), toPublicPath);
-  const { leftSkill, rightSkill } = resolveComparedSkills(marketplace, comparePayload, leftSkillId, rightSkillId);
-  const compareSelections = [leftSkill, rightSkill].flatMap((skill, index) =>
-    skill
-      ? [
-          {
-            key: `${skill.id}-${index}`,
-            label: index === 0 ? messages.rankingCompareLeftLabel : messages.rankingCompareRightLabel,
-            title: skill.name,
-            description: skill.description,
-            metrics: [
-              resolveMarketplaceSkillCategoryLabel(skill),
-              `${skill.star_count} ${messages.skillStarsSuffix}`,
-              `${skill.quality_score.toFixed(1)} ${messages.skillQualitySuffix}`
-            ]
-          }
-        ]
-      : []
-  );
+  const model = buildPublicRankingPageModel({
+    ranking,
+    sortKey,
+    comparePayload,
+    leftSkillId,
+    rightSkillId,
+    messages,
+    resolvePath: toPublicPath
+  });
   const shellSlots = useMarketplaceTopbarSlots({
     stageLabel: messages.stageRankings,
     variant: "market",
@@ -68,31 +63,18 @@ export function PublicRankingPage({
       <MarketplaceTopbarBreadcrumb
         ariaLabel={messages.categoryBreadcrumbAriaLabel}
         items={[
-          { href: toPublicPath("/"), label: messages.shellHome },
+          { href: toPublicPath(publicHomeRoute), label: messages.shellHome },
           { label: messages.rankingTitle, isCurrent: true }
         ]}
       />
     )
   });
 
-  function buildRankingHref(nextSortKey: RankingSortKey): string {
-    const params = new URLSearchParams();
-    if (nextSortKey !== "stars") {
-      params.set("sort", nextSortKey);
-    }
-    if (leftSkill && rightSkill && leftSkill.id !== rightSkill.id) {
-      params.set("left", String(leftSkill.id));
-      params.set("right", String(rightSkill.id));
-    }
-    const query = params.toString();
-    return query ? `${toPublicPath("/rankings")}?${query}` : toPublicPath("/rankings");
-  }
-
-  usePublicSkillBatchWarmup(skillWarmupTargets);
+  usePublicSkillBatchWarmup(model.skillWarmupTargets);
 
   return (
     <div className="marketplace-main-column marketplace-ranking-stage">
-      <PublicShellRegistration slots={shellSlots} />
+      <PublicMarketWebclientRegistration slots={shellSlots} />
 
       <section className="marketplace-section-card marketplace-ranking-panel">
         <div className="marketplace-ranking-head">
@@ -101,24 +83,17 @@ export function PublicRankingPage({
             <h2>{messages.rankingTitle}</h2>
             <p>{messages.rankingDescription}</p>
           </div>
-          <PublicLink href="/categories" className="marketplace-topbar-button is-subtle">
+          <PublicLink href={publicCategoriesRoute} className="marketplace-topbar-button is-subtle">
             {messages.shellCategories}
           </PublicLink>
         </div>
 
         <div className="marketplace-ranking-summary-row" aria-label={messages.rankingTitle}>
-          <span className="marketplace-ranking-summary-chip">
-            {ranking.summary.totalCompared} {messages.rankingComparedSuffix}
-          </span>
-          <span className="marketplace-ranking-summary-chip">
-            {messages.rankingTopStarsPrefix} {formatCompactMarketplaceNumber(ranking.summary.topStars)}
-          </span>
-          <span className="marketplace-ranking-summary-chip">
-            {messages.statTopQuality} {ranking.summary.topQuality.toFixed(1)}
-          </span>
-          <span className="marketplace-ranking-summary-chip">
-            {messages.rankingAverageQualityPrefix} {ranking.summary.averageQuality.toFixed(1)}
-          </span>
+          {model.summaryChips.map((chip) => (
+            <span key={chip.key} className="marketplace-ranking-summary-chip">
+              {chip.text}
+            </span>
+          ))}
         </div>
 
         <MarketplaceChipControlGroup
@@ -128,20 +103,7 @@ export function PublicRankingPage({
           inline
           className="marketplace-ranking-sort-row"
           rowClassName="marketplace-ranking-sort-tabs"
-          items={[
-            {
-              key: "ranking-sort-stars",
-              href: buildRankingHref("stars"),
-              label: messages.rankingSortByStars,
-              isActive: sortKey === "stars"
-            },
-            {
-              key: "ranking-sort-quality",
-              href: buildRankingHref("quality"),
-              label: messages.rankingSortByQuality,
-              isActive: sortKey === "quality"
-            }
-          ]}
+          items={model.sortItems}
         />
       </section>
 
@@ -161,7 +123,12 @@ export function PublicRankingPage({
 
               <div className="marketplace-ranking-highlight-grid">
                 {ranking.highlights.map((item, index) => (
-                  <PublicLink key={item.id} href={`/skills/${item.id}`} className="marketplace-ranking-highlight-card" warmOnViewport>
+                  <PublicLink
+                    key={item.id}
+                    href={`${publicSkillsRoutePrefix}/${item.id}`}
+                    className="marketplace-ranking-highlight-card"
+                    warmOnViewport
+                  >
                     <article>
                       <div className="marketplace-ranking-highlight-head">
                         <span className={index === 0 ? "marketplace-ranking-rank-chip is-top" : "marketplace-ranking-rank-chip"}>
@@ -207,8 +174,13 @@ export function PublicRankingPage({
                 </div>
 
                 <div className="marketplace-ranking-table-body">
-                  {ranking.highlights.concat(ranking.listItems).map((item, index) => (
-                    <PublicLink key={item.id} href={`/skills/${item.id}`} className="marketplace-ranking-table-row" warmOnViewport>
+                  {model.displayItems.map((item, index) => (
+                    <PublicLink
+                      key={item.id}
+                      href={`${publicSkillsRoutePrefix}/${item.id}`}
+                      className="marketplace-ranking-table-row"
+                      warmOnViewport
+                    >
                       <span className={index === 0 ? "marketplace-ranking-rank-chip is-top" : "marketplace-ranking-rank-chip"}>
                         #{index + 1}
                       </span>
@@ -237,17 +209,17 @@ export function PublicRankingPage({
               description={messages.rankingCompareContextDescription}
             >
               <MarketplaceCompareForm
-                action={toPublicPath("/rankings")}
-                items={marketplace.items.map((item) => ({ id: item.id, name: item.name }))}
-                leftValue={String(leftSkill?.id || leftSkillId || ranking.rankedItems[0]?.id || "")}
-                rightValue={String(rightSkill?.id || rightSkillId || ranking.rankedItems[1]?.id || "")}
+                action={model.compareFormAction}
+                items={model.compareFormItems}
+                leftValue={model.compareFormLeftValue}
+                rightValue={model.compareFormRightValue}
                 leftAriaLabel={messages.rankingCompareLeftSkillAriaLabel}
                 rightAriaLabel={messages.rankingCompareRightSkillAriaLabel}
                 submitLabel={messages.rankingCompareButton}
-                hiddenFields={[{ name: "sort", value: sortKey }]}
+                hiddenFields={model.compareHiddenFields}
               />
 
-              <MarketplaceCompareSelectionList items={compareSelections} />
+              <MarketplaceCompareSelectionList items={model.compareSelections} />
             </MarketplaceSupportCard>
 
             <MarketplaceSupportCard
@@ -255,20 +227,13 @@ export function PublicRankingPage({
               description={messages.rankingCategoryLeadersDescription}
             >
               <MarketplaceCategoryLeadersList
-                leaders={ranking.categoryLeaders}
+                leaders={model.categoryLeaders}
                 skillCountSuffix={messages.skillCountSuffix}
                 leadingSkillPrefix={messages.rankingLeadingSkillPrefix}
                 averageQualityPrefix={messages.rankingAverageQualityPrefix}
               />
             </MarketplaceSupportCard>
-
-            <MarketplaceRecentSearchesCard
-              fallbackLinks={[
-                { href: "/results?q=release", label: "release" },
-                { href: "/categories", label: messages.shellCategories },
-                { href: "/", label: messages.shellHome }
-              ]}
-            />
+            <MarketplaceRecentSearchesCard />
           </>
         }
       />

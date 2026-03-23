@@ -1,7 +1,13 @@
 "use client";
 
-import { PublicShellRegistration } from "@/src/components/shared/PublicShellSlots";
+import { useMemo } from "react";
+
+import { PublicMarketWebclientRegistration } from "@/src/components/shared/PublicMarketWebclientSlots";
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
+import {
+  publicCategoriesRoute,
+  publicHomeRoute
+} from "@/src/lib/routing/publicRouteRegistry";
 import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
 import type { PublicMarketplaceResponse } from "@/src/lib/schemas/public";
 
@@ -16,18 +22,10 @@ import { MarketplaceSupportCard } from "./marketplace/MarketplaceSupportCard";
 import { MarketplaceSupportLinkList } from "./marketplace/MarketplaceSupportLinkList";
 import { MarketplaceSupportMetricsList } from "./marketplace/MarketplaceSupportMetricsList";
 import { MarketplaceTopbarBreadcrumb } from "./marketplace/MarketplaceTopbarBreadcrumb";
-import { resolveCategoryDetailControlState } from "./marketplace/categoryDetailModel";
-import { buildMarketplaceCategoryHubNavigationItems } from "./marketplace/marketplaceCategoryHubModel";
-import { buildPublicSkillBatchWarmupTargets } from "./marketplace/publicSkillBatchWarmup";
-import { isPresentationCategorySlug, resolveMarketplaceSkillCategorySlug } from "./marketplace/marketplaceTaxonomy";
-import {
-  buildMarketplaceSummaryMetrics,
-  filterMarketplaceItems,
-  resolveMarketplaceCategorySummary
-} from "./marketplace/marketplaceViewModel";
 import { usePublicSkillBatchWarmup } from "./marketplace/usePublicSkillBatchWarmup";
 import { useMarketplaceTopbarSlots } from "./marketplace/useMarketplaceTopbarSlots";
 import { useMarketplaceRecentSearches } from "./marketplace/useMarketplaceRecentSearches";
+import { buildPublicCategoryDetailPageModel } from "./publicCategoryDetailPageModel";
 
 interface PublicCategoryDetailPageProps {
   marketplace: PublicMarketplaceResponse;
@@ -37,14 +35,6 @@ interface PublicCategoryDetailPageProps {
   activeSubcategory?: string;
   sort?: string;
   mode?: string;
-}
-
-function normalizeQueryValue(rawValue: string | undefined, fallback: string): string {
-  const normalizedValue = String(rawValue || "")
-    .trim()
-    .toLowerCase();
-
-  return normalizedValue || fallback;
 }
 
 export function PublicCategoryDetailPage({
@@ -59,17 +49,22 @@ export function PublicCategoryDetailPage({
   const { messages } = usePublicI18n();
   const { toPublicPath, toPublicLinkTarget } = usePublicRouteState();
   const { addEntry } = useMarketplaceRecentSearches();
-  const categorySummary = resolveMarketplaceCategorySummary(marketplace.categories, activeCategory, marketplace.items);
-  const normalizedSort = normalizeQueryValue(sort, "relevance");
-  const normalizedMode = normalizeQueryValue(mode, "hybrid");
-  const visibleItems = filterMarketplaceItems(marketplace.items, {
-    activeCategory,
-    activeSubcategory,
-    query,
-    semanticQuery,
-    sort: normalizedSort
-  });
-  const skillWarmupTargets = buildPublicSkillBatchWarmupTargets(visibleItems, toPublicPath);
+  const model = useMemo(
+    () =>
+      buildPublicCategoryDetailPageModel({
+        marketplace,
+        messages,
+        activeCategory,
+        query,
+        semanticQuery,
+        activeSubcategory,
+        sort,
+        mode,
+        resolvePath: toPublicPath,
+        resolveLinkTarget: toPublicLinkTarget
+      }),
+    [activeCategory, activeSubcategory, marketplace, messages, mode, query, semanticQuery, sort, toPublicLinkTarget, toPublicPath]
+  );
   const shellSlots = useMarketplaceTopbarSlots({
     stageLabel: messages.stageCategories,
     variant: "market",
@@ -77,19 +72,19 @@ export function PublicCategoryDetailPage({
       <MarketplaceTopbarBreadcrumb
         ariaLabel={messages.categoryBreadcrumbAriaLabel}
         items={[
-          { href: toPublicPath("/"), label: messages.shellHome },
-          { href: toPublicPath("/categories"), label: messages.shellCategories },
-          ...(categorySummary ? [{ label: categorySummary.name, isCurrent: true }] : [])
+          { href: toPublicPath(publicHomeRoute), label: messages.shellHome },
+          { href: toPublicPath(publicCategoriesRoute), label: messages.shellCategories },
+          ...(model.categorySummary ? [{ label: model.categorySummary.name, isCurrent: true }] : [])
         ]}
       />
     )
   });
-  usePublicSkillBatchWarmup(skillWarmupTargets);
+  usePublicSkillBatchWarmup(model.skillWarmupTargets);
 
-  if (!categorySummary) {
+  if (!model.categorySummary) {
     return (
       <div className="marketplace-main-column">
-        <PublicShellRegistration slots={shellSlots} />
+        <PublicMarketWebclientRegistration slots={shellSlots} />
 
         <section className="marketplace-section-card">
           <div className="marketplace-empty-state">
@@ -100,76 +95,17 @@ export function PublicCategoryDetailPage({
       </div>
     );
   }
-  const summaryMetrics = buildMarketplaceSummaryMetrics(marketplace, messages);
-  const controlState = resolveCategoryDetailControlState(categorySummary, messages, {
-    activeSubcategory,
-    sort: normalizedSort,
-    mode: normalizedMode
-  });
-  const activeRailCategory =
-    isPresentationCategorySlug(categorySummary.slug) && categorySummary.slug
-      ? categorySummary.slug
-      : visibleItems[0]
-        ? resolveMarketplaceSkillCategorySlug(visibleItems[0])
-        : "";
-  const actionPath = toPublicPath(`/categories/${activeCategory}`);
-  const activeSortLabel = controlState.sortOptions.find((option) => option.isActive)?.label || messages.categorySortRelevance;
-  const activeModeLabel = controlState.modeOptions.find((option) => option.isActive)?.label || messages.categoryModeHybrid;
-  const contextLinks = controlState.subcategoryOptions.slice(0, 6);
-  const allCategoriesTarget = toPublicLinkTarget("/categories");
-  const railItems = [
-    {
-      slug: "all",
-      name: messages.categoryHubAllCategories,
-      count: marketplace.stats.total_skills || marketplace.items.length,
-      href: allCategoriesTarget.as || allCategoriesTarget.href,
-      isActive: false
-    },
-    ...buildMarketplaceCategoryHubNavigationItems(marketplace.categories).map((item) => ({
-      slug: item.slug,
-      name: item.name,
-      count: item.count,
-      href: toPublicPath(`/categories/${item.slug}`),
-      isActive: item.slug === activeRailCategory
-    }))
-  ];
-
-  function buildCategoryHref(overrides: { subcategory?: string; sort?: string; mode?: string }): string {
-    const params = new URLSearchParams();
-    const nextSubcategory = overrides.subcategory ?? activeSubcategory;
-    const nextSort = normalizeQueryValue(overrides.sort ?? normalizedSort, "relevance");
-    const nextMode = normalizeQueryValue(overrides.mode ?? normalizedMode, "hybrid");
-
-    if (query.trim()) {
-      params.set("q", query.trim());
-    }
-    if (semanticQuery.trim()) {
-      params.set("tags", semanticQuery.trim());
-    }
-    if (nextSubcategory.trim()) {
-      params.set("subcategory", nextSubcategory.trim());
-    }
-    if (nextSort !== "relevance") {
-      params.set("sort", nextSort);
-    }
-    if (nextMode !== "hybrid") {
-      params.set("mode", nextMode);
-    }
-
-    const search = params.toString();
-    return search ? `${actionPath}?${search}` : actionPath;
-  }
 
   return (
     <div className="marketplace-main-column marketplace-category-index-stage">
-      <PublicShellRegistration slots={shellSlots} />
+      <PublicMarketWebclientRegistration slots={shellSlots} />
 
       <div className="marketplace-category-reference-layout">
         <MarketplaceCategoryRail
           categories={marketplace.categories}
-          activeCategory={activeRailCategory}
+          activeCategory={model.activeRailCategory}
           description={messages.categoryHubBrowseDescription}
-          navigationItems={railItems}
+          navigationItems={model.railItems}
         />
 
         <div className="marketplace-category-reference-stream" data-testid="categories-stream">
@@ -178,32 +114,26 @@ export function PublicCategoryDetailPage({
               <div className="marketplace-section-header">
                 <p className="marketplace-kicker">{messages.resultsCategoryContextTitle}</p>
                 <h1 className="marketplace-category-detail-title">
-                  {categorySummary.name} {messages.categoryResultsSuffix}
+                  {model.categorySummary.name} {messages.categoryResultsSuffix}
                 </h1>
-                <p>{categorySummary.description}</p>
+                <p>{model.categorySummary.description}</p>
               </div>
               <div className="marketplace-pill-row">
-                <span className="marketplace-search-utility-pill">
-                  {visibleItems.length} {messages.statMatchingSkills}
+                <span className="marketplace-search-utility-pill" data-testid="category-detail-matching-count">
+                  {model.matchingSkillCount} {messages.statMatchingSkills}
                 </span>
-                <span className="marketplace-search-utility-pill">{activeSortLabel}</span>
-                <span className="marketplace-search-utility-pill">{activeModeLabel}</span>
+                <span className="marketplace-search-utility-pill">{model.activeSortLabel}</span>
+                <span className="marketplace-search-utility-pill">{model.activeModeLabel}</span>
               </div>
             </div>
 
             <MarketplaceChipControlGroup
               label={messages.categoryAllSubcategories}
-              items={controlState.subcategoryOptions.map((option) => ({
-                key: `subcategory-${option.value || "all"}`,
-                href: buildCategoryHref({ subcategory: option.value }),
-                label: option.label,
-                secondaryLabel: option.count,
-                isActive: option.isActive
-              }))}
+              items={model.subcategoryItems}
             />
 
             <MarketplaceSearchForm
-              action={actionPath}
+              action={model.actionPath}
               query={query}
               semanticQuery={semanticQuery}
               placeholder={messages.searchPlaceholder}
@@ -217,34 +147,24 @@ export function PublicCategoryDetailPage({
               semanticFieldClassName="marketplace-search-field"
               hiddenFields={[
                 ...(activeSubcategory.trim() ? [{ name: "subcategory", value: activeSubcategory.trim() }] : []),
-                ...(normalizedSort !== "relevance" ? [{ name: "sort", value: normalizedSort }] : []),
-                ...(normalizedMode !== "hybrid" ? [{ name: "mode", value: normalizedMode }] : [])
+                ...(model.normalizedSort !== "relevance" ? [{ name: "sort", value: model.normalizedSort }] : []),
+                ...(model.normalizedMode !== "hybrid" ? [{ name: "mode", value: model.normalizedMode }] : [])
               ]}
               onSubmit={(event) => {
                 const formData = new FormData(event.currentTarget);
-                addEntry(actionPath, String(formData.get("q") || ""), String(formData.get("tags") || ""));
+                addEntry(model.actionPath, String(formData.get("q") || ""), String(formData.get("tags") || ""));
               }}
             />
 
             <div className="marketplace-category-filter-grid">
               <MarketplaceChipControlGroup
                 label={messages.searchSortLabel}
-                items={controlState.sortOptions.map((option) => ({
-                  key: `sort-${option.value}`,
-                  href: buildCategoryHref({ sort: option.value }),
-                  label: option.label,
-                  isActive: option.isActive
-                }))}
+                items={model.sortItems}
               />
 
               <MarketplaceChipControlGroup
                 label={messages.searchModeLabel}
-                items={controlState.modeOptions.map((option) => ({
-                  key: `mode-${option.value}`,
-                  href: buildCategoryHref({ mode: option.value }),
-                  label: option.label,
-                  isActive: option.isActive
-                }))}
+                items={model.modeItems}
               />
             </div>
           </section>
@@ -258,10 +178,10 @@ export function PublicCategoryDetailPage({
             mainContent={
               <MarketplaceResultsListSection
                 title={messages.resultsCategoryContextTitle}
-                description={categorySummary.description}
-                hasResults={visibleItems.length > 0}
+                description={model.categorySummary.description}
+                hasResults={model.visibleItems.length > 0}
                 testId="category-results-section"
-                resultsContent={visibleItems.map((item) => (
+                resultsContent={model.visibleItems.map((item) => (
                   <MarketplaceSkillCard key={item.id} item={item} />
                 ))}
                 emptyContent={
@@ -274,13 +194,7 @@ export function PublicCategoryDetailPage({
             }
             sideContent={
               <>
-                <MarketplaceRecentSearchesCard
-                  fallbackLinks={[
-                    { href: "/results?q=release", label: "release" },
-                    { href: "/results?q=repository", label: "repository" },
-                    { href: "/rankings", label: messages.shellRankings }
-                  ]}
-                />
+                <MarketplaceRecentSearchesCard />
 
                 <MarketplaceSupportCard
                   title={messages.resultsDiscoveryNotesTitle}
@@ -289,16 +203,16 @@ export function PublicCategoryDetailPage({
                 >
                   <MarketplaceSupportLinkList
                     className="marketplace-category-context-links"
-                    items={contextLinks.map((option) => ({
-                      key: `context-${option.value || "all"}`,
-                      href: buildCategoryHref({ subcategory: option.value }),
+                    items={model.contextLinks.map((option) => ({
+                      key: option.key,
+                      href: option.href,
                       label: option.label,
                       meta: `${option.count} ${messages.skillCountSuffix}`,
                       isActive: option.isActive
                     }))}
                   />
 
-                  <MarketplaceSupportMetricsList metrics={summaryMetrics} className="marketplace-category-context-metrics" />
+                  <MarketplaceSupportMetricsList metrics={model.summaryMetrics} className="marketplace-category-context-metrics" />
                 </MarketplaceSupportCard>
               </>
             }

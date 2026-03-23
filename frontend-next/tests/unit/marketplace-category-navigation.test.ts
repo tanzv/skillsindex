@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildMarketplaceCategoryNavigation } from "@/src/features/public/marketplace/marketplaceCategoryNavigation";
-import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
+import { buildPublicMarketplaceFallback } from "@/src/lib/marketplace/fallback";
 
 describe("marketplace category navigation", () => {
   it("orders categories by count and name for shared rail rendering", () => {

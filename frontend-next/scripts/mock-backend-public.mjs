@@ -140,10 +140,74 @@ function buildTopTags(skills) {
     .slice(0, 8);
 }
 
+function normalizeGroupSlug(value) {
+  return asString(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+}
+
+function resolvePresentationSkillGrouping(skill) {
+  const category = normalizeGroupSlug(skill.category);
+  const subcategory = normalizeGroupSlug(skill.subcategory);
+
+  if (["operations", "engineering", "development", "devops", "tools", "data-ai", "testing-security"].includes(category)) {
+    if (["release", "recovery", "cloud", "containers", "cicd", "monitoring"].includes(subcategory)) {
+      return { category_group: "programming-development", subcategory_group: "devops-cloud" };
+    }
+    if (["repository", "git-workflows"].includes(subcategory)) {
+      return { category_group: "programming-development", subcategory_group: "git-github" };
+    }
+    if (["frontend", "backend", "full-stack", "cms-platforms", "package-distribution", "ecommerce-development"].includes(subcategory)) {
+      return { category_group: "programming-development", subcategory_group: "web-frontend-development" };
+    }
+
+    return { category_group: "programming-development", subcategory_group: "coding-agents-ides" };
+  }
+
+  if (category === "content-media") {
+    if (subcategory === "media") {
+      return { category_group: "design-art", subcategory_group: "media-streaming" };
+    }
+    if (subcategory === "design") {
+      return { category_group: "design-art", subcategory_group: "image-video-generation" };
+    }
+  }
+
+  return {
+    category_group: category,
+    subcategory_group: subcategory
+  };
+}
+
+function buildPresentationCategorySummary(skills, categoryGroup) {
+  const normalizedCategoryGroup = normalizeGroupSlug(categoryGroup);
+  if (!normalizedCategoryGroup) {
+    return null;
+  }
+
+  const grouped = skills
+    .map((skill) => resolvePresentationSkillGrouping(skill))
+    .filter((grouping) => grouping.category_group === normalizedCategoryGroup);
+
+  if (!grouped.length) {
+    return {
+      category_slug: normalizedCategoryGroup,
+      total_skills: 0,
+      subcategory_count: 0
+    };
+  }
+
+  return {
+    category_slug: normalizedCategoryGroup,
+    total_skills: grouped.length,
+    subcategory_count: new Set(grouped.map((grouping) => grouping.subcategory_group).filter(Boolean)).size
+  };
+}
+
 function filterSkills(skills, url) {
   const keyword = asString(url.searchParams.get("q")).toLowerCase();
   const category = asString(url.searchParams.get("category")).toLowerCase();
   const subcategory = asString(url.searchParams.get("subcategory")).toLowerCase();
+  const categoryGroup = normalizeGroupSlug(url.searchParams.get("category_group"));
+  const subcategoryGroup = normalizeGroupSlug(url.searchParams.get("subcategory_group"));
   const sort = asString(url.searchParams.get("sort"), "relevance");
 
   const filtered = skills.filter((skill) => {
@@ -153,6 +217,16 @@ function filterSkills(skills, url) {
 
     if (subcategory && skill.subcategory.toLowerCase() !== subcategory) {
       return false;
+    }
+
+    if (categoryGroup || subcategoryGroup) {
+      const grouping = resolvePresentationSkillGrouping(skill);
+      if (categoryGroup && grouping.category_group !== categoryGroup) {
+        return false;
+      }
+      if (subcategoryGroup && grouping.subcategory_group !== subcategoryGroup) {
+        return false;
+      }
     }
 
     if (!keyword) {
@@ -174,9 +248,52 @@ function filterSkills(skills, url) {
   return filtered;
 }
 
+function buildMarketplaceSummary(categories, topTags, publicSkills, filteredSkills, url) {
+  const categoryFilter = asString(url.searchParams.get("category")).toLowerCase();
+  const categoryGroupFilter = normalizeGroupSlug(url.searchParams.get("category_group"));
+  const matchedCategory = categories.find((category) => asString(category.slug).toLowerCase() === categoryFilter) || null;
+  const visibleCategories = categories.filter((category) => asNumber(category.count) > 0);
+  const groupedCategory = buildPresentationCategorySummary(publicSkills, categoryGroupFilter);
+
+  return {
+    landing: {
+      total_skills: publicSkills.length,
+      category_count: visibleCategories.length,
+      top_tag_count: topTags.length,
+      featured_skill_count: Math.min(publicSkills.length, 3),
+      latest_skill_count: Math.min(publicSkills.length, 6)
+    },
+    category_hub: {
+      total_categories: visibleCategories.length,
+      total_skills: publicSkills.length,
+      top_tag_count: topTags.length,
+      spotlight_category_count: visibleCategories.length
+    },
+    category_detail: categoryGroupFilter
+      ? {
+          category_slug: groupedCategory?.category_slug || categoryGroupFilter,
+          total_skills: asNumber(groupedCategory?.total_skills),
+          matching_skills: filteredSkills.length,
+          subcategory_count: asNumber(groupedCategory?.subcategory_count)
+        }
+      : categoryFilter
+      ? {
+          category_slug: categoryFilter,
+          total_skills: asNumber(matchedCategory?.count),
+          matching_skills: filteredSkills.length,
+          subcategory_count: Array.isArray(matchedCategory?.subcategories)
+            ? matchedCategory.subcategories.filter((subcategory) => asNumber(subcategory.count) > 0).length
+            : 0
+        }
+      : null
+  };
+}
+
 function buildMarketplacePayload(state, url, sessionUser) {
   const publicSkills = getPublicSkills(state);
   const filteredSkills = filterSkills(publicSkills, url);
+  const categories = buildCategoryPayload(publicSkills);
+  const topTags = buildTopTags(publicSkills);
   const pageSize = Math.max(1, asNumber(url.searchParams.get("page_size"), filteredSkills.length || publicSkills.length || 12));
   const page = Math.max(1, asNumber(url.searchParams.get("page"), 1));
   const startIndex = (page - 1) * pageSize;
@@ -199,11 +316,74 @@ function buildMarketplacePayload(state, url, sessionUser) {
       prev_page: page > 1 ? page - 1 : 0,
       next_page: page < totalPages ? page + 1 : 0
     },
-    categories: buildCategoryPayload(publicSkills),
-    top_tags: buildTopTags(publicSkills),
+    categories,
+    top_tags: topTags,
     items: paginatedItems,
+    summary: buildMarketplaceSummary(categories, topTags, publicSkills, filteredSkills, url),
     session_user: sessionUser,
     can_access_dashboard: Boolean(sessionUser)
+  };
+}
+
+function buildRankingPayload(state, url) {
+  const sort = asString(url.searchParams.get("sort"), "stars");
+  const publicSkills = getPublicSkills(state);
+  const rankedItems = filterSkills(
+    publicSkills,
+    new URL(`http://127.0.0.1/rankings?sort=${encodeURIComponent(sort)}`),
+  );
+  const totalQuality = rankedItems.reduce(
+    (sum, item) => sum + item.quality_score,
+    0,
+  );
+  const categoryBuckets = new Map();
+
+  for (const item of rankedItems) {
+    const currentBucket = categoryBuckets.get(item.category) || [];
+    currentBucket.push(item);
+    categoryBuckets.set(item.category, currentBucket);
+  }
+
+  const categoryLeaders = Array.from(categoryBuckets.entries())
+    .map(([categorySlug, items]) => ({
+      category_slug: categorySlug,
+      count: items.length,
+      average_quality: Number(
+        (
+          items.reduce((sum, item) => sum + item.quality_score, 0) / items.length
+        ).toFixed(1),
+      ),
+      leading_skill: items[0],
+    }))
+    .sort(
+      (left, right) =>
+        right.count - left.count ||
+        right.average_quality - left.average_quality ||
+        left.category_slug.localeCompare(right.category_slug),
+    )
+    .slice(0, 5);
+
+  return {
+    sort: sort === "quality" ? "quality" : "stars",
+    ranked_items: rankedItems,
+    highlights: rankedItems.slice(0, 3),
+    list_items: rankedItems.slice(3, 12),
+    summary: {
+      total_compared: rankedItems.length,
+      top_stars: rankedItems.reduce(
+        (maxValue, item) => Math.max(maxValue, item.star_count),
+        0,
+      ),
+      top_quality: Number(
+        rankedItems
+          .reduce((maxValue, item) => Math.max(maxValue, item.quality_score), 0)
+          .toFixed(1),
+      ),
+      average_quality: rankedItems.length
+        ? Number((totalQuality / rankedItems.length).toFixed(1))
+        : 0,
+    },
+    category_leaders: categoryLeaders,
   };
 }
 
@@ -381,6 +561,11 @@ export async function handlePublicRequest({
 }) {
   if (method === "GET" && pathname === "/api/v1/public/marketplace") {
     json(response, 200, buildMarketplacePayload(state, url, sessionUser || null));
+    return true;
+  }
+
+  if (method === "GET" && pathname === "/api/v1/public/rankings") {
+    json(response, 200, buildRankingPayload(state, url));
     return true;
   }
 

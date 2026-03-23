@@ -18,7 +18,6 @@ interface MarketplaceSidebarLink {
 }
 
 interface MarketplaceDiscoverySidebarProps {
-  fallbackLinks: Array<{ href: string; label: string }>;
   categoryTitle: string;
   categoryDescription: string;
   categoryLinks: MarketplaceSidebarLink[];
@@ -28,7 +27,6 @@ interface MarketplaceDiscoverySidebarProps {
 }
 
 export function MarketplaceDiscoverySidebar({
-  fallbackLinks,
   categoryTitle,
   categoryDescription,
   categoryLinks,
@@ -39,7 +37,7 @@ export function MarketplaceDiscoverySidebar({
   const { messages } = usePublicI18n();
   const content = (
     <>
-      <MarketplaceRecentSearchesCard fallbackLinks={fallbackLinks} />
+      <MarketplaceRecentSearchesCard />
 
       <MarketplaceSupportCard title={categoryTitle} description={categoryDescription}>
         <MarketplaceSupportLinkList

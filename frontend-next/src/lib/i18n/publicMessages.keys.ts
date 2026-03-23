@@ -267,7 +267,14 @@ export const publicMarketplaceMessageKeyMap = {
   stateErrorDescription: "state_error_description",
   statePermissionTitle: "state_permission_title",
   statePermissionDescription: "state_permission_description",
-  statePrototypeRoute: "state_prototype_route",
+  state404Title: "state_404_title",
+  state404Description: "state_404_description",
+  state500Title: "state_500_title",
+  state500Description: "state_500_description",
+  state503Title: "state_503_title",
+  state503Description: "state_503_description",
+  stateSystemRoute: "state_system_route",
   stateBackToMarketplace: "state_back_to_marketplace",
-  stateOpenSearch: "state_open_search"
+  stateOpenSearch: "state_open_search",
+  stateRetry: "state_retry"
 } satisfies Record<keyof PublicMarketplaceMessages, string>;

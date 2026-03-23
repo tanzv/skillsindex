@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Button } from "@/src/components/ui/button";
+import { publicRankingsRoute } from "@/src/lib/routing/publicRouteRegistry";
 
 import { SkillDetailInteractionAccessGate } from "./SkillDetailInteractionAccessGate";
 import { SkillDetailInteractionComposer } from "./SkillDetailInteractionComposer";
@@ -20,7 +21,6 @@ export function SkillDetailInteractionPanel({
   onCommentSubmit,
   onFavorite,
   onRate,
-  toPublicPath,
   workspaceHref
 }: SkillDetailInteractionPanelProps) {
   return (
@@ -58,7 +58,7 @@ export function SkillDetailInteractionPanel({
 
       <div className="skill-detail-link-grid">
         <Button asChild variant="outline" className="skill-detail-secondary-action">
-          <Link href={toPublicPath("/rankings")}>{messages.skillDetailOpenRankings}</Link>
+          <Link href={publicRankingsRoute}>{messages.skillDetailOpenRankings}</Link>
         </Button>
       </div>
     </section>

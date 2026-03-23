@@ -5,10 +5,13 @@ import type {
   PublicMarketplaceResponse
 } from "@/src/lib/schemas/public";
 import type { PublicMarketplaceMessages } from "@/src/lib/i18n/publicMessages";
+import {
+  type MarketplaceFilterContext,
+  filterMarketplaceItems,
+  filterMarketplaceItemsByCategory
+} from "@/src/lib/marketplace/itemFilter";
 
 import {
-  buildMarketplaceSkillSearchText,
-  matchesMarketplaceCategorySelection,
   resolveMarketplaceCategorySummary as resolveMarketplaceCategorySummaryFromTaxonomy
 } from "./marketplaceTaxonomy";
 
@@ -17,6 +20,18 @@ export interface MarketplaceSummaryMetric {
   value: string;
   detail: string;
 }
+
+type MarketplaceSummaryMetricMessages = Pick<
+  PublicMarketplaceMessages,
+  | "metricCategoryFamilies"
+  | "metricDiscoveryWindow"
+  | "metricPublicAssets"
+  | "metricTopTagPivots"
+  | "statCategories"
+  | "statMatchingSkills"
+  | "statTopTags"
+  | "statTotalSkills"
+>;
 
 export interface MarketplaceCategoryShelfEntry {
   subcategory: MarketplaceSubcategory;
@@ -41,7 +56,7 @@ export function formatCompactMarketplaceNumber(value: number): string {
 
 export function buildMarketplaceSummaryMetrics(
   payload: PublicMarketplaceResponse,
-  messages: PublicMarketplaceMessages
+  messages: MarketplaceSummaryMetricMessages
 ): MarketplaceSummaryMetric[] {
   return [
     {
@@ -123,90 +138,6 @@ export function buildMarketplaceCategoryAnchorId(categorySlug: string): string {
   return `category-shelf-${String(categorySlug || "").trim().toLowerCase()}`;
 }
 
-interface MarketplaceFilterContext {
-  activeCategory?: string;
-  activeSubcategory?: string;
-  query?: string;
-  semanticQuery?: string;
-  sort?: string;
-}
-
-function normalizeSearchTerms(rawValue: string | undefined): string[] {
-  return String(rawValue || "")
-    .trim()
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean);
-}
-
-export function filterMarketplaceItems(items: MarketplaceSkill[], context: MarketplaceFilterContext): MarketplaceSkill[] {
-  const queryTerms = normalizeSearchTerms(context.query);
-  const semanticTerms = normalizeSearchTerms(context.semanticQuery);
-  const normalizedSort = String(context.sort || "").trim().toLowerCase();
-
-  const visibleItems = items.filter((item) => {
-    if (!matchesMarketplaceCategorySelection(item, context.activeCategory, context.activeSubcategory)) {
-      return false;
-    }
-
-    const haystack = buildMarketplaceSkillSearchText(item);
-
-    if (queryTerms.length > 0 && !queryTerms.every((term) => haystack.includes(term))) {
-      return false;
-    }
-
-    if (semanticTerms.length > 0 && !semanticTerms.every((term) => haystack.includes(term))) {
-      return false;
-    }
-
-    return true;
-  });
-
-  if (normalizedSort === "recent" || normalizedSort === "latest") {
-    return [...visibleItems].sort((left, right) => {
-      return Date.parse(right.updated_at || "") - Date.parse(left.updated_at || "");
-    });
-  }
-
-  if (normalizedSort === "stars") {
-    return [...visibleItems].sort((left, right) => {
-      if (right.star_count !== left.star_count) {
-        return right.star_count - left.star_count;
-      }
-
-      if (right.quality_score !== left.quality_score) {
-        return right.quality_score - left.quality_score;
-      }
-
-      return left.name.localeCompare(right.name);
-    });
-  }
-
-  if (normalizedSort === "quality") {
-    return [...visibleItems].sort((left, right) => {
-      if (right.quality_score !== left.quality_score) {
-        return right.quality_score - left.quality_score;
-      }
-
-      if (right.star_count !== left.star_count) {
-        return right.star_count - left.star_count;
-      }
-
-      return left.name.localeCompare(right.name);
-    });
-  }
-
-  return visibleItems;
-}
-
-export function filterMarketplaceItemsByCategory(items: MarketplaceSkill[], activeCategory: string | undefined): MarketplaceSkill[] {
-  if (!String(activeCategory || "").trim()) {
-    return items;
-  }
-
-  return filterMarketplaceItems(items, { activeCategory });
-}
-
 interface MarketplaceCategoryShelfOptions {
   maxFeaturedSkills?: number;
   maxSubcategories?: number;
@@ -242,3 +173,6 @@ export function buildMarketplaceCategoryShelves(
     };
   });
 }
+
+export type { MarketplaceFilterContext };
+export { filterMarketplaceItems, filterMarketplaceItemsByCategory };

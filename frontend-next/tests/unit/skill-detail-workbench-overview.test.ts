@@ -64,12 +64,11 @@ describe("skill detail workbench overview", () => {
       previewTitle: "README.md",
       previewLanguage: "Markdown",
       previewContent: "# README",
-      previewUpdatedAt: "2026-03-16T12:50:47.641682+08:00",
-      sections: []
+      previewUpdatedAt: "2026-03-16T12:50:47.641682+08:00"
     });
   });
 
-  it("extracts overview sections from markdown headings and bullet lists", () => {
+  it("falls back to the primary skill content when no resource preview exists", () => {
     const overview = buildSkillDetailOverviewModel({
       detail: {
         skill: {
@@ -109,17 +108,24 @@ describe("skill detail workbench overview", () => {
       }
     });
 
-    expect(overview.sections).toEqual([
-      {
-        title: "What it does",
-        description: "Keeps repository sync evidence readable for platform owners.",
-        points: ["Tracks ownership drift across sync runs.", "Highlights missing repository mappings."]
-      },
-      {
-        title: "Outputs",
-        description: "Produces short operational snapshots.",
-        points: ["Sync evidence summary", "Owner mapping exceptions"]
-      }
-    ]);
+    expect(overview).toEqual({
+      summary: "Review repository sync drift and ownership mappings.",
+      previewTitle: "SKILL.md",
+      previewLanguage: "Unknown",
+      previewContent: [
+        "# Repository Sync Auditor",
+        "",
+        "## What it does",
+        "Keeps repository sync evidence readable for platform owners.",
+        "- Tracks ownership drift across sync runs.",
+        "- Highlights missing repository mappings.",
+        "",
+        "## Outputs",
+        "Produces short operational snapshots.",
+        "- Sync evidence summary",
+        "- Owner mapping exceptions"
+      ].join("\n"),
+      previewUpdatedAt: null
+    });
   });
 });

@@ -1,15 +1,8 @@
-import { PublicProgramPage } from "@/src/features/public/PublicProgramPage";
 import {
-  loadPublicMarketplaceSnapshotFromRequest,
-  type PublicSnapshotSearchParams
-} from "@/src/lib/api/publicSnapshot.server";
+  renderPublicNarrativeSnapshotRoute,
+  type PublicNarrativeSnapshotRouteProps
+} from "@/src/features/public/publicNarrativeSnapshotRouteEntry";
 
-interface AboutPageProps {
-  searchParams: Promise<PublicSnapshotSearchParams>;
-}
-
-export default async function AboutPage({ searchParams }: AboutPageProps) {
-  const marketplace = await loadPublicMarketplaceSnapshotFromRequest(searchParams);
-
-  return <PublicProgramPage pageKey="about" marketplace={marketplace} />;
+export default async function AboutPage({ searchParams }: PublicNarrativeSnapshotRouteProps) {
+  return renderPublicNarrativeSnapshotRoute("about", searchParams);
 }

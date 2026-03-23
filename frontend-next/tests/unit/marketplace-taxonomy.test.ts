@@ -5,7 +5,7 @@ import {
   resolveMarketplaceCategorySummary,
   resolveMarketplaceSkillCategoryLabel,
   resolveMarketplaceSkillSubcategoryLabel
-} from "@/src/features/public/marketplace/marketplaceTaxonomy";
+} from "@/src/lib/marketplace/taxonomy";
 import { filterMarketplaceItems } from "@/src/features/public/marketplace/marketplaceViewModel";
 import type { MarketplaceCategory, MarketplaceSkill } from "@/src/lib/schemas/public";
 

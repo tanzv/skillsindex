@@ -25,6 +25,13 @@ vi.mock("@/src/features/public/i18n/PublicI18nProvider", () => ({
       searchModeLabel: "Mode",
       searchSortLabel: "Sort",
       searchViewLabel: "View",
+      categoryModeAI: "AI",
+      categoryModeHybrid: "Hybrid",
+      categoryModeKeyword: "Keyword",
+      categorySortQuality: "Quality",
+      categorySortRecent: "Recent",
+      categorySortRelevance: "Relevance",
+      categorySortStars: "Stars",
       searchRecentOpen: "Filters",
       searchOverlayTitle: "Search Results",
       searchOverlayDescription: "Overlay description",
@@ -84,5 +91,26 @@ describe("MarketplaceSearchPanel", () => {
     expect(markup).toContain(">release<");
     expect(markup).toContain(">sync<");
     expect(markup).not.toContain("href=\"/results\">");
+  });
+
+  it("renders interactive sort and mode controls that preserve the active search filters", () => {
+    const markup = renderToStaticMarkup(
+      createElement(MarketplaceSearchPanel, {
+        variant: "results",
+        action: "/results",
+        query: "release",
+        semanticQuery: "ops",
+        currentSort: "quality",
+        currentMode: "ai",
+        showSemanticField: true
+      })
+    );
+
+    expect(markup).toContain("Relevance");
+    expect(markup).toContain("Stars");
+    expect(markup).toContain("Keyword");
+    expect(markup).toContain("AI");
+    expect(markup).toContain('href="/results?q=release&amp;tags=ops&amp;sort=stars&amp;mode=ai"');
+    expect(markup).toContain('href="/results?q=release&amp;tags=ops&amp;sort=quality&amp;mode=keyword"');
   });
 });

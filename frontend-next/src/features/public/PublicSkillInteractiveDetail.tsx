@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
-import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
 import type {
   PublicSkillDetailResponse,
   PublicSkillResourceContentResponse,
@@ -16,13 +15,17 @@ import type {
 } from "@/src/lib/schemas/public";
 
 import { buildPublicSkillDetailModel } from "./publicSkillDetailModel";
-import { buildPublicSkillFallbackResourceContent } from "./publicSkillDetailFallback";
+import {
+  buildPublicSkillInteractivePageModel,
+  resolveInitialSelectedSkillResourceName
+} from "./publicSkillInteractivePageModel";
 import { SkillDetailContextBar } from "./skill-detail/SkillDetailContextBar";
 import { SkillDetailHeader } from "./skill-detail/SkillDetailHeader";
 import { SkillDetailSidebar } from "./skill-detail/SkillDetailSidebar";
 import { SkillDetailWorkbench, type SkillDetailWorkspaceTab } from "./skill-detail/SkillDetailWorkbench";
 import { shouldLoadDeferredSkillResourceContent, shouldLoadDeferredSkillResources, shouldLoadDeferredSkillVersions } from "./skill-detail/skillDetailDeferredLoad";
-import { buildSkillDetailPreviewStatus, buildSkillDetailWorkspaceCopy } from "./skill-detail/skillDetailWorkspaceConfig";
+import { buildSkillDetailWorkspaceCopy } from "./skill-detail/skillDetailWorkspaceConfig";
+import { useDeferredLoadStatus, useLatestRef, useMountedRef } from "./skill-detail/useDeferredLoadStatus";
 
 interface PublicSkillInteractiveDetailProps {
   initialDetail: PublicSkillDetailResponse;
@@ -31,8 +34,6 @@ interface PublicSkillInteractiveDetailProps {
   initialResourceContent: PublicSkillResourceContentResponse | null;
 }
 
-type DeferredLoadStatus = "idle" | "loading" | "ready" | "error";
-
 export function PublicSkillInteractiveDetail({
   initialDetail,
   resources,
@@ -40,15 +41,26 @@ export function PublicSkillInteractiveDetail({
   initialResourceContent
 }: PublicSkillInteractiveDetailProps) {
   const { locale, messages } = usePublicI18n();
-  const { toPublicPath } = usePublicRouteState();
-  const initialSelectedResourceName = initialResourceContent?.path || resources?.files[0]?.name || "";
+  const mountedRef = useMountedRef();
+  const initialSelectedResourceName = resolveInitialSelectedSkillResourceName({
+    detail: initialDetail,
+    resources,
+    initialResourceContent
+  });
   const [detail, setDetail] = useState(initialDetail);
+  const skillIdRef = useLatestRef(detail.skill.id);
   const [resourcesState, setResourcesState] = useState(resources);
-  const [resourcesStatus, setResourcesStatus] = useState<DeferredLoadStatus>(resources ? "ready" : "idle");
+  const { status: resourcesStatus, setStatus: setResourcesStatus, statusRef: resourcesStatusRef } = useDeferredLoadStatus(
+    resources ? "ready" : "idle"
+  );
   const [versionsState, setVersionsState] = useState(versions);
-  const [versionsStatus, setVersionsStatus] = useState<DeferredLoadStatus>(versions ? "ready" : "idle");
+  const { status: versionsStatus, setStatus: setVersionsStatus, statusRef: versionsStatusRef } = useDeferredLoadStatus(
+    versions ? "ready" : "idle"
+  );
   const [resourceContent, setResourceContent] = useState(initialResourceContent);
-  const [resourceContentStatus, setResourceContentStatus] = useState<DeferredLoadStatus>(initialResourceContent ? "ready" : "idle");
+  const { setStatus: setResourceContentStatus, statusRef: resourceContentStatusRef } = useDeferredLoadStatus(
+    initialResourceContent ? "ready" : "idle"
+  );
   const [selectedResourceName, setSelectedResourceName] = useState(initialSelectedResourceName);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
@@ -59,69 +71,62 @@ export function PublicSkillInteractiveDetail({
   const shouldLoadResourceContent = shouldLoadDeferredSkillResourceContent(workspaceTab);
 
   useEffect(() => {
-    if (!shouldLoadResources || resourcesState || resourcesStatus === "loading" || resourcesStatus === "error") {
+    if (!shouldLoadResources || resourcesState || resourcesStatusRef.current === "loading" || resourcesStatusRef.current === "error") {
       return;
     }
-    let canceled = false;
+    const requestedSkillId = detail.skill.id;
     setResourcesStatus("loading");
 
     async function loadResources() {
       try {
         const payload = await clientFetchJSON<PublicSkillResourcesResponse>(`/api/bff/public/skills/${detail.skill.id}/resources`);
-        if (!canceled) {
-          setResourcesState(payload);
-          setResourcesStatus("ready");
+        if (!mountedRef.current || skillIdRef.current !== requestedSkillId) {
+          return;
         }
+        setResourcesState(payload);
+        setResourcesStatus("ready");
       } catch {
-        if (!canceled) {
-          setResourcesState(null);
-          setResourcesStatus("error");
+        if (!mountedRef.current || skillIdRef.current !== requestedSkillId) {
+          return;
         }
+        setResourcesState(null);
+        setResourcesStatus("error");
       }
     }
-
     void loadResources();
-
-    return () => {
-      canceled = true;
-    };
-  }, [detail.skill.id, resourcesState, resourcesStatus, shouldLoadResources]);
+  }, [detail.skill.id, mountedRef, resourcesState, resourcesStatusRef, setResourcesStatus, shouldLoadResources, skillIdRef]);
 
   useEffect(() => {
-    if (!shouldLoadVersions || versionsState || versionsStatus === "loading" || versionsStatus === "error") {
+    if (!shouldLoadVersions || versionsState || versionsStatusRef.current === "loading" || versionsStatusRef.current === "error") {
       return;
     }
-    let canceled = false;
+    const requestedSkillId = detail.skill.id;
     setVersionsStatus("loading");
 
     async function loadVersions() {
       try {
         const payload = await clientFetchJSON<PublicSkillVersionsResponse>(`/api/bff/public/skills/${detail.skill.id}/versions`);
-        if (!canceled) {
-          setVersionsState(payload);
-          setVersionsStatus("ready");
+        if (!mountedRef.current || skillIdRef.current !== requestedSkillId) {
+          return;
         }
+        setVersionsState(payload);
+        setVersionsStatus("ready");
       } catch {
-        if (!canceled) {
-          setVersionsState(null);
-          setVersionsStatus("error");
+        if (!mountedRef.current || skillIdRef.current !== requestedSkillId) {
+          return;
         }
+        setVersionsState(null);
+        setVersionsStatus("error");
       }
     }
-
     void loadVersions();
-
-    return () => {
-      canceled = true;
-    };
-  }, [detail.skill.id, shouldLoadVersions, versionsState, versionsStatus]);
+  }, [detail.skill.id, mountedRef, setVersionsStatus, shouldLoadVersions, skillIdRef, versionsState, versionsStatusRef]);
 
   useEffect(() => {
     const firstResourceName = resourcesState?.files[0]?.name || "";
     if (!firstResourceName || selectedResourceName) {
       return;
     }
-
     setSelectedResourceName(firstResourceName);
   }, [resourcesState, selectedResourceName]);
 
@@ -131,16 +136,16 @@ export function PublicSkillInteractiveDetail({
       !shouldLoadResourceContent ||
       !firstResourceName ||
       resourceContent ||
-      resourceContentStatus === "loading" ||
-      resourceContentStatus === "error"
+      resourceContentStatusRef.current === "loading" ||
+      resourceContentStatusRef.current === "error"
     ) {
       return;
     }
-
     if (selectedResourceName && selectedResourceName !== firstResourceName) {
       return;
     }
-    let canceled = false;
+    const requestedSkillId = detail.skill.id;
+    setResourceContent(null);
     setResourceContentStatus("loading");
 
     async function loadInitialResourceContent() {
@@ -148,30 +153,31 @@ export function PublicSkillInteractiveDetail({
         const payload = await clientFetchJSON<PublicSkillResourceContentResponse>(
           `/api/bff/public/skills/${detail.skill.id}/resource-file?path=${encodeURIComponent(firstResourceName)}`
         );
-        if (!canceled) {
-          setResourceContent(payload);
-          setResourceContentStatus("ready");
-        }
-      } catch {
-        const fallbackContent = buildPublicSkillFallbackResourceContent(detail.skill.id, firstResourceName);
-        if (!canceled && fallbackContent) {
-          setResourceContent(fallbackContent);
-          setResourceContentStatus("ready");
+        if (!mountedRef.current || skillIdRef.current !== requestedSkillId) {
           return;
         }
-
-        if (!canceled) {
-          setResourceContentStatus("error");
+        setResourceContent(payload);
+        setResourceContentStatus("ready");
+      } catch {
+        if (!mountedRef.current || skillIdRef.current !== requestedSkillId) {
+          return;
         }
+        setResourceContent(null);
+        setResourceContentStatus("error");
       }
     }
-
     void loadInitialResourceContent();
-
-    return () => {
-      canceled = true;
-    };
-  }, [detail.skill.id, resourceContent, resourceContentStatus, resourcesState, selectedResourceName, shouldLoadResourceContent]);
+  }, [
+    detail.skill.id,
+    mountedRef,
+    resourceContent,
+    resourceContentStatusRef,
+    resourcesState,
+    selectedResourceName,
+    setResourceContentStatus,
+    shouldLoadResourceContent,
+    skillIdRef
+  ]);
 
   const model = useMemo(
     () =>
@@ -190,23 +196,14 @@ export function PublicSkillInteractiveDetail({
     return resourcesState?.files.find((file) => file.name === selectedResourceName) || resourcesState?.files[0] || null;
   }, [resourcesState?.files, selectedResourceName]);
 
-  const activeWorkspaceLabel =
-    workspaceTab === "overview"
-      ? messages.skillDetailOverviewTitle
-      : workspaceTab === "installation"
-        ? messages.skillDetailInstallTitle
-        : workspaceTab === "skill"
-          ? messages.skillDetailContentTitle
-          : workspaceTab === "history"
-            ? messages.skillDetailVersionsTitle
-            : workspaceTab === "related"
-              ? messages.skillDetailRelatedTitle
-              : messages.skillDetailResourcesTitle;
   const workspaceCopy = buildSkillDetailWorkspaceCopy(messages);
-  const previewStatus = buildSkillDetailPreviewStatus({
+  const pageModel = buildPublicSkillInteractivePageModel({
+    detail,
+    resources: resourcesState,
+    versions: versionsState,
     activeTab: workspaceTab,
-    selectedFileName: selectedResourceName || selectedFile?.name,
-    versionCount: versionsState?.total || 0
+    selectedResourceName: selectedResourceName || selectedFile?.name || "",
+    messages
   });
 
   async function refreshDetail() {
@@ -304,6 +301,7 @@ export function PublicSkillInteractiveDetail({
     setBusy(true);
     setFeedback("");
     setSelectedResourceName(fileName);
+    setResourceContent(null);
     setResourceContentStatus("loading");
     try {
       const payload = await clientFetchJSON<PublicSkillResourceContentResponse>(
@@ -313,13 +311,7 @@ export function PublicSkillInteractiveDetail({
       setResourceContentStatus("ready");
       setWorkspaceTab("skill");
     } catch (error) {
-      const fallbackContent = buildPublicSkillFallbackResourceContent(detail.skill.id, fileName);
-      if (fallbackContent) {
-        setResourceContent(fallbackContent);
-        setResourceContentStatus("ready");
-        setWorkspaceTab("skill");
-        return;
-      }
+      setResourceContent(null);
       setResourceContentStatus("error");
       setFeedback(error instanceof Error ? error.message : messages.skillDetailFeedbackResourceFailed);
     } finally {
@@ -332,20 +324,14 @@ export function PublicSkillInteractiveDetail({
       <SkillDetailContextBar
         activeTab={workspaceTab}
         breadcrumbAriaLabel={messages.stageSkillDetail}
-        breadcrumbItems={[
-          { href: toPublicPath("/"), label: messages.shellHome },
-          { href: `/skills/${detail.skill.id}`, label: detail.skill.name },
-          { label: activeWorkspaceLabel, isCurrent: true, isSoft: true }
-        ]}
+        breadcrumbItems={pageModel.breadcrumbItems}
         onTabChange={setWorkspaceTab}
-        previewStatus={previewStatus}
+        previewStatus={pageModel.previewStatus}
         summaryItems={[detail.skill.source_type, detail.skill.quality_score.toFixed(1)].filter(Boolean)}
         title={detail.skill.name}
         workspaceCopy={workspaceCopy}
       />
-
       <SkillDetailHeader detail={detail} locale={locale} messages={messages} model={model} />
-
       <div className="skill-detail-workspace">
         <div className="skill-detail-main-column">
           <SkillDetailWorkbench
@@ -362,13 +348,12 @@ export function PublicSkillInteractiveDetail({
             versionsPending={shouldLoadVersions && versionsStatus === "loading" && !versionsState}
           />
         </div>
-
         <SkillDetailSidebar
           activeTab={workspaceTab}
           busy={busy}
           commentDraft={commentDraft}
           comments={detail.comments}
-          currentContextLabel={previewStatus}
+          currentContextLabel={pageModel.previewStatus}
           detail={detail}
           feedback={feedback}
           locale={locale}
@@ -379,7 +364,6 @@ export function PublicSkillInteractiveDetail({
           onCommentSubmit={(event) => void handleCommentSubmit(event)}
           onFavorite={() => void handleFavorite()}
           onRate={(score) => void handleRate(score)}
-          toPublicPath={toPublicPath}
         />
       </div>
     </div>

@@ -1,26 +1,27 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
-import { usePublicViewerSession } from "@/src/features/public/PublicViewerSessionProvider";
+import { PublicMarketWebclientSlotsProvider } from "@/src/components/shared/PublicMarketWebclientSlots";
+import { PublicTopbar, type PublicTopbarSlots } from "@/src/components/shared/PublicTopbar";
+import { buildPublicTopbarModel } from "@/src/components/shared/publicShellModel";
+import { cn } from "@/src/lib/utils";
 import { splitPublicPathPrefix } from "@/src/lib/routing/publicCompat";
 import { useResolvedPublicPathname } from "@/src/lib/routing/useResolvedPublicPathname";
-import { cn } from "@/src/lib/utils";
+import { persistBrowserThemePreference, resolveThemePreferenceFromLightFlag } from "@/src/lib/theme/sharedThemePreference";
+
+import { usePublicViewerSession } from "./PublicViewerSessionProvider";
+import { usePublicI18n } from "./i18n/PublicI18nProvider";
 import {
   buildMarketplaceTopbarSlots,
   resolveMarketplaceShellContentWidth,
   resolveMarketplaceShellRouteKind,
   resolveMarketplaceTopbarRoutePreset
-} from "@/src/features/public/marketplace/marketplaceTopbarSlots";
+} from "./marketplace/marketplaceTopbarSlots";
 
-import { PublicShellSlotsProvider } from "./PublicShellSlots";
-import { PublicTopbar, type PublicTopbarSlots } from "./PublicTopbar";
-import { buildPublicTopbarModel } from "./publicShellModel";
-
-interface PublicShellProps {
+interface PublicMarketWebclientProps {
   children: ReactNode;
 }
 
@@ -29,7 +30,7 @@ function buildSearchSuffix(searchParams: ReturnType<typeof useSearchParams>): st
   return encoded ? `?${encoded}` : "";
 }
 
-export function PublicShell({ children }: PublicShellProps) {
+export function PublicMarketWebclient({ children }: PublicMarketWebclientProps) {
   const resolvedPathname = useResolvedPublicPathname();
   const searchParams = useSearchParams();
   const { prefix, corePath, isLightTheme, isMobileLayout } = splitPublicPathPrefix(resolvedPathname);
@@ -39,6 +40,11 @@ export function PublicShell({ children }: PublicShellProps) {
   const searchSuffix = buildSearchSuffix(searchParams);
   const routeKind = useMemo(() => resolveMarketplaceShellRouteKind(corePath), [corePath]);
   const contentWidth = useMemo(() => resolveMarketplaceShellContentWidth(routeKind), [routeKind]);
+
+  useLayoutEffect(() => {
+    persistBrowserThemePreference(resolveThemePreferenceFromLightFlag(isLightTheme));
+  }, [isLightTheme]);
+
   const topbarModel = useMemo(
     () =>
       buildPublicTopbarModel({
@@ -105,6 +111,7 @@ export function PublicShell({ children }: PublicShellProps) {
       <PublicTopbar
         brandTitle={messages.shellBrandTitle}
         brandSubtitle={messages.shellBrandSubtitle}
+        isLightTheme={isLightTheme}
         model={topbarModel}
         messages={messages}
         locale={locale}
@@ -112,9 +119,9 @@ export function PublicShell({ children }: PublicShellProps) {
         slots={effectiveSlots}
       />
 
-      <PublicShellSlotsProvider onSlotsChange={setSlots}>
+      <PublicMarketWebclientSlotsProvider onSlotsChange={setSlots}>
         <main className="marketplace-shell-content">{children}</main>
-      </PublicShellSlotsProvider>
+      </PublicMarketWebclientSlotsProvider>
     </div>
   );
 }

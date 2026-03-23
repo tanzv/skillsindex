@@ -5,8 +5,8 @@ export interface ComparedSkills {
   rightSkill: MarketplaceSkill | null;
 }
 
-export function resolveComparedSkills(
-  marketplace: PublicMarketplaceResponse,
+export function resolveComparedSkillsFromItems(
+  items: MarketplaceSkill[],
   comparePayload: PublicSkillCompareResponse | null,
   leftSkillId: number,
   rightSkillId: number
@@ -18,14 +18,20 @@ export function resolveComparedSkills(
     };
   }
 
-  const fallbackLeft = marketplace.items.find((item) => item.id === leftSkillId) || marketplace.items[0] || null;
-  const fallbackRight =
-    marketplace.items.find((item) => item.id === rightSkillId) ||
-    marketplace.items.find((item) => item.id !== fallbackLeft?.id) ||
-    null;
+  const fallbackLeft = items.find((item) => item.id === leftSkillId) || items[0] || null;
+  const fallbackRight = items.find((item) => item.id === rightSkillId) || items.find((item) => item.id !== fallbackLeft?.id) || null;
 
   return {
     leftSkill: fallbackLeft,
     rightSkill: fallbackRight
   };
+}
+
+export function resolveComparedSkills(
+  marketplace: PublicMarketplaceResponse,
+  comparePayload: PublicSkillCompareResponse | null,
+  leftSkillId: number,
+  rightSkillId: number
+): ComparedSkills {
+  return resolveComparedSkillsFromItems(marketplace.items, comparePayload, leftSkillId, rightSkillId);
 }

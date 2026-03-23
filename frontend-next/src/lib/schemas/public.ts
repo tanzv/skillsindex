@@ -36,7 +36,7 @@ export interface MarketplaceSkill {
 }
 
 export interface PublicMarketplaceResponse {
-  filters: Record<string, string>;
+  filters: Record<string, string | number>;
   stats: {
     total_skills: number;
     matching_skills: number;
@@ -53,8 +53,60 @@ export interface PublicMarketplaceResponse {
   top_tags: MarketplaceTag[];
   filter_options?: Record<string, unknown>;
   items: MarketplaceSkill[];
+  summary?: PublicMarketplaceSummary;
   session_user: SessionUser | null;
   can_access_dashboard: boolean;
+}
+
+export interface PublicMarketplaceLandingSummary {
+  total_skills: number;
+  category_count: number;
+  top_tag_count: number;
+  featured_skill_count: number;
+  latest_skill_count: number;
+}
+
+export interface PublicMarketplaceCategoryHubSummary {
+  total_categories: number;
+  total_skills: number;
+  top_tag_count: number;
+  spotlight_category_count: number;
+}
+
+export interface PublicMarketplaceCategoryDetailSummary {
+  category_slug: string;
+  total_skills: number;
+  matching_skills: number;
+  subcategory_count: number;
+}
+
+export interface PublicMarketplaceSummary {
+  landing: PublicMarketplaceLandingSummary;
+  category_hub: PublicMarketplaceCategoryHubSummary;
+  category_detail: PublicMarketplaceCategoryDetailSummary | null;
+}
+
+export interface PublicRankingSummary {
+  total_compared: number;
+  top_stars: number;
+  top_quality: number;
+  average_quality: number;
+}
+
+export interface PublicRankingCategoryLeader {
+  category_slug: string;
+  count: number;
+  average_quality: number;
+  leading_skill: MarketplaceSkill;
+}
+
+export interface PublicRankingResponse {
+  sort: string;
+  ranked_items: MarketplaceSkill[];
+  highlights: MarketplaceSkill[];
+  list_items: MarketplaceSkill[];
+  summary: PublicRankingSummary;
+  category_leaders: PublicRankingCategoryLeader[];
 }
 
 export interface PublicSkillDetailResponse {
@@ -80,6 +132,7 @@ export interface PublicSkillDetailResponse {
     can_delete: boolean;
   }>;
   comments_limit: number;
+  related_skills?: MarketplaceSkill[];
 }
 
 export interface PublicSkillResourcesResponse {

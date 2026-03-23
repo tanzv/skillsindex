@@ -3,7 +3,7 @@ import type { PublicMarketplaceMessages } from "@/src/lib/i18n/publicMessages";
 import { formatPublicDate, type PublicLocale } from "@/src/lib/i18n/publicLocale";
 
 import type { PublicSkillDetailModel } from "../publicSkillDetailModel";
-import { resolveMarketplaceSkillCategoryLabel, resolveMarketplaceSkillSubcategoryLabel } from "../marketplace/marketplaceTaxonomy";
+import { resolveSkillDetailCategoryLabel, resolveSkillDetailSubcategoryLabel } from "./skillDetailTaxonomy";
 
 interface SkillDetailHeaderProps {
   detail: PublicSkillDetailResponse;
@@ -75,8 +75,8 @@ function resolveHeaderAccentVariant(skill: PublicSkillDetailResponse["skill"]): 
 }
 
 export function SkillDetailHeader({ detail, locale, messages, model }: SkillDetailHeaderProps) {
-  const categoryLabel = resolveMarketplaceSkillCategoryLabel(detail.skill);
-  const subcategoryLabel = resolveMarketplaceSkillSubcategoryLabel(detail.skill);
+  const categoryLabel = resolveSkillDetailCategoryLabel(detail.skill);
+  const subcategoryLabel = resolveSkillDetailSubcategoryLabel(detail.skill);
   const sourceBadge = resolveSourceBadge(detail.skill.source_type, messages.skillDetailNotAvailable);
   const compactSourceLabel = resolveCompactSourceLabel(detail.skill.source_url, `${categoryLabel} / ${subcategoryLabel}`);
   const accentVariant = resolveHeaderAccentVariant(detail.skill);

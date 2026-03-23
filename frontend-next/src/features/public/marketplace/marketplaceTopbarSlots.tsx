@@ -1,21 +1,42 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
 
 import type { PublicTopbarSlots } from "@/src/components/shared/PublicTopbar";
 import type { PublicMarketplaceMessages } from "@/src/lib/i18n/publicMessages";
+import {
+  resolvePublicShellRouteKind as resolveRegistryPublicShellRouteKind,
+  resolvePublicTopbarRoutePresetDescriptor,
+  type PublicTopbarBreadcrumbKind,
+  type PublicTopbarRoutePresetDescriptor
+} from "@/src/lib/navigation/publicNavigationRegistry";
+import { publicCategoriesRoute, publicHomeRoute } from "@/src/lib/routing/publicRouteRegistry";
 
 import {
   MarketplaceHomeBrand,
   MarketplaceHomePrimaryNavigation,
-  MarketplaceHomeTopbarActions,
   MarketplaceSkillDetailBrand,
   MarketplaceSkillDetailPrimaryNavigation,
   MarketplaceSkillDetailTopbarActions,
   MarketplaceSectionTopbarActions,
   MarketplaceTopbarStageStatus
-} from "./MarketplaceHomeTopbar";
+} from "./MarketplaceTopbarPrimitives";
 import { MarketplaceTopbarBreadcrumb } from "./MarketplaceTopbarBreadcrumb";
+
+const MarketplaceHomeTopbarActions = dynamic(() =>
+  import("./MarketplaceHomeTopbar").then((module) => module.MarketplaceHomeTopbarActions),
+  {
+    loading: () => (
+      <div
+        className="marketplace-topbar-actions marketplace-home-topbar-actions"
+        data-marketplace-topbar-slot="actions"
+        data-marketplace-topbar-variant="landing"
+        aria-hidden="true"
+      />
+    )
+  }
+);
 
 export type MarketplaceTopbarSlotVariant = "landing" | "market" | "skill-detail";
 export type MarketplaceShellRouteKind = "landing" | "section" | "skill-detail" | "narrative" | "default";
@@ -47,30 +68,8 @@ type MarketplaceStageMessages = Pick<
   | "stageResults"
 >;
 
-const marketplaceNarrativeRoutes = new Set(["/about", "/docs", "/governance", "/rollout", "/timeline"]);
-
 export function resolveMarketplaceShellRouteKind(corePath: string): MarketplaceShellRouteKind {
-  if (corePath === "/") {
-    return "landing";
-  }
-
-  if (corePath.startsWith("/categories") || corePath === "/rankings" || corePath === "/compare") {
-    return "section";
-  }
-
-  if (corePath === "/results" || corePath === "/search") {
-    return "section";
-  }
-
-  if (corePath.startsWith("/skills/")) {
-    return "skill-detail";
-  }
-
-  if (marketplaceNarrativeRoutes.has(corePath)) {
-    return "narrative";
-  }
-
-  return "default";
+  return resolveRegistryPublicShellRouteKind(corePath);
 }
 
 export function resolveMarketplaceShellContentWidth(routeKind: MarketplaceShellRouteKind): MarketplaceShellContentWidth {
@@ -85,13 +84,17 @@ function formatRouteSegmentLabel(segment: string): string {
     .join(" ");
 }
 
-function buildPresetBreadcrumb(corePath: string, messages: MarketplaceStageMessages): ReactNode | undefined {
-  if (corePath === "/results" || corePath === "/search") {
+function buildPresetBreadcrumb(
+  corePath: string,
+  breadcrumbKind: PublicTopbarBreadcrumbKind,
+  messages: MarketplaceStageMessages
+): ReactNode | undefined {
+  if (breadcrumbKind === "results") {
     return (
       <MarketplaceTopbarBreadcrumb
         ariaLabel={messages.categoryBreadcrumbAriaLabel}
         items={[
-          { href: "/", label: messages.shellHome },
+          { href: publicHomeRoute, label: messages.shellHome },
           { label: messages.resultsLedgerTitle, isCurrent: true }
         ]}
         testId="search-shell-breadcrumb"
@@ -99,19 +102,19 @@ function buildPresetBreadcrumb(corePath: string, messages: MarketplaceStageMessa
     );
   }
 
-  if (corePath === "/categories") {
+  if (breadcrumbKind === "categories-index") {
     return (
       <MarketplaceTopbarBreadcrumb
         ariaLabel={messages.categoryBreadcrumbAriaLabel}
         items={[
-          { href: "/", label: messages.shellHome },
+          { href: publicHomeRoute, label: messages.shellHome },
           { label: messages.categoryBrowseTitle, isCurrent: true }
         ]}
       />
     );
   }
 
-  if (corePath.startsWith("/categories/")) {
+  if (breadcrumbKind === "category-detail") {
     const categorySlug = corePath.split("/")[2] || "";
     const categoryLabel = formatRouteSegmentLabel(categorySlug) || messages.shellCategories;
 
@@ -119,34 +122,34 @@ function buildPresetBreadcrumb(corePath: string, messages: MarketplaceStageMessa
       <MarketplaceTopbarBreadcrumb
         ariaLabel={messages.categoryBreadcrumbAriaLabel}
         items={[
-          { href: "/", label: messages.shellHome },
-          { href: "/categories", label: messages.shellCategories },
+          { href: publicHomeRoute, label: messages.shellHome },
+          { href: publicCategoriesRoute, label: messages.shellCategories },
           { label: categoryLabel, isCurrent: true }
         ]}
       />
     );
   }
 
-  if (corePath === "/rankings" || corePath === "/compare") {
+  if (breadcrumbKind === "rankings") {
     return (
       <MarketplaceTopbarBreadcrumb
         ariaLabel={messages.categoryBreadcrumbAriaLabel}
         items={[
-          { href: "/", label: messages.shellHome },
+          { href: publicHomeRoute, label: messages.shellHome },
           { label: messages.rankingTitle, isCurrent: true }
         ]}
       />
     );
   }
 
-  if (corePath.startsWith("/skills/")) {
+  if (breadcrumbKind === "skill-detail") {
     return (
       <MarketplaceTopbarBreadcrumb
         ariaLabel={messages.stageSkillDetail}
         className="skill-detail-shell-breadcrumb"
-        testId="skill-detail-shell-breadcrumb"
+        testId="skill-detail-topbar-breadcrumb"
         items={[
-          { href: "/", label: messages.shellHome },
+          { href: publicHomeRoute, label: messages.shellHome },
           { label: messages.stageSkillDetail, isCurrent: true, isSoft: true }
         ]}
       />
@@ -154,6 +157,24 @@ function buildPresetBreadcrumb(corePath: string, messages: MarketplaceStageMessa
   }
 
   return undefined;
+}
+
+function resolvePresetStageLabel(
+  descriptor: PublicTopbarRoutePresetDescriptor,
+  messages: MarketplaceStageMessages
+): string | undefined {
+  switch (descriptor.stageId) {
+    case "categories":
+      return messages.stageCategories;
+    case "rankings":
+      return messages.stageRankings;
+    case "results":
+      return messages.stageResults;
+    case "skill-detail":
+      return messages.stageSkillDetail;
+    default:
+      return undefined;
+  }
 }
 
 export function buildMarketplaceTopbarSlots({
@@ -184,40 +205,15 @@ export function resolveMarketplaceTopbarRoutePreset(
   corePath: string,
   messages: MarketplaceStageMessages
 ): MarketplaceTopbarRoutePreset | null {
-  if (corePath === "/") {
-    return { variant: "landing" };
+  const descriptor = resolvePublicTopbarRoutePresetDescriptor(corePath);
+
+  if (!descriptor) {
+    return null;
   }
 
-  if (corePath.startsWith("/categories")) {
-    return {
-      variant: "market",
-      stageLabel: messages.stageCategories,
-      belowContent: buildPresetBreadcrumb(corePath, messages)
-    };
-  }
-
-  if (corePath === "/rankings" || corePath === "/compare") {
-    return {
-      variant: "market",
-      stageLabel: messages.stageRankings,
-      belowContent: buildPresetBreadcrumb(corePath, messages)
-    };
-  }
-
-  if (corePath.startsWith("/skills/")) {
-    return {
-      variant: "market",
-      stageLabel: messages.stageSkillDetail
-    };
-  }
-
-  if (corePath === "/results" || corePath === "/search") {
-    return {
-      variant: "market",
-      stageLabel: messages.stageResults,
-      belowContent: buildPresetBreadcrumb(corePath, messages)
-    };
-  }
-
-  return null;
+  return {
+    variant: descriptor.variant,
+    stageLabel: descriptor.variant === "skill-detail" ? undefined : resolvePresetStageLabel(descriptor, messages),
+    belowContent: descriptor.breadcrumbKind ? buildPresetBreadcrumb(corePath, descriptor.breadcrumbKind, messages) : undefined
+  };
 }

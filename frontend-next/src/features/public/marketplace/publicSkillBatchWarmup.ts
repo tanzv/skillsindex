@@ -3,9 +3,11 @@ import type { MarketplaceSkill } from "@/src/lib/schemas/public";
 
 const defaultSkillWarmupLimit = 6;
 
+export type PublicSkillWarmupRouteResolver = (route: string) => string;
+
 export function buildPublicSkillBatchWarmupTargets(
   items: MarketplaceSkill[],
-  toPublicPath: (route: string) => string,
+  resolveRoute: PublicSkillWarmupRouteResolver = (route) => route,
   limit = defaultSkillWarmupLimit
 ): string[] {
   const normalizedLimit = Math.max(0, limit);
@@ -16,7 +18,7 @@ export function buildPublicSkillBatchWarmupTargets(
       break;
     }
 
-    routes.add(toPublicPath(`/skills/${item.id}`));
+    routes.add(resolveRoute(`/skills/${item.id}`));
   }
 
   return [...routes];

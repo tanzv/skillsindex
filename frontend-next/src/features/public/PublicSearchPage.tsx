@@ -1,61 +1,62 @@
 "use client";
 
-import Link from "next/link";
-import { PublicShellRegistration } from "@/src/components/shared/PublicShellSlots";
-import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
-import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
-import type { MarketplaceCategory, MarketplaceSubcategory, PublicMarketplaceResponse } from "@/src/lib/schemas/public";
+import dynamic from "next/dynamic";
 
-import { MarketplaceDiscoverySidebar } from "./marketplace/MarketplaceDiscoverySidebar";
+import { PublicLink } from "@/src/components/shared/PublicLink";
+import { PublicMarketWebclientRegistration } from "@/src/components/shared/PublicMarketWebclientSlots";
+import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
+import {
+  publicCategoriesRoute,
+  publicHomeRoute,
+  publicRankingsRoute,
+  publicResultsRoute
+} from "@/src/lib/routing/publicRouteRegistry";
+import type { PublicMarketplaceResponse } from "@/src/lib/schemas/public";
+
 import { MarketplaceResultsListSection } from "./marketplace/MarketplaceResultsListSection";
 import { MarketplaceResultsStage } from "./marketplace/MarketplaceResultsStage";
-import { MarketplaceSearchPanel } from "./marketplace/MarketplaceSearchPanel";
 import { MarketplaceSkillCard } from "./marketplace/MarketplaceSkillCard";
 import { MarketplaceTopbarBreadcrumb } from "./marketplace/MarketplaceTopbarBreadcrumb";
-import {
-  buildMarketplaceSummaryMetrics,
-  filterMarketplaceItems,
-  resolveMarketplaceCategorySummary
-} from "./marketplace/marketplaceViewModel";
-import { buildPublicSkillBatchWarmupTargets } from "./marketplace/publicSkillBatchWarmup";
 import { usePublicSkillBatchWarmup } from "./marketplace/usePublicSkillBatchWarmup";
 import { useMarketplaceTopbarSlots } from "./marketplace/useMarketplaceTopbarSlots";
+import type { PublicSearchPageModel } from "./publicSearchPageModel";
+
+const ResultsSearchPanel = dynamic(() =>
+  import("./marketplace/MarketplaceSearchPanel").then((module) => module.MarketplaceSearchPanel),
+  {
+    loading: () => <div className="marketplace-section-card" aria-hidden="true" />
+  }
+);
+
+const ResultsDiscoverySidebar = dynamic(() =>
+  import("./marketplace/MarketplaceDiscoverySidebar").then((module) => module.MarketplaceDiscoverySidebar),
+  {
+    loading: () => <div className="marketplace-side-column" aria-hidden="true" />
+  }
+);
 
 interface PublicSearchPageProps {
   marketplace: PublicMarketplaceResponse;
+  model: PublicSearchPageModel;
   query: string;
   semanticQuery?: string;
-  title?: string;
-  description?: string;
+  sort?: string;
+  mode?: string;
   formAction?: string;
-  activeCategory?: string;
   activeSubcategory?: string;
 }
 
 export function PublicSearchPage({
   marketplace,
+  model,
   query,
   semanticQuery = "",
-  title,
-  description,
-  formAction = "/results",
-  activeCategory,
+  sort = "relevance",
+  mode = "hybrid",
+  formAction = publicResultsRoute,
   activeSubcategory
 }: PublicSearchPageProps) {
   const { messages } = usePublicI18n();
-  const { toPublicPath } = usePublicRouteState();
-  const categorySummary = resolveMarketplaceCategorySummary(marketplace.categories, activeCategory, marketplace.items);
-  const visibleItems = filterMarketplaceItems(marketplace.items, {
-    activeCategory,
-    activeSubcategory,
-    query,
-    semanticQuery
-  });
-  const skillWarmupTargets = buildPublicSkillBatchWarmupTargets(visibleItems, toPublicPath);
-  const summaryMetrics = buildMarketplaceSummaryMetrics(marketplace, messages);
-  const resolvedTitle = title || messages.resultsLedgerTitle;
-  const resolvedDescription = description || messages.resultsLedgerDescription;
-  const contextLabel = categorySummary ? `${messages.resultsCategoryContextTitle} · ${categorySummary.name}` : messages.stageResults;
   const shellSlots = useMarketplaceTopbarSlots({
     stageLabel: messages.stageResults,
     variant: "market",
@@ -63,48 +64,43 @@ export function PublicSearchPage({
       <MarketplaceTopbarBreadcrumb
         ariaLabel={messages.categoryBreadcrumbAriaLabel}
         items={[
-          { href: toPublicPath("/"), label: messages.shellHome },
-          ...(categorySummary
+          { href: publicHomeRoute, label: messages.shellHome },
+          ...(model.categorySummary
             ? [
-                { href: toPublicPath("/categories"), label: messages.shellCategories },
-                { label: categorySummary.name, isCurrent: true }
+                { href: publicCategoriesRoute, label: messages.shellCategories },
+                { label: model.categorySummary.name, isCurrent: true }
               ]
-            : [{ label: resolvedTitle, isCurrent: true }])
+            : [{ label: model.resolvedTitle, isCurrent: true }])
         ]}
         testId="search-shell-breadcrumb"
       />
     )
   });
-  const categoryLinks: Array<{ href: string; label: string; count: number }> = categorySummary
-    ? categorySummary.subcategories.map((subcategory: MarketplaceSubcategory) => ({
-        href: toPublicPath(`/categories/${categorySummary.slug}?subcategory=${subcategory.slug}`),
-        label: subcategory.name,
-        count: subcategory.count
-      }))
-    : marketplace.categories.map((category: MarketplaceCategory) => ({
-        href: toPublicPath(`/categories/${category.slug}`),
-      label: category.name,
-      count: category.count
-      }));
 
-  usePublicSkillBatchWarmup(skillWarmupTargets);
+  usePublicSkillBatchWarmup(model.skillWarmupTargets);
 
   return (
     <div className="marketplace-main-column">
-      <PublicShellRegistration slots={shellSlots} />
+      <PublicMarketWebclientRegistration slots={shellSlots} />
 
-      <MarketplaceSearchPanel
+      <ResultsSearchPanel
         variant="results"
         action={formAction}
         query={query}
-        title={resolvedTitle}
-        description={resolvedDescription}
+        title={model.resolvedTitle}
+        description={model.resolvedDescription}
         submitLabel={messages.searchButton}
         suggestions={marketplace.top_tags.map((tag) => tag.name)}
-        contextLabel={contextLabel}
+        contextLabel={model.contextLabel}
         semanticQuery={semanticQuery}
         showSemanticField
-        hiddenFields={activeSubcategory ? [{ name: "subcategory", value: activeSubcategory }] : []}
+        currentSort={sort}
+        currentMode={mode}
+        hiddenFields={[
+          ...(activeSubcategory ? [{ name: "subcategory", value: activeSubcategory }] : []),
+          ...(sort !== "relevance" ? [{ name: "sort", value: sort }] : []),
+          ...(mode !== "hybrid" ? [{ name: "mode", value: mode }] : [])
+        ]}
       />
 
       <MarketplaceResultsStage
@@ -113,9 +109,9 @@ export function PublicSearchPage({
         sideTestId="results-support"
         mainContent={
           <MarketplaceResultsListSection
-            title={resolvedTitle}
-            description={resolvedDescription}
-            hasResults={visibleItems.length > 0}
+            title={model.resolvedTitle}
+            description={model.resolvedDescription}
+            hasResults={model.visibleItems.length > 0}
             headerMeta={
               <div className="marketplace-pill-row">
                 <span className="marketplace-search-utility-pill">
@@ -126,7 +122,7 @@ export function PublicSearchPage({
                 </span>
               </div>
             }
-            resultsContent={visibleItems.map((item) => (
+            resultsContent={model.visibleItems.map((item) => (
               <MarketplaceSkillCard key={item.id} item={item} />
             ))}
             emptyContent={
@@ -134,32 +130,27 @@ export function PublicSearchPage({
                 <h3>{messages.resultsEmptyTitle}</h3>
                 <p>{messages.resultsEmptyDescription}</p>
                 <div className="marketplace-pill-row">
-                  <Link href={toPublicPath("/rankings")} className="marketplace-topbar-button is-primary">
+                  <PublicLink href={publicRankingsRoute} className="marketplace-topbar-button is-primary">
                     {messages.resultsOpenRankings}
-                  </Link>
-                  <Link href={toPublicPath("/categories")} className="marketplace-topbar-button">
+                  </PublicLink>
+                  <PublicLink href={publicCategoriesRoute} className="marketplace-topbar-button">
                     {messages.resultsBrowseCategories}
-                  </Link>
+                  </PublicLink>
                 </div>
               </div>
             }
           />
         }
         sideContent={
-          <MarketplaceDiscoverySidebar
+          <ResultsDiscoverySidebar
             wrapInColumn={false}
-            fallbackLinks={[
-              { href: "/results?q=release", label: "release" },
-              { href: "/results?q=repository", label: "repository" },
-              { href: "/rankings", label: messages.shellRankings }
-            ]}
-            categoryTitle={categorySummary ? messages.resultsCategoryContextTitle : messages.resultsCategoryPivotsTitle}
-            categoryDescription={categorySummary ? categorySummary.description : messages.resultsCategoryPivotsDescription}
-            categoryLinks={categoryLinks.map((item) => ({
+            categoryTitle={model.categorySummary ? messages.resultsCategoryContextTitle : messages.resultsCategoryPivotsTitle}
+            categoryDescription={model.categorySummary ? model.categorySummary.description : messages.resultsCategoryPivotsDescription}
+            categoryLinks={model.categoryLinks.map((item) => ({
               ...item,
-              isActive: Boolean(activeSubcategory && item.href.includes(`subcategory=${activeSubcategory}`))
+              isActive: item.isActive || Boolean(activeSubcategory && item.href.includes(`subcategory=${activeSubcategory}`))
             }))}
-            summaryMetrics={summaryMetrics}
+            summaryMetrics={model.summaryMetrics}
           />
         }
       />

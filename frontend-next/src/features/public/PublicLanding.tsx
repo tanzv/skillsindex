@@ -1,19 +1,14 @@
 "use client";
 
-import { useMemo } from "react";
-
-import { PublicShellRegistration } from "@/src/components/shared/PublicShellSlots";
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
 import { usePublicRouteState } from "@/src/lib/routing/usePublicRouteState";
 import type { PublicMarketplaceResponse } from "@/src/lib/schemas/public";
 
+import { MarketplaceEntrySearchPanel } from "./marketplace/MarketplaceEntrySearchPanel";
 import { MarketplaceHomeHero } from "./marketplace/MarketplaceHomeHero";
-import { MarketplaceSearchPanel } from "./marketplace/MarketplaceSearchPanel";
 import { MarketplaceHomeVirtualFeed } from "./marketplace/MarketplaceHomeVirtualFeed";
-import { resolveFeaturedMarketplaceItems, resolveLatestMarketplaceItems } from "./marketplace/marketplaceViewModel";
-import { buildPublicSkillBatchWarmupTargets } from "./marketplace/publicSkillBatchWarmup";
 import { usePublicSkillBatchWarmup } from "./marketplace/usePublicSkillBatchWarmup";
-import { useMarketplaceTopbarSlots } from "./marketplace/useMarketplaceTopbarSlots";
+import { buildPublicLandingPageModel } from "./publicLandingPageModel";
 
 interface PublicLandingProps {
   marketplace: PublicMarketplaceResponse;
@@ -22,50 +17,38 @@ interface PublicLandingProps {
 export function PublicLanding({ marketplace }: PublicLandingProps) {
   const { messages } = usePublicI18n();
   const { toPublicPath } = usePublicRouteState();
-  const featuredItems = resolveFeaturedMarketplaceItems(marketplace.items, 3);
-  const featuredItemIds = useMemo(() => new Set(featuredItems.map((item) => item.id)), [featuredItems]);
-  const latestItems = useMemo(() => {
-    const resolvedItems = resolveLatestMarketplaceItems(marketplace.items, marketplace.items.length || 6, featuredItemIds);
-    return resolvedItems.length > 0 ? resolvedItems : featuredItems;
-  }, [featuredItemIds, featuredItems, marketplace.items]);
-  const featuredChips = marketplace.top_tags.slice(0, 3).map((tag) => tag.name);
-  const latestChips = marketplace.categories.slice(0, 4).map((category) => category.name);
-  const skillWarmupTargets = buildPublicSkillBatchWarmupTargets([...featuredItems, ...latestItems], toPublicPath);
-  const shellSlots = useMarketplaceTopbarSlots({ variant: "landing" });
+  const model = buildPublicLandingPageModel({
+    marketplace,
+    messages,
+    resolvePath: toPublicPath
+  });
 
-  usePublicSkillBatchWarmup(skillWarmupTargets);
+  usePublicSkillBatchWarmup(model.skillWarmupTargets);
 
   return (
     <div className="marketplace-main-column marketplace-home-stage">
-      <PublicShellRegistration slots={shellSlots} />
-
       <div className="marketplace-home-stage-head">
         <section className="marketplace-home-entry-shell">
-          <MarketplaceHomeHero />
+          <MarketplaceHomeHero summary={model.landingSummary} />
         </section>
 
         <section className="marketplace-home-search-shell" data-testid="landing-search-strip">
-          <MarketplaceSearchPanel
-            variant="entry"
-            action="/results"
-            query=""
-            suggestions={marketplace.top_tags.map((tag) => tag.name)}
-            readOnlyQuery
-            showSubmitAction={false}
-            showRecentAction={false}
+          <MarketplaceEntrySearchPanel
+            action={model.searchAction}
+            suggestions={model.searchSuggestions}
           />
         </section>
       </div>
 
       <MarketplaceHomeVirtualFeed
-        featuredItems={featuredItems}
-        latestItems={latestItems}
-        featuredTitle={messages.landingCuratedTitle}
-        featuredDescription={messages.landingCuratedDescription}
-        featuredChips={featuredChips}
-        latestTitle={messages.landingLatestTitle}
-        latestDescription={messages.landingLatestDescription}
-        latestChips={latestChips}
+        featuredItems={model.featuredItems}
+        latestItems={model.latestItems}
+        featuredTitle={model.featuredTitle}
+        featuredDescription={model.featuredDescription}
+        featuredChips={model.featuredChips}
+        latestTitle={model.latestTitle}
+        latestDescription={model.latestDescription}
+        latestChips={model.latestChips}
       />
     </div>
   );

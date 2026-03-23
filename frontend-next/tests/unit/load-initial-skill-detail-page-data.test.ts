@@ -7,26 +7,22 @@ import type {
   PublicSkillVersionsResponse
 } from "@/src/lib/schemas/public";
 
-vi.mock("@/src/lib/api/public", () => ({
-  fetchSkillDetail: vi.fn(),
-  fetchSkillResources: vi.fn(),
-  fetchSkillVersions: vi.fn(),
-  fetchSkillResourceContent: vi.fn()
+vi.mock("@/src/lib/api/publicSkillDetail", () => ({
+  fetchSkillDetail: vi.fn()
 }));
 
 vi.mock("@/src/features/public/publicSkillDetailFallback", () => ({
   buildPublicSkillDetailFallback: vi.fn(),
+  buildPublicSkillFallbackRelatedSkills: vi.fn(),
   resolvePublicSkillFallback: vi.fn()
 }));
 
 import {
-  fetchSkillDetail,
-  fetchSkillResourceContent,
-  fetchSkillResources,
-  fetchSkillVersions
-} from "@/src/lib/api/public";
+  fetchSkillDetail
+} from "@/src/lib/api/publicSkillDetail";
 import {
   buildPublicSkillDetailFallback,
+  buildPublicSkillFallbackRelatedSkills,
   resolvePublicSkillFallback
 } from "@/src/features/public/publicSkillDetailFallback";
 import { loadInitialSkillDetailPageData } from "@/src/features/public/loadInitialSkillDetailPageData";
@@ -66,54 +62,30 @@ const detailPayload: PublicSkillDetailResponse = {
 describe("loadInitialSkillDetailPageData", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.mocked(buildPublicSkillFallbackRelatedSkills).mockReturnValue([
+      {
+        ...detailPayload.skill,
+        id: 202,
+        name: "Fallback Related Skill"
+      }
+    ]);
   });
 
-  it("preloads resources and the first resource content when backend detail is available", async () => {
-    const resourcesPayload = {
-      skill_id: 101,
-      repo_url: "https://example.com/repo",
-      source_branch: "main",
-      source_path: "SKILL.md",
-      files: [
-        {
-          name: "SKILL.md",
-          display_name: "SKILL.md",
-          size_bytes: 100,
-          size_label: "100 B",
-          language: "Markdown"
-        }
-      ]
-    } as PublicSkillResourcesResponse;
-    const resourceContentPayload = {
-      skill_id: 101,
-      path: "SKILL.md",
-      display_name: "SKILL.md",
-      language: "Markdown",
-      size_bytes: 100,
-      size_label: "100 B",
-      content: "# Release Readiness Checklist",
-      updated_at: "2026-03-14T08:00:00Z"
-    } as PublicSkillResourceContentResponse;
-
+  it("keeps the initial payload focused on detail when backend detail is available", async () => {
     vi.mocked(fetchSkillDetail).mockResolvedValue(detailPayload);
-    vi.mocked(fetchSkillResources).mockResolvedValue(resourcesPayload);
-    vi.mocked(fetchSkillResourceContent).mockResolvedValue(resourceContentPayload);
 
     const payload = await loadInitialSkillDetailPageData(new Headers(), 101);
 
     expect(fetchSkillDetail).toHaveBeenCalledTimes(1);
-    expect(fetchSkillResources).toHaveBeenCalledTimes(1);
-    expect(fetchSkillVersions).not.toHaveBeenCalled();
-    expect(fetchSkillResourceContent).toHaveBeenCalledWith(expect.any(Headers), 101, "SKILL.md");
+    expect(buildPublicSkillFallbackRelatedSkills).not.toHaveBeenCalled();
     expect(payload.detail).toEqual(detailPayload);
-    expect(payload.resources).toEqual(resourcesPayload);
+    expect(payload.resources).toBeNull();
     expect(payload.versions).toBeNull();
-    expect(payload.initialResourceContent).toEqual(resourceContentPayload);
+    expect(payload.initialResourceContent).toBeNull();
   });
 
-  it("keeps detail available when resources preload fails", async () => {
+  it("keeps detail available when backend detail succeeds without preloading deferred data", async () => {
     vi.mocked(fetchSkillDetail).mockResolvedValue(detailPayload);
-    vi.mocked(fetchSkillResources).mockRejectedValue(new Error("resource preload failed"));
 
     const payload = await loadInitialSkillDetailPageData(new Headers(), 101);
 
@@ -122,34 +94,50 @@ describe("loadInitialSkillDetailPageData", () => {
     expect(payload.initialResourceContent).toBeNull();
   });
 
-  it("falls back to the bundled skill payload when backend detail fails", async () => {
-    const fallbackResources = { skill_id: 101, repo_url: "", source_branch: "main", source_path: "SKILL.md", files: [] } as PublicSkillResourcesResponse;
-    const fallbackVersions = { items: [], total: 0 } as PublicSkillVersionsResponse;
-    const fallbackResourceContent = {
-      skill_id: 101,
-      path: "SKILL.md",
-      display_name: "SKILL.md",
-      language: "Markdown",
-      size_bytes: 10,
-      size_label: "10 B",
-      content: "# Release Readiness Checklist",
-      updated_at: "2026-03-14T08:00:00Z"
-    } as PublicSkillResourceContentResponse;
-
-    vi.mocked(fetchSkillDetail).mockRejectedValue(new Error("backend down"));
-    vi.mocked(resolvePublicSkillFallback).mockReturnValue(detailPayload.skill);
-    vi.mocked(buildPublicSkillDetailFallback).mockReturnValue({
-      detail: detailPayload,
-      resources: fallbackResources,
-      versions: fallbackVersions,
-      resourceContent: fallbackResourceContent
+  it("keeps API related skills when they are already present", async () => {
+    const apiRelatedSkill = {
+      ...detailPayload.skill,
+      id: 303,
+      name: "API Related Skill"
+    };
+    vi.mocked(fetchSkillDetail).mockResolvedValue({
+      ...detailPayload,
+      related_skills: [apiRelatedSkill]
     });
 
     const payload = await loadInitialSkillDetailPageData(new Headers(), 101);
 
-    expect(payload.detail).toEqual(detailPayload);
-    expect(payload.resources).toEqual(fallbackResources);
-    expect(payload.versions).toEqual(fallbackVersions);
-    expect(payload.initialResourceContent).toEqual(fallbackResourceContent);
+    expect(buildPublicSkillFallbackRelatedSkills).not.toHaveBeenCalled();
+    expect(payload.detail?.related_skills).toEqual([apiRelatedSkill]);
+  });
+
+  it("returns an explicit load failure instead of bundled fallback detail when backend detail fails", async () => {
+    vi.mocked(fetchSkillDetail).mockRejectedValue(new Error("backend down"));
+    vi.mocked(resolvePublicSkillFallback).mockReturnValue(detailPayload.skill);
+    vi.mocked(buildPublicSkillDetailFallback).mockReturnValue({
+      detail: detailPayload,
+      resources: { skill_id: 101, repo_url: "", source_branch: "main", source_path: "SKILL.md", files: [] } as PublicSkillResourcesResponse,
+      versions: { items: [], total: 0 } as PublicSkillVersionsResponse,
+      resourceContent: {
+        skill_id: 101,
+        path: "SKILL.md",
+        display_name: "SKILL.md",
+        language: "Markdown",
+        size_bytes: 10,
+        size_label: "10 B",
+        content: "# Release Readiness Checklist",
+        updated_at: "2026-03-14T08:00:00Z"
+      } as PublicSkillResourceContentResponse
+    });
+
+    const payload = await loadInitialSkillDetailPageData(new Headers(), 101);
+
+    expect(resolvePublicSkillFallback).not.toHaveBeenCalled();
+    expect(buildPublicSkillDetailFallback).not.toHaveBeenCalled();
+    expect(payload.detail).toBeNull();
+    expect(payload.resources).toBeNull();
+    expect(payload.versions).toBeNull();
+    expect(payload.initialResourceContent).toBeNull();
+    expect(payload.errorMessage).toBe("backend down");
   });
 });

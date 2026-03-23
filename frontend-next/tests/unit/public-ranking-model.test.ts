@@ -1,29 +1,32 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
-import { buildPublicRankingModel, sortRankingItems } from "@/src/features/public/publicRankingModel";
+import {
+  mapRankingCategoryLeaderCards,
+  sortRankingItems
+} from "@/src/features/public/publicRankingModel";
+
+import { buildPublicRankingResponseFixture, publicRankingFixtureUnsortedItems } from "./stubs/publicRankingFixture";
 
 describe("public ranking model", () => {
-  it("sorts fallback skills deterministically by stars and quality", () => {
-    const payload = buildPublicMarketplaceFallback();
-
-    expect(sortRankingItems(payload.items, "stars").map((item) => item.id)).toEqual([101, 104, 105, 102, 103, 111, 106, 107, 109, 108, 110, 112]);
-    expect(sortRankingItems(payload.items, "quality").map((item) => item.id)).toEqual([101, 104, 111, 102, 103, 105, 106, 107, 108, 109, 110, 112]);
+  it("sorts ranking items deterministically by stars and quality", () => {
+    expect(sortRankingItems(publicRankingFixtureUnsortedItems, "stars").map((item) => item.id)).toEqual([101, 104, 105, 102, 103, 111]);
+    expect(sortRankingItems(publicRankingFixtureUnsortedItems, "quality").map((item) => item.id)).toEqual([101, 104, 111, 102, 103, 105]);
   });
 
-  it("builds ranking highlights, summary metrics, and category leaders", () => {
-    const payload = buildPublicMarketplaceFallback();
-    const model = buildPublicRankingModel(payload, "stars");
+  it("maps ranking category leader cards from backend ranking payloads", () => {
+    const payload = buildPublicRankingResponseFixture("stars");
+    const leaderCards = mapRankingCategoryLeaderCards(payload.category_leaders);
 
-    expect(model.summary.totalCompared).toBe(12);
-    expect(model.summary.topStars).toBe(214);
-    expect(model.summary.averageQuality).toBe(9);
-    expect(model.highlights).toHaveLength(3);
-    expect(model.categoryLeaders[0]).toEqual(
+    expect(payload.summary.total_compared).toBe(6);
+    expect(payload.summary.top_stars).toBe(214);
+    expect(payload.summary.average_quality).toBe(9.3);
+    expect(payload.highlights).toHaveLength(3);
+    expect(payload.list_items).toHaveLength(3);
+    expect(leaderCards[0]).toEqual(
       expect.objectContaining({
         category: "Programming & Development",
-        count: 7,
-        averageQuality: 9.2,
+        count: 4,
+        averageQuality: 9.3,
         leadingSkillName: "Next.js UX Audit Agent"
       })
     );

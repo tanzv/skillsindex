@@ -2,13 +2,18 @@ import type {
   PublicSkillDetailResponse,
   PublicSkillResourceContentResponse,
   PublicSkillResourcesResponse,
-  PublicSkillVersionsResponse
+  PublicSkillVersionsResponse,
 } from "@/src/lib/schemas/public";
 import type { PublicMarketplaceMessages } from "@/src/lib/i18n/publicMessages";
-import { formatPublicDate, type PublicLocale } from "@/src/lib/i18n/publicLocale";
+import {
+  formatPublicDate,
+  type PublicLocale,
+} from "@/src/lib/i18n/publicLocale";
 
-import { fallbackSkills } from "./publicMarketplaceFallback";
-import { resolveMarketplaceSkillCategoryLabel, resolveMarketplaceSkillSubcategoryLabel } from "./marketplace/marketplaceTaxonomy";
+import {
+  resolveSkillDetailCategoryLabel,
+  resolveSkillDetailSubcategoryLabel,
+} from "./skill-detail/skillDetailTaxonomy";
 
 interface DetailMetric {
   label: string;
@@ -99,82 +104,140 @@ export function buildPublicSkillDetailModel({
   versions,
   resourceContent,
   locale,
-  messages
+  messages,
 }: BuildPublicSkillDetailModelOptions): PublicSkillDetailModel {
-  const relatedSkills = fallbackSkills
+  const relatedSkills = (detail.related_skills || [])
     .filter((skill) => skill.id !== detail.skill.id)
-    .sort((left, right) => {
-      const sameCategoryLeft = resolveMarketplaceSkillCategoryLabel(left) === resolveMarketplaceSkillCategoryLabel(detail.skill) ? 1 : 0;
-      const sameCategoryRight = resolveMarketplaceSkillCategoryLabel(right) === resolveMarketplaceSkillCategoryLabel(detail.skill) ? 1 : 0;
-      return sameCategoryRight - sameCategoryLeft || right.quality_score - left.quality_score || right.star_count - left.star_count;
+      .sort((left, right) => {
+        const sameCategoryLeft =
+        resolveSkillDetailCategoryLabel(left) ===
+        resolveSkillDetailCategoryLabel(detail.skill)
+          ? 1
+          : 0;
+      const sameCategoryRight =
+        resolveSkillDetailCategoryLabel(right) ===
+        resolveSkillDetailCategoryLabel(detail.skill)
+          ? 1
+          : 0;
+      return (
+        sameCategoryRight - sameCategoryLeft ||
+        right.quality_score - left.quality_score ||
+        right.star_count - left.star_count
+      );
     })
     .slice(0, 3)
     .map((skill) => ({
       id: skill.id,
       name: skill.name,
-      category: `${resolveMarketplaceSkillCategoryLabel(skill)} / ${resolveMarketplaceSkillSubcategoryLabel(skill)}`,
-      qualityScore: skill.quality_score.toFixed(1)
+      category: `${resolveSkillDetailCategoryLabel(skill)} / ${resolveSkillDetailSubcategoryLabel(skill)}`,
+      qualityScore: skill.quality_score.toFixed(1),
     }));
 
   return {
     summaryMetrics: [
-      { label: messages.skillDetailMetricsQuality, value: detail.skill.quality_score.toFixed(1) },
-      { label: messages.skillDetailMetricsFavorites, value: formatNumber(detail.stats.favorite_count) },
-      { label: messages.skillDetailMetricsRatings, value: formatNumber(detail.stats.rating_count) },
-      { label: messages.skillDetailMetricsComments, value: formatNumber(detail.stats.comment_count) }
+      {
+        label: messages.skillDetailMetricsQuality,
+        value: detail.skill.quality_score.toFixed(1),
+      },
+      {
+        label: messages.skillDetailMetricsFavorites,
+        value: formatNumber(detail.stats.favorite_count),
+      },
+      {
+        label: messages.skillDetailMetricsRatings,
+        value: formatNumber(detail.stats.rating_count),
+      },
+      {
+        label: messages.skillDetailMetricsComments,
+        value: formatNumber(detail.stats.comment_count),
+      },
     ],
     overviewFacts: [
-      { label: messages.skillDetailFactCategory, value: `${resolveMarketplaceSkillCategoryLabel(detail.skill)} / ${resolveMarketplaceSkillSubcategoryLabel(detail.skill)}` },
-      { label: messages.skillDetailFactSourceType, value: resolveText(detail.skill.source_type, messages.skillDetailNotAvailable) },
-      { label: messages.skillDetailFactUpdated, value: resolveText(formatDate(detail.skill.updated_at, locale), messages.skillDetailNotAvailable) },
-      { label: messages.skillDetailFactStars, value: formatNumber(detail.skill.star_count) }
+      {
+        label: messages.skillDetailFactCategory,
+        value: `${resolveSkillDetailCategoryLabel(detail.skill)} / ${resolveSkillDetailSubcategoryLabel(detail.skill)}`,
+      },
+      {
+        label: messages.skillDetailFactSourceType,
+        value: resolveText(
+          detail.skill.source_type,
+          messages.skillDetailNotAvailable,
+        ),
+      },
+      {
+        label: messages.skillDetailFactUpdated,
+        value: resolveText(
+          formatDate(detail.skill.updated_at, locale),
+          messages.skillDetailNotAvailable,
+        ),
+      },
+      {
+        label: messages.skillDetailFactStars,
+        value: formatNumber(detail.skill.star_count),
+      },
     ],
     installationSteps: [
       {
         label: messages.skillDetailInstallLabel,
-        value: resolveText(detail.skill.install_command, messages.skillDetailNoInstall),
-        description: messages.skillDetailInstallHelp
+        value: resolveText(
+          detail.skill.install_command,
+          messages.skillDetailNoInstall,
+        ),
+        description: messages.skillDetailInstallHelp,
       },
       {
         label: messages.skillDetailRepositoryPathLabel,
-        value: resolveText(resources?.source_path || resourceContent?.path, messages.skillDetailNotAvailable),
-        description: messages.skillDetailRepositoryPathHelp
+        value: resolveText(
+          resources?.source_path || resourceContent?.path,
+          messages.skillDetailNotAvailable,
+        ),
+        description: messages.skillDetailRepositoryPathHelp,
       },
       {
         label: messages.skillDetailExecutionContextLabel,
         value: detail.viewer_state.can_interact
           ? messages.skillDetailExecutionContextInteractive
           : messages.skillDetailExecutionContextReadonly,
-        description: messages.skillDetailExecutionContextHelp
-      }
+        description: messages.skillDetailExecutionContextHelp,
+      },
     ],
     resourceInsights: [
       {
         label: messages.skillDetailResourceRepositoryLabel,
-        value: resolveText(resources?.repo_url || resources?.source_url || detail.skill.source_url, messages.skillDetailNotAvailable)
+        value: resolveText(
+          resources?.repo_url ||
+            resources?.source_url ||
+            detail.skill.source_url,
+          messages.skillDetailNotAvailable,
+        ),
       },
       {
         label: messages.skillDetailResourceBranchLabel,
-        value: resolveText(resources?.source_branch, "main")
+        value: resolveText(resources?.source_branch, "main"),
       },
       {
         label: messages.skillDetailResourceFilesLabel,
-        value: formatNumber(resources?.file_count || resources?.files.length || 0)
+        value: formatNumber(
+          resources?.file_count || resources?.files.length || 0,
+        ),
       },
       {
         label: messages.skillDetailResourcePreviewLabel,
-        value: resolveText(resourceContent?.display_name || resources?.files[0]?.display_name, messages.skillDetailNotAvailable),
+        value: resolveText(
+          resourceContent?.display_name || resources?.files[0]?.display_name,
+          messages.skillDetailNotAvailable,
+        ),
         description: resourceContent?.language
           ? `${messages.skillDetailResourcePreviewLanguage}: ${resourceContent.language}`
-          : undefined
-      }
+          : undefined,
+      },
     ],
     versionHighlights:
       versions?.items.slice(0, 4).map((version) => ({
         label: `v${version.version_number} · ${version.trigger}`,
         value: version.risk_level,
-        description: `${version.change_summary} ${messages.skillDetailVersionCapturedPrefix} ${formatDate(version.captured_at, locale)}.`
+        description: `${version.change_summary} ${messages.skillDetailVersionCapturedPrefix} ${formatDate(version.captured_at, locale)}.`,
       })) || [],
-    relatedSkills
+    relatedSkills,
   };
 }

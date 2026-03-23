@@ -1,60 +1,35 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { shouldDisableBatchSkillWarmup } from "@/src/features/public/marketplace/publicSkillWarmupPolicy";
+import {
+  shouldEnableBatchSkillWarmupForEnvironment,
+  shouldEnablePublicSkillViewportWarmupForEnvironment,
+  shouldWarmPublicSkillViewportLinksInDev
+} from "@/src/lib/marketplace/publicSkillWarmupPolicy";
 
 describe("public skill warmup policy", () => {
-  it("disables batch warmup when data saver is enabled", () => {
-    expect(
-      shouldDisableBatchSkillWarmup({
-        connection: {
-          saveData: true
-        }
-      })
-    ).toBe(true);
+  it("keeps batch warmup limited to production", () => {
+    expect(shouldEnableBatchSkillWarmupForEnvironment("production")).toBe(true);
+    expect(shouldEnableBatchSkillWarmupForEnvironment("development")).toBe(false);
   });
 
-  it("disables batch warmup on constrained network types", () => {
-    expect(
-      shouldDisableBatchSkillWarmup({
-        connection: {
-          effectiveType: "2g"
-        }
-      })
-    ).toBe(true);
+  it("keeps viewport skill warmup disabled by default in development", () => {
+    vi.stubEnv("NEXT_PUBLIC_ENABLE_DEV_PUBLIC_SKILL_VIEWPORT_WARMUP", undefined);
 
-    expect(
-      shouldDisableBatchSkillWarmup({
-        connection: {
-          effectiveType: "slow-2g"
-        }
-      })
-    ).toBe(true);
+    expect(shouldWarmPublicSkillViewportLinksInDev()).toBe(false);
+    expect(shouldEnablePublicSkillViewportWarmupForEnvironment("development")).toBe(false);
   });
 
-  it("disables batch warmup on low-memory or low-core devices", () => {
-    expect(
-      shouldDisableBatchSkillWarmup({
-        deviceMemory: 2
-      })
-    ).toBe(true);
+  it("allows viewport skill warmup in development when explicitly enabled", () => {
+    vi.stubEnv("NEXT_PUBLIC_ENABLE_DEV_PUBLIC_SKILL_VIEWPORT_WARMUP", "true");
 
-    expect(
-      shouldDisableBatchSkillWarmup({
-        hardwareConcurrency: 2
-      })
-    ).toBe(true);
+    expect(shouldWarmPublicSkillViewportLinksInDev()).toBe(true);
+    expect(shouldEnablePublicSkillViewportWarmupForEnvironment("development")).toBe(true);
   });
 
-  it("keeps batch warmup enabled on capable devices", () => {
-    expect(
-      shouldDisableBatchSkillWarmup({
-        connection: {
-          effectiveType: "4g",
-          saveData: false
-        },
-        deviceMemory: 8,
-        hardwareConcurrency: 8
-      })
-    ).toBe(false);
+  it("keeps viewport skill warmup enabled outside development", () => {
+    vi.stubEnv("NEXT_PUBLIC_ENABLE_DEV_PUBLIC_SKILL_VIEWPORT_WARMUP", undefined);
+
+    expect(shouldEnablePublicSkillViewportWarmupForEnvironment("production")).toBe(true);
+    expect(shouldEnablePublicSkillViewportWarmupForEnvironment("test")).toBe(true);
   });
 });

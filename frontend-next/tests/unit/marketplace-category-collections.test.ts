@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { buildMarketplaceCategoryCollectionCards } from "@/src/features/public/marketplace/marketplaceCategoryCollections";
 import { buildMarketplaceCategoryHubModel } from "@/src/features/public/marketplace/marketplaceCategoryHubModel";
-import { buildPublicMarketplaceFallback } from "@/src/features/public/publicMarketplaceFallback";
+import { buildPublicMarketplaceFallback } from "@/src/lib/marketplace/fallback";
 import type { PublicMarketplaceMessages } from "@/src/lib/i18n/publicMessages";
 
 const messages = {

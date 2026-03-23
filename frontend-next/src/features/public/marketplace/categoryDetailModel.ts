@@ -1,6 +1,18 @@
 import type { PublicMarketplaceMessages } from "@/src/lib/i18n/publicMessages";
 import type { MarketplaceCategory } from "@/src/lib/schemas/public";
 
+type CategoryDetailControlMessages = Pick<
+  PublicMarketplaceMessages,
+  | "categoryAllSubcategories"
+  | "categoryModeAI"
+  | "categoryModeHybrid"
+  | "categoryModeKeyword"
+  | "categorySortQuality"
+  | "categorySortRecent"
+  | "categorySortRelevance"
+  | "categorySortStars"
+>;
+
 export interface CategoryDetailControlOption {
   value: string;
   label: string;
@@ -33,7 +45,7 @@ function normalizeValue(rawValue: string | undefined, fallback = ""): string {
 
 export function resolveCategoryDetailControlState(
   category: MarketplaceCategory,
-  messages: PublicMarketplaceMessages,
+  messages: CategoryDetailControlMessages,
   input: CategoryDetailControlStateInput
 ): CategoryDetailControlState {
   const activeSubcategory = normalizeValue(input.activeSubcategory);

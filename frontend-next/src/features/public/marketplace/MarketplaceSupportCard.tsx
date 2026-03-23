@@ -7,7 +7,7 @@ import { cn } from "@/src/lib/utils";
 interface MarketplaceSupportCardProps {
   title: string;
   description?: string;
-  children: ReactNode;
+  children?: ReactNode;
   headerAction?: ReactNode;
   className?: string;
   testId?: string;
