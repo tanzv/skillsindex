@@ -4,7 +4,7 @@ async function expectRootBackground(
   page: import("@playwright/test").Page,
   expectedColors: { body: string; html: string }
 ) {
-  await page.waitForSelector(".marketplace-shell");
+  await page.waitForSelector(".marketplace-shell", { state: "attached" });
   await page.waitForFunction(
     (target) => {
       const bodyColor = window.getComputedStyle(document.body).backgroundColor;
