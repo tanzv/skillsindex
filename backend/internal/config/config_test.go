@@ -2,8 +2,83 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 )
+
+func TestLoadReadsDotEnvFromWorkingDirectory(t *testing.T) {
+	tempDir := t.TempDir()
+	envFilePath := filepath.Join(tempDir, ".env")
+	envContent := "APP_ENV=staging\nAPP_PORT=19090\nADMIN_USERNAME=dotenv-admin\n"
+
+	if err := os.WriteFile(envFilePath, []byte(envContent), 0o600); err != nil {
+		t.Fatalf("failed to write env file: %v", err)
+	}
+
+	originalWorkingDirectory, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to capture working directory: %v", err)
+	}
+	if err := os.Chdir(tempDir); err != nil {
+		t.Fatalf("failed to change working directory: %v", err)
+	}
+	t.Cleanup(func() {
+		if chdirErr := os.Chdir(originalWorkingDirectory); chdirErr != nil {
+			t.Fatalf("failed to restore working directory: %v", chdirErr)
+		}
+	})
+
+	if err := os.Unsetenv("APP_ENV"); err != nil {
+		t.Fatalf("failed to unset APP_ENV: %v", err)
+	}
+	if err := os.Unsetenv("APP_PORT"); err != nil {
+		t.Fatalf("failed to unset APP_PORT: %v", err)
+	}
+	if err := os.Unsetenv("ADMIN_USERNAME"); err != nil {
+		t.Fatalf("failed to unset ADMIN_USERNAME: %v", err)
+	}
+
+	cfg := Load()
+	if cfg.AppEnv != "staging" {
+		t.Fatalf("expected APP_ENV from .env, got %q", cfg.AppEnv)
+	}
+	if cfg.ServerPort != "19090" {
+		t.Fatalf("expected APP_PORT from .env, got %q", cfg.ServerPort)
+	}
+	if cfg.AdminUsername != "dotenv-admin" {
+		t.Fatalf("expected ADMIN_USERNAME from .env, got %q", cfg.AdminUsername)
+	}
+}
+
+func TestLoadPrefersProcessEnvironmentOverDotEnv(t *testing.T) {
+	tempDir := t.TempDir()
+	envFilePath := filepath.Join(tempDir, ".env")
+	envContent := "APP_ENV=staging\n"
+
+	if err := os.WriteFile(envFilePath, []byte(envContent), 0o600); err != nil {
+		t.Fatalf("failed to write env file: %v", err)
+	}
+
+	originalWorkingDirectory, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to capture working directory: %v", err)
+	}
+	if err := os.Chdir(tempDir); err != nil {
+		t.Fatalf("failed to change working directory: %v", err)
+	}
+	t.Cleanup(func() {
+		if chdirErr := os.Chdir(originalWorkingDirectory); chdirErr != nil {
+			t.Fatalf("failed to restore working directory: %v", chdirErr)
+		}
+	})
+
+	t.Setenv("APP_ENV", "production")
+
+	cfg := Load()
+	if cfg.AppEnv != "production" {
+		t.Fatalf("expected explicit environment to win, got %q", cfg.AppEnv)
+	}
+}
 
 func TestLoadAllowRegistration(t *testing.T) {
 	t.Setenv("ALLOW_REGISTRATION", "false")

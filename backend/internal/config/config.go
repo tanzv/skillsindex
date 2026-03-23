@@ -1,7 +1,9 @@
 package config
 
 import (
+	"bufio"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -38,6 +40,8 @@ type Config struct {
 
 // Load reads configuration from environment variables.
 func Load() Config {
+	loadDotEnvDefaults()
+
 	cfg := Config{
 		AppEnv:              firstNonEmpty(os.Getenv("APP_ENV"), "development"),
 		ServerPort:          firstNonEmpty(os.Getenv("APP_PORT"), "8080"),
@@ -80,6 +84,59 @@ func firstNonEmpty(values ...string) string {
 		}
 	}
 	return ""
+}
+
+func loadDotEnvDefaults() {
+	for _, candidate := range dotEnvCandidates() {
+		loadDotEnvFile(candidate)
+	}
+}
+
+func dotEnvCandidates() []string {
+	return []string{
+		".env",
+		filepath.Join("..", ".env"),
+	}
+}
+
+func loadDotEnvFile(path string) {
+	file, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		key, value, ok := parseDotEnvLine(line)
+		if !ok || key == "" {
+			continue
+		}
+		if _, exists := os.LookupEnv(key); exists {
+			continue
+		}
+
+		_ = os.Setenv(key, value)
+	}
+}
+
+func parseDotEnvLine(line string) (string, string, bool) {
+	clean := strings.TrimSpace(line)
+	clean = strings.TrimPrefix(clean, "export ")
+	separatorIndex := strings.Index(clean, "=")
+	if separatorIndex <= 0 {
+		return "", "", false
+	}
+
+	key := strings.TrimSpace(clean[:separatorIndex])
+	value := strings.TrimSpace(clean[separatorIndex+1:])
+	value = strings.Trim(value, `"'`)
+	return key, value, true
 }
 
 func parseBoolEnv(raw string, defaultValue bool) bool {
