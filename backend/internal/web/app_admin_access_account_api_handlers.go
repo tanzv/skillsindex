@@ -29,7 +29,7 @@ func (a *App) loadAdminManagedUserTarget(w http.ResponseWriter, r *http.Request)
 		return 0, models.User{}, false
 	}
 
-	target, err := a.authService.GetUserByID(r.Context(), targetUserID)
+	target, err := a.findManagedAccountByID(r.Context(), targetUserID)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]any{"error": "user_not_found"})
 		return 0, models.User{}, false
@@ -87,7 +87,7 @@ func (a *App) handleAPIAdminAccountStatus(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := a.authService.SetUserStatus(r.Context(), targetUserID, status); err != nil {
+	if err := a.updateManagedAccountStatus(r.Context(), targetUserID, status); err != nil {
 		switch {
 		case errors.Is(err, services.ErrLastSuperAdmin):
 			writeJSON(w, http.StatusConflict, map[string]any{"error": "last_super_admin_guard"})
@@ -95,9 +95,6 @@ func (a *App) handleAPIAdminAccountStatus(w http.ResponseWriter, r *http.Request
 			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "update_failed", "message": err.Error()})
 		}
 		return
-	}
-	if status == models.UserStatusDisabled {
-		_ = a.authService.ForceSignOutUser(r.Context(), targetUserID)
 	}
 
 	a.recordAudit(r.Context(), user, services.RecordAuditInput{
@@ -124,7 +121,7 @@ func (a *App) handleAPIAdminAccountForceSignout(w http.ResponseWriter, r *http.R
 	if !ok {
 		return
 	}
-	if err := a.authService.ForceSignOutUser(r.Context(), targetUserID); err != nil {
+	if err := a.forceSignOutManagedAccount(r.Context(), targetUserID); err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "force_signout_failed", "message": err.Error()})
 		return
 	}
@@ -161,11 +158,10 @@ func (a *App) handleAPIAdminAccountPasswordReset(w http.ResponseWriter, r *http.
 	if !ok {
 		return
 	}
-	if err := a.authService.AdminResetPassword(r.Context(), targetUserID, password); err != nil {
+	if err := a.resetManagedAccountPassword(r.Context(), targetUserID, password); err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "reset_failed", "message": err.Error()})
 		return
 	}
-	_ = a.authService.ForceSignOutUser(r.Context(), targetUserID)
 
 	a.recordAudit(r.Context(), user, services.RecordAuditInput{
 		Action:     "api_user_password_reset",

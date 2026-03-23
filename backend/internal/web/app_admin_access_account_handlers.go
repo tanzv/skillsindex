@@ -29,17 +29,19 @@ func (a *App) handleAdminAccountCreate(w http.ResponseWriter, r *http.Request) {
 		redirectAdminPath(w, r, "/admin/accounts/new", "", "Invalid role value")
 		return
 	}
-	createdUser, err := a.authService.Register(r.Context(), r.FormValue("username"), r.FormValue("password"))
+	createdUser, roleAssignmentAttempted, err := a.createManagedAccount(
+		r.Context(),
+		r.FormValue("username"),
+		r.FormValue("password"),
+		role,
+	)
 	if err != nil {
-		redirectAdminPath(w, r, "/admin/accounts/new", "", err.Error())
-		return
-	}
-	if role != models.RoleMember {
-		if err := a.authService.SetUserRole(r.Context(), createdUser.ID, role); err != nil {
+		if roleAssignmentAttempted {
 			redirectAdminPath(w, r, "/admin/accounts/new", "", "Failed to assign role")
 			return
 		}
-		createdUser.Role = role
+		redirectAdminPath(w, r, "/admin/accounts/new", "", err.Error())
+		return
 	}
 
 	a.recordAudit(r.Context(), currentUser, services.RecordAuditInput{
@@ -83,21 +85,18 @@ func (a *App) handleAdminAccountStatusUpdate(w http.ResponseWriter, r *http.Requ
 		redirectAdminPath(w, r, "/admin/accounts", "", "Cannot disable current signed-in account")
 		return
 	}
-	targetUser, err := a.authService.GetUserByID(r.Context(), targetUserID)
+	targetUser, err := a.findManagedAccountByID(r.Context(), targetUserID)
 	if err != nil {
 		redirectAdminPath(w, r, "/admin/accounts", "", "User not found")
 		return
 	}
-	if err := a.authService.SetUserStatus(r.Context(), targetUserID, status); err != nil {
+	if err := a.updateManagedAccountStatus(r.Context(), targetUserID, status); err != nil {
 		if errors.Is(err, services.ErrLastSuperAdmin) {
 			redirectAdminPath(w, r, "/admin/accounts", "", "Cannot disable the last active super admin")
 			return
 		}
 		redirectAdminPath(w, r, "/admin/accounts", "", "Failed to update account status")
 		return
-	}
-	if status == models.UserStatusDisabled {
-		_ = a.authService.ForceSignOutUser(r.Context(), targetUserID)
 	}
 	a.recordAudit(r.Context(), currentUser, services.RecordAuditInput{
 		Action:     "user_update_status",
@@ -126,12 +125,12 @@ func (a *App) handleAdminAccountForceSignout(w http.ResponseWriter, r *http.Requ
 	if !ok {
 		return
 	}
-	targetUser, err := a.authService.GetUserByID(r.Context(), targetUserID)
+	targetUser, err := a.findManagedAccountByID(r.Context(), targetUserID)
 	if err != nil {
 		redirectAdminPath(w, r, "/admin/accounts", "", "User not found")
 		return
 	}
-	if err := a.authService.ForceSignOutUser(r.Context(), targetUserID); err != nil {
+	if err := a.forceSignOutManagedAccount(r.Context(), targetUserID); err != nil {
 		redirectAdminPath(w, r, "/admin/accounts", "", "Failed to force sign-out")
 		return
 	}
@@ -171,16 +170,15 @@ func (a *App) handleAdminAccountPasswordReset(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	targetUser, err := a.authService.GetUserByID(r.Context(), targetUserID)
+	targetUser, err := a.findManagedAccountByID(r.Context(), targetUserID)
 	if err != nil {
 		redirectAdminPath(w, r, "/admin/accounts", "", "User not found")
 		return
 	}
-	if err := a.authService.AdminResetPassword(r.Context(), targetUserID, newPassword); err != nil {
+	if err := a.resetManagedAccountPassword(r.Context(), targetUserID, newPassword); err != nil {
 		redirectAdminPath(w, r, "/admin/accounts", "", "Failed to reset password")
 		return
 	}
-	_ = a.authService.ForceSignOutUser(r.Context(), targetUserID)
 	a.recordAudit(r.Context(), currentUser, services.RecordAuditInput{
 		Action:     "user_password_reset",
 		TargetType: "user",

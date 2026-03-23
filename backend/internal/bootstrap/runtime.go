@@ -110,6 +110,8 @@ func ServerStateInitializationOptions() *StateInitializationOptions {
 	options := defaultStateInitializationOptions()
 	options.SeedData = false
 	options.DefaultAccount = false
+	options.RepositorySyncPolicy = false
+	options.RepositorySyncMirror = false
 	return &options
 }
 
@@ -118,6 +120,8 @@ func APIStateInitializationOptions() *StateInitializationOptions {
 	options := defaultStateInitializationOptions()
 	options.SeedData = false
 	options.DefaultAccount = false
+	options.RepositorySyncPolicy = false
+	options.RepositorySyncMirror = false
 	return &options
 }
 

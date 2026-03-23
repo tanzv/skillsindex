@@ -29,11 +29,6 @@ func (a *App) handleAdminRoleAssign(w http.ResponseWriter, r *http.Request) {
 		redirectAdminPath(w, r, "/admin/roles/new", "", "Invalid user id")
 		return
 	}
-	targetUser, err := a.authService.GetUserByID(r.Context(), uint(userIDValue))
-	if err != nil {
-		redirectAdminPath(w, r, "/admin/roles/new", "", "User not found")
-		return
-	}
 
 	role, ok := parseRoleValue(r.FormValue("role"))
 	if !ok {
@@ -41,7 +36,8 @@ func (a *App) handleAdminRoleAssign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.authService.SetUserRole(r.Context(), targetUser.ID, role); err != nil {
+	targetUser, err := a.updateManagedUserRole(r.Context(), uint(userIDValue), role)
+	if err != nil {
 		switch {
 		case errors.Is(err, services.ErrUserNotFound):
 			redirectAdminPath(w, r, "/admin/roles/new", "", "User not found")
@@ -82,11 +78,6 @@ func (a *App) handleAdminUserRoleUpdate(w http.ResponseWriter, r *http.Request) 
 	if !ok {
 		return
 	}
-	targetUser, err := a.authService.GetUserByID(r.Context(), userID)
-	if err != nil {
-		redirectDashboard(w, r, "", "User not found")
-		return
-	}
 	if err := r.ParseForm(); err != nil {
 		redirectDashboard(w, r, "", "Invalid form payload")
 		return
@@ -97,7 +88,8 @@ func (a *App) handleAdminUserRoleUpdate(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := a.authService.SetUserRole(r.Context(), userID, role); err != nil {
+	targetUser, err := a.updateManagedUserRole(r.Context(), userID, role)
+	if err != nil {
 		switch {
 		case errors.Is(err, services.ErrUserNotFound):
 			redirectDashboard(w, r, "", "User not found")

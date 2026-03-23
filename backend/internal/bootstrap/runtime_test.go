@@ -227,11 +227,11 @@ func TestAPIStateInitializationOptionsDisablesSeedAndDefaultAccount(t *testing.T
 	if !got.RegistrationSetting {
 		t.Fatalf("expected API state initialization to keep RegistrationSetting enabled")
 	}
-	if !got.RepositorySyncPolicy {
-		t.Fatalf("expected API state initialization to keep RepositorySyncPolicy enabled")
+	if got.RepositorySyncPolicy {
+		t.Fatalf("expected API state initialization to disable RepositorySyncPolicy")
 	}
-	if !got.RepositorySyncMirror {
-		t.Fatalf("expected API state initialization to keep RepositorySyncMirror enabled")
+	if got.RepositorySyncMirror {
+		t.Fatalf("expected API state initialization to disable RepositorySyncMirror")
 	}
 }
 
@@ -271,10 +271,10 @@ func TestServerStateInitializationOptionsDisablesSeedAndDefaultAccount(t *testin
 	if !got.RegistrationSetting {
 		t.Fatalf("expected server state initialization to keep RegistrationSetting enabled")
 	}
-	if !got.RepositorySyncPolicy {
-		t.Fatalf("expected server state initialization to keep RepositorySyncPolicy enabled")
+	if got.RepositorySyncPolicy {
+		t.Fatalf("expected server state initialization to disable RepositorySyncPolicy")
 	}
-	if !got.RepositorySyncMirror {
-		t.Fatalf("expected server state initialization to keep RepositorySyncMirror enabled")
+	if got.RepositorySyncMirror {
+		t.Fatalf("expected server state initialization to disable RepositorySyncMirror")
 	}
 }
