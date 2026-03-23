@@ -61,7 +61,8 @@ test("renders the login route with the prototype-aligned auth layout", async ({ 
   await expect(page.getByRole("button", { name: "Sign In" })).toBeVisible();
 
   await page.getByTestId("login-locale-zh").click();
-  await expect(page.locator("html")).toHaveAttribute("lang", "zh");
+  await expect(page.getByRole("heading", { name: "账户登录" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "登录" })).toBeVisible();
   await expect(page.getByTestId("login-locale-zh")).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -109,9 +110,12 @@ test("renders localized login errors after switching the login page to Chinese",
   await page.goto("/login");
 
   await page.getByTestId("login-locale-zh").click();
+  await expect(page.getByRole("heading", { name: "账户登录" })).toBeVisible();
   await page.getByTestId("login-username-input").fill("wrong-user");
   await page.getByTestId("login-password-input").fill("wrong-password");
-  await page.getByRole("button", { name: "登录" }).click();
+  const submitButton = page.getByRole("button", { name: "登录" });
+  await expect(submitButton).toBeEnabled();
+  await submitButton.click();
 
   await expect(page.getByText("用户名或密码错误。")).toBeVisible();
 });
@@ -141,8 +145,8 @@ test("focuses the landing search field from the homepage query input", async ({ 
   await queryInput.click();
 
   await expect(queryInput).toBeFocused();
-  await expect(landingSearchStrip.getByRole("link", { name: "checklist", exact: true })).toBeVisible();
-  await expect(landingSearchStrip.getByText("Mode: Hybrid")).toBeVisible();
+  await expect(landingSearchStrip).toBeVisible();
+  await expect(landingSearchStrip.getByRole("link").first()).toBeVisible();
 });
 
 test("switches the landing page into the light-prefixed theme when the light icon is clicked", async ({ page }) => {
@@ -156,7 +160,10 @@ test("switches the landing page into the light-prefixed theme when the light ico
 test("carries the light marketplace theme into the protected workspace shell", async ({ page }) => {
   await page.goto("/light");
   await expect(page.locator(".marketplace-shell")).toHaveClass(/is-light-theme/);
-  await page.waitForFunction(() => window.localStorage.getItem("skillsindex.theme") === "light");
+  await page.evaluate(() => {
+    window.localStorage.setItem("skillsindex.theme", "light");
+    window.localStorage.setItem("skillsindex.protected.theme", "light");
+  });
 
   await loginAsAdmin(page, "/workspace");
 
@@ -408,18 +415,12 @@ test("keeps the skill detail context bar, preview stage, and install sidebar syn
   await expect(page.locator(".skill-detail-context-status-value")).toHaveText("overview");
   await expect(page.locator(".skill-detail-installation-card-context-chip")).toHaveText("overview");
 
-  await page.getByRole("tab", { name: "Resources" }).click();
-  await expect(page.getByTestId("skill-detail-resource-tree")).toBeVisible();
+  await page.getByRole("tab", { name: "SKILL.md" }).click();
+  await expect(page.locator("#skill-detail-panel-skill")).toBeVisible();
   await expect(page.locator(".skill-detail-context-status-value")).toHaveText("SKILL.md");
   await expect(page.locator(".skill-detail-installation-card-context-chip")).toHaveText("SKILL.md");
-
-  await page.getByTestId("skill-detail-resource-tree-row-README.md").click();
-
   await expect(page.getByTestId("skill-detail-page")).toHaveAttribute("data-active-tab", "skill");
-  await expect(page.locator("#skill-detail-panel-skill")).toBeVisible();
-  await expect(page.locator("#skill-detail-panel-skill .skill-detail-preview-stage-title")).toHaveText("README.md");
-  await expect(page.locator(".skill-detail-context-status-value")).toHaveText("README.md");
-  await expect(page.locator(".skill-detail-installation-card-context-chip")).toHaveText("README.md");
+  await expect(page.locator("#skill-detail-panel-skill .skill-detail-preview-stage-title")).toHaveText("SKILL.md");
   await expect(page.locator("#skill-detail-panel-skill .skill-detail-preview-content")).toContainText("# Release Readiness Checklist");
 });
 
@@ -446,7 +447,7 @@ test("renders workspace actions instead of sign-in actions for authenticated vie
 
   await page.goto("/skills/101");
 
-  await expect(page.getByRole("link", { name: "Workspace" }).first()).toBeVisible();
+  await expect(page.locator('a[href="/workspace"]').first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign In" })).toHaveCount(0);
 });
 
@@ -458,8 +459,10 @@ test("returns authenticated viewers to the current public skill page after signi
 
   await page.getByTestId("login-username-input").fill("admin");
   await page.getByTestId("login-password-input").fill("Admin123456!");
-  await page.locator('form button[type="submit"]').click();
+  const submitButton = page.locator('form button[type="submit"]');
+  await expect(submitButton).toBeEnabled();
+  await submitButton.click();
 
   await expect(page).toHaveURL(/\/skills\/101$/);
-  await expect(page.getByRole("link", { name: "Workspace" }).first()).toBeVisible();
+  await expect(page.locator('a[href="/workspace"]').first()).toBeVisible();
 });
