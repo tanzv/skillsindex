@@ -105,6 +105,14 @@ func resolveStateInitializationOptions(options *StateInitializationOptions) Stat
 	return *options
 }
 
+// ServerStateInitializationOptions returns the startup state policy for the web server command.
+func ServerStateInitializationOptions() *StateInitializationOptions {
+	options := defaultStateInitializationOptions()
+	options.SeedData = false
+	options.DefaultAccount = false
+	return &options
+}
+
 // APIStateInitializationOptions returns the startup state policy for the API-only command.
 func APIStateInitializationOptions() *StateInitializationOptions {
 	options := defaultStateInitializationOptions()

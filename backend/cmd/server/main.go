@@ -18,6 +18,7 @@ func main() {
 	if err := bootstrap.RunAPIServer(ctx, cfg, bootstrap.RunOptions{
 		StartupLabel: "SkillsIndex is listening at",
 		ForceAPIOnly: false,
+		StateInit:    bootstrap.ServerStateInitializationOptions(),
 	}); err != nil {
 		log.Fatalf("%v", err)
 	}

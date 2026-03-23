@@ -256,3 +256,25 @@ func TestBootstrapStateInitializationOptionsEnablesAll(t *testing.T) {
 		t.Fatalf("expected bootstrap state initialization to enable RepositorySyncMirror")
 	}
 }
+
+func TestServerStateInitializationOptionsDisablesSeedAndDefaultAccount(t *testing.T) {
+	got := ServerStateInitializationOptions()
+	if got == nil {
+		t.Fatalf("expected server state initialization options")
+	}
+	if got.SeedData {
+		t.Fatalf("expected server state initialization to disable SeedData")
+	}
+	if got.DefaultAccount {
+		t.Fatalf("expected server state initialization to disable DefaultAccount")
+	}
+	if !got.RegistrationSetting {
+		t.Fatalf("expected server state initialization to keep RegistrationSetting enabled")
+	}
+	if !got.RepositorySyncPolicy {
+		t.Fatalf("expected server state initialization to keep RepositorySyncPolicy enabled")
+	}
+	if !got.RepositorySyncMirror {
+		t.Fatalf("expected server state initialization to keep RepositorySyncMirror enabled")
+	}
+}
