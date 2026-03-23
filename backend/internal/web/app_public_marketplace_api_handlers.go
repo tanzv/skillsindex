@@ -95,6 +95,7 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 		totalItems = int64(len(filteredSkills))
 		currentPage = 1
 		currentPageSize = maxInt(len(filteredSkills), 1)
+		topTags = buildTopTags(filteredSkills, 12)
 	} else if mode == "ai" && query != "" {
 		semanticItems, err := a.skillService.AISemanticSearchPublicSkills(r.Context(), query, 48)
 		if err != nil {
