@@ -133,5 +133,10 @@ test("keeps marketplace topbars and shells within compact gutters on large scree
 test("exposes a shared marketplace favicon on public routes", async ({ page }) => {
   await page.goto("/categories");
 
-  await expect(page.locator("head link[rel='icon']")).toHaveAttribute("href", /icon/);
+  const iconHrefs = await page.locator("head link[rel='icon']").evaluateAll((links) =>
+    links.map((link) => link.getAttribute("href") || "")
+  );
+
+  expect(iconHrefs.some((href) => href.includes("skillsindex-tab"))).toBe(true);
+  expect(iconHrefs.some((href) => href.includes("icon.svg"))).toBe(true);
 });

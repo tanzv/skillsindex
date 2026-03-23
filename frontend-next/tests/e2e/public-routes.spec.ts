@@ -88,26 +88,21 @@ test("renders explicit and implicit system status pages", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Back to Marketplace" })).toBeVisible();
 });
 
-test("renders the global error boundary for a diagnostic runtime fault", async ({ page }) => {
+test("keeps private diagnostic runtime routes out of the public router", async ({ page }) => {
   await page.goto("/__diagnostics/runtime-error");
 
   await expect(page.getByTestId("system-status-page")).toBeVisible();
-  await expect(page.getByTestId("system-status-code")).toHaveText("500");
-  await expect(page.getByRole("heading", { name: "Unexpected Application Error" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Try Again" })).toBeVisible();
+  await expect(page.getByTestId("system-status-code")).toHaveText("404");
+  await expect(page.getByRole("heading", { name: "Page Not Found" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to Marketplace" })).toBeVisible();
-  await expect(page.getByText(/^Error digest:/)).toBeVisible();
 });
 
-test("renders the shared loading transition before a delayed diagnostic route settles", async ({ page }) => {
-  const navigation = page.goto("/__diagnostics/slow");
+test("keeps private diagnostic slow routes out of the public router", async ({ page }) => {
+  await page.goto("/__diagnostics/slow");
 
-  await expect(page.getByTestId("system-status-loading-page")).toBeVisible();
-
-  await navigation;
-
-  await expect(page.getByTestId("diagnostic-slow-page")).toBeVisible();
-  await expect(page.getByText("Diagnostic content ready.")).toBeVisible();
+  await expect(page.getByTestId("system-status-page")).toBeVisible();
+  await expect(page.getByTestId("system-status-code")).toHaveText("404");
+  await expect(page.getByRole("heading", { name: "Page Not Found" })).toBeVisible();
 });
 
 test("renders localized login errors after switching the login page to Chinese", async ({ page }) => {
@@ -138,13 +133,16 @@ test("renders the light-prefixed marketplace landing route with the light shell 
   await expect(page.getByTestId("landing-featured-grid").locator(".marketplace-home-deck-card").first()).toBeVisible();
 });
 
-test("opens the landing search overlay from the read-only homepage query input", async ({ page }) => {
+test("focuses the landing search field from the homepage query input", async ({ page }) => {
   await page.goto("/");
 
-  await page.locator(".marketplace-home-search-shell .marketplace-search-input.is-query input").click();
-  await expect(page.getByRole("dialog", { name: "Search Results" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Recent searches" })).toBeVisible();
-  await expect(page.getByText("History appears here after you submit a query.")).toBeVisible();
+  const queryInput = page.locator(".marketplace-home-search-shell .marketplace-search-input.is-query input");
+  const landingSearchStrip = page.getByTestId("landing-search-strip");
+  await queryInput.click();
+
+  await expect(queryInput).toBeFocused();
+  await expect(landingSearchStrip.getByRole("link", { name: "checklist", exact: true })).toBeVisible();
+  await expect(landingSearchStrip.getByText("Mode: Hybrid")).toBeVisible();
 });
 
 test("switches the landing page into the light-prefixed theme when the light icon is clicked", async ({ page }) => {
@@ -158,6 +156,7 @@ test("switches the landing page into the light-prefixed theme when the light ico
 test("carries the light marketplace theme into the protected workspace shell", async ({ page }) => {
   await page.goto("/light");
   await expect(page.locator(".marketplace-shell")).toHaveClass(/is-light-theme/);
+  await page.waitForFunction(() => window.localStorage.getItem("skillsindex.theme") === "light");
 
   await loginAsAdmin(page, "/workspace");
 
@@ -410,7 +409,7 @@ test("keeps the skill detail context bar, preview stage, and install sidebar syn
   await expect(page.locator(".skill-detail-installation-card-context-chip")).toHaveText("overview");
 
   await page.getByRole("tab", { name: "Resources" }).click();
-  await expect(page.locator("#skill-detail-panel-resources")).toBeVisible();
+  await expect(page.getByTestId("skill-detail-resource-tree")).toBeVisible();
   await expect(page.locator(".skill-detail-context-status-value")).toHaveText("SKILL.md");
   await expect(page.locator(".skill-detail-installation-card-context-chip")).toHaveText("SKILL.md");
 
