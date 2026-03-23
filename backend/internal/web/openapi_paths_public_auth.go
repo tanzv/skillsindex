@@ -14,10 +14,11 @@ func openAPIPathsPublicAuth() map[string]any {
 					queryParam("subcategory", "string", false, "Subcategory slug"),
 					queryParam("category_group", "string", false, "Presentation taxonomy category slug"),
 					queryParam("subcategory_group", "string", false, "Presentation taxonomy subcategory slug"),
+					queryParam("scope", "string", false, "Optional route scope: category_hub|category_detail"),
 					queryParam("sort", "string", false, "Sort field: recent|stars|quality"),
 					queryParam("mode", "string", false, "Search mode: keyword|ai"),
 					queryParam("page", "integer", false, "Page number"),
-					queryParam("page_size", "integer", false, "Page size, max 24"),
+					queryParam("page_size", "integer", false, "Page size, max 24 unless one unpaginated category scope is requested"),
 				},
 				"responses": map[string]any{
 					"200": jsonResponse("Public marketplace payload", "PublicMarketplaceResponse"),

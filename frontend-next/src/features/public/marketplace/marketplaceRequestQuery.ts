@@ -36,7 +36,9 @@ export function buildCategoryHubMarketplaceRequestQuery(
   searchParams: MarketplaceRouteSearchParams
 ): Record<string, string> {
   void searchParams;
-  return {};
+  return {
+    scope: "category_hub"
+  };
 }
 
 export function buildRankingMarketplaceRequestQuery(
@@ -71,6 +73,7 @@ export function buildCategoryDetailMarketplaceRequestQuery(
     delete requestQuery.subcategory;
 
     return {
+      scope: "category_detail",
       ...requestQuery,
       category_group: normalizedSlug,
       ...(normalizedSubcategory ? { subcategory_group: normalizedSubcategory } : {})
@@ -78,6 +81,7 @@ export function buildCategoryDetailMarketplaceRequestQuery(
   }
 
   return {
+    scope: "category_detail",
     ...requestQuery,
     category: normalizedSlug
   };

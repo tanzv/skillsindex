@@ -98,6 +98,7 @@ func openAPISchemasCoreCatalogAndAuth() map[string]any {
 			"properties": map[string]any{
 				"q":                 map[string]any{"type": "string"},
 				"tags":              map[string]any{"type": "string"},
+				"scope":             map[string]any{"type": "string"},
 				"category":          map[string]any{"type": "string"},
 				"subcategory":       map[string]any{"type": "string"},
 				"category_group":    map[string]any{"type": "string"},

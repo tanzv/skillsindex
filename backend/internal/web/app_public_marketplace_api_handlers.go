@@ -27,13 +27,15 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 	subcategory := strings.TrimSpace(r.URL.Query().Get("subcategory"))
 	categoryGroup := strings.TrimSpace(r.URL.Query().Get("category_group"))
 	subcategoryGroup := strings.TrimSpace(r.URL.Query().Get("subcategory_group"))
+	scope := normalizeMarketplaceScope(r.URL.Query().Get("scope"))
 	sortBy := normalizeMarketplaceSort(r.URL.Query().Get("sort"))
 	mode := normalizeMarketplaceMode(r.URL.Query().Get("mode"))
 	page := parsePositiveInt(r.URL.Query().Get("page"), 1)
 	pageSize := parsePositiveInt(r.URL.Query().Get("page_size"), 24)
-	if pageSize > 24 {
+	if pageSize > 24 && !isUnpaginatedMarketplaceScope(scope) {
 		pageSize = 24
 	}
+	tags := services.ParseTagInput(tagFilter)
 
 	totalSkills, err := a.skillService.CountPublicSkills(r.Context())
 	if err != nil {
@@ -69,7 +71,31 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 		currentPageSize = pageSize
 	)
 
-	if mode == "ai" && query != "" {
+	if isUnpaginatedMarketplaceScope(scope) {
+		allSkills, err := a.skillService.ListPublicSkills(r.Context())
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]any{
+				"error":   "search_failed",
+				"message": "Failed to query marketplace skills",
+			})
+			return
+		}
+
+		filteredSkills := filterMarketplaceSkillsByKeywordAndTags(allSkills, query, tags)
+		filteredSkills = filterSkillsByMarketplaceSelection(
+			filteredSkills,
+			category,
+			subcategory,
+			categoryGroup,
+			subcategoryGroup,
+		)
+		sortMarketplaceSkillsInPlace(filteredSkills, sortBy)
+
+		items = filteredSkills
+		totalItems = int64(len(filteredSkills))
+		currentPage = 1
+		currentPageSize = maxInt(len(filteredSkills), 1)
+	} else if mode == "ai" && query != "" {
 		semanticItems, err := a.skillService.AISemanticSearchPublicSkills(r.Context(), query, 48)
 		if err != nil {
 			writeJSON(w, http.StatusInternalServerError, map[string]any{
@@ -114,7 +140,7 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 	} else {
 		result, err := a.skillService.SearchPublicSkills(r.Context(), services.PublicSearchInput{
 			Query:           query,
-			Tags:            services.ParseTagInput(tagFilter),
+			Tags:            tags,
 			CategorySlug:    category,
 			SubcategorySlug: subcategory,
 			SortBy:          sortBy,
@@ -176,6 +202,7 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 		"filters": map[string]any{
 			"q":                 query,
 			"tags":              tagFilter,
+			"scope":             scope,
 			"category":          category,
 			"subcategory":       subcategory,
 			"category_group":    categoryGroup,

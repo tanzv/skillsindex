@@ -252,6 +252,26 @@ func normalizeMarketplaceMode(raw string) string {
 	}
 }
 
+func normalizeMarketplaceScope(raw string) string {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "category_hub":
+		return "category_hub"
+	case "category_detail":
+		return "category_detail"
+	default:
+		return ""
+	}
+}
+
+func isUnpaginatedMarketplaceScope(scope string) bool {
+	switch normalizeMarketplaceScope(scope) {
+	case "category_hub", "category_detail":
+		return true
+	default:
+		return false
+	}
+}
+
 func buildMarketplaceFilterOptionValues(values ...string) []map[string]string {
 	options := make([]map[string]string, 0, len(values))
 	for _, value := range values {
