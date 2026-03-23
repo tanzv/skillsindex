@@ -10,15 +10,15 @@ import (
 )
 
 type apiAdminSpecItem struct {
-	ID              uint               `json:"id"`
-	Name            string             `json:"name"`
-	Slug            string             `json:"slug"`
-	SourceType      string             `json:"source_type"`
+	ID              uint                 `json:"id"`
+	Name            string               `json:"name"`
+	Slug            string               `json:"slug"`
+	SourceType      string               `json:"source_type"`
 	Status          models.APISpecStatus `json:"status"`
-	SemanticVersion string             `json:"semantic_version"`
-	IsCurrent       bool               `json:"is_current"`
-	SourcePath      string             `json:"source_path"`
-	BundlePath      string             `json:"bundle_path"`
+	SemanticVersion string               `json:"semantic_version"`
+	IsCurrent       bool                 `json:"is_current"`
+	SourcePath      string               `json:"source_path"`
+	BundlePath      string               `json:"bundle_path"`
 }
 
 func (a *App) handleAPIAdminCurrentSpec(w http.ResponseWriter, r *http.Request) {

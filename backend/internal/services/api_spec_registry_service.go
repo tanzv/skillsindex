@@ -14,8 +14,8 @@ import (
 	"skillsindex/internal/models"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"gorm.io/gorm"
 	"gopkg.in/yaml.v3"
+	"gorm.io/gorm"
 )
 
 var (
