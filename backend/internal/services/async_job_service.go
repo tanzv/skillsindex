@@ -30,6 +30,7 @@ type CreateAsyncJobInput struct {
 	OwnerUserID   *uint
 	ActorUserID   *uint
 	TargetSkillID *uint
+	SyncRunID     *uint
 	MaxAttempts   int
 	PayloadDigest string
 }
@@ -64,6 +65,7 @@ func (s *AsyncJobService) CreateOrGetActive(
 			Preload("OwnerUser").
 			Preload("ActorUser").
 			Preload("CanceledByUser").
+			Preload("SyncRun").
 			Where("payload_digest = ?", payloadDigest).
 			Where("status IN ?", []models.AsyncJobStatus{models.AsyncJobStatusPending, models.AsyncJobStatusRunning}).
 			Order("id DESC").
@@ -82,6 +84,7 @@ func (s *AsyncJobService) CreateOrGetActive(
 		OwnerUserID:   input.OwnerUserID,
 		ActorUserID:   input.ActorUserID,
 		TargetSkillID: input.TargetSkillID,
+		SyncRunID:     input.SyncRunID,
 		Attempt:       1,
 		MaxAttempts:   maxAttempts,
 		PayloadDigest: payloadDigest,
@@ -122,6 +125,7 @@ func (s *AsyncJobService) List(ctx context.Context, input ListAsyncJobsInput) ([
 		Preload("OwnerUser").
 		Preload("ActorUser").
 		Preload("CanceledByUser").
+		Preload("SyncRun").
 		Order("created_at DESC").
 		Order("id DESC").
 		Limit(limit).
@@ -141,6 +145,7 @@ func (s *AsyncJobService) GetByID(ctx context.Context, jobID uint) (models.Async
 		Preload("OwnerUser").
 		Preload("ActorUser").
 		Preload("CanceledByUser").
+		Preload("SyncRun").
 		First(&item, jobID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return models.AsyncJob{}, ErrAsyncJobNotFound
@@ -149,6 +154,20 @@ func (s *AsyncJobService) GetByID(ctx context.Context, jobID uint) (models.Async
 		return models.AsyncJob{}, fmt.Errorf("failed to load async job: %w", err)
 	}
 	return item, nil
+}
+
+// AttachSyncRun associates one async job with one sync run.
+func (s *AsyncJobService) AttachSyncRun(ctx context.Context, jobID uint, runID uint) (models.AsyncJob, error) {
+	if jobID == 0 || runID == 0 {
+		return models.AsyncJob{}, ErrAsyncJobNotFound
+	}
+	if _, err := s.GetByID(ctx, jobID); err != nil {
+		return models.AsyncJob{}, err
+	}
+	if err := s.db.WithContext(ctx).Model(&models.AsyncJob{}).Where("id = ?", jobID).Update("sync_run_id", runID).Error; err != nil {
+		return models.AsyncJob{}, fmt.Errorf("failed to attach sync run to async job: %w", err)
+	}
+	return s.GetByID(ctx, jobID)
 }
 
 // Start transitions one job from pending to running.

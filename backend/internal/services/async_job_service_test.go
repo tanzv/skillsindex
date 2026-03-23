@@ -20,7 +20,7 @@ func setupAsyncJobServiceTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("failed to open db: %v", err)
 	}
-	if err := db.AutoMigrate(&models.User{}, &models.AsyncJob{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.SyncJobRun{}, &models.AsyncJob{}); err != nil {
 		t.Fatalf("failed to migrate async job models: %v", err)
 	}
 	return db
@@ -192,5 +192,69 @@ func TestAsyncJobServiceGetByIDNotFound(t *testing.T) {
 	_, err := svc.GetByID(context.Background(), 999)
 	if !errors.Is(err, ErrAsyncJobNotFound) {
 		t.Fatalf("expected ErrAsyncJobNotFound, got=%v", err)
+	}
+}
+
+func TestAsyncJobServiceCreatePersistsSyncRunReference(t *testing.T) {
+	db := setupAsyncJobServiceTestDB(t)
+	svc := NewAsyncJobService(db)
+
+	run := models.SyncJobRun{
+		Trigger:     "manual",
+		TriggerType: "manual",
+		Scope:       "all",
+		Status:      "pending",
+		StartedAt:   time.Now().UTC(),
+		FinishedAt:  time.Now().UTC(),
+	}
+	if err := db.Create(&run).Error; err != nil {
+		t.Fatalf("failed to create sync run: %v", err)
+	}
+
+	created, _, err := svc.CreateOrGetActive(context.Background(), CreateAsyncJobInput{
+		JobType:       models.AsyncJobTypeSyncRepository,
+		SyncRunID:     &run.ID,
+		MaxAttempts:   3,
+		PayloadDigest: "digest-run-link-1",
+	}, time.Now().UTC())
+	if err != nil {
+		t.Fatalf("failed to create async job: %v", err)
+	}
+	if created.SyncRunID == nil || *created.SyncRunID != run.ID {
+		t.Fatalf("expected sync run id to be persisted")
+	}
+}
+
+func TestAsyncJobServiceAttachSyncRun(t *testing.T) {
+	db := setupAsyncJobServiceTestDB(t)
+	svc := NewAsyncJobService(db)
+
+	run := models.SyncJobRun{
+		Trigger:     "manual",
+		TriggerType: "manual",
+		Scope:       "all",
+		Status:      SyncRunStatusRunning,
+		StartedAt:   time.Now().UTC(),
+		FinishedAt:  time.Now().UTC(),
+	}
+	if err := db.Create(&run).Error; err != nil {
+		t.Fatalf("failed to create sync run: %v", err)
+	}
+
+	created, _, err := svc.CreateOrGetActive(context.Background(), CreateAsyncJobInput{
+		JobType:       models.AsyncJobTypeSyncRepository,
+		MaxAttempts:   3,
+		PayloadDigest: "digest-attach-run-1",
+	}, time.Now().UTC())
+	if err != nil {
+		t.Fatalf("failed to create async job: %v", err)
+	}
+
+	attached, err := svc.AttachSyncRun(context.Background(), created.ID, run.ID)
+	if err != nil {
+		t.Fatalf("failed to attach sync run: %v", err)
+	}
+	if attached.SyncRunID == nil || *attached.SyncRunID != run.ID {
+		t.Fatalf("expected attached sync run id to be persisted")
 	}
 }

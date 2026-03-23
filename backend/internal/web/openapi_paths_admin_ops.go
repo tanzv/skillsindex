@@ -74,7 +74,9 @@ func openAPIPathsAdminOpsDashboard() map[string]any {
 				},
 				"responses": map[string]any{
 					"200": jsonResponse("Async job records", "AsyncJobsResponse"),
+					"400": jsonResponse("Invalid owner filter", "ErrorResponse"),
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
+					"500": jsonResponse("Job query failed", "ErrorResponse"),
 					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
@@ -94,6 +96,7 @@ func openAPIPathsAdminOpsDashboard() map[string]any {
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
 					"403": jsonResponse("Permission denied", "ErrorResponse"),
 					"404": jsonResponse("Job not found", "ErrorResponse"),
+					"500": jsonResponse("Job query failed", "ErrorResponse"),
 					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
@@ -113,6 +116,7 @@ func openAPIPathsAdminOpsDashboard() map[string]any {
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
 					"403": jsonResponse("Permission denied", "ErrorResponse"),
 					"404": jsonResponse("Job not found", "ErrorResponse"),
+					"500": jsonResponse("Retry failed", "ErrorResponse"),
 					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
@@ -132,6 +136,7 @@ func openAPIPathsAdminOpsDashboard() map[string]any {
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
 					"403": jsonResponse("Permission denied", "ErrorResponse"),
 					"404": jsonResponse("Job not found", "ErrorResponse"),
+					"500": jsonResponse("Cancel failed", "ErrorResponse"),
 					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
@@ -142,13 +147,12 @@ func openAPIPathsAdminOpsDashboard() map[string]any {
 				"summary":     "List sync run records",
 				"description": "Session endpoint to query repository synchronization run history.",
 				"security":    sessionSecurity(),
-				"parameters": []map[string]any{
-					queryParam("owner_id", "integer", false, "Owner user id filter"),
-					queryParam("limit", "integer", false, "Maximum run records"),
-				},
+				"parameters":  openAPISyncRunListQueryParams(),
 				"responses": map[string]any{
 					"200": jsonResponse("Sync run records", "SyncJobsResponse"),
+					"400": jsonResponse("Invalid query filter", "ErrorResponse"),
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
 		},
@@ -163,9 +167,11 @@ func openAPIPathsAdminOpsDashboard() map[string]any {
 				},
 				"responses": map[string]any{
 					"200": jsonResponse("Sync run detail", "SyncJobDetailResponse"),
+					"400": jsonResponse("Invalid run id", "ErrorResponse"),
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
 					"403": jsonResponse("Permission denied", "ErrorResponse"),
 					"404": jsonResponse("Sync run not found", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
 		},
@@ -175,13 +181,12 @@ func openAPIPathsAdminOpsDashboard() map[string]any {
 				"summary":     "List sync run records (alias)",
 				"description": "Compatibility alias of /api/v1/admin/sync-jobs for querying synchronization run history.",
 				"security":    sessionSecurity(),
-				"parameters": []map[string]any{
-					queryParam("owner_id", "integer", false, "Owner user id filter"),
-					queryParam("limit", "integer", false, "Maximum run records"),
-				},
+				"parameters":  openAPISyncRunListQueryParams(),
 				"responses": map[string]any{
 					"200": jsonResponse("Sync run records", "SyncJobsResponse"),
+					"400": jsonResponse("Invalid query filter", "ErrorResponse"),
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
 		},
@@ -196,9 +201,11 @@ func openAPIPathsAdminOpsDashboard() map[string]any {
 				},
 				"responses": map[string]any{
 					"200": jsonResponse("Sync run detail", "SyncJobDetailResponse"),
+					"400": jsonResponse("Invalid run id", "ErrorResponse"),
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
 					"403": jsonResponse("Permission denied", "ErrorResponse"),
 					"404": jsonResponse("Sync run not found", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
 		},
@@ -330,5 +337,31 @@ func openAPIPathsAdminOpsDashboard() map[string]any {
 				},
 			},
 		},
+	}
+}
+
+func openAPISyncRunListQueryParams() []map[string]any {
+	params := []map[string]any{
+		queryParam("owner_id", "integer", false, "Owner user id filter"),
+		queryParam("target_skill_id", "integer", false, "Target skill id filter"),
+	}
+	return append(params, openAPISharedSyncRunListQueryParams()...)
+}
+
+func openAPISkillSyncRunListQueryParams() []map[string]any {
+	params := []map[string]any{
+		pathParam("skillID", "Skill ID"),
+	}
+	return append(params, openAPISharedSyncRunListQueryParams()...)
+}
+
+func openAPISharedSyncRunListQueryParams() []map[string]any {
+	return []map[string]any{
+		queryParam("policy_id", "integer", false, "Sync policy id filter"),
+		queryParam("job_id", "integer", false, "Async job id filter"),
+		queryParam("status", "string", false, "Run status filter"),
+		queryParam("trigger_type", "string", false, "Run trigger type filter"),
+		queryParam("include_errored", "boolean", false, "Include runs with error code or summary"),
+		queryParam("limit", "integer", false, "Maximum run records"),
 	}
 }

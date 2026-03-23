@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"skillsindex/internal/models"
 
@@ -33,6 +34,15 @@ type RecordAuditInput struct {
 type ListAuditInput struct {
 	ActorUserID uint
 	Limit       int
+}
+
+// ListAuditByTargetInput contains filters for querying logs by one target.
+type ListAuditByTargetInput struct {
+	TargetType    string
+	TargetID      uint
+	CreatedAfter  *time.Time
+	CreatedBefore *time.Time
+	Limit         int
 }
 
 // NewAuditService creates a new audit service.
@@ -119,6 +129,42 @@ func (s *AuditService) ListRecent(ctx context.Context, input ListAuditInput) ([]
 		Limit(limit).
 		Find(&logs).Error; err != nil {
 		return nil, fmt.Errorf("failed to list audit logs: %w", err)
+	}
+	return logs, nil
+}
+
+// ListByTarget returns recent audit logs for one specific target.
+func (s *AuditService) ListByTarget(ctx context.Context, input ListAuditByTargetInput) ([]models.AuditLog, error) {
+	targetType := strings.TrimSpace(strings.ToLower(input.TargetType))
+	if targetType == "" {
+		return nil, fmt.Errorf("audit target type is required")
+	}
+	if input.TargetID == 0 {
+		return nil, fmt.Errorf("audit target id is required")
+	}
+
+	limit := input.Limit
+	if limit <= 0 || limit > 200 {
+		limit = 20
+	}
+
+	var logs []models.AuditLog
+	query := s.db.WithContext(ctx).
+		Model(&models.AuditLog{}).
+		Where("target_type = ? AND target_id = ?", targetType, input.TargetID)
+	if input.CreatedAfter != nil {
+		query = query.Where("created_at >= ?", input.CreatedAfter.UTC())
+	}
+	if input.CreatedBefore != nil {
+		query = query.Where("created_at <= ?", input.CreatedBefore.UTC())
+	}
+	if err := query.
+		Preload("ActorUser").
+		Order("created_at DESC").
+		Order("id DESC").
+		Limit(limit).
+		Find(&logs).Error; err != nil {
+		return nil, fmt.Errorf("failed to list audit logs by target: %w", err)
 	}
 	return logs, nil
 }

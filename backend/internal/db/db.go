@@ -40,6 +40,7 @@ func Migrate(database *gorm.DB) error {
 		&models.IntegrationConnector{},
 		&models.WebhookDeliveryLog{},
 		&models.Incident{},
+		&models.SyncPolicy{},
 		&models.AsyncJob{},
 		&models.SyncJobRun{},
 		&models.SkillVersion{},

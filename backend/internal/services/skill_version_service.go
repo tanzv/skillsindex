@@ -79,7 +79,18 @@ func (s *SkillVersionService) Capture(
 	trigger string,
 	actorUserID *uint,
 ) error {
-	return s.captureWithDB(ctx, s.db.WithContext(ctx), skillID, trigger, actorUserID)
+	return s.captureWithDB(ctx, s.db.WithContext(ctx), skillID, trigger, actorUserID, nil)
+}
+
+// CaptureWithRunContext creates a new version snapshot linked to one sync run.
+func (s *SkillVersionService) CaptureWithRunContext(
+	ctx context.Context,
+	skillID uint,
+	trigger string,
+	actorUserID *uint,
+	runID *uint,
+) error {
+	return s.captureWithDB(ctx, s.db.WithContext(ctx), skillID, trigger, actorUserID, runID)
 }
 
 // CaptureWithTx creates a new version snapshot with provided transaction.
@@ -93,7 +104,22 @@ func (s *SkillVersionService) CaptureWithTx(
 	if tx == nil {
 		tx = s.db.WithContext(ctx)
 	}
-	return s.captureWithDB(ctx, tx.WithContext(ctx), skillID, trigger, actorUserID)
+	return s.captureWithDB(ctx, tx.WithContext(ctx), skillID, trigger, actorUserID, nil)
+}
+
+// CaptureWithTxAndRunContext creates a version snapshot with transaction and run linkage.
+func (s *SkillVersionService) CaptureWithTxAndRunContext(
+	ctx context.Context,
+	tx *gorm.DB,
+	skillID uint,
+	trigger string,
+	actorUserID *uint,
+	runID *uint,
+) error {
+	if tx == nil {
+		tx = s.db.WithContext(ctx)
+	}
+	return s.captureWithDB(ctx, tx.WithContext(ctx), skillID, trigger, actorUserID, runID)
 }
 
 func (s *SkillVersionService) captureWithDB(
@@ -102,6 +128,7 @@ func (s *SkillVersionService) captureWithDB(
 	skillID uint,
 	trigger string,
 	actorUserID *uint,
+	runID *uint,
 ) error {
 	if skillID == 0 {
 		return fmt.Errorf("skill id is required")
@@ -156,6 +183,7 @@ func (s *SkillVersionService) captureWithDB(
 		OwnerID:         skill.OwnerID,
 		VersionNumber:   currentMax + 1,
 		Trigger:         normalizeVersionTrigger(trigger),
+		RunID:           runID,
 		ActorUserID:     actorUserID,
 		Name:            skill.Name,
 		Description:     skill.Description,
@@ -236,6 +264,7 @@ func (s *SkillVersionService) ListBySkill(ctx context.Context, input ListSkillVe
 	var items []models.SkillVersion
 	if err := query.
 		Preload("ActorUser").
+		Preload("Run").
 		Order("version_number DESC").
 		Order("id DESC").
 		Limit(limit).
@@ -257,12 +286,35 @@ func (s *SkillVersionService) GetByID(ctx context.Context, skillID uint, version
 	var item models.SkillVersion
 	if err := s.db.WithContext(ctx).
 		Preload("ActorUser").
+		Preload("Run").
 		Where("skill_id = ? AND id = ?", skillID, versionID).
 		First(&item).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return models.SkillVersion{}, ErrSkillNotFound
 		}
 		return models.SkillVersion{}, fmt.Errorf("failed to load skill version: %w", err)
+	}
+	return item, nil
+}
+
+// GetLatestByRunID returns the latest version linked to one sync run.
+func (s *SkillVersionService) GetLatestByRunID(ctx context.Context, runID uint) (models.SkillVersion, error) {
+	if runID == 0 {
+		return models.SkillVersion{}, fmt.Errorf("run id is required")
+	}
+
+	var item models.SkillVersion
+	if err := s.db.WithContext(ctx).
+		Preload("ActorUser").
+		Preload("Run").
+		Where("run_id = ?", runID).
+		Order("version_number DESC").
+		Order("id DESC").
+		First(&item).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return models.SkillVersion{}, ErrSkillNotFound
+		}
+		return models.SkillVersion{}, fmt.Errorf("failed to load skill version by run id: %w", err)
 	}
 	return item, nil
 }

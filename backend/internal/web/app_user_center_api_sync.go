@@ -1,10 +1,8 @@
 package web
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -12,93 +10,6 @@ import (
 	"skillsindex/internal/models"
 	"skillsindex/internal/services"
 )
-
-func (a *App) handleAPIUserCenterAccounts(w http.ResponseWriter, r *http.Request) {
-	actor, ok := a.requireUserCenterPermission(w, r, userCenterPermissionAccountsRead)
-	if !ok {
-		return
-	}
-	if a.authService == nil || a.oauthGrantService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
-		return
-	}
-
-	accounts, err := a.authService.ListUsers(r.Context())
-	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
-		return
-	}
-	grants, err := a.oauthGrantService.ListGrantsByProviders(r.Context(), []models.OAuthProvider{models.OAuthProviderFeishuSync, models.OAuthProviderDingTalkSync})
-	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "mapping_query_failed", "message": err.Error()})
-		return
-	}
-
-	bindingsByUser := map[uint][]apiUserCenterBindingItem{}
-	for _, grant := range grants {
-		provider := userCenterProviderLabel(grant.Provider)
-		if provider == "" {
-			continue
-		}
-		bindingsByUser[grant.UserID] = append(bindingsByUser[grant.UserID], apiUserCenterBindingItem{
-			Provider:       provider,
-			ExternalUserID: grant.ExternalUserID,
-			ExpiresAt:      grant.ExpiresAt.UTC(),
-		})
-	}
-
-	overrides, err := a.loadUserCenterPermissionOverrides(r.Context())
-	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "permission_query_failed", "message": err.Error()})
-		return
-	}
-
-	items := make([]apiUserCenterAccountItem, 0, len(accounts))
-	for _, account := range accounts {
-		permissions, permErr := a.resolveUserCenterPermissions(r.Context(), account)
-		if permErr != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "permission_query_failed", "message": permErr.Error()})
-			return
-		}
-		source := "default"
-		if _, exists := overrides[account.ID]; exists {
-			source = "override"
-		}
-		bindings := bindingsByUser[account.ID]
-		sort.Slice(bindings, func(i int, j int) bool {
-			if bindings[i].Provider == bindings[j].Provider {
-				return bindings[i].ExternalUserID < bindings[j].ExternalUserID
-			}
-			return bindings[i].Provider < bindings[j].Provider
-		})
-		items = append(items, apiUserCenterAccountItem{
-			ID:            account.ID,
-			Username:      account.Username,
-			DisplayName:   account.DisplayName,
-			AvatarURL:     account.AvatarURL,
-			Role:          string(account.EffectiveRole()),
-			Status:        userStatusValue(account),
-			Permissions:   permissions,
-			BindingSource: source,
-			Bindings:      bindings,
-			CreatedAt:     account.CreatedAt,
-			UpdatedAt:     account.UpdatedAt,
-		})
-	}
-
-	a.recordAudit(r.Context(), actor, services.RecordAuditInput{
-		Action:     "api_user_center_accounts_list",
-		TargetType: "user",
-		TargetID:   0,
-		Summary:    "Listed user center accounts",
-	})
-
-	writeJSON(w, http.StatusOK, map[string]any{
-		"items":                 items,
-		"total":                 len(items),
-		"available_permissions": userCenterAllPermissions,
-	})
-}
 
 func (a *App) handleAPIUserCenterSync(w http.ResponseWriter, r *http.Request) {
 	actor, ok := a.requireUserCenterPermission(w, r, userCenterPermissionAccountsSync)
@@ -282,110 +193,5 @@ func (a *App) handleAPIUserCenterSync(w http.ResponseWriter, r *http.Request) {
 		"disabled_count":              disabledCount,
 		"permission_configured_count": permissionConfiguredCount,
 		"force_sign_out_disabled":     forceSignOutDisabled,
-	})
-}
-
-func (a *App) handleAPIUserCenterPermissionsGet(w http.ResponseWriter, r *http.Request) {
-	_, ok := a.requireUserCenterPermission(w, r, userCenterPermissionPermissionsEdit)
-	if !ok {
-		return
-	}
-	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
-		return
-	}
-
-	targetUserID, err := parseUintURLParam(r, "userID")
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_user_id"})
-		return
-	}
-	targetUser, err := a.authService.GetUserByID(r.Context(), targetUserID)
-	if err != nil {
-		if errors.Is(err, services.ErrUserNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "user_not_found"})
-			return
-		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
-		return
-	}
-
-	overrides, err := a.loadUserCenterPermissionOverrides(r.Context())
-	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "permission_query_failed", "message": err.Error()})
-		return
-	}
-	defaultPermissions := defaultUserCenterPermissions(targetUser.EffectiveRole())
-	effectivePermissions := defaultPermissions
-	source := "default"
-	overridePermissions := []string{}
-	if override, exists := overrides[targetUser.ID]; exists {
-		effectivePermissions = override
-		overridePermissions = override
-		source = "override"
-	}
-
-	writeJSON(w, http.StatusOK, map[string]any{
-		"user_id":               targetUser.ID,
-		"role":                  string(targetUser.EffectiveRole()),
-		"available_permissions": userCenterAllPermissions,
-		"default_permissions":   defaultPermissions,
-		"override_permissions":  overridePermissions,
-		"effective_permissions": effectivePermissions,
-		"permission_source":     source,
-	})
-}
-
-func (a *App) handleAPIUserCenterPermissionsUpdate(w http.ResponseWriter, r *http.Request) {
-	actor, ok := a.requireUserCenterPermission(w, r, userCenterPermissionPermissionsEdit)
-	if !ok {
-		return
-	}
-	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
-		return
-	}
-
-	targetUserID, err := parseUintURLParam(r, "userID")
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_user_id"})
-		return
-	}
-	targetUser, err := a.authService.GetUserByID(r.Context(), targetUserID)
-	if err != nil {
-		if errors.Is(err, services.ErrUserNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "user_not_found"})
-			return
-		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
-		return
-	}
-
-	input, err := readAPIUserCenterPermissionUpdateInput(r)
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
-		return
-	}
-	normalized := normalizeUserCenterPermissionList(input.Permissions)
-	if err := a.setUserCenterPermissionOverride(r.Context(), targetUserID, normalized); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "update_failed", "message": err.Error()})
-		return
-	}
-
-	a.recordAudit(r.Context(), actor, services.RecordAuditInput{
-		Action:     "api_user_center_permissions_update",
-		TargetType: "user",
-		TargetID:   targetUserID,
-		Summary:    "Updated user center permissions",
-		Details: auditDetailsJSON(map[string]string{
-			"username":    targetUser.Username,
-			"permissions": strings.Join(normalized, ","),
-		}),
-	})
-
-	writeJSON(w, http.StatusOK, map[string]any{
-		"ok":                    true,
-		"user_id":               targetUserID,
-		"effective_permissions": normalized,
 	})
 }

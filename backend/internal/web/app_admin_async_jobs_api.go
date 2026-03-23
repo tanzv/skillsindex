@@ -14,6 +14,7 @@ type apiAdminAsyncJobItem struct {
 	ActorUserID      *uint      `json:"actor_user_id"`
 	CanceledByUserID *uint      `json:"canceled_by_user_id"`
 	TargetSkillID    *uint      `json:"target_skill_id"`
+	SyncRunID        *uint      `json:"sync_run_id,omitempty"`
 	Attempt          int        `json:"attempt"`
 	MaxAttempts      int        `json:"max_attempts"`
 	StartedAt        *time.Time `json:"started_at"`
@@ -42,6 +43,7 @@ func resultToAPIAdminAsyncJobItem(item models.AsyncJob) apiAdminAsyncJobItem {
 		ActorUserID:      item.ActorUserID,
 		CanceledByUserID: item.CanceledByUserID,
 		TargetSkillID:    item.TargetSkillID,
+		SyncRunID:        item.SyncRunID,
 		Attempt:          item.Attempt,
 		MaxAttempts:      item.MaxAttempts,
 		StartedAt:        item.StartedAt,

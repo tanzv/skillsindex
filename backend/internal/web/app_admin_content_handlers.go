@@ -2,23 +2,95 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"skillsindex/internal/models"
 	"skillsindex/internal/services"
 )
 
-func (a *App) recordSkillMPSingleSyncRun(ctx context.Context, skill models.Skill, actorUserID uint, synced int, failed int, errorSummary string) {
-	if a.syncJobSvc == nil || skill.ID == 0 || skill.OwnerID == 0 || actorUserID == 0 {
+func (a *App) startRemoteSyncGovernance(
+	ctx context.Context,
+	skill models.Skill,
+	actorUserID uint,
+) (services.SyncGovernanceExecution, error) {
+	if a == nil || a.syncGovernanceSvc == nil || skill.ID == 0 || skill.OwnerID == 0 || actorUserID == 0 {
+		return services.SyncGovernanceExecution{}, nil
+	}
+	targetSkillID := skill.ID
+	ownerUserID := skill.OwnerID
+	actorID := actorUserID
+	return a.syncGovernanceSvc.Start(ctx, services.StartSyncGovernanceInput{
+		JobType:       remoteSyncAsyncJobType(skill.SourceType),
+		Trigger:       services.SyncRunTriggerTypeManual,
+		TriggerType:   services.SyncRunTriggerTypeManual,
+		Scope:         "single",
+		TargetSkillID: &targetSkillID,
+		OwnerUserID:   &ownerUserID,
+		ActorUserID:   &actorID,
+		MaxAttempts:   3,
+		PayloadDigest: remoteSyncPayloadDigest(skill),
+		StartedAt:     timeNowUTC(),
+	})
+}
+
+func (a *App) completeRemoteSyncGovernance(
+	ctx context.Context,
+	execution services.SyncGovernanceExecution,
+	skill models.Skill,
+	actorUserID uint,
+	synced int,
+	failed int,
+	err error,
+) {
+	if a == nil {
 		return
 	}
+	errorSummary := ""
+	errorCode := ""
+	if err != nil {
+		errorSummary = strings.TrimSpace(err.Error())
+		errorCode = "sync_single_failed"
+	}
+	if a.syncGovernanceSvc != nil && execution.Job.ID != 0 && execution.Run.ID != 0 {
+		actorID := actorUserID
+		_, _ = a.syncGovernanceSvc.Complete(ctx, services.CompleteSyncGovernanceInput{
+			RunID:        execution.Run.ID,
+			JobID:        execution.Job.ID,
+			Candidates:   1,
+			Synced:       synced,
+			Failed:       failed,
+			FinishedAt:   timeNowUTC(),
+			ErrorCode:    errorCode,
+			ErrorMessage: errorSummary,
+			ErrorSummary: errorSummary,
+			ActorUserID:  &actorID,
+		})
+		return
+	}
+	a.recordLegacySingleRemoteSyncRun(ctx, skill, actorUserID, synced, failed, errorSummary)
+}
 
+func (a *App) recordLegacySingleRemoteSyncRun(
+	ctx context.Context,
+	skill models.Skill,
+	actorUserID uint,
+	synced int,
+	failed int,
+	errorSummary string,
+) {
+	if a == nil || a.syncJobSvc == nil || skill.ID == 0 || skill.OwnerID == 0 || actorUserID == 0 {
+		return
+	}
 	targetSkillID := skill.ID
 	ownerUserID := skill.OwnerID
 	actorID := actorUserID
 	_, _ = a.syncJobSvc.RecordRun(ctx, services.RecordSyncRunInput{
-		Trigger:       "manual",
+		Trigger:       services.SyncRunTriggerTypeManual,
+		TriggerType:   services.SyncRunTriggerTypeManual,
 		Scope:         "single",
 		TargetSkillID: &targetSkillID,
 		OwnerUserID:   &ownerUserID,
@@ -175,27 +247,42 @@ func (a *App) handleRemoteSync(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	execution, governanceErr := a.startRemoteSyncGovernance(r.Context(), skill, user.ID)
+	if governanceErr != nil {
+		redirectDashboard(w, r, "", "Failed to start sync job")
+		return
+	}
+	if execution.Deduped {
+		redirectDashboard(w, r, "", "A matching sync job is already running")
+		return
+	}
+
 	switch skill.SourceType {
 	case models.SourceTypeRepository:
 		source := services.RepoSource{URL: skill.SourceURL, Branch: skill.SourceBranch, Path: skill.SourcePath}
 		meta, syncErr := a.repositoryService.CloneAndExtract(r.Context(), source)
 		if syncErr != nil {
+			a.completeRemoteSyncGovernance(r.Context(), execution, skill, user.ID, 0, 1, syncErr)
 			redirectDashboard(w, r, "", "Repository sync failed: "+syncErr.Error())
 			return
 		}
-		_, err = a.skillService.UpdateSyncedSkill(r.Context(), services.SyncUpdateInput{
-			SkillID:      skillID,
-			OwnerID:      skill.OwnerID,
-			SourceType:   models.SourceTypeRepository,
-			SourceURL:    source.URL,
-			SourceBranch: source.Branch,
-			SourcePath:   source.Path,
-			Meta:         meta,
-		})
+		var runID *uint
+		if execution.Run.ID != 0 {
+			runID = &execution.Run.ID
+		}
+		actorID := user.ID
+		_, err = a.skillService.UpdateRepositorySkillWithRunContext(r.Context(), services.RepositoryUpdateInput{
+			SkillID: skillID,
+			OwnerID: skill.OwnerID,
+			Source:  source,
+			Meta:    meta,
+		}, &actorID, runID)
 		if err != nil {
+			a.completeRemoteSyncGovernance(r.Context(), execution, skill, user.ID, 0, 1, err)
 			redirectDashboard(w, r, "", "Failed to update skill from repository")
 			return
 		}
+		a.completeRemoteSyncGovernance(r.Context(), execution, skill, user.ID, 1, 0, nil)
 		a.recordAudit(r.Context(), user, services.RecordAuditInput{
 			Action:     "skill_sync_repository",
 			TargetType: "skill",
@@ -211,23 +298,28 @@ func (a *App) handleRemoteSync(w http.ResponseWriter, r *http.Request) {
 	case models.SourceTypeSkillMP:
 		meta, sourceURL, syncErr := a.skillMPService.FetchSkill(r.Context(), services.SkillMPFetchInput{URL: skill.SourceURL})
 		if syncErr != nil {
-			a.recordSkillMPSingleSyncRun(r.Context(), skill, user.ID, 0, 1, syncErr.Error())
+			a.completeRemoteSyncGovernance(r.Context(), execution, skill, user.ID, 0, 1, syncErr)
 			redirectDashboard(w, r, "", "SkillMP sync failed: "+syncErr.Error())
 			return
 		}
-		_, err = a.skillService.UpdateSyncedSkill(r.Context(), services.SyncUpdateInput{
+		var runID *uint
+		if execution.Run.ID != 0 {
+			runID = &execution.Run.ID
+		}
+		actorID := user.ID
+		_, err = a.skillService.UpdateSyncedSkillWithRunContext(r.Context(), services.SyncUpdateInput{
 			SkillID:    skillID,
 			OwnerID:    skill.OwnerID,
 			SourceType: models.SourceTypeSkillMP,
 			SourceURL:  sourceURL,
 			Meta:       meta,
-		})
+		}, &actorID, runID)
 		if err != nil {
-			a.recordSkillMPSingleSyncRun(r.Context(), skill, user.ID, 0, 1, err.Error())
+			a.completeRemoteSyncGovernance(r.Context(), execution, skill, user.ID, 0, 1, err)
 			redirectDashboard(w, r, "", "Failed to update skill from SkillMP")
 			return
 		}
-		a.recordSkillMPSingleSyncRun(r.Context(), skill, user.ID, 1, 0, "")
+		a.completeRemoteSyncGovernance(r.Context(), execution, skill, user.ID, 1, 0, nil)
 		a.recordAudit(r.Context(), user, services.RecordAuditInput{
 			Action:     "skill_sync_skillmp",
 			TargetType: "skill",
@@ -241,6 +333,29 @@ func (a *App) handleRemoteSync(w http.ResponseWriter, r *http.Request) {
 		})
 		redirectDashboard(w, r, "SkillMP skill updated", "")
 	default:
+		a.completeRemoteSyncGovernance(r.Context(), execution, skill, user.ID, 0, 1, fmt.Errorf("unsupported source type"))
 		redirectDashboard(w, r, "", "Only repository and SkillMP skills can be synced")
 	}
+}
+
+func remoteSyncAsyncJobType(sourceType models.SkillSourceType) models.AsyncJobType {
+	if sourceType == models.SourceTypeSkillMP {
+		return models.AsyncJobTypeSyncSkillMP
+	}
+	return models.AsyncJobTypeSyncRepository
+}
+
+func remoteSyncPayloadDigest(skill models.Skill) string {
+	return fmt.Sprintf(
+		"remote-sync:%s:%d:%s:%s:%s",
+		string(skill.SourceType),
+		skill.ID,
+		strings.TrimSpace(skill.SourceURL),
+		strings.TrimSpace(skill.SourceBranch),
+		strings.TrimSpace(skill.SourcePath),
+	)
+}
+
+func timeNowUTC() time.Time {
+	return time.Now().UTC()
 }

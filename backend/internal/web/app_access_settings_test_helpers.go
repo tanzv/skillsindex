@@ -27,12 +27,16 @@ func setupAccessSettingsTestApp(t *testing.T) *App {
 	if err := db.AutoMigrate(&models.SystemSetting{}); err != nil {
 		t.Fatalf("failed to migrate sqlite db: %v", err)
 	}
-	if err := db.AutoMigrate(&models.User{}, &models.SyncJobRun{}, &models.AsyncJob{}, &models.AuditLog{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Skill{}, &models.Tag{}, &models.SkillTag{}, &models.SyncPolicy{}, &models.SyncJobRun{}, &models.AsyncJob{}, &models.SkillVersion{}, &models.AuditLog{}); err != nil {
 		t.Fatalf("failed to migrate sqlite db for sync jobs, async jobs, and audit logs: %v", err)
 	}
 	settingsSvc := services.NewSettingsService(db)
+	asyncJobSvc := services.NewAsyncJobService(db)
+	syncJobSvc := services.NewSyncJobService(db)
+	auditSvc := services.NewAuditService(db)
 	return &App{
 		authService:     services.NewAuthService(db),
+		skillService:    services.NewSkillService(db),
 		settingsService: settingsSvc,
 		syncPolicyService: services.NewRepositorySyncPolicyService(settingsSvc, services.RepositorySyncPolicy{
 			Enabled:   false,
@@ -40,9 +44,12 @@ func setupAccessSettingsTestApp(t *testing.T) *App {
 			Timeout:   10 * time.Minute,
 			BatchSize: 20,
 		}),
-		syncJobSvc:        services.NewSyncJobService(db),
-		asyncJobSvc:       services.NewAsyncJobService(db),
-		auditService:      services.NewAuditService(db),
+		syncPolicyRecordSvc: services.NewSyncPolicyService(db),
+		syncJobSvc:        syncJobSvc,
+		asyncJobSvc:       asyncJobSvc,
+		skillVersionSvc:   services.NewSkillVersionService(db),
+		auditService:      auditSvc,
+		syncGovernanceSvc: services.NewSyncGovernanceService(asyncJobSvc, syncJobSvc, nil, auditSvc),
 		opsService:        services.NewOpsService(db),
 		allowRegistration: true,
 	}

@@ -140,6 +140,7 @@ func (a *App) handleAPIPublicSkillDetail(w http.ResponseWriter, r *http.Request)
 		viewerState.CanInteract = viewer.CanAccessDashboard()
 	}
 	comments := make([]apiPublicSkillDetailComment, 0)
+	relatedSkills := make([]apiSkillResponse, 0)
 
 	if a.interaction != nil {
 		loadedStats, statsErr := a.interaction.GetStats(r.Context(), skill.ID)
@@ -174,11 +175,17 @@ func (a *App) handleAPIPublicSkillDetail(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
+	loadedRelatedSkills, relatedErr := a.skillService.ListMarketplaceRelatedSkills(r.Context(), skill.ID, viewerID, 6)
+	if relatedErr == nil {
+		relatedSkills = resultToAPIItems(loadedRelatedSkills)
+	}
+
 	writeJSON(w, http.StatusOK, map[string]any{
 		"skill":          detailSkill,
 		"stats":          stats,
 		"viewer_state":   viewerState,
 		"comments":       comments,
 		"comments_limit": 80,
+		"related_skills": relatedSkills,
 	})
 }

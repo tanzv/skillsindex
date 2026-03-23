@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -65,6 +66,104 @@ func TestHandleAPIPublicSkillDetailIncludesInteractionAggregation(t *testing.T) 
 	}
 	if !strings.Contains(body, `"comments_limit":80`) {
 		t.Fatalf("missing comment limit: %s", body)
+	}
+}
+
+func TestHandleAPIPublicSkillDetailIncludesRelatedSkills(t *testing.T) {
+	app, user, skill, _ := setupInteractionAPITestApp(t)
+
+	relatedPrimary, err := app.skillService.CreateSkill(context.Background(), services.CreateSkillInput{
+		OwnerID:         user.ID,
+		Name:            "CI Release Guard",
+		Description:     "Protect CI release promotion with shared automation checks.",
+		Content:         "release automation ci guard",
+		Visibility:      models.VisibilityPublic,
+		SourceType:      models.SourceTypeRepository,
+		RecordOrigin:    models.RecordOriginImported,
+		CategorySlug:    "development",
+		SubcategorySlug: "automation",
+		StarCount:       420,
+		QualityScore:    9.5,
+	})
+	if err != nil {
+		t.Fatalf("failed to create related primary skill: %v", err)
+	}
+	if err := app.skillService.ReplaceSkillTags(context.Background(), relatedPrimary.ID, []string{"ci", "automation", "release"}); err != nil {
+		t.Fatalf("failed to tag related primary skill: %v", err)
+	}
+
+	relatedSecondary, err := app.skillService.CreateSkill(context.Background(), services.CreateSkillInput{
+		OwnerID:         user.ID,
+		Name:            "Automation Runbook",
+		Description:     "General automation operations companion.",
+		Content:         "automation operations",
+		Visibility:      models.VisibilityPublic,
+		SourceType:      models.SourceTypeManual,
+		RecordOrigin:    models.RecordOriginImported,
+		CategorySlug:    "development",
+		SubcategorySlug: "automation",
+		StarCount:       200,
+		QualityScore:    8.8,
+	})
+	if err != nil {
+		t.Fatalf("failed to create related secondary skill: %v", err)
+	}
+	if err := app.skillService.ReplaceSkillTags(context.Background(), relatedSecondary.ID, []string{"automation"}); err != nil {
+		t.Fatalf("failed to tag related secondary skill: %v", err)
+	}
+
+	unrelated, err := app.skillService.CreateSkill(context.Background(), services.CreateSkillInput{
+		OwnerID:         user.ID,
+		Name:            "Finance Digest",
+		Description:     "Budget reporting helper.",
+		Content:         "finance reporting budget",
+		Visibility:      models.VisibilityPublic,
+		SourceType:      models.SourceTypeManual,
+		RecordOrigin:    models.RecordOriginImported,
+		CategorySlug:    "business",
+		SubcategorySlug: "finance",
+		StarCount:       900,
+		QualityScore:    9.8,
+	})
+	if err != nil {
+		t.Fatalf("failed to create unrelated skill: %v", err)
+	}
+	if err := app.skillService.ReplaceSkillTags(context.Background(), unrelated.ID, []string{"finance"}); err != nil {
+		t.Fatalf("failed to tag unrelated skill: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/skills/"+strconv.FormatUint(uint64(skill.ID), 10), nil)
+	req = withCurrentUser(req, &user)
+	req = withURLParams(req, map[string]string{
+		"skillID": strconv.FormatUint(uint64(skill.ID), 10),
+	})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicSkillDetail(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
+	}
+
+	var payload struct {
+		RelatedSkills []struct {
+			ID   uint   `json:"id"`
+			Name string `json:"name"`
+		} `json:"related_skills"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("failed to decode response payload: %v", err)
+	}
+	if len(payload.RelatedSkills) < 2 {
+		t.Fatalf("expected at least two related skills, got=%d", len(payload.RelatedSkills))
+	}
+	if payload.RelatedSkills[0].ID != relatedPrimary.ID {
+		t.Fatalf("expected most related skill first: got=%d want=%d", payload.RelatedSkills[0].ID, relatedPrimary.ID)
+	}
+	for _, item := range payload.RelatedSkills {
+		if item.ID == skill.ID {
+			t.Fatalf("current skill must not appear in related skills payload")
+		}
 	}
 }
 

@@ -66,37 +66,13 @@ func TestRouterHandlesCORSPreflightForAPIPath(t *testing.T) {
 }
 
 func TestNewAppSkipsTemplateParsingInAPIOnlyMode(t *testing.T) {
-	app, err := NewApp(
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		true,
-		false,
-		true,
-		nil,
-		nil,
-		"",
-		"./storage",
-	)
+	app, err := NewApp(AppDependencies{
+		AllowRegistration: true,
+		CookieSecure:      false,
+		APIOnly:           true,
+		TemplateGlob:      "",
+		StoragePath:       "./storage",
+	})
 	if err != nil {
 		t.Fatalf("expected no error when template glob is empty in api-only mode, got: %v", err)
 	}

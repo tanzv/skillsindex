@@ -105,6 +105,7 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 		Timeout:   runtimeConfig.RepoSyncTimeout,
 		BatchSize: runtimeConfig.RepoSyncBatchSize,
 	})
+	syncPolicyRecordService := services.NewSyncPolicyService(database)
 	if _, err := authService.EnsureDefaultAccount(
 		ctx,
 		runtimeConfig.AdminUsername,
@@ -118,6 +119,11 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 	}
 	if _, err := repoSyncPolicyService.Ensure(ctx); err != nil {
 		return fmt.Errorf("failed to initialize repository sync policy: %w", err)
+	}
+	if ensuredPolicy, err := repoSyncPolicyService.Get(ctx); err != nil {
+		return fmt.Errorf("failed to load initialized repository sync policy: %w", err)
+	} else if _, err := syncPolicyRecordService.UpsertRepositoryMirror(ctx, ensuredPolicy, nil); err != nil {
+		return fmt.Errorf("failed to initialize repository sync policy mirror: %w", err)
 	}
 
 	sessionService := services.NewSessionService(runtimeConfig.SessionSecret, runtimeConfig.SessionCookieSecure)
@@ -133,6 +139,12 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 	asyncJobService := services.NewAsyncJobService(database)
 	syncJobService := services.NewSyncJobService(database)
 	skillVersionService := services.NewSkillVersionService(database)
+	syncGovernanceService := services.NewSyncGovernanceService(
+		asyncJobService,
+		syncJobService,
+		skillVersionService,
+		auditService,
+	)
 	organizationService := services.NewOrganizationService(database)
 	oauthGrantService := services.NewOAuthGrantService(database)
 	dingTalkService := services.NewDingTalkService(services.DingTalkConfig{
@@ -150,8 +162,7 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 
 	scheduler := services.NewRepositorySyncScheduler(
 		repositorySyncCoordinator,
-		asyncJobService,
-		syncJobService,
+		syncGovernanceService,
 		runtimeConfig.RepoSyncInterval,
 		runtimeConfig.RepoSyncTimeout,
 		runtimeConfig.RepoSyncBatchSize,
@@ -169,37 +180,39 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 		runtimeConfig.RepoSyncBatchSize,
 	)
 
-	app, err := web.NewApp(
-		authService,
-		sessionService,
-		userSessionService,
-		skillService,
-		apiKeyService,
-		interactionService,
-		auditService,
-		integrationService,
-		incidentService,
-		moderationService,
-		opsService,
-		asyncJobService,
-		syncJobService,
-		skillVersionService,
-		organizationService,
-		oauthGrantService,
-		dingTalkService,
-		uploadService,
-		repositoryService,
-		skillMPService,
-		settingsService,
-		repoSyncPolicyService,
-		runtimeConfig.AllowRegistration,
-		runtimeConfig.SessionCookieSecure,
-		runtimeConfig.APIOnly,
-		runtimeConfig.CORSAllowedOrigins,
-		runtimeConfig.APIKeys,
-		"",
-		runtimeConfig.StoragePath,
-	)
+	app, err := web.NewApp(web.AppDependencies{
+		AuthService:           authService,
+		SessionService:        sessionService,
+		UserSessionService:    userSessionService,
+		SkillService:          skillService,
+		APIKeyService:         apiKeyService,
+		InteractionService:    interactionService,
+		AuditService:          auditService,
+		IntegrationService:    integrationService,
+		IncidentService:       incidentService,
+		ModerationService:     moderationService,
+		OpsService:            opsService,
+		AsyncJobService:       asyncJobService,
+		SyncJobService:        syncJobService,
+		SyncGovernanceService: syncGovernanceService,
+		SkillVersionService:   skillVersionService,
+		OrganizationService:   organizationService,
+		OAuthGrantService:     oauthGrantService,
+		DingTalkService:       dingTalkService,
+		UploadService:         uploadService,
+		RepositoryService:     repositoryService,
+		SkillMPService:        skillMPService,
+		SettingsService:       settingsService,
+		SyncPolicyService:     repoSyncPolicyService,
+		SyncPolicyRecordSvc:   syncPolicyRecordService,
+		AllowRegistration:     runtimeConfig.AllowRegistration,
+		CookieSecure:          runtimeConfig.SessionCookieSecure,
+		APIOnly:               runtimeConfig.APIOnly,
+		CORSAllowedOrigins:    runtimeConfig.CORSAllowedOrigins,
+		APIKeys:               runtimeConfig.APIKeys,
+		TemplateGlob:          "",
+		StoragePath:           runtimeConfig.StoragePath,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to build web app: %w", err)
 	}

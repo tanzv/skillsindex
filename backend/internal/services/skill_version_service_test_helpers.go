@@ -23,6 +23,7 @@ func setupSkillVersionServiceTestDB(t *testing.T) *gorm.DB {
 		&models.Skill{},
 		&models.Tag{},
 		&models.SkillTag{},
+		&models.SyncJobRun{},
 		&models.SkillVersion{},
 	); err != nil {
 		t.Fatalf("failed to migrate skill version models: %v", err)

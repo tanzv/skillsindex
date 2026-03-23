@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"skillsindex/internal/models"
 
@@ -157,5 +158,64 @@ func TestAuditServiceRecordAllowsAnonymousActor(t *testing.T) {
 	}
 	if logs[0].Result != "accepted" {
 		t.Fatalf("unexpected result: got=%q want=%q", logs[0].Result, "accepted")
+	}
+}
+
+func TestAuditServiceListByTargetRespectsCreatedAtWindow(t *testing.T) {
+	db := setupAuditServiceTestDB(t)
+	svc := NewAuditService(db)
+
+	if err := svc.Record(context.Background(), RecordAuditInput{
+		Action:     "skill_sync_old",
+		TargetType: "skill",
+		TargetID:   7,
+		Summary:    "Old skill audit",
+	}); err != nil {
+		t.Fatalf("failed to record old audit: %v", err)
+	}
+	if err := svc.Record(context.Background(), RecordAuditInput{
+		Action:     "skill_sync_recent",
+		TargetType: "skill",
+		TargetID:   7,
+		Summary:    "Recent skill audit",
+	}); err != nil {
+		t.Fatalf("failed to record recent audit: %v", err)
+	}
+
+	var logs []models.AuditLog
+	if err := db.Order("id ASC").Find(&logs).Error; err != nil {
+		t.Fatalf("failed to query audit logs: %v", err)
+	}
+	if len(logs) != 2 {
+		t.Fatalf("unexpected audit log count: got=%d want=2", len(logs))
+	}
+
+	base := time.Now().UTC()
+	oldTime := base.Add(-2 * time.Hour)
+	recentTime := base.Add(-30 * time.Second)
+	if err := db.Model(&models.AuditLog{}).Where("id = ?", logs[0].ID).Update("created_at", oldTime).Error; err != nil {
+		t.Fatalf("failed to update old audit timestamp: %v", err)
+	}
+	if err := db.Model(&models.AuditLog{}).Where("id = ?", logs[1].ID).Update("created_at", recentTime).Error; err != nil {
+		t.Fatalf("failed to update recent audit timestamp: %v", err)
+	}
+
+	windowStart := base.Add(-5 * time.Minute)
+	windowEnd := base.Add(5 * time.Minute)
+	filtered, err := svc.ListByTarget(context.Background(), ListAuditByTargetInput{
+		TargetType:    "skill",
+		TargetID:      7,
+		CreatedAfter:  &windowStart,
+		CreatedBefore: &windowEnd,
+		Limit:         10,
+	})
+	if err != nil {
+		t.Fatalf("failed to list filtered audit logs: %v", err)
+	}
+	if len(filtered) != 1 {
+		t.Fatalf("unexpected filtered audit count: got=%d want=1", len(filtered))
+	}
+	if filtered[0].Action != "skill_sync_recent" {
+		t.Fatalf("unexpected filtered audit action: got=%s want=%s", filtered[0].Action, "skill_sync_recent")
 	}
 }

@@ -89,6 +89,38 @@ type PublicSearchResult struct {
 	Limit int
 }
 
+// PublicRankingInput defines the request shape for public ranking data.
+type PublicRankingInput struct {
+	SortBy string
+	Limit  int
+}
+
+// PublicRankingSummary stores aggregate metrics for one ranking view.
+type PublicRankingSummary struct {
+	TotalCompared  int64
+	TopStars       int
+	TopQuality     float64
+	AverageQuality float64
+}
+
+// PublicRankingCategoryLeader stores one category aggregate for ranking sidebars.
+type PublicRankingCategoryLeader struct {
+	CategorySlug   string
+	Count          int64
+	AverageQuality float64
+	LeadingSkill   models.Skill
+}
+
+// PublicRankingResult stores the backend-owned ranking contract.
+type PublicRankingResult struct {
+	SortBy          string
+	RankedItems     []models.Skill
+	Highlights      []models.Skill
+	ListItems       []models.Skill
+	Summary         PublicRankingSummary
+	CategoryLeaders []PublicRankingCategoryLeader
+}
+
 // CategorySkillCount stores public skill counts per category slug.
 type CategorySkillCount struct {
 	CategorySlug string

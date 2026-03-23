@@ -97,3 +97,78 @@ func TestListRepositorySkillsForSync(t *testing.T) {
 		t.Fatalf("unexpected owner repository count: got=%d want=3", len(itemsByOwner))
 	}
 }
+
+func TestUpdateSyncedSkillWithRunContextCapturesVersionRunID(t *testing.T) {
+	db := setupSkillServiceTestDB(t)
+	if err := db.AutoMigrate(&models.SyncJobRun{}); err != nil {
+		t.Fatalf("failed to migrate sync job run model: %v", err)
+	}
+	svc := NewSkillService(db)
+	versionSvc := NewSkillVersionService(db)
+
+	owner := models.User{Username: "run-context-owner", PasswordHash: "hash"}
+	if err := db.Create(&owner).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+
+	created, err := svc.CreateSkill(context.Background(), CreateSkillInput{
+		OwnerID:      owner.ID,
+		Name:         "Run Context Skill",
+		Description:  "before sync",
+		Content:      "before content",
+		Tags:         []string{"sync"},
+		Visibility:   models.VisibilityPrivate,
+		SourceType:   models.SourceTypeRepository,
+		CategorySlug: "development",
+	})
+	if err != nil {
+		t.Fatalf("failed to create skill: %v", err)
+	}
+
+	run := models.SyncJobRun{
+		Trigger:       SyncRunTriggerTypeManual,
+		TriggerType:   SyncRunTriggerTypeManual,
+		Scope:         "single",
+		Status:        SyncRunStatusRunning,
+		TargetSkillID: &created.ID,
+		OwnerUserID:   &owner.ID,
+		StartedAt:     time.Now().UTC(),
+		FinishedAt:    time.Now().UTC(),
+	}
+	if err := db.Create(&run).Error; err != nil {
+		t.Fatalf("failed to create sync run: %v", err)
+	}
+
+	actorID := owner.ID
+	_, err = svc.UpdateSyncedSkillWithRunContext(context.Background(), SyncUpdateInput{
+		SkillID:      created.ID,
+		OwnerID:      owner.ID,
+		SourceType:   models.SourceTypeRepository,
+		SourceURL:    "https://example.com/repo.git",
+		SourceBranch: "main",
+		SourcePath:   "/skills/run-context",
+		Meta: ExtractedSkill{
+			Name:        "Run Context Skill Updated",
+			Description: "after sync",
+			Content:     "after content",
+			Tags:        []string{"sync", "updated"},
+		},
+	}, &actorID, &run.ID)
+	if err != nil {
+		t.Fatalf("failed to update synced skill with run context: %v", err)
+	}
+
+	versions, err := versionSvc.ListBySkill(context.Background(), ListSkillVersionsInput{
+		SkillID: created.ID,
+		Limit:   10,
+	})
+	if err != nil {
+		t.Fatalf("failed to list versions: %v", err)
+	}
+	if len(versions) < 2 {
+		t.Fatalf("expected updated sync to append new version, got=%d", len(versions))
+	}
+	if versions[0].RunID == nil || *versions[0].RunID != run.ID {
+		t.Fatalf("expected latest version to link run id")
+	}
+}

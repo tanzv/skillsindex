@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"skillsindex/internal/models"
+	"skillsindex/internal/services"
 )
 
 func TestReadRepositorySyncPolicyUpdateInputForm(t *testing.T) {
@@ -92,5 +93,16 @@ func TestAdminRepositorySyncPolicyUpdateFormSuccess(t *testing.T) {
 	}
 	if !updated.Enabled || updated.Interval != 12*time.Minute || updated.Timeout != 2*time.Minute || updated.BatchSize != 66 {
 		t.Fatalf("unexpected updated policy: %#v", updated)
+	}
+
+	items, err := app.syncPolicyRecordSvc.List(context.Background(), services.ListSyncPoliciesInput{
+		SourceType: models.SyncPolicySourceRepository,
+		Limit:      10,
+	})
+	if err != nil {
+		t.Fatalf("failed to list mirrored repository policies: %v", err)
+	}
+	if len(items) != 1 || !items[0].Enabled || items[0].IntervalMinutes != 12 || items[0].TimeoutMinutes != 2 || items[0].BatchSize != 66 {
+		t.Fatalf("unexpected mirrored repository policy items: %#v", items)
 	}
 }

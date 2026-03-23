@@ -46,6 +46,7 @@ func (a *App) registerDashboardRoutes(r chi.Router) {
 		private.Get("/api/v1/admin/sync-policy/repository", a.handleAPIAdminRepositorySyncPolicy)
 		private.Post("/api/v1/admin/sync-policy/repository", a.handleAPIAdminRepositorySyncPolicyUpdate)
 		private.Get("/api/v1/admin/sync-policies", a.handleAPIAdminSyncPolicies)
+		private.Get("/api/v1/admin/sync-policies/{policyID}", a.handleAPIAdminSyncPolicyDetail)
 		private.Post("/api/v1/admin/sync-policies/create", a.handleAPIAdminSyncPoliciesCreate)
 		private.Post("/api/v1/admin/sync-policies/{policyID}/update", a.handleAPIAdminSyncPoliciesUpdate)
 		private.Post("/api/v1/admin/sync-policies/{policyID}/toggle", a.handleAPIAdminSyncPoliciesToggle)

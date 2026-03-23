@@ -9,6 +9,8 @@ type SkillVersion struct {
 	OwnerID           uint            `gorm:"index;not null"`
 	VersionNumber     int             `gorm:"index;not null"`
 	Trigger           string          `gorm:"size:32;index;not null"`
+	RunID             *uint           `gorm:"index"`
+	Run               *SyncJobRun     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:RunID"`
 	ActorUserID       *uint           `gorm:"index"`
 	ActorUser         *User           `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:ActorUserID"`
 	Name              string          `gorm:"size:128;not null"`

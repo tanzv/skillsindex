@@ -98,7 +98,7 @@ func setupPublicMarketplaceAPITestApp(t *testing.T) (*App, models.User) {
 func TestHandleAPIPublicMarketplaceReturnsExpectedPayload(t *testing.T) {
 	app, _ := setupPublicMarketplaceAPITestApp(t)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/marketplace?q=react&sort=stars&mode=keyword&page=1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/marketplace?q=react&category=development&sort=stars&mode=keyword&page=1", nil)
 	req.Header.Set("Accept", "application/json")
 	recorder := httptest.NewRecorder()
 
@@ -123,6 +123,18 @@ func TestHandleAPIPublicMarketplaceReturnsExpectedPayload(t *testing.T) {
 	if !strings.Contains(body, `"filter_options"`) {
 		t.Fatalf("missing filter_options payload: %s", body)
 	}
+	if !strings.Contains(body, `"summary"`) {
+		t.Fatalf("missing summary payload: %s", body)
+	}
+	if !strings.Contains(body, `"landing"`) || !strings.Contains(body, `"category_hub"`) {
+		t.Fatalf("missing marketplace summary sections: %s", body)
+	}
+	if !strings.Contains(body, `"category_detail"`) || !strings.Contains(body, `"category_slug":"development"`) {
+		t.Fatalf("missing category detail summary payload: %s", body)
+	}
+	if !strings.Contains(body, `"subcategory_count":1`) {
+		t.Fatalf("missing expected category detail subcategory count: %s", body)
+	}
 	if !strings.Contains(body, `"value":"recent"`) || !strings.Contains(body, `"value":"ai"`) {
 		t.Fatalf("missing expected default filter option values: %s", body)
 	}
@@ -131,6 +143,50 @@ func TestHandleAPIPublicMarketplaceReturnsExpectedPayload(t *testing.T) {
 	}
 	if !strings.Contains(body, `"category_slug":"devops"`) {
 		t.Fatalf("missing expected devops category override payload: %s", body)
+	}
+}
+
+func TestHandleAPIPublicMarketplaceSupportsGroupedCategoryFilters(t *testing.T) {
+	app, _ := setupPublicMarketplaceAPITestApp(t)
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/api/v1/public/marketplace?category_group=programming-development&subcategory_group=devops-cloud",
+		nil,
+	)
+	req.Header.Set("Accept", "application/json")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicMarketplace(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
+	}
+
+	body := recorder.Body.String()
+	if !strings.Contains(body, `"matching_skills":1`) {
+		t.Fatalf("expected grouped filters to narrow marketplace matches: %s", body)
+	}
+	if !strings.Contains(body, `"Ops Governance Toolkit"`) {
+		t.Fatalf("expected grouped subcategory filter to keep matching devops skill: %s", body)
+	}
+	if strings.Contains(body, `"React Dashboard Builder"`) {
+		t.Fatalf("expected grouped subcategory filter to exclude non-matching programming skills: %s", body)
+	}
+	if !strings.Contains(body, `"category_group":"programming-development"`) {
+		t.Fatalf("expected grouped category filter to echo into response filters: %s", body)
+	}
+	if !strings.Contains(body, `"subcategory_group":"devops-cloud"`) {
+		t.Fatalf("expected grouped subcategory filter to echo into response filters: %s", body)
+	}
+	if !strings.Contains(body, `"category_slug":"programming-development"`) {
+		t.Fatalf("expected grouped category detail summary payload: %s", body)
+	}
+	if !strings.Contains(body, `"total_skills":2`) {
+		t.Fatalf("expected grouped category detail total to reflect full grouped category: %s", body)
+	}
+	if !strings.Contains(body, `"subcategory_count":2`) {
+		t.Fatalf("expected grouped category detail to report grouped subcategory count: %s", body)
 	}
 }
 
@@ -167,6 +223,48 @@ func TestHandleAPIPublicMarketplaceUsesStableLowercaseTopTagKeys(t *testing.T) {
 	}
 	if _, ok := payload.TopTags[0]["Count"]; ok {
 		t.Fatalf("unexpected exported Go field key in top_tags payload: %+v", payload.TopTags[0])
+	}
+}
+
+func TestHandleAPIPublicMarketplaceRespectsRequestedPageSize(t *testing.T) {
+	app, _ := setupPublicMarketplaceAPITestApp(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/marketplace?sort=quality&page=1&page_size=1", nil)
+	req.Header.Set("Accept", "application/json")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicMarketplace(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("unexpected status code: got=%d want=%d body=%s", recorder.Code, http.StatusOK, recorder.Body.String())
+	}
+
+	var payload struct {
+		Filters struct {
+			PageSize int `json:"page_size"`
+		} `json:"filters"`
+		Pagination struct {
+			PageSize int `json:"page_size"`
+		} `json:"pagination"`
+		Items []struct {
+			Name string `json:"name"`
+		} `json:"items"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("failed to decode marketplace payload: %v body=%s", err, recorder.Body.String())
+	}
+
+	if payload.Filters.PageSize != 1 {
+		t.Fatalf("expected response filters to echo page_size=1, got=%d", payload.Filters.PageSize)
+	}
+	if payload.Pagination.PageSize != 1 {
+		t.Fatalf("expected pagination page_size to be 1, got=%d", payload.Pagination.PageSize)
+	}
+	if len(payload.Items) != 1 {
+		t.Fatalf("expected one marketplace item when page_size=1, got=%d", len(payload.Items))
+	}
+	if payload.Items[0].Name != "React Dashboard Builder" {
+		t.Fatalf("expected top quality skill to remain first item, got=%q", payload.Items[0].Name)
 	}
 }
 

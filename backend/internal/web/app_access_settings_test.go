@@ -325,4 +325,21 @@ func TestAPIAdminRepositorySyncPolicyUpdate(t *testing.T) {
 	if !ok || !enabled {
 		t.Fatalf("unexpected enabled in response: %#v", payload)
 	}
+
+	items, err := app.syncPolicyRecordSvc.List(context.Background(), services.ListSyncPoliciesInput{
+		SourceType: models.SyncPolicySourceRepository,
+		Limit:      10,
+	})
+	if err != nil {
+		t.Fatalf("failed to list mirrored sync policies: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected one mirrored repository policy, got=%d", len(items))
+	}
+	if items[0].TargetScope != services.RepositorySyncPolicyMirrorTargetScope {
+		t.Fatalf("unexpected mirrored target scope: %#v", items[0])
+	}
+	if !items[0].Enabled || items[0].IntervalMinutes != 15 || items[0].TimeoutMinutes != 3 || items[0].BatchSize != 42 {
+		t.Fatalf("unexpected mirrored repository policy: %#v", items[0])
+	}
 }

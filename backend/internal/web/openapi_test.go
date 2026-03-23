@@ -19,6 +19,7 @@ func TestBuildOpenAPISpecContainsCorePaths(t *testing.T) {
 
 	requiredPaths := []string{
 		"/api/v1/public/marketplace",
+		"/api/v1/public/rankings",
 		"/api/v1/public/skills/{skillID}",
 		"/api/v1/skills/search",
 		"/api/v1/skills/ai-search",
@@ -58,6 +59,7 @@ func TestBuildOpenAPISpecContainsCorePaths(t *testing.T) {
 		"/api/v1/admin/sync-runs/{runID}",
 		"/api/v1/admin/sync-policy/repository",
 		"/api/v1/admin/sync-policies",
+		"/api/v1/admin/sync-policies/{policyID}",
 		"/api/v1/admin/sync-policies/create",
 		"/api/v1/admin/sync-policies/{policyID}/update",
 		"/api/v1/admin/sync-policies/{policyID}/toggle",
@@ -108,6 +110,8 @@ func TestBuildOpenAPISpecContainsCorePaths(t *testing.T) {
 		"/api/v1/skills/{skillID}/sync-runs/{runID}",
 		"/api/v1/skills/{skillID}/organization-bind",
 		"/api/v1/skills/{skillID}/organization-unbind",
+		"/api/v1/skills/{skillID}/versions",
+		"/api/v1/skills/{skillID}/versions/{versionID}",
 		"/api/v1/skills/{skillID}/versions/{versionID}/rollback",
 		"/api/v1/skills/{skillID}/versions/{versionID}/restore",
 		"/skills/{skillID}/versions",
@@ -177,6 +181,58 @@ func TestBuildOpenAPISpecSyncRunItemContainsTargetSkillID(t *testing.T) {
 	if _, exists := properties["target_skill_id"]; !exists {
 		t.Fatalf("SyncJobRunItem should include target_skill_id")
 	}
+	if _, exists := properties["version"]; !exists {
+		t.Fatalf("SyncJobRunItem should include version summary")
+	}
+	if _, exists := properties["audit"]; !exists {
+		t.Fatalf("SyncJobRunItem should include audit summary")
+	}
+}
+
+func TestBuildOpenAPISpecAdminSyncRunListIncludesUnifiedFilters(t *testing.T) {
+	spec := buildOpenAPISpec("http://127.0.0.1:8080")
+	paths, ok := spec["paths"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing paths object")
+	}
+
+	requiredParams := map[string]struct{}{
+		"owner_id":        {},
+		"policy_id":       {},
+		"job_id":          {},
+		"target_skill_id": {},
+		"status":          {},
+		"trigger_type":    {},
+		"include_errored": {},
+		"limit":           {},
+	}
+	for _, pathKey := range []string{"/api/v1/admin/sync-jobs", "/api/v1/admin/sync-runs"} {
+		pathItem, ok := paths[pathKey].(map[string]any)
+		if !ok {
+			t.Fatalf("missing path item: %s", pathKey)
+		}
+		getOp, ok := pathItem["get"].(map[string]any)
+		if !ok {
+			t.Fatalf("missing get operation: %s", pathKey)
+		}
+		params, ok := getOp["parameters"].([]map[string]any)
+		if !ok {
+			t.Fatalf("missing parameters for path: %s", pathKey)
+		}
+
+		found := make(map[string]struct{}, len(params))
+		for _, param := range params {
+			name, _ := param["name"].(string)
+			if name != "" {
+				found[name] = struct{}{}
+			}
+		}
+		for name := range requiredParams {
+			if _, exists := found[name]; !exists {
+				t.Fatalf("path %s missing query param %s", pathKey, name)
+			}
+		}
+	}
 }
 
 func TestBuildOpenAPISpecPublicSearchIncludesScopeDeniedResponse(t *testing.T) {
@@ -224,6 +280,46 @@ func TestBuildOpenAPISpecPublicMarketplaceIncludesConditionalUnauthorizedRespons
 	}
 	if _, exists := responses["401"]; !exists {
 		t.Fatalf("public marketplace responses should include 401 for private marketplace mode")
+	}
+}
+
+func TestBuildOpenAPISpecPublicMarketplaceIncludesGroupedQueryFilters(t *testing.T) {
+	spec := buildOpenAPISpec("http://127.0.0.1:8080")
+	paths, ok := spec["paths"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing paths object")
+	}
+
+	marketplacePath, ok := paths["/api/v1/public/marketplace"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing public marketplace path")
+	}
+	getOp, ok := marketplacePath["get"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing public marketplace get operation")
+	}
+	params, ok := getOp["parameters"].([]map[string]any)
+	if !ok {
+		t.Fatalf("missing public marketplace parameters")
+	}
+
+	var hasCategoryGroup bool
+	var hasSubcategoryGroup bool
+	var hasPageSize bool
+	for _, item := range params {
+		name, _ := item["name"].(string)
+		switch name {
+		case "category_group":
+			hasCategoryGroup = true
+		case "subcategory_group":
+			hasSubcategoryGroup = true
+		case "page_size":
+			hasPageSize = true
+		}
+	}
+
+	if !hasCategoryGroup || !hasSubcategoryGroup || !hasPageSize {
+		t.Fatalf("public marketplace parameters should include grouped taxonomy filters: %+v", params)
 	}
 }
 

@@ -31,6 +31,9 @@ func setupSkillVersionHandlersTestApp(t *testing.T) (*App, *gorm.DB, models.User
 		&models.Skill{},
 		&models.Tag{},
 		&models.SkillTag{},
+		&models.SyncPolicy{},
+		&models.AsyncJob{},
+		&models.SyncJobRun{},
 		&models.SkillVersion{},
 		&models.AuditLog{},
 	); err != nil {
@@ -89,6 +92,7 @@ func setupSkillVersionHandlersTestApp(t *testing.T) (*App, *gorm.DB, models.User
 	))
 	app := &App{
 		skillService:      skillSvc,
+		syncJobSvc:        services.NewSyncJobService(db),
 		skillVersionSvc:   versionSvc,
 		auditService:      services.NewAuditService(db),
 		templates:         tmpl,

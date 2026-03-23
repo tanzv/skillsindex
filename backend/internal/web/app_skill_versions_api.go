@@ -14,17 +14,19 @@ func (a *App) handleAPISkillVersionRollback(w http.ResponseWriter, r *http.Reque
 		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
 		return
 	}
-	if a.skillVersionSvc == nil {
+	if a.skillVersionSvc == nil || a.skillService == nil {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
 		return
 	}
 
-	skillID, ok := parseSkillID(w, r)
-	if !ok {
+	skillID, err := parseUintURLParam(r, "skillID")
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_skill_id"})
 		return
 	}
-	versionID, ok := parseVersionID(w, r)
-	if !ok {
+	versionID, err := parseUintURLParam(r, "versionID")
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_version_id"})
 		return
 	}
 	skill, err := a.skillService.GetSkillByID(r.Context(), skillID)
@@ -94,17 +96,19 @@ func (a *App) handleAPISkillVersionRestore(w http.ResponseWriter, r *http.Reques
 		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
 		return
 	}
-	if a.skillVersionSvc == nil {
+	if a.skillVersionSvc == nil || a.skillService == nil {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
 		return
 	}
 
-	skillID, ok := parseSkillID(w, r)
-	if !ok {
+	skillID, err := parseUintURLParam(r, "skillID")
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_skill_id"})
 		return
 	}
-	versionID, ok := parseVersionID(w, r)
-	if !ok {
+	versionID, err := parseUintURLParam(r, "versionID")
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_version_id"})
 		return
 	}
 	skill, err := a.skillService.GetSkillByID(r.Context(), skillID)
@@ -120,6 +124,10 @@ func (a *App) handleAPISkillVersionRestore(w http.ResponseWriter, r *http.Reques
 	actorID := user.ID
 	updated, restoreErr := a.skillVersionSvc.RestoreVersion(r.Context(), skillID, versionID, skill.OwnerID, &actorID)
 	if restoreErr != nil {
+		if errors.Is(restoreErr, services.ErrSkillNotFound) {
+			writeJSON(w, http.StatusNotFound, map[string]any{"error": "version_not_found"})
+			return
+		}
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "restore_failed", "message": restoreErr.Error()})
 		return
 	}

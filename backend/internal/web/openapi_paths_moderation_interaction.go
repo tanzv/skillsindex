@@ -190,12 +190,10 @@ func openAPIPathsModerationInteraction() map[string]any {
 				"summary":     "List sync runs of one skill",
 				"description": "Session JSON endpoint for owner/admin/super_admin to query synchronization run history of one skill.",
 				"security":    sessionSecurity(),
-				"parameters": []map[string]any{
-					pathParam("skillID", "Skill ID"),
-					queryParam("limit", "integer", false, "Maximum run records"),
-				},
+				"parameters":  openAPISkillSyncRunListQueryParams(),
 				"responses": map[string]any{
 					"200": jsonResponse("Sync run records", "SyncJobsResponse"),
+					"400": jsonResponse("Invalid query filter", "ErrorResponse"),
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
 					"403": jsonResponse("Permission denied", "ErrorResponse"),
 					"404": jsonResponse("Skill not found", "ErrorResponse"),
@@ -261,6 +259,50 @@ func openAPIPathsModerationInteraction() map[string]any {
 				},
 			},
 		},
+		"/api/v1/skills/{skillID}/versions": map[string]any{
+			"get": map[string]any{
+				"tags":        []string{"interaction"},
+				"summary":     "List historical versions of one skill",
+				"description": "Session JSON endpoint for owner/admin/super_admin to query one skill version history.",
+				"security":    sessionSecurity(),
+				"parameters": []map[string]any{
+					pathParam("skillID", "Skill ID"),
+					queryParam("trigger", "string", false, "Optional trigger filter, for example sync or rollback"),
+					queryParam("from_time", "string", false, "Optional captured_at lower bound in RFC3339 or YYYY-MM-DD"),
+					queryParam("to_time", "string", false, "Optional captured_at upper bound in RFC3339 or YYYY-MM-DD"),
+					queryParam("include_archived", "boolean", false, "Set true to include archived versions"),
+					queryParam("limit", "integer", false, "Maximum version records"),
+				},
+				"responses": map[string]any{
+					"200": jsonResponse("Skill version history", "SkillVersionsResponse"),
+					"400": jsonResponse("Invalid query filter", "ErrorResponse"),
+					"401": jsonResponse("Unauthorized", "ErrorResponse"),
+					"403": jsonResponse("Permission denied", "ErrorResponse"),
+					"404": jsonResponse("Skill not found", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
+				},
+			},
+		},
+		"/api/v1/skills/{skillID}/versions/{versionID}": map[string]any{
+			"get": map[string]any{
+				"tags":        []string{"interaction"},
+				"summary":     "Get one historical version of one skill",
+				"description": "Session JSON endpoint for owner/admin/super_admin to query one skill version snapshot by id.",
+				"security":    sessionSecurity(),
+				"parameters": []map[string]any{
+					pathParam("skillID", "Skill ID"),
+					pathParam("versionID", "Version ID"),
+				},
+				"responses": map[string]any{
+					"200": jsonResponse("Skill version detail", "SkillVersionDetailResponse"),
+					"400": jsonResponse("Invalid skill or version id", "ErrorResponse"),
+					"401": jsonResponse("Unauthorized", "ErrorResponse"),
+					"403": jsonResponse("Permission denied", "ErrorResponse"),
+					"404": jsonResponse("Skill or version not found", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
+				},
+			},
+		},
 		"/api/v1/skills/{skillID}/versions/{versionID}/rollback": map[string]any{
 			"post": map[string]any{
 				"tags":        []string{"interaction"},
@@ -277,6 +319,7 @@ func openAPIPathsModerationInteraction() map[string]any {
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
 					"403": jsonResponse("Permission denied", "ErrorResponse"),
 					"404": jsonResponse("Skill or version not found", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
 		},
@@ -296,6 +339,7 @@ func openAPIPathsModerationInteraction() map[string]any {
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
 					"403": jsonResponse("Permission denied", "ErrorResponse"),
 					"404": jsonResponse("Skill or version not found", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
 		},

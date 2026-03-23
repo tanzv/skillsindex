@@ -56,6 +56,16 @@ func TestHandleAPIPublicMarketplaceReturnsBootstrapShowcaseData(t *testing.T) {
 			TotalSkills    int `json:"total_skills"`
 			MatchingSkills int `json:"matching_skills"`
 		} `json:"stats"`
+		Summary struct {
+			Landing struct {
+				TotalSkills   int `json:"total_skills"`
+				CategoryCount int `json:"category_count"`
+				TopTagCount   int `json:"top_tag_count"`
+			} `json:"landing"`
+			CategoryHub struct {
+				TotalCategories int `json:"total_categories"`
+			} `json:"category_hub"`
+		} `json:"summary"`
 		Pagination struct {
 			TotalItems int `json:"total_items"`
 		} `json:"pagination"`
@@ -76,6 +86,12 @@ func TestHandleAPIPublicMarketplaceReturnsBootstrapShowcaseData(t *testing.T) {
 
 	if payload.Stats.TotalSkills == 0 {
 		t.Fatalf("expected bootstrap marketplace data to contribute to total skills")
+	}
+	if payload.Summary.Landing.TotalSkills == 0 || payload.Summary.Landing.CategoryCount == 0 || payload.Summary.Landing.TopTagCount == 0 {
+		t.Fatalf("expected bootstrap marketplace summary to include landing metrics: %+v", payload.Summary.Landing)
+	}
+	if payload.Summary.CategoryHub.TotalCategories == 0 {
+		t.Fatalf("expected bootstrap marketplace summary to include category hub metrics: %+v", payload.Summary.CategoryHub)
 	}
 	if payload.Stats.MatchingSkills == 0 || payload.Pagination.TotalItems == 0 {
 		t.Fatalf("expected bootstrap marketplace payload to include visible items: %+v", payload)

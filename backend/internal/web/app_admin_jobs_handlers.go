@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"skillsindex/internal/models"
 	"strconv"
 	"time"
 
@@ -86,7 +87,7 @@ func (a *App) handleAdminJobRetry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	retried, retryErr := a.asyncJobSvc.Retry(r.Context(), jobID, user.ID, time.Now().UTC())
+	retried, retryErr := a.retryAsyncJob(r.Context(), job, user.ID, time.Now().UTC())
 	if retryErr != nil {
 		redirectAdminPath(w, r, "/admin/jobs/"+strconv.FormatUint(uint64(jobID), 10), "", "Failed to retry job")
 		return
@@ -104,7 +105,11 @@ func (a *App) handleAdminJobRetry(w http.ResponseWriter, r *http.Request) {
 		}),
 	})
 
-	redirectAdminPath(w, r, "/admin/jobs/"+strconv.FormatUint(uint64(jobID), 10), "Job moved back to pending", "")
+	successMessage := "Job moved back to pending"
+	if retried.Status == models.AsyncJobStatusRunning {
+		successMessage = "Job retry started"
+	}
+	redirectAdminPath(w, r, "/admin/jobs/"+strconv.FormatUint(uint64(jobID), 10), successMessage, "")
 }
 
 func (a *App) handleAdminJobCancel(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +142,7 @@ func (a *App) handleAdminJobCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	canceled, cancelErr := a.asyncJobSvc.Cancel(r.Context(), jobID, user.ID, time.Now().UTC())
+	canceled, cancelErr := a.cancelAsyncJob(r.Context(), job, user.ID, time.Now().UTC())
 	if cancelErr != nil {
 		redirectAdminPath(w, r, "/admin/jobs/"+strconv.FormatUint(uint64(jobID), 10), "", "Failed to cancel job")
 		return

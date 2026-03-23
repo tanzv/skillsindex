@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -14,8 +13,8 @@ import (
 // RepositorySyncScheduler runs periodic repository synchronization jobs.
 type RepositorySyncScheduler struct {
 	coordinator    *RepositorySyncCoordinator
-	asyncJobs      *AsyncJobService
-	syncRuns       *SyncJobService
+	batchRunner    func(context.Context, *uint, *time.Time, int) (RepositorySyncSummary, error)
+	governance     *SyncGovernanceService
 	interval       time.Duration
 	timeout        time.Duration
 	batchSize      int
@@ -26,8 +25,7 @@ type RepositorySyncScheduler struct {
 // NewRepositorySyncScheduler constructs a periodic scheduler for repository sync jobs.
 func NewRepositorySyncScheduler(
 	coordinator *RepositorySyncCoordinator,
-	asyncJobs *AsyncJobService,
-	syncRuns *SyncJobService,
+	governance *SyncGovernanceService,
 	interval time.Duration,
 	timeout time.Duration,
 	batchSize int,
@@ -48,8 +46,8 @@ func NewRepositorySyncScheduler(
 	}
 	return &RepositorySyncScheduler{
 		coordinator:    coordinator,
-		asyncJobs:      asyncJobs,
-		syncRuns:       syncRuns,
+		batchRunner:    buildRepositorySyncBatchRunner(coordinator),
+		governance:     governance,
 		interval:       interval,
 		timeout:        timeout,
 		batchSize:      batchSize,
@@ -60,7 +58,7 @@ func NewRepositorySyncScheduler(
 
 // Start launches the periodic scheduler loop.
 func (s *RepositorySyncScheduler) Start(ctx context.Context) {
-	if s == nil || s.coordinator == nil {
+	if s == nil || s.batchRunner == nil {
 		return
 	}
 
@@ -95,7 +93,7 @@ func (s *RepositorySyncScheduler) runOnce(parent context.Context, trigger string
 		s.logger.Printf("repository scheduler [%s] skipped: policy disabled", trigger)
 		return
 	}
-	if s.coordinator == nil {
+	if s.batchRunner == nil {
 		s.logger.Printf("repository scheduler [%s] skipped: coordinator unavailable", trigger)
 		return
 	}
@@ -105,60 +103,36 @@ func (s *RepositorySyncScheduler) runOnce(parent context.Context, trigger string
 	runCtx, cancel := context.WithTimeout(parent, policy.Timeout)
 	defer cancel()
 
-	jobID := uint(0)
-	if s.asyncJobs != nil {
-		payloadDigest := fmt.Sprintf("scheduler:%s:%d:%s", trigger, policy.BatchSize, dueBefore.Format("200601021504"))
-		created, _, createErr := s.asyncJobs.CreateOrGetActive(parent, CreateAsyncJobInput{
+	var execution SyncGovernanceExecution
+	payloadDigest := fmt.Sprintf("scheduler:%s:%d:%s", trigger, policy.BatchSize, dueBefore.Format("200601021504"))
+	if s.governance != nil {
+		startedExecution, startErr := s.governance.Start(parent, StartSyncGovernanceInput{
 			JobType:       models.AsyncJobTypeSyncRepository,
+			Trigger:       trigger,
+			TriggerType:   normalizeSyncRunTriggerType(trigger, trigger),
+			Scope:         "all",
 			MaxAttempts:   3,
 			PayloadDigest: payloadDigest,
-		}, startedAt)
-		if createErr != nil {
-			s.logger.Printf("repository scheduler [%s] failed to create async job: %v", trigger, createErr)
+			StartedAt:     startedAt,
+		})
+		if startErr != nil {
+			s.logger.Printf("repository scheduler [%s] failed to start governed execution: %v", trigger, startErr)
+		} else if startedExecution.Deduped {
+			s.logger.Printf("repository scheduler [%s] skipped: active execution already exists", trigger)
+			return
 		} else {
-			jobID = created.ID
-			if _, startErr := s.asyncJobs.Start(parent, created.ID, startedAt); startErr != nil && !errors.Is(startErr, ErrAsyncJobInvalidTransition) {
-				s.logger.Printf("repository scheduler [%s] failed to start async job: %v", trigger, startErr)
-			}
+			execution = startedExecution
 		}
 	}
 
-	summary, err := s.coordinator.SyncBatch(runCtx, nil, &dueBefore, policy.BatchSize)
+	summary, err := s.batchRunner(runCtx, nil, &dueBefore, policy.BatchSize)
 	if err != nil {
-		if s.asyncJobs != nil && jobID != 0 {
-			_, _ = s.asyncJobs.MarkFailed(parent, jobID, "sync_batch_failed", err.Error(), time.Now().UTC())
-		}
-		s.recordRun(parent, RecordSyncRunInput{
-			Trigger:      trigger,
-			Scope:        "all",
-			Candidates:   0,
-			Synced:       0,
-			Failed:       1,
-			StartedAt:    startedAt,
-			FinishedAt:   time.Now().UTC(),
-			ErrorSummary: err.Error(),
-		})
+		s.completeGovernedExecution(parent, execution, summary, time.Now().UTC(), err, "")
 		s.logger.Printf("repository scheduler [%s] failed: %v", trigger, err)
 		return
 	}
 	errorSummary := strings.Join(summary.Errors, " | ")
-	if s.asyncJobs != nil && jobID != 0 {
-		if summary.Failed > 0 {
-			_, _ = s.asyncJobs.MarkFailed(parent, jobID, "sync_partial_failed", errorSummary, time.Now().UTC())
-		} else {
-			_, _ = s.asyncJobs.MarkSucceeded(parent, jobID, time.Now().UTC())
-		}
-	}
-	s.recordRun(parent, RecordSyncRunInput{
-		Trigger:      trigger,
-		Scope:        "all",
-		Candidates:   summary.Candidates,
-		Synced:       summary.Synced,
-		Failed:       summary.Failed,
-		StartedAt:    startedAt,
-		FinishedAt:   time.Now().UTC(),
-		ErrorSummary: errorSummary,
-	})
+	s.completeGovernedExecution(parent, execution, summary, time.Now().UTC(), nil, errorSummary)
 
 	if summary.Candidates == 0 {
 		return
@@ -182,15 +156,6 @@ func (s *RepositorySyncScheduler) runOnce(parent context.Context, trigger string
 		summary.Synced,
 		summary.Failed,
 	)
-}
-
-func (s *RepositorySyncScheduler) recordRun(ctx context.Context, input RecordSyncRunInput) {
-	if s.syncRuns == nil {
-		return
-	}
-	if _, err := s.syncRuns.RecordRun(ctx, input); err != nil {
-		s.logger.Printf("repository scheduler failed to store sync run: %v", err)
-	}
 }
 
 func (s *RepositorySyncScheduler) currentPolicy(ctx context.Context) RepositorySyncPolicy {
@@ -219,4 +184,50 @@ func (s *RepositorySyncScheduler) currentPolicy(ctx context.Context) RepositoryS
 		loaded.BatchSize = policy.BatchSize
 	}
 	return loaded
+}
+
+func (s *RepositorySyncScheduler) completeGovernedExecution(
+	ctx context.Context,
+	execution SyncGovernanceExecution,
+	summary RepositorySyncSummary,
+	finishedAt time.Time,
+	syncErr error,
+	errorSummary string,
+) {
+	if s.governance == nil || execution.Job.ID == 0 || execution.Run.ID == 0 {
+		return
+	}
+	errorCode := ""
+	errorMessage := errorSummary
+	failedCount := summary.Failed
+	if syncErr != nil {
+		errorCode = "sync_batch_failed"
+		errorMessage = syncErr.Error()
+		errorSummary = syncErr.Error()
+		failedCount = maxInt(failedCount, 1)
+	} else if summary.Failed > 0 {
+		errorCode = "sync_partial_failed"
+	}
+	if _, err := s.governance.Complete(ctx, CompleteSyncGovernanceInput{
+		RunID:        execution.Run.ID,
+		JobID:        execution.Job.ID,
+		Candidates:   summary.Candidates,
+		Synced:       summary.Synced,
+		Failed:       failedCount,
+		FinishedAt:   finishedAt,
+		ErrorCode:    errorCode,
+		ErrorMessage: errorMessage,
+		ErrorSummary: errorSummary,
+	}); err != nil {
+		s.logger.Printf("repository scheduler failed to finalize governed execution: %v", err)
+	}
+}
+
+func buildRepositorySyncBatchRunner(
+	coordinator *RepositorySyncCoordinator,
+) func(context.Context, *uint, *time.Time, int) (RepositorySyncSummary, error) {
+	if coordinator == nil {
+		return nil
+	}
+	return coordinator.SyncBatch
 }

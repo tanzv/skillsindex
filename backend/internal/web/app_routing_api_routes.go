@@ -11,6 +11,7 @@ func (a *App) registerMarketplaceAPIRoutes(r chi.Router) {
 	r.Group(func(publicAPI chi.Router) {
 		publicAPI.Use(a.requireMarketplaceAccess)
 		publicAPI.Get("/api/v1/public/marketplace", a.handleAPIPublicMarketplace)
+		publicAPI.Get("/api/v1/public/rankings", a.handleAPIPublicRankings)
 		publicAPI.Get("/api/v1/public/skills/compare", a.handleAPIPublicSkillCompare)
 		publicAPI.Get("/api/v1/public/skills/{skillID}/resources", a.handleAPIPublicSkillResources)
 		publicAPI.Get("/api/v1/public/skills/{skillID}/resource-file", a.handleAPIPublicSkillResourceContent)

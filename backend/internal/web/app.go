@@ -1,13 +1,9 @@
 package web
 
 import (
-	"fmt"
+	"context"
 	"html/template"
-	"math"
 	"net/http"
-	"net/url"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"skillsindex/internal/catalog"
@@ -25,39 +21,42 @@ const csrfTokenFormField = "csrf_token"
 
 // App wires handlers, templates, and domain services for web delivery.
 type App struct {
-	authService       *services.AuthService
-	sessionService    *services.SessionService
-	sessionStarter    func(http.ResponseWriter, *http.Request, uint) error
-	userSessionSvc    *services.UserSessionService
-	skillService      *services.SkillService
-	apiKeyService     *services.APIKeyService
-	interaction       *services.SkillInteractionService
-	auditService      *services.AuditService
-	integrationSvc    *services.IntegrationService
-	incidentSvc       *services.IncidentService
-	moderationSvc     *services.ModerationService
-	opsService        *services.OpsService
-	asyncJobSvc       *services.AsyncJobService
-	syncJobSvc        *services.SyncJobService
-	skillVersionSvc   *services.SkillVersionService
-	organizationSvc   *services.OrganizationService
-	oauthGrantService *services.OAuthGrantService
-	dingTalkService   *services.DingTalkService
-	uploadService     *services.UploadService
-	repositoryService *services.RepositorySyncService
-	repoSyncRunner    *services.RepositorySyncCoordinator
-	skillMPService    *services.SkillMPService
-	settingsService   *services.SettingsService
-	syncPolicyService *services.RepositorySyncPolicyService
-	loginThrottle     *loginThrottleState
-	allowRegistration bool
-	apiKeys           map[string]struct{}
-	translations      translationCatalog
-	templates         *template.Template
-	storagePath       string
-	cookieSecure      bool
-	apiOnly           bool
-	corsOrigins       map[string]struct{}
+	authService         *services.AuthService
+	sessionService      *services.SessionService
+	sessionStarter      func(http.ResponseWriter, *http.Request, uint) error
+	userSessionSvc      *services.UserSessionService
+	skillService        *services.SkillService
+	apiKeyService       *services.APIKeyService
+	interaction         *services.SkillInteractionService
+	auditService        *services.AuditService
+	integrationSvc      *services.IntegrationService
+	incidentSvc         *services.IncidentService
+	moderationSvc       *services.ModerationService
+	opsService          *services.OpsService
+	asyncJobSvc         *services.AsyncJobService
+	syncJobSvc          *services.SyncJobService
+	syncGovernanceSvc   *services.SyncGovernanceService
+	skillVersionSvc     *services.SkillVersionService
+	organizationSvc     *services.OrganizationService
+	oauthGrantService   *services.OAuthGrantService
+	dingTalkService     *services.DingTalkService
+	uploadService       *services.UploadService
+	repositoryService   *services.RepositorySyncService
+	repoSyncRunner      *services.RepositorySyncCoordinator
+	repoSyncBatchRunner func(context.Context, *uint, *time.Time, int) (services.RepositorySyncSummary, error)
+	skillMPService      *services.SkillMPService
+	settingsService     *services.SettingsService
+	syncPolicyService   *services.RepositorySyncPolicyService
+	syncPolicyRecordSvc *services.SyncPolicyService
+	loginThrottle       *loginThrottleState
+	allowRegistration   bool
+	apiKeys             map[string]struct{}
+	translations        translationCatalog
+	templates           *template.Template
+	storagePath         string
+	cookieSecure        bool
+	apiOnly             bool
+	corsOrigins         map[string]struct{}
 }
 
 // ViewData is rendered by the shared template.
@@ -160,212 +159,4 @@ type ViewData struct {
 	DetailFavorited         bool
 	DetailUserRating        int
 	DetailComments          []models.SkillComment
-}
-
-// NewApp initializes the HTTP app with optional template rendering support.
-func NewApp(
-	authService *services.AuthService,
-	sessionService *services.SessionService,
-	userSessionService *services.UserSessionService,
-	skillService *services.SkillService,
-	apiKeyService *services.APIKeyService,
-	interactionService *services.SkillInteractionService,
-	auditService *services.AuditService,
-	integrationService *services.IntegrationService,
-	incidentService *services.IncidentService,
-	moderationService *services.ModerationService,
-	opsService *services.OpsService,
-	asyncJobService *services.AsyncJobService,
-	syncJobService *services.SyncJobService,
-	skillVersionService *services.SkillVersionService,
-	organizationService *services.OrganizationService,
-	oauthGrantService *services.OAuthGrantService,
-	dingTalkService *services.DingTalkService,
-	uploadService *services.UploadService,
-	repositoryService *services.RepositorySyncService,
-	skillMPService *services.SkillMPService,
-	settingsService *services.SettingsService,
-	syncPolicyService *services.RepositorySyncPolicyService,
-	allowRegistration bool,
-	cookieSecure bool,
-	apiOnly bool,
-	corsAllowedOrigins []string,
-	apiKeys []string,
-	templateGlob string,
-	storagePath string,
-) (*App, error) {
-	translations := loadTranslations(filepath.Join("docs", "i18n"))
-
-	funcMap := template.FuncMap{
-		"tagNames": func(tags []models.Tag) string {
-			if len(tags) == 0 {
-				return ""
-			}
-			names := make([]string, 0, len(tags))
-			for _, tag := range tags {
-				names = append(names, tag.Name)
-			}
-			return strings.Join(names, ", ")
-		},
-		"formatTimePtr": func(value *time.Time) string {
-			if value == nil {
-				return "Never"
-			}
-			return value.UTC().Format("2006-01-02 15:04 UTC")
-		},
-		"formatTime": func(value time.Time) string {
-			return value.UTC().Format("2006-01-02")
-		},
-		"formatDateTime": func(value time.Time) string {
-			return value.UTC().Format("2006-01-02 15:04 UTC")
-		},
-		"isSyncable": func(source models.SkillSourceType) bool {
-			return source == models.SourceTypeRepository || source == models.SourceTypeSkillMP
-		},
-		"totalPages": func(total int64, pageSize int) int {
-			if pageSize <= 0 {
-				return 1
-			}
-			pages := int(math.Ceil(float64(total) / float64(pageSize)))
-			if pages < 1 {
-				pages = 1
-			}
-			return pages
-		},
-		"plus":    func(value int, delta int) int { return value + delta },
-		"minus":   func(value int, delta int) int { return value - delta },
-		"toUpper": strings.ToUpper,
-		"tr": func(locale string, key string) string {
-			return translations.translate(locale, key)
-		},
-		"queryEscape": func(value string) string {
-			return url.QueryEscape(value)
-		},
-		"canAccessDashboard": func(user *models.User) bool {
-			if user == nil {
-				return false
-			}
-			return user.CanAccessDashboard()
-		},
-		"canManageUsers": func(user *models.User) bool {
-			if user == nil {
-				return false
-			}
-			return user.CanManageUsers()
-		},
-		"canViewAllSkills": func(user *models.User) bool {
-			if user == nil {
-				return false
-			}
-			return user.CanViewAllSkills()
-		},
-		"apiKeyStatus": func(key models.APIKey) string {
-			if key.RevokedAt != nil {
-				return "revoked"
-			}
-			if key.ExpiresAt != nil && time.Now().UTC().After(key.ExpiresAt.UTC()) {
-				return "expired"
-			}
-			return "active"
-		},
-		"apiKeyScopes": func(key models.APIKey) string {
-			scopes := services.APIKeyScopes(key)
-			if len(scopes) == 0 {
-				return "legacy-all"
-			}
-			return strings.Join(scopes, ", ")
-		},
-		"roleKey": func(role models.UserRole) string {
-			return roleTranslationKey(role)
-		},
-		"ownerSelected": func(current *uint, userID uint) bool {
-			if current == nil {
-				return false
-			}
-			return *current == userID
-		},
-		"sessionLabel": func(value string) string {
-			clean := strings.TrimSpace(value)
-			if len(clean) <= 14 {
-				return clean
-			}
-			return clean[:8] + "..." + clean[len(clean)-4:]
-		},
-		"topFeaturedQuality":         topFeaturedQuality,
-		"topFeaturedPercent":         topFeaturedPercent,
-		"isAdminPage":                isAdminPage,
-		"isAuthShellPage":            isAuthShellPage,
-		"isLoginPage":                isLoginPage,
-		"isRegisterPage":             isRegisterPage,
-		"isPasswordResetRequestPage": isPasswordResetRequestPage,
-		"isPasswordResetConfirmPage": isPasswordResetConfirmPage,
-		"loginPath":                  loginPath,
-		"registerPath":               registerPath,
-		"passwordResetRequestPath":   passwordResetRequestPath,
-		"passwordResetConfirmPath":   passwordResetConfirmPath,
-		"bodyClass":                  bodyClass,
-	}
-
-	var tmpl *template.Template
-	if !apiOnly {
-		if strings.TrimSpace(templateGlob) == "" {
-			return nil, fmt.Errorf("template glob is required when api-only mode is disabled")
-		}
-		parsed, err := template.New("layout").Funcs(funcMap).ParseGlob(templateGlob)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse templates: %w", err)
-		}
-		tmpl = parsed
-	}
-
-	keySet := make(map[string]struct{}, len(apiKeys))
-	for _, key := range apiKeys {
-		clean := strings.TrimSpace(key)
-		if clean == "" {
-			continue
-		}
-		keySet[clean] = struct{}{}
-	}
-
-	corsOriginSet := make(map[string]struct{}, len(corsAllowedOrigins))
-	for _, origin := range corsAllowedOrigins {
-		clean := strings.TrimSpace(origin)
-		if clean == "" {
-			continue
-		}
-		corsOriginSet[clean] = struct{}{}
-	}
-	return &App{
-		authService:       authService,
-		sessionService:    sessionService,
-		userSessionSvc:    userSessionService,
-		skillService:      skillService,
-		apiKeyService:     apiKeyService,
-		interaction:       interactionService,
-		auditService:      auditService,
-		integrationSvc:    integrationService,
-		incidentSvc:       incidentService,
-		moderationSvc:     moderationService,
-		opsService:        opsService,
-		asyncJobSvc:       asyncJobService,
-		syncJobSvc:        syncJobService,
-		skillVersionSvc:   skillVersionService,
-		organizationSvc:   organizationService,
-		oauthGrantService: oauthGrantService,
-		dingTalkService:   dingTalkService,
-		uploadService:     uploadService,
-		repositoryService: repositoryService,
-		repoSyncRunner:    services.NewRepositorySyncCoordinator(skillService, repositoryService),
-		skillMPService:    skillMPService,
-		settingsService:   settingsService,
-		syncPolicyService: syncPolicyService,
-		allowRegistration: allowRegistration,
-		cookieSecure:      cookieSecure,
-		apiKeys:           keySet,
-		translations:      translations,
-		templates:         tmpl,
-		storagePath:       storagePath,
-		apiOnly:           apiOnly,
-		corsOrigins:       corsOriginSet,
-	}, nil
 }

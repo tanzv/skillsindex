@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -38,58 +39,54 @@ func (a *App) handleRepositorySyncBatch(w http.ResponseWriter, r *http.Request) 
 	}
 
 	startedAt := time.Now().UTC()
-	asyncJobID := uint(0)
-	if a.asyncJobSvc != nil {
-		payloadDigest := fmt.Sprintf("manual:sync_repository:%s:%d", scope, limit)
+	batchRunner := a.repositorySyncBatchRunner()
+	if batchRunner == nil {
+		redirectDashboard(w, r, "", "Repository sync runner unavailable")
+		return
+	}
+
+	var execution services.SyncGovernanceExecution
+	legacyAsyncJobID := uint(0)
+	if a.syncGovernanceSvc != nil {
+		startedExecution, startErr := a.syncGovernanceSvc.Start(r.Context(), services.StartSyncGovernanceInput{
+			JobType:       models.AsyncJobTypeSyncRepository,
+			Trigger:       "manual",
+			TriggerType:   services.SyncRunTriggerTypeManual,
+			Scope:         scope,
+			OwnerUserID:   ownerID,
+			ActorUserID:   &user.ID,
+			MaxAttempts:   3,
+			PayloadDigest: fmt.Sprintf("manual:sync_repository:%s:%d", scope, limit),
+			StartedAt:     startedAt,
+		})
+		if startErr != nil {
+			redirectDashboard(w, r, "", "Failed to start repository sync job")
+			return
+		}
+		if startedExecution.Deduped {
+			redirectDashboard(w, r, "", "A matching repository sync job is already running")
+			return
+		}
+		execution = startedExecution
+	} else if a.asyncJobSvc != nil {
 		created, _, createErr := a.asyncJobSvc.CreateOrGetActive(r.Context(), services.CreateAsyncJobInput{
 			JobType:       models.AsyncJobTypeSyncRepository,
 			OwnerUserID:   ownerID,
 			ActorUserID:   &user.ID,
 			MaxAttempts:   3,
-			PayloadDigest: payloadDigest,
+			PayloadDigest: fmt.Sprintf("manual:sync_repository:%s:%d", scope, limit),
 		}, startedAt)
 		if createErr == nil {
-			asyncJobID = created.ID
-			if _, startErr := a.asyncJobSvc.Start(r.Context(), asyncJobID, startedAt); startErr != nil && !errors.Is(startErr, services.ErrAsyncJobInvalidTransition) {
-				asyncJobID = 0
+			legacyAsyncJobID = created.ID
+			if _, startErr := a.asyncJobSvc.Start(r.Context(), legacyAsyncJobID, startedAt); startErr != nil && !errors.Is(startErr, services.ErrAsyncJobInvalidTransition) {
+				legacyAsyncJobID = 0
 			}
 		}
 	}
-	summary, err := a.repoSyncRunner.SyncBatch(r.Context(), ownerID, nil, limit)
+
+	summary, err := batchRunner(r.Context(), ownerID, nil, limit)
 	finishedAt := time.Now().UTC()
-	if a.asyncJobSvc != nil && asyncJobID != 0 {
-		errorSummary := ""
-		if err != nil {
-			errorSummary = err.Error()
-			_, _ = a.asyncJobSvc.MarkFailed(r.Context(), asyncJobID, "sync_batch_failed", errorSummary, finishedAt)
-		} else if len(summary.Errors) > 0 {
-			errorSummary = strings.Join(summary.Errors, " | ")
-			_, _ = a.asyncJobSvc.MarkFailed(r.Context(), asyncJobID, "sync_partial_failed", errorSummary, finishedAt)
-		} else {
-			_, _ = a.asyncJobSvc.MarkSucceeded(r.Context(), asyncJobID, finishedAt)
-		}
-	}
-	if a.syncJobSvc != nil {
-		actorID := &user.ID
-		errorSummary := ""
-		if err != nil {
-			errorSummary = err.Error()
-		} else if len(summary.Errors) > 0 {
-			errorSummary = strings.Join(summary.Errors, " | ")
-		}
-		_, _ = a.syncJobSvc.RecordRun(r.Context(), services.RecordSyncRunInput{
-			Trigger:      "manual",
-			Scope:        scope,
-			OwnerUserID:  ownerID,
-			ActorUserID:  actorID,
-			Candidates:   summary.Candidates,
-			Synced:       summary.Synced,
-			Failed:       summary.Failed,
-			StartedAt:    startedAt,
-			FinishedAt:   finishedAt,
-			ErrorSummary: errorSummary,
-		})
-	}
+	a.completeRepositorySyncBatchGovernance(r, execution, legacyAsyncJobID, ownerID, user.ID, scope, summary, startedAt, finishedAt, err)
 	if err != nil {
 		redirectDashboard(w, r, "", "Repository sync batch failed: "+err.Error())
 		return
@@ -119,6 +116,101 @@ func (a *App) handleRepositorySyncBatch(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	redirectDashboard(w, r, message, "")
+}
+
+func (a *App) repositorySyncBatchRunner() func(
+	context.Context,
+	*uint,
+	*time.Time,
+	int,
+) (services.RepositorySyncSummary, error) {
+	if a == nil {
+		return nil
+	}
+	if a.repoSyncBatchRunner != nil {
+		return a.repoSyncBatchRunner
+	}
+	if a.repoSyncRunner != nil {
+		return a.repoSyncRunner.SyncBatch
+	}
+	return nil
+}
+
+func (a *App) completeRepositorySyncBatchGovernance(
+	r *http.Request,
+	execution services.SyncGovernanceExecution,
+	legacyAsyncJobID uint,
+	ownerID *uint,
+	actorUserID uint,
+	scope string,
+	summary services.RepositorySyncSummary,
+	startedAt time.Time,
+	finishedAt time.Time,
+	syncErr error,
+) {
+	if a == nil || r == nil {
+		return
+	}
+	errorSummary := ""
+	if syncErr != nil {
+		errorSummary = syncErr.Error()
+	} else if len(summary.Errors) > 0 {
+		errorSummary = strings.Join(summary.Errors, " | ")
+	}
+	if a.syncGovernanceSvc != nil && execution.Job.ID != 0 && execution.Run.ID != 0 {
+		actorID := actorUserID
+		errorCode := ""
+		errorMessage := errorSummary
+		failedCount := summary.Failed
+		if syncErr != nil {
+			errorCode = "sync_batch_failed"
+			if failedCount < 1 {
+				failedCount = 1
+			}
+		} else if summary.Failed > 0 {
+			errorCode = "sync_partial_failed"
+		}
+		_, _ = a.syncGovernanceSvc.Complete(r.Context(), services.CompleteSyncGovernanceInput{
+			RunID:        execution.Run.ID,
+			JobID:        execution.Job.ID,
+			Candidates:   summary.Candidates,
+			Synced:       summary.Synced,
+			Failed:       failedCount,
+			FinishedAt:   finishedAt,
+			ErrorCode:    errorCode,
+			ErrorMessage: errorMessage,
+			ErrorSummary: errorSummary,
+			ActorUserID:  &actorID,
+			AuditAction:  "",
+		})
+		return
+	}
+	if a.asyncJobSvc != nil && legacyAsyncJobID != 0 {
+		if syncErr != nil || summary.Failed > 0 {
+			errorCode := "sync_batch_failed"
+			if syncErr == nil {
+				errorCode = "sync_partial_failed"
+			}
+			_, _ = a.asyncJobSvc.MarkFailed(r.Context(), legacyAsyncJobID, errorCode, errorSummary, finishedAt)
+		} else {
+			_, _ = a.asyncJobSvc.MarkSucceeded(r.Context(), legacyAsyncJobID, finishedAt)
+		}
+	}
+	if a.syncJobSvc != nil {
+		actorID := actorUserID
+		_, _ = a.syncJobSvc.RecordRun(r.Context(), services.RecordSyncRunInput{
+			Trigger:      "manual",
+			Scope:        scope,
+			OwnerUserID:  ownerID,
+			ActorUserID:  &actorID,
+			Candidates:   summary.Candidates,
+			Synced:       summary.Synced,
+			Failed:       summary.Failed,
+			StartedAt:    startedAt,
+			FinishedAt:   finishedAt,
+			ErrorSummary: errorSummary,
+		})
+	}
 }
 
 func (a *App) handleSkillVersions(w http.ResponseWriter, r *http.Request) {

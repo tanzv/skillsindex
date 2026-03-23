@@ -18,7 +18,7 @@ func setupSyncJobServiceTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("failed to open db: %v", err)
 	}
-	if err := db.AutoMigrate(&models.User{}, &models.SyncJobRun{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.SyncPolicy{}, &models.AsyncJob{}, &models.SyncJobRun{}); err != nil {
 		t.Fatalf("failed to migrate sync job models: %v", err)
 	}
 	return db
@@ -70,6 +70,28 @@ func TestSyncJobServiceRecordRunPersistsTargetSkillID(t *testing.T) {
 	}
 	if *items[0].TargetSkillID != targetSkillID {
 		t.Fatalf("unexpected target skill id: got=%d want=%d", *items[0].TargetSkillID, targetSkillID)
+	}
+}
+
+func TestSyncJobServiceRecordRunFailsWhenOnlyErrorSummaryExists(t *testing.T) {
+	db := setupSyncJobServiceTestDB(t)
+	svc := NewSyncJobService(db)
+
+	recorded, err := svc.RecordRun(context.Background(), RecordSyncRunInput{
+		Trigger:      "manual",
+		Scope:        "single",
+		Candidates:   1,
+		Synced:       0,
+		Failed:       0,
+		ErrorSummary: "repository clone failed",
+		StartedAt:    time.Now().UTC().Add(-2 * time.Second),
+		FinishedAt:   time.Now().UTC(),
+	})
+	if err != nil {
+		t.Fatalf("failed to record run: %v", err)
+	}
+	if recorded.Status != SyncRunStatusFailed {
+		t.Fatalf("unexpected sync run status: got=%s want=%s", recorded.Status, SyncRunStatusFailed)
 	}
 }
 
@@ -184,5 +206,113 @@ func TestSyncJobServiceGetRunByID(t *testing.T) {
 	_, err = svc.GetRunByID(context.Background(), recorded.ID+999)
 	if !errors.Is(err, ErrSyncRunNotFound) {
 		t.Fatalf("expected ErrSyncRunNotFound, got: %v", err)
+	}
+}
+
+func TestSyncJobServiceRecordRunPersistsUnifiedFields(t *testing.T) {
+	db := setupSyncJobServiceTestDB(t)
+	svc := NewSyncJobService(db)
+
+	owner := models.User{Username: "sync-owner", PasswordHash: "hash", Role: models.RoleMember}
+	if err := db.Create(&owner).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+	policy := models.SyncPolicy{
+		PolicyName:      "Repository scheduled",
+		TargetScope:     "source:repository",
+		SourceType:      models.SyncPolicySourceRepository,
+		IntervalMinutes: 30,
+		Timezone:        "UTC",
+		Enabled:         true,
+	}
+	if err := db.Create(&policy).Error; err != nil {
+		t.Fatalf("failed to create policy: %v", err)
+	}
+	job := models.AsyncJob{
+		JobType:     models.AsyncJobTypeSyncRepository,
+		Status:      models.AsyncJobStatusPending,
+		OwnerUserID: &owner.ID,
+		Attempt:     1,
+		MaxAttempts: 3,
+	}
+	if err := db.Create(&job).Error; err != nil {
+		t.Fatalf("failed to create job: %v", err)
+	}
+
+	run, err := svc.RecordRun(context.Background(), RecordSyncRunInput{
+		PolicyID:       &policy.ID,
+		JobID:          &job.ID,
+		Trigger:        "scheduled",
+		TriggerType:    "scheduled",
+		Scope:          "source:repository",
+		Status:         "failed",
+		OwnerUserID:    &owner.ID,
+		Attempt:        2,
+		ErrorCode:      "clone_failed",
+		ErrorMessage:   "repository clone timeout",
+		ErrorSummary:   "repository clone timeout",
+		SourceRevision: "abc123",
+		StartedAt:      time.Now().UTC().Add(-2 * time.Second),
+		FinishedAt:     time.Now().UTC(),
+	})
+	if err != nil {
+		t.Fatalf("failed to record unified run: %v", err)
+	}
+	if run.PolicyID == nil || *run.PolicyID != policy.ID {
+		t.Fatalf("expected policy id to be persisted")
+	}
+	if run.JobID == nil || *run.JobID != job.ID {
+		t.Fatalf("expected job id to be persisted")
+	}
+	if run.TriggerType != "scheduled" {
+		t.Fatalf("unexpected trigger type: %s", run.TriggerType)
+	}
+	if run.Attempt != 2 {
+		t.Fatalf("unexpected attempt: %d", run.Attempt)
+	}
+	if run.ErrorCode != "clone_failed" {
+		t.Fatalf("unexpected error code: %s", run.ErrorCode)
+	}
+	if run.SourceRevision != "abc123" {
+		t.Fatalf("unexpected source revision: %s", run.SourceRevision)
+	}
+}
+
+func TestSyncJobServiceStartAndFinalizeRunLifecycle(t *testing.T) {
+	db := setupSyncJobServiceTestDB(t)
+	svc := NewSyncJobService(db)
+
+	startedAt := time.Now().UTC().Add(-4 * time.Second)
+	run, err := svc.StartRun(context.Background(), StartSyncRunInput{
+		Trigger:   "tick",
+		Scope:     "all",
+		Attempt:   1,
+		StartedAt: startedAt,
+	})
+	if err != nil {
+		t.Fatalf("failed to start run: %v", err)
+	}
+	if run.Status != SyncRunStatusRunning {
+		t.Fatalf("unexpected started run status: %s", run.Status)
+	}
+	if run.TriggerType != SyncRunTriggerTypeScheduled {
+		t.Fatalf("unexpected trigger type: %s", run.TriggerType)
+	}
+
+	finished, err := svc.FinalizeRun(context.Background(), run.ID, FinishSyncRunInput{
+		Candidates:   3,
+		Synced:       2,
+		Failed:       1,
+		FinishedAt:   startedAt.Add(4 * time.Second),
+		ErrorSummary: "one skill failed",
+	})
+	if err != nil {
+		t.Fatalf("failed to finalize run: %v", err)
+	}
+	if finished.Status != SyncRunStatusPartial {
+		t.Fatalf("unexpected finalized status: %s", finished.Status)
+	}
+	if finished.DurationMs <= 0 {
+		t.Fatalf("expected positive duration")
 	}
 }

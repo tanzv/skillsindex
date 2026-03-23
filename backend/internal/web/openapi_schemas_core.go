@@ -96,12 +96,15 @@ func openAPISchemasCoreCatalogAndAuth() map[string]any {
 		"PublicMarketplaceFilters": map[string]any{
 			"type": "object",
 			"properties": map[string]any{
-				"q":           map[string]any{"type": "string"},
-				"tags":        map[string]any{"type": "string"},
-				"category":    map[string]any{"type": "string"},
-				"subcategory": map[string]any{"type": "string"},
-				"sort":        map[string]any{"type": "string"},
-				"mode":        map[string]any{"type": "string"},
+				"q":                 map[string]any{"type": "string"},
+				"tags":              map[string]any{"type": "string"},
+				"category":          map[string]any{"type": "string"},
+				"subcategory":       map[string]any{"type": "string"},
+				"category_group":    map[string]any{"type": "string"},
+				"subcategory_group": map[string]any{"type": "string"},
+				"sort":              map[string]any{"type": "string"},
+				"mode":              map[string]any{"type": "string"},
+				"page_size":         map[string]any{"type": "integer"},
 			},
 		},
 		"PublicMarketplaceStats": map[string]any{
@@ -120,6 +123,49 @@ func openAPISchemasCoreCatalogAndAuth() map[string]any {
 				"total_pages": map[string]any{"type": "integer"},
 				"prev_page":   map[string]any{"type": "integer"},
 				"next_page":   map[string]any{"type": "integer"},
+			},
+		},
+		"PublicMarketplaceLandingSummary": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"total_skills":         map[string]any{"type": "integer"},
+				"category_count":       map[string]any{"type": "integer"},
+				"top_tag_count":        map[string]any{"type": "integer"},
+				"featured_skill_count": map[string]any{"type": "integer"},
+				"latest_skill_count":   map[string]any{"type": "integer"},
+			},
+		},
+		"PublicMarketplaceCategoryHubSummary": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"total_categories":         map[string]any{"type": "integer"},
+				"total_skills":             map[string]any{"type": "integer"},
+				"top_tag_count":            map[string]any{"type": "integer"},
+				"spotlight_category_count": map[string]any{"type": "integer"},
+			},
+		},
+		"PublicMarketplaceCategoryDetailSummary": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"category_slug":     map[string]any{"type": "string"},
+				"total_skills":      map[string]any{"type": "integer"},
+				"matching_skills":   map[string]any{"type": "integer"},
+				"subcategory_count": map[string]any{"type": "integer"},
+			},
+		},
+		"PublicMarketplaceSummary": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"landing": map[string]any{
+					"$ref": "#/components/schemas/PublicMarketplaceLandingSummary",
+				},
+				"category_hub": map[string]any{
+					"$ref": "#/components/schemas/PublicMarketplaceCategoryHubSummary",
+				},
+				"category_detail": map[string]any{
+					"$ref":     "#/components/schemas/PublicMarketplaceCategoryDetailSummary",
+					"nullable": true,
+				},
 			},
 		},
 		"PublicMarketplaceResponse": map[string]any{
@@ -145,11 +191,57 @@ func openAPISchemasCoreCatalogAndAuth() map[string]any {
 					"type":  "array",
 					"items": map[string]any{"$ref": "#/components/schemas/SkillItem"},
 				},
+				"summary": map[string]any{
+					"$ref": "#/components/schemas/PublicMarketplaceSummary",
+				},
 				"session_user": map[string]any{
 					"$ref":     "#/components/schemas/AuthSessionUser",
 					"nullable": true,
 				},
 				"can_access_dashboard": map[string]any{"type": "boolean"},
+			},
+		},
+		"PublicRankingSummary": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"total_compared":  map[string]any{"type": "integer"},
+				"top_stars":       map[string]any{"type": "integer"},
+				"top_quality":     map[string]any{"type": "number"},
+				"average_quality": map[string]any{"type": "number"},
+			},
+		},
+		"PublicRankingCategoryLeader": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"category_slug":   map[string]any{"type": "string"},
+				"count":           map[string]any{"type": "integer"},
+				"average_quality": map[string]any{"type": "number"},
+				"leading_skill":   map[string]any{"$ref": "#/components/schemas/SkillItem"},
+			},
+		},
+		"PublicRankingResponse": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"sort": map[string]any{"type": "string"},
+				"ranked_items": map[string]any{
+					"type":  "array",
+					"items": map[string]any{"$ref": "#/components/schemas/SkillItem"},
+				},
+				"highlights": map[string]any{
+					"type":  "array",
+					"items": map[string]any{"$ref": "#/components/schemas/SkillItem"},
+				},
+				"list_items": map[string]any{
+					"type":  "array",
+					"items": map[string]any{"$ref": "#/components/schemas/SkillItem"},
+				},
+				"summary": map[string]any{
+					"$ref": "#/components/schemas/PublicRankingSummary",
+				},
+				"category_leaders": map[string]any{
+					"type":  "array",
+					"items": map[string]any{"$ref": "#/components/schemas/PublicRankingCategoryLeader"},
+				},
 			},
 		},
 		"PublicSkillDetailStats": map[string]any{
@@ -195,6 +287,10 @@ func openAPISchemasCoreCatalogAndAuth() map[string]any {
 				"comments": map[string]any{
 					"type":  "array",
 					"items": map[string]any{"$ref": "#/components/schemas/PublicSkillDetailComment"},
+				},
+				"related_skills": map[string]any{
+					"type":  "array",
+					"items": map[string]any{"$ref": "#/components/schemas/SkillItem"},
 				},
 			},
 		},

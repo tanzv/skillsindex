@@ -82,3 +82,45 @@ type apiMarketplaceSubcategoryEntry struct {
 	Name  string `json:"name"`
 	Count int64  `json:"count"`
 }
+
+type apiPublicMarketplaceLandingSummary struct {
+	TotalSkills        int64 `json:"total_skills"`
+	CategoryCount      int   `json:"category_count"`
+	TopTagCount        int   `json:"top_tag_count"`
+	FeaturedSkillCount int   `json:"featured_skill_count"`
+	LatestSkillCount   int   `json:"latest_skill_count"`
+}
+
+type apiPublicMarketplaceCategoryHubSummary struct {
+	TotalCategories        int   `json:"total_categories"`
+	TotalSkills            int64 `json:"total_skills"`
+	TopTagCount            int   `json:"top_tag_count"`
+	SpotlightCategoryCount int   `json:"spotlight_category_count"`
+}
+
+type apiPublicMarketplaceCategoryDetailSummary struct {
+	CategorySlug     string `json:"category_slug"`
+	TotalSkills      int64  `json:"total_skills"`
+	MatchingSkills   int64  `json:"matching_skills"`
+	SubcategoryCount int    `json:"subcategory_count"`
+}
+
+type apiPublicMarketplaceSummary struct {
+	Landing        apiPublicMarketplaceLandingSummary         `json:"landing"`
+	CategoryHub    apiPublicMarketplaceCategoryHubSummary     `json:"category_hub"`
+	CategoryDetail *apiPublicMarketplaceCategoryDetailSummary `json:"category_detail"`
+}
+
+type apiPublicRankingSummary struct {
+	TotalCompared  int64   `json:"total_compared"`
+	TopStars       int     `json:"top_stars"`
+	TopQuality     float64 `json:"top_quality"`
+	AverageQuality float64 `json:"average_quality"`
+}
+
+type apiPublicRankingCategoryLeader struct {
+	CategorySlug   string           `json:"category_slug"`
+	Count          int64            `json:"count"`
+	AverageQuality float64          `json:"average_quality"`
+	LeadingSkill   apiSkillResponse `json:"leading_skill"`
+}

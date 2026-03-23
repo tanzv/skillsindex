@@ -37,17 +37,22 @@ func (a *App) handleAPISkillSyncRuns(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	limit := parsePositiveInt(r.URL.Query().Get("limit"), 80)
-	items, listErr := a.syncJobSvc.ListRuns(r.Context(), services.ListSyncRunsInput{
-		TargetSkillID: &skillID,
-		Limit:         limit,
-	})
+	filters, err := parseSyncRunListCommonFilters(r)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": syncRunListFilterErrorCode(err)})
+		return
+	}
+
+	input := filters.listInput()
+	input.TargetSkillID = &skillID
+
+	items, listErr := a.syncJobSvc.ListRuns(r.Context(), input)
 	if listErr != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": listErr.Error()})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"items": items, "total": len(items)})
+	writeJSON(w, http.StatusOK, map[string]any{"items": resultToAPISyncRunItems(items), "total": len(items)})
 }
 
 func (a *App) handleAPISkillSyncRunDetail(w http.ResponseWriter, r *http.Request) {
@@ -95,5 +100,5 @@ func (a *App) handleAPISkillSyncRunDetail(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{"item": item})
+	writeJSON(w, http.StatusOK, map[string]any{"item": a.buildSyncRunDetailAPIItem(r.Context(), item)})
 }

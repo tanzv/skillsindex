@@ -37,6 +37,12 @@ func (a *App) handleAdminRepositorySyncPolicyUpdate(w http.ResponseWriter, r *ht
 		redirectAdminPath(w, r, "/admin/records/sync-jobs", "", "Failed to update repository sync policy: "+err.Error())
 		return
 	}
+	if a.syncPolicyRecordSvc != nil {
+		if _, err := a.syncPolicyRecordSvc.UpsertRepositoryMirror(r.Context(), updated, &currentUser.ID); err != nil {
+			redirectAdminPath(w, r, "/admin/records/sync-jobs", "", "Failed to sync repository policy mirror: "+err.Error())
+			return
+		}
+	}
 
 	a.recordAudit(r.Context(), currentUser, services.RecordAuditInput{
 		Action:     "repository_sync_policy_update",

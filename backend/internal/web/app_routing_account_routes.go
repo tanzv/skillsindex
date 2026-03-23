@@ -35,6 +35,8 @@ func (a *App) registerAuthenticatedRoutes(r chi.Router) {
 		authRoutes.Post("/api/v1/skills/{skillID}/comments/{commentID}/delete", a.handleAPISkillCommentDelete)
 		authRoutes.Get("/api/v1/skills/{skillID}/sync-runs", a.handleAPISkillSyncRuns)
 		authRoutes.Get("/api/v1/skills/{skillID}/sync-runs/{runID}", a.handleAPISkillSyncRunDetail)
+		authRoutes.Get("/api/v1/skills/{skillID}/versions", a.handleAPISkillVersions)
+		authRoutes.Get("/api/v1/skills/{skillID}/versions/{versionID}", a.handleAPISkillVersionDetail)
 		authRoutes.Post("/api/v1/skills/{skillID}/organization-bind", a.handleAPISkillOrganizationBind)
 		authRoutes.Post("/api/v1/skills/{skillID}/organization-unbind", a.handleAPISkillOrganizationUnbind)
 		authRoutes.Post("/skills/{skillID}/organization-bind", a.handleSkillOrganizationBind)

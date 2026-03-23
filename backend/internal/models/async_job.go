@@ -49,6 +49,8 @@ type AsyncJob struct {
 	CanceledByUser   *User          `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:CanceledByUserID"`
 	TargetSkillID    *uint          `gorm:"index"`
 	TargetSkill      *Skill         `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:TargetSkillID"`
+	SyncRunID        *uint          `gorm:"index"`
+	SyncRun          *SyncJobRun    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:SyncRunID"`
 	Attempt          int            `gorm:"not null;default:1"`
 	MaxAttempts      int            `gorm:"not null;default:3"`
 	StartedAt        *time.Time     `gorm:"index"`

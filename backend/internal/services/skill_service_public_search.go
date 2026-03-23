@@ -6,7 +6,6 @@ import (
 	"math"
 	"sort"
 	"strings"
-	"time"
 	"unicode"
 
 	"skillsindex/internal/models"
@@ -108,112 +107,20 @@ func (s *SkillService) CountPublicSkills(ctx context.Context) (int64, error) {
 	return total, nil
 }
 
-// CountPublicCategorySkills returns grouped counts for category slug.
-func (s *SkillService) CountPublicCategorySkills(ctx context.Context) ([]CategorySkillCount, error) {
-	type row struct {
-		CategorySlug string
-		Count        int64
-	}
-	var rows []row
-	if err := s.db.WithContext(ctx).
-		Model(&models.Skill{}).
-		Select("category_slug, COUNT(*) as count").
-		Where("visibility = ?", models.VisibilityPublic).
-		Where("record_origin = ?", models.RecordOriginImported).
-		Group("category_slug").
-		Scan(&rows).Error; err != nil {
-		return nil, fmt.Errorf("failed to count category skills: %w", err)
-	}
-
-	result := make([]CategorySkillCount, 0, len(rows))
-	for _, item := range rows {
-		slug := strings.TrimSpace(item.CategorySlug)
-		if slug == "" {
-			continue
-		}
-		result = append(result, CategorySkillCount{CategorySlug: slug, Count: item.Count})
-	}
-	return result, nil
-}
-
-// CountPublicSubcategorySkills returns grouped counts for subcategory slug.
-func (s *SkillService) CountPublicSubcategorySkills(ctx context.Context, categorySlug string) (map[string]int64, error) {
-	type row struct {
-		SubcategorySlug string
-		Count           int64
-	}
-	var rows []row
-	query := s.db.WithContext(ctx).
-		Model(&models.Skill{}).
-		Select("subcategory_slug, COUNT(*) as count").
-		Where("visibility = ?", models.VisibilityPublic).
-		Where("record_origin = ?", models.RecordOriginImported)
-	if strings.TrimSpace(categorySlug) != "" {
-		query = query.Where("category_slug = ?", strings.TrimSpace(categorySlug))
-	}
-	if err := query.Group("subcategory_slug").Scan(&rows).Error; err != nil {
-		return nil, fmt.Errorf("failed to count subcategory skills: %w", err)
-	}
-
-	counts := make(map[string]int64, len(rows))
-	for _, item := range rows {
-		slug := strings.TrimSpace(item.SubcategorySlug)
-		if slug == "" {
-			continue
-		}
-		counts[slug] = item.Count
-	}
-	return counts, nil
-}
-
-// BuildTimeline returns cumulative counts for day/week/month intervals.
-func (s *SkillService) BuildTimeline(ctx context.Context, interval string) ([]TimelinePoint, error) {
+// ListPublicSkills returns all marketplace-visible skills with relations preloaded.
+func (s *SkillService) ListPublicSkills(ctx context.Context) ([]models.Skill, error) {
 	var skills []models.Skill
-	if err := s.db.WithContext(ctx).
-		Model(&models.Skill{}).
-		Where("visibility = ?", models.VisibilityPublic).
-		Where("record_origin = ?", models.RecordOriginImported).
-		Select("created_at").
-		Order("created_at ASC").
+	if err := applyMarketplacePublicScope(
+		s.db.WithContext(ctx).Model(&models.Skill{}),
+	).
+		Preload("Owner").
+		Preload("Tags").
+		Order("updated_at DESC").
+		Order("id DESC").
 		Find(&skills).Error; err != nil {
-		return nil, fmt.Errorf("failed to build timeline: %w", err)
+		return nil, fmt.Errorf("failed to list public skills: %w", err)
 	}
-
-	buckets := make(map[time.Time]int64)
-	for _, skill := range skills {
-		date := normalizeBucketDate(skill.CreatedAt.UTC(), interval)
-		buckets[date]++
-	}
-	points := make([]TimelinePoint, 0, len(buckets))
-	for date, count := range buckets {
-		points = append(points, TimelinePoint{BucketDate: date, Count: count})
-	}
-	sort.Slice(points, func(i, j int) bool {
-		return points[i].BucketDate.Before(points[j].BucketDate)
-	})
-
-	var cumulative int64
-	for i := range points {
-		cumulative += points[i].Count
-		points[i].Cumulative = cumulative
-	}
-	return points, nil
-}
-
-func normalizeBucketDate(ts time.Time, interval string) time.Time {
-	switch strings.ToLower(strings.TrimSpace(interval)) {
-	case "month":
-		return time.Date(ts.Year(), ts.Month(), 1, 0, 0, 0, 0, time.UTC)
-	case "week":
-		weekday := int(ts.Weekday())
-		if weekday == 0 {
-			weekday = 7
-		}
-		start := ts.AddDate(0, 0, -(weekday - 1))
-		return time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, time.UTC)
-	default:
-		return time.Date(ts.Year(), ts.Month(), ts.Day(), 0, 0, 0, 0, time.UTC)
-	}
+	return skills, nil
 }
 
 // AISemanticSearchPublicSkills runs a simple semantic ranking over public skills.

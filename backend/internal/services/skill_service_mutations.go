@@ -180,8 +180,45 @@ func (s *SkillService) UpdateRepositorySkill(ctx context.Context, input Reposito
 	})
 }
 
+// UpdateRepositorySkillWithRunContext updates one repository skill and links the captured version to one sync run.
+func (s *SkillService) UpdateRepositorySkillWithRunContext(
+	ctx context.Context,
+	input RepositoryUpdateInput,
+	actorUserID *uint,
+	runID *uint,
+) (models.Skill, error) {
+	return s.UpdateSyncedSkillWithRunContext(ctx, SyncUpdateInput{
+		SkillID:      input.SkillID,
+		OwnerID:      input.OwnerID,
+		SourceType:   models.SourceTypeRepository,
+		SourceURL:    input.Source.URL,
+		SourceBranch: input.Source.Branch,
+		SourcePath:   input.Source.Path,
+		Meta:         input.Meta,
+	}, actorUserID, runID)
+}
+
 // UpdateSyncedSkill updates an existing remote skill from a sync result.
 func (s *SkillService) UpdateSyncedSkill(ctx context.Context, input SyncUpdateInput) (models.Skill, error) {
+	return s.updateSyncedSkillWithVersionContext(ctx, input, nil, nil)
+}
+
+// UpdateSyncedSkillWithRunContext updates one remote skill and links the captured version to one sync run.
+func (s *SkillService) UpdateSyncedSkillWithRunContext(
+	ctx context.Context,
+	input SyncUpdateInput,
+	actorUserID *uint,
+	runID *uint,
+) (models.Skill, error) {
+	return s.updateSyncedSkillWithVersionContext(ctx, input, actorUserID, runID)
+}
+
+func (s *SkillService) updateSyncedSkillWithVersionContext(
+	ctx context.Context,
+	input SyncUpdateInput,
+	actorUserID *uint,
+	runID *uint,
+) (models.Skill, error) {
 	tx := s.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return models.Skill{}, fmt.Errorf("failed to start transaction: %w", tx.Error)
@@ -216,7 +253,7 @@ func (s *SkillService) UpdateSyncedSkill(ctx context.Context, input SyncUpdateIn
 		return models.Skill{}, err
 	}
 	if s.versionService != nil {
-		if err := s.versionService.CaptureWithTx(ctx, tx, skill.ID, "sync", nil); err != nil {
+		if err := s.versionService.CaptureWithTxAndRunContext(ctx, tx, skill.ID, "sync", actorUserID, runID); err != nil {
 			return models.Skill{}, err
 		}
 	}

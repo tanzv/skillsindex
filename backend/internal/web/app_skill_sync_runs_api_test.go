@@ -24,7 +24,7 @@ func setupSkillSyncRunsTestApp(t *testing.T) (*App, *gorm.DB, models.User, model
 	if err != nil {
 		t.Fatalf("failed to open sqlite db: %v", err)
 	}
-	if err := db.AutoMigrate(&models.User{}, &models.Skill{}, &models.Tag{}, &models.SkillTag{}, &models.SyncJobRun{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Skill{}, &models.Tag{}, &models.SkillTag{}, &models.SyncPolicy{}, &models.AsyncJob{}, &models.SyncJobRun{}, &models.SkillVersion{}, &models.AuditLog{}); err != nil {
 		t.Fatalf("failed to migrate sqlite db: %v", err)
 	}
 
@@ -61,8 +61,10 @@ func setupSkillSyncRunsTestApp(t *testing.T) (*App, *gorm.DB, models.User, model
 	}
 
 	app := &App{
-		skillService: services.NewSkillService(db),
-		syncJobSvc:   services.NewSyncJobService(db),
+		skillService:    services.NewSkillService(db),
+		syncJobSvc:      services.NewSyncJobService(db),
+		skillVersionSvc: services.NewSkillVersionService(db),
+		auditService:    services.NewAuditService(db),
 	}
 	return app, db, owner, member, admin, skillA, skillB
 }

@@ -12,12 +12,31 @@ func openAPIPathsPublicAuth() map[string]any {
 					queryParam("tags", "string", false, "Comma-separated tags"),
 					queryParam("category", "string", false, "Category slug"),
 					queryParam("subcategory", "string", false, "Subcategory slug"),
+					queryParam("category_group", "string", false, "Presentation taxonomy category slug"),
+					queryParam("subcategory_group", "string", false, "Presentation taxonomy subcategory slug"),
 					queryParam("sort", "string", false, "Sort field: recent|stars|quality"),
 					queryParam("mode", "string", false, "Search mode: keyword|ai"),
 					queryParam("page", "integer", false, "Page number"),
+					queryParam("page_size", "integer", false, "Page size, max 24"),
 				},
 				"responses": map[string]any{
 					"200": jsonResponse("Public marketplace payload", "PublicMarketplaceResponse"),
+					"401": jsonResponse("Authentication required when marketplace is private", "ErrorResponse"),
+					"500": jsonResponse("Server error", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
+				},
+			},
+		},
+		"/api/v1/public/rankings": map[string]any{
+			"get": map[string]any{
+				"tags":        []string{"skills"},
+				"summary":     "Get public rankings payload",
+				"description": "Public endpoint that returns backend-owned ranking sections for the rankings route. When marketplace_public_access=false, anonymous callers receive 401 and frontend routes should redirect to login.",
+				"parameters": []map[string]any{
+					queryParam("sort", "string", false, "Ranking sort: stars|quality"),
+				},
+				"responses": map[string]any{
+					"200": jsonResponse("Public rankings payload", "PublicRankingResponse"),
 					"401": jsonResponse("Authentication required when marketplace is private", "ErrorResponse"),
 					"500": jsonResponse("Server error", "ErrorResponse"),
 					"503": jsonResponse("Service unavailable", "ErrorResponse"),

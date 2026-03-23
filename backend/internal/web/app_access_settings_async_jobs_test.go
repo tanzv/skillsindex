@@ -172,3 +172,122 @@ func TestAdminJobCancelFormPermissionDenied(t *testing.T) {
 		t.Fatalf("unexpected redirect location: %s", recorder.Header().Get("Location"))
 	}
 }
+
+func TestAPIAdminJobRetryUsesGovernanceForSyncJobs(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	ownerID := uint(81)
+	actorID := uint(82)
+	started, err := app.syncGovernanceSvc.Start(context.Background(), services.StartSyncGovernanceInput{
+		JobType:       models.AsyncJobTypeSyncRepository,
+		Trigger:       services.SyncRunTriggerTypeManual,
+		TriggerType:   services.SyncRunTriggerTypeManual,
+		Scope:         "single",
+		OwnerUserID:   &ownerID,
+		ActorUserID:   &actorID,
+		MaxAttempts:   3,
+		PayloadDigest: "digest-governed-retry",
+		StartedAt:     time.Now().UTC(),
+	})
+	if err != nil {
+		t.Fatalf("failed to start governed async job: %v", err)
+	}
+	if _, err := app.syncGovernanceSvc.Complete(context.Background(), services.CompleteSyncGovernanceInput{
+		RunID:        started.Run.ID,
+		JobID:        started.Job.ID,
+		Candidates:   1,
+		Failed:       1,
+		FinishedAt:   time.Now().UTC().Add(2 * time.Second),
+		ErrorCode:    "sync_failed",
+		ErrorMessage: "temporary timeout",
+		ErrorSummary: "temporary timeout",
+	}); err != nil {
+		t.Fatalf("failed to fail governed async job: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/admin/jobs/%d/retry", started.Job.ID), nil)
+	req = withCurrentUser(req, &models.User{ID: actorID, Role: models.RoleAdmin})
+	req = withURLParam(req, "jobID", fmt.Sprintf("%d", started.Job.ID))
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminJobRetry(recorder, req)
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
+	}
+
+	updated, err := app.asyncJobSvc.GetByID(context.Background(), started.Job.ID)
+	if err != nil {
+		t.Fatalf("failed to load async job after retry: %v", err)
+	}
+	if updated.Status != models.AsyncJobStatusRunning {
+		t.Fatalf("unexpected status after governed retry: got=%s want=%s", updated.Status, models.AsyncJobStatusRunning)
+	}
+	if updated.Attempt != 2 {
+		t.Fatalf("unexpected attempt after governed retry: got=%d want=2", updated.Attempt)
+	}
+	if updated.SyncRunID == nil || *updated.SyncRunID == started.Run.ID {
+		t.Fatalf("expected governed retry to create a new sync run")
+	}
+
+	runs, err := app.syncJobSvc.ListRuns(context.Background(), services.ListSyncRunsInput{
+		JobID: &started.Job.ID,
+		Limit: 10,
+	})
+	if err != nil {
+		t.Fatalf("failed to list sync runs after retry: %v", err)
+	}
+	if len(runs) != 2 {
+		t.Fatalf("expected two sync runs after retry, got=%d", len(runs))
+	}
+	if runs[0].Attempt != 2 {
+		t.Fatalf("unexpected latest run attempt: got=%d want=2", runs[0].Attempt)
+	}
+	if runs[0].Status != services.SyncRunStatusRunning {
+		t.Fatalf("unexpected latest run status: got=%s want=%s", runs[0].Status, services.SyncRunStatusRunning)
+	}
+}
+
+func TestAPIAdminJobCancelUsesGovernanceForSyncJobs(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	ownerID := uint(91)
+	actorID := uint(92)
+	started, err := app.syncGovernanceSvc.Start(context.Background(), services.StartSyncGovernanceInput{
+		JobType:       models.AsyncJobTypeSyncRepository,
+		Trigger:       services.SyncRunTriggerTypeManual,
+		TriggerType:   services.SyncRunTriggerTypeManual,
+		Scope:         "single",
+		OwnerUserID:   &ownerID,
+		ActorUserID:   &actorID,
+		MaxAttempts:   3,
+		PayloadDigest: "digest-governed-cancel",
+		StartedAt:     time.Now().UTC(),
+	})
+	if err != nil {
+		t.Fatalf("failed to start governed async job: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/admin/jobs/%d/cancel", started.Job.ID), nil)
+	req = withCurrentUser(req, &models.User{ID: actorID, Role: models.RoleAdmin})
+	req = withURLParam(req, "jobID", fmt.Sprintf("%d", started.Job.ID))
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminJobCancel(recorder, req)
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
+	}
+
+	updated, err := app.asyncJobSvc.GetByID(context.Background(), started.Job.ID)
+	if err != nil {
+		t.Fatalf("failed to load async job after cancel: %v", err)
+	}
+	if updated.Status != models.AsyncJobStatusCanceled {
+		t.Fatalf("unexpected status after governed cancel: got=%s want=%s", updated.Status, models.AsyncJobStatusCanceled)
+	}
+
+	run, err := app.syncJobSvc.GetRunByID(context.Background(), started.Run.ID)
+	if err != nil {
+		t.Fatalf("failed to load sync run after cancel: %v", err)
+	}
+	if run.Status != services.SyncRunStatusCanceled {
+		t.Fatalf("unexpected sync run status after cancel: got=%s want=%s", run.Status, services.SyncRunStatusCanceled)
+	}
+}
