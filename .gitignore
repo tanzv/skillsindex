@@ -5,6 +5,7 @@
 .launch-code/
 .superpowers/
 .superset/
+.worktrees/
 
 node_modules/
 backend/bin/
