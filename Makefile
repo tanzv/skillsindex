@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help env-init postgres-up bootstrap init-local dev-backend dev-frontend dev dev-status verify-backend verify-frontend check-lines
+.PHONY: help env-init postgres-up bootstrap init-local dev-backend dev-frontend dev dev-status verify-backend verify-frontend verify-frontend-real-backend check-lines
 
 help:
 	@printf '%s\n' \
@@ -16,6 +16,7 @@ help:
 		'  make dev-status      Show running lcode sessions in JSON' \
 		'  make verify-backend  Run backend tests and vet' \
 		'  make verify-frontend Run frontend lint, unit tests, and build' \
+		'  make verify-frontend-real-backend Run frontend smoke tests against a real backend (requires a bootstrapped local database)' \
 		'  make check-lines     Run repository max-lines check'
 
 env-init:
@@ -47,6 +48,9 @@ verify-backend:
 
 verify-frontend:
 	cd frontend-next && npm run lint && npm run test:unit && npm run build
+
+verify-frontend-real-backend:
+	./scripts/run_frontend_real_backend_smoke.sh
 
 check-lines:
 	./scripts/check_max_lines.sh
