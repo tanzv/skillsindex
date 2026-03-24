@@ -1,4 +1,5 @@
 import { ErrorState } from "@/src/components/shared/ErrorState";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { workspaceOverviewRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 import type { SessionContext } from "@/src/lib/schemas/session";
 
@@ -18,6 +19,6 @@ export async function renderWorkspaceRoute(pathname: string, session: SessionCon
 
     return <WorkspaceRoutePage model={model} />;
   } catch (error) {
-    return <ErrorState description={error instanceof Error ? error.message : "Failed to load workspace data."} />;
+    return <ErrorState description={resolveRequestErrorDisplayMessage(error, "Failed to load workspace data.")} />;
   }
 }

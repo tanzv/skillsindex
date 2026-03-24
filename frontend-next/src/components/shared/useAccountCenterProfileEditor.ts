@@ -9,6 +9,7 @@ import {
   type AccountProfilePayload
 } from "@/src/lib/account/accountProfile";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 
 interface AccountCenterProfileEditorMessages {
   profileSaveSuccess: string;
@@ -48,7 +49,7 @@ export function useAccountCenterProfileEditor({
       setProfilePayload(payload);
       setProfileDraft(buildAccountProfileDraft(payload, fallbackUserName));
     } catch (error) {
-      setProfileError(error instanceof Error ? error.message : messages.profileSaveError);
+      setProfileError(resolveRequestErrorDisplayMessage(error, messages.profileSaveError));
       setProfileDraft(buildAccountProfileDraft(null, fallbackUserName));
     } finally {
       setProfileLoading(false);
@@ -74,7 +75,7 @@ export function useAccountCenterProfileEditor({
       setProfileMessage(messages.profileSaveSuccess);
       onSaved?.();
     } catch (error) {
-      setProfileError(error instanceof Error ? error.message : messages.profileSaveError);
+      setProfileError(resolveRequestErrorDisplayMessage(error, messages.profileSaveError));
     } finally {
       setProfileSaving(false);
     }

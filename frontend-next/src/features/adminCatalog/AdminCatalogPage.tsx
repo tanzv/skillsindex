@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 import { resolveAdminCatalogPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 import { Button } from "@/src/components/ui/button";
@@ -89,7 +90,7 @@ export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
         setPolicyDraft(normalizeSyncPolicyPayload(payload));
       }
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : adminCatalogMessages.loadError);
+      setError(resolveRequestErrorDisplayMessage(loadError, adminCatalogMessages.loadError));
       setRawPayload(null);
     } finally {
       setLoading(false);
@@ -116,7 +117,7 @@ export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
       );
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : adminCatalogMessages.actionError);
+      setError(resolveRequestErrorDisplayMessage(actionError, adminCatalogMessages.actionError));
     } finally {
       setBusyAction("");
     }
@@ -131,7 +132,7 @@ export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
       setMessage(adminCatalogMessages.skillSyncSuccess);
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : adminCatalogMessages.actionError);
+      setError(resolveRequestErrorDisplayMessage(actionError, adminCatalogMessages.actionError));
     } finally {
       setBusyAction("");
     }
@@ -154,7 +155,7 @@ export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
       setMessage(adminCatalogMessages.policySaveSuccess);
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : adminCatalogMessages.actionError);
+      setError(resolveRequestErrorDisplayMessage(actionError, adminCatalogMessages.actionError));
     } finally {
       setBusyAction("");
     }

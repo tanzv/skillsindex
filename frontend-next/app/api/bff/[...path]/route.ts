@@ -11,46 +11,63 @@ interface ProxyRouteProps {
   }>;
 }
 
+function createProxyErrorResponse() {
+  return NextResponse.json(
+    {
+      error: "backend_unreachable",
+      message: "Failed to reach the backend service."
+    },
+    {
+      status: 503
+    }
+  );
+}
+
 async function proxyRequest(request: NextRequest, params: ProxyRouteProps["params"]) {
-  const resolvedParams = await params;
-  const search = request.nextUrl.searchParams.toString();
-  const backendPath = buildBackendProxyPath(resolvedParams.path, search);
-  const cookieHeader = getRequestCookieHeader(request.headers);
-  const method = request.method.toUpperCase();
-  const headers = new Headers({
-    accept: request.headers.get("accept") || "application/json"
-  });
+  try {
+    const resolvedParams = await params;
+    const search = request.nextUrl.searchParams.toString();
+    const backendPath = buildBackendProxyPath(resolvedParams.path, search);
+    const cookieHeader = getRequestCookieHeader(request.headers);
+    const method = request.method.toUpperCase();
+    const headers = new Headers({
+      accept: request.headers.get("accept") || "application/json"
+    });
 
-  const contentType = request.headers.get("content-type");
-  if (contentType) {
-    headers.set("content-type", contentType);
+    const contentType = request.headers.get("content-type");
+    if (contentType) {
+      headers.set("content-type", contentType);
+    }
+
+    const acceptLanguage = request.headers.get("accept-language");
+    if (acceptLanguage) {
+      headers.set("accept-language", acceptLanguage);
+    }
+
+    if (cookieHeader) {
+      headers.set("cookie", cookieHeader);
+    }
+    applyCSRFToken(headers, method, cookieHeader);
+
+    const requestBuffer =
+      method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer().then((buffer) => (buffer.byteLength > 0 ? buffer : undefined));
+
+    const backendResponse = await fetchBackend(backendPath, {
+      method,
+      headers,
+      body: requestBuffer,
+      cache: "no-store",
+      redirect: "manual"
+    });
+
+    return new NextResponse(backendResponse.body, {
+      status: backendResponse.status,
+      headers: buildProxyResponseHeaders(backendResponse.headers)
+    });
+  } catch (error) {
+    console.error("bff proxy request failed", error);
+    return createProxyErrorResponse();
   }
-
-  const acceptLanguage = request.headers.get("accept-language");
-  if (acceptLanguage) {
-    headers.set("accept-language", acceptLanguage);
-  }
-
-  if (cookieHeader) {
-    headers.set("cookie", cookieHeader);
-  }
-  applyCSRFToken(headers, method, cookieHeader);
-
-  const requestBuffer =
-    method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer().then((buffer) => (buffer.byteLength > 0 ? buffer : undefined));
-
-  const backendResponse = await fetchBackend(backendPath, {
-    method,
-    headers,
-    body: requestBuffer,
-    cache: "no-store",
-    redirect: "manual"
-  });
-
-  return new NextResponse(backendResponse.body, {
-    status: backendResponse.status,
-    headers: buildProxyResponseHeaders(backendResponse.headers)
-  });
 }
 
 export async function GET(request: NextRequest, context: ProxyRouteProps) {

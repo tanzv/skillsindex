@@ -8,6 +8,7 @@ import { ErrorState } from "@/src/components/shared/ErrorState";
 import { PageHeader } from "@/src/components/shared/PageHeader";
 import { Button } from "@/src/components/ui/button";
 import { fetchAdminCollection } from "@/src/lib/api/admin";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 import { loadProtectedMessages } from "@/src/lib/i18n/protectedMessages.server";
 import { resolveServerLocale } from "@/src/lib/i18n/serverLocale";
@@ -65,7 +66,7 @@ export async function renderAdminDataRoute(pathname: string): Promise<ReactEleme
     return (
       <div className="space-y-6">
         <PageHeader eyebrow={routeMessages.eyebrow} title={meta.title} description={meta.description} />
-        <ErrorState description={error instanceof Error ? error.message : routeMessages.loadFailureDescription} />
+        <ErrorState description={resolveRequestErrorDisplayMessage(error, routeMessages.loadFailureDescription)} />
       </div>
     );
   }

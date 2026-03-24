@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import {
@@ -33,7 +34,7 @@ export function AdminOverviewPage() {
       setSnapshot(normalizeAdminOverviewPayload(payload));
     } catch (loadError) {
       setSnapshot(null);
-      setError(loadError instanceof Error ? loadError.message : overviewMessages.loadError);
+      setError(resolveRequestErrorDisplayMessage(loadError, overviewMessages.loadError));
     } finally {
       setLoading(false);
     }

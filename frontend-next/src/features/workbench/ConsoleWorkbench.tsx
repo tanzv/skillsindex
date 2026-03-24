@@ -8,6 +8,7 @@ import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 
 import type { ActionDefinition, FieldDefinition, ResourceDefinition, WorkbenchDefinition } from "./types";
 import { buildBFFPath } from "./utils";
@@ -146,7 +147,7 @@ export function ConsoleWorkbench({ definition, scope }: ConsoleWorkbenchProps) {
         ...current,
         [resource.key]: {
           loading: false,
-          error: error instanceof Error ? error.message : "Request failed",
+          error: resolveRequestErrorDisplayMessage(error, "Request failed"),
           data: current[resource.key]?.data ?? null,
           path
         }
@@ -194,7 +195,7 @@ export function ConsoleWorkbench({ definition, scope }: ConsoleWorkbenchProps) {
     } catch (error) {
       setActionStates((current) => ({
         ...current,
-        [action.key]: { loading: false, error: error instanceof Error ? error.message : "Action failed", data: null, path }
+        [action.key]: { loading: false, error: resolveRequestErrorDisplayMessage(error, "Action failed"), data: null, path }
       }));
     }
   }, [definition.resources, loadResource]);

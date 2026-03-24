@@ -10,6 +10,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { resolveAdminOperationsDashboardRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 
 import {
@@ -93,7 +94,7 @@ export function AdminOperationsPage({ route }: { route: AdminOperationsDashboard
       const payload = await clientFetchJSON(meta.endpoint);
       setRawPayload(payload);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : operationsMessages.dashboardLoadError);
+      setError(resolveRequestErrorDisplayMessage(loadError, operationsMessages.dashboardLoadError));
       setRawPayload(null);
     } finally {
       setLoading(false);
@@ -118,7 +119,7 @@ export function AdminOperationsPage({ route }: { route: AdminOperationsDashboard
       setRawPayload(payload);
       setMessage(operationsMessages.releaseGatesRunSuccess);
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : operationsMessages.releaseGatesRunError);
+      setError(resolveRequestErrorDisplayMessage(actionError, operationsMessages.releaseGatesRunError));
     } finally {
       setBusyAction("");
     }

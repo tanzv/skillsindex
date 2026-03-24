@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { usePublicI18n } from "@/src/features/public/i18n/PublicI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import type {
   PublicSkillDetailResponse,
   PublicSkillResourceContentResponse,
@@ -228,7 +229,7 @@ export function PublicSkillInteractiveDetail({
       }));
       setFeedback(payload.favorited ? messages.skillDetailFeedbackFavoriteAdded : messages.skillDetailFeedbackFavoriteRemoved);
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : messages.skillDetailFeedbackFavoriteFailed);
+      setFeedback(resolveRequestErrorDisplayMessage(error, messages.skillDetailFeedbackFavoriteFailed));
     } finally {
       setBusy(false);
     }
@@ -253,7 +254,7 @@ export function PublicSkillInteractiveDetail({
       }));
       setFeedback(`${messages.skillDetailFeedbackRatingSubmittedPrefix} ${payload.score}.`);
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : messages.skillDetailFeedbackRatingFailed);
+      setFeedback(resolveRequestErrorDisplayMessage(error, messages.skillDetailFeedbackRatingFailed));
     } finally {
       setBusy(false);
     }
@@ -275,7 +276,7 @@ export function PublicSkillInteractiveDetail({
       setFeedback(messages.skillDetailFeedbackCommentCreated);
       await refreshDetail();
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : messages.skillDetailFeedbackCommentFailed);
+      setFeedback(resolveRequestErrorDisplayMessage(error, messages.skillDetailFeedbackCommentFailed));
     } finally {
       setBusy(false);
     }
@@ -291,7 +292,7 @@ export function PublicSkillInteractiveDetail({
       setFeedback(messages.skillDetailFeedbackCommentDeleted);
       await refreshDetail();
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : messages.skillDetailFeedbackCommentDeleteFailed);
+      setFeedback(resolveRequestErrorDisplayMessage(error, messages.skillDetailFeedbackCommentDeleteFailed));
     } finally {
       setBusy(false);
     }
@@ -313,7 +314,7 @@ export function PublicSkillInteractiveDetail({
     } catch (error) {
       setResourceContent(null);
       setResourceContentStatus("error");
-      setFeedback(error instanceof Error ? error.message : messages.skillDetailFeedbackResourceFailed);
+      setFeedback(resolveRequestErrorDisplayMessage(error, messages.skillDetailFeedbackResourceFailed));
     } finally {
       setBusy(false);
     }
