@@ -79,6 +79,10 @@ func (s *APISpecRegistryService) ImportDraft(ctx context.Context, input ImportAP
 	if err != nil {
 		return ImportAPISpecDraftResult{}, err
 	}
+	operations, err := extractAPIOperations(0, document)
+	if err != nil {
+		return ImportAPISpecDraftResult{}, err
+	}
 
 	bundlePath, checksum, err := s.persistBundle(slug, bundleRaw)
 	if err != nil {
@@ -86,20 +90,29 @@ func (s *APISpecRegistryService) ImportDraft(ctx context.Context, input ImportAP
 	}
 
 	version := resolveSpecVersion(document)
-	spec := models.APISpec{
-		Name:            name,
-		Slug:            slug,
-		SourceType:      apiSpecSourceTypeRepository,
-		Status:          models.APISpecStatusDraft,
-		SemanticVersion: version,
-		IsCurrent:       false,
-		SourcePath:      sourcePath,
-		BundlePath:      bundlePath,
-		Checksum:        checksum,
-		CreatedBy:       input.ActorUserID,
-	}
-	if err := s.db.WithContext(ctx).Create(&spec).Error; err != nil {
-		return ImportAPISpecDraftResult{}, fmt.Errorf("failed to persist api spec draft: %w", err)
+	spec := models.APISpec{}
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		spec = models.APISpec{
+			Name:            name,
+			Slug:            slug,
+			SourceType:      apiSpecSourceTypeRepository,
+			Status:          models.APISpecStatusDraft,
+			SemanticVersion: version,
+			IsCurrent:       false,
+			SourcePath:      sourcePath,
+			BundlePath:      bundlePath,
+			Checksum:        checksum,
+			CreatedBy:       input.ActorUserID,
+		}
+		if err := tx.Create(&spec).Error; err != nil {
+			return fmt.Errorf("failed to persist api spec draft: %w", err)
+		}
+		if err := replaceAPIOperations(ctx, tx, spec.ID, operations); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return ImportAPISpecDraftResult{}, err
 	}
 
 	return ImportAPISpecDraftResult{
@@ -123,6 +136,10 @@ func (s *APISpecRegistryService) ValidateDraft(ctx context.Context, specID uint)
 	if err != nil {
 		return models.APISpec{}, err
 	}
+	operations, err := extractAPIOperations(spec.ID, document)
+	if err != nil {
+		return models.APISpec{}, err
+	}
 	bundlePath, checksum, err := s.persistBundle(spec.Slug, bundleRaw)
 	if err != nil {
 		return models.APISpec{}, err
@@ -133,8 +150,16 @@ func (s *APISpecRegistryService) ValidateDraft(ctx context.Context, specID uint)
 	spec.BundlePath = bundlePath
 	spec.Checksum = checksum
 	spec.SemanticVersion = resolveSpecVersion(document)
-	if err := s.db.WithContext(ctx).Save(&spec).Error; err != nil {
-		return models.APISpec{}, fmt.Errorf("failed to mark api spec validated: %w", err)
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&spec).Error; err != nil {
+			return fmt.Errorf("failed to mark api spec validated: %w", err)
+		}
+		if err := replaceAPIOperations(ctx, tx, spec.ID, operations); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return models.APISpec{}, err
 	}
 	return spec, nil
 }
@@ -200,4 +225,31 @@ func resolveSpecVersion(document *openapi3.T) string {
 func hashBytes(value []byte) string {
 	sum := sha256.Sum256(value)
 	return hex.EncodeToString(sum[:])
+}
+
+func replaceAPIOperations(ctx context.Context, tx *gorm.DB, specID uint, operations []models.APIOperation) error {
+	if tx == nil {
+		return fmt.Errorf("database transaction is required")
+	}
+	if specID == 0 {
+		return fmt.Errorf("api spec id is required")
+	}
+
+	if err := tx.WithContext(ctx).Where("spec_id = ?", specID).Delete(&models.APIOperation{}).Error; err != nil {
+		return fmt.Errorf("failed to clear extracted api operations: %w", err)
+	}
+
+	if len(operations) == 0 {
+		return nil
+	}
+
+	persisted := make([]models.APIOperation, 0, len(operations))
+	for _, operation := range operations {
+		operation.SpecID = specID
+		persisted = append(persisted, operation)
+	}
+	if err := tx.WithContext(ctx).Create(&persisted).Error; err != nil {
+		return fmt.Errorf("failed to persist extracted api operations: %w", err)
+	}
+	return nil
 }

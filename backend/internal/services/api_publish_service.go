@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -18,12 +19,21 @@ type PublishAPISpecInput struct {
 
 // APIPublishService manages publish lifecycle for imported API specs.
 type APIPublishService struct {
-	db *gorm.DB
+	db              *gorm.DB
+	runtimeReloader apiRuntimeReloader
 }
 
 // NewAPIPublishService constructs an API publish service.
 func NewAPIPublishService(db *gorm.DB) *APIPublishService {
 	return &APIPublishService{db: db}
+}
+
+// SetRuntimeReloader wires a runtime registry reloader for publish-time refresh.
+func (s *APIPublishService) SetRuntimeReloader(reloader apiRuntimeReloader) {
+	if s == nil {
+		return
+	}
+	s.runtimeReloader = reloader
 }
 
 // Publish marks one imported draft or validated spec as the current published version.
@@ -88,6 +98,11 @@ func (s *APIPublishService) Publish(ctx context.Context, input PublishAPISpecInp
 	})
 	if err != nil {
 		return models.APISpec{}, err
+	}
+	if s.runtimeReloader != nil {
+		if reloadErr := s.runtimeReloader.Reload(ctx); reloadErr != nil && !errors.Is(reloadErr, ErrAPISpecNotFound) {
+			return models.APISpec{}, fmt.Errorf("failed to reload api contract runtime: %w", reloadErr)
+		}
 	}
 	return published, nil
 }
