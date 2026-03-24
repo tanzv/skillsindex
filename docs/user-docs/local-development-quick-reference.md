@@ -27,6 +27,13 @@ make dev-frontend
 frontend-next/.env
 ```
 
+前端环境变量必须至少包含：
+
+```bash
+SKILLSINDEX_SERVER_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+```
+
 后端：
 
 ```bash
@@ -58,6 +65,7 @@ make dev-frontend
 对应底层命令：
 
 ```bash
+python3 scripts/dev/check_frontend_backend_env.py
 lcode config run --name skillsindex-backend
 lcode config run --name skillsindex-frontend
 ```
@@ -137,6 +145,7 @@ docker compose up -d postgres
 cp backend/.env.example backend/.env
 cp frontend-next/.env.example frontend-next/.env
 go run ./cmd/bootstrap
+python3 scripts/dev/check_frontend_backend_env.py
 lcode config run --name skillsindex-backend
 lcode config run --name skillsindex-frontend
 ```
@@ -161,6 +170,19 @@ lcode inspect <backend_session_id> --tail 120
 
 ```bash
 lcode stop <session_id> --json
+python3 scripts/dev/check_frontend_backend_env.py
 lcode config run --name skillsindex-frontend
 lcode config run --name skillsindex-backend
+```
+
+前端连错后端或页面表现不一致：
+
+```bash
+python3 scripts/dev/check_frontend_backend_env.py
+```
+
+要求：
+
+```bash
+SKILLSINDEX_SERVER_API_BASE_URL == NEXT_PUBLIC_API_BASE_URL
 ```

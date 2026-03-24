@@ -35,9 +35,16 @@
 当前默认包含：
 
 ```bash
+SKILLSINDEX_SERVER_API_BASE_URL=http://localhost:8080
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
 NEXT_PUBLIC_APP_NAME=SkillsIndex
 ```
+
+其中：
+
+1. `SKILLSINDEX_SERVER_API_BASE_URL` 供 Next.js 服务端代理与服务端渲染使用
+2. `NEXT_PUBLIC_API_BASE_URL` 供浏览器侧请求使用
+3. 两者必须保持为同一个后端地址
 
 ### 3.2 后端
 
@@ -77,6 +84,14 @@ make dev-backend
 lcode config run --name skillsindex-backend
 lcode config run --name skillsindex-frontend
 ```
+
+在执行 `make dev-frontend` 前，仓库会自动运行：
+
+```bash
+python3 scripts/dev/check_frontend_backend_env.py
+```
+
+如果两个前端后端地址变量缺失或不一致，启动会被阻止。
 
 默认访问地址：
 
@@ -180,7 +195,8 @@ lcode stop <session_id> --json
 
 1. 停止对应 session
 2. 修改 `.env`
-3. 重新执行 `lcode config run --name ...`
+3. 确认 `SKILLSINDEX_SERVER_API_BASE_URL` 与 `NEXT_PUBLIC_API_BASE_URL` 完全一致
+4. 重新执行 `lcode config run --name ...`
 
 ## 9. 推荐工作流
 
@@ -193,6 +209,7 @@ make dev
 如果希望看展开后的底层行为，对应命令为：
 
 ```bash
+python3 scripts/dev/check_frontend_backend_env.py
 lcode config run --name skillsindex-backend
 lcode config run --name skillsindex-frontend
 lcode running --json

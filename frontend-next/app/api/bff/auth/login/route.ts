@@ -83,8 +83,7 @@ export async function POST(request: NextRequest) {
       status: loginResponse.status,
       headers: responseHeaders
     });
-  } catch (error) {
-    console.error("bff login request failed", error);
+  } catch {
     return createBackendUnavailableResponse();
   }
 }

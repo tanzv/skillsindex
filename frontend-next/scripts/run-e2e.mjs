@@ -203,6 +203,7 @@ async function main() {
       const buildProcess = spawnProcess(nextBinary, ["build", "--webpack"], {
         env: {
           ...process.env,
+          SKILLSINDEX_SERVER_API_BASE_URL: backendBaseURL,
           NEXT_PUBLIC_API_BASE_URL: backendBaseURL,
           SKILLSINDEX_ENABLE_DIAGNOSTIC_ROUTES: "1"
         },
@@ -240,6 +241,7 @@ async function main() {
     const nextServer = spawnProcess(nextBinary, ["start", "--hostname", "127.0.0.1", "--port", String(frontendPort)], {
       env: {
         ...process.env,
+        SKILLSINDEX_SERVER_API_BASE_URL: backendBaseURL,
         NEXT_PUBLIC_API_BASE_URL: backendBaseURL,
         SKILLSINDEX_ENABLE_DIAGNOSTIC_ROUTES: "1"
       },

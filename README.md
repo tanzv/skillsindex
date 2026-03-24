@@ -90,8 +90,9 @@ It supports manual creation, archive uploads, repository sync, tagging, search, 
 Recommended local development workflow:
 
 1. Keep runtime configuration in `backend/.env` and `frontend-next/.env`.
-2. Use the root `Makefile` as the shortest local-development entrypoint.
-3. Let `lcode` profiles manage frontend and backend processes underneath, while `make dev*` reuses existing sessions when possible.
+2. In `frontend-next/.env`, keep `SKILLSINDEX_SERVER_API_BASE_URL` and `NEXT_PUBLIC_API_BASE_URL` aligned to the same backend origin.
+3. Use the root `Makefile` as the shortest local-development entrypoint.
+4. Let `lcode` profiles manage frontend and backend processes underneath, while `make dev*` reuses existing sessions when possible.
 
 For the Chinese local-development guide and quick-reference commands, see:
 
@@ -148,6 +149,12 @@ lcode config run --name skillsindex-frontend
 lcode running --json
 ```
 
+Before starting the frontend through `make dev-frontend`, the repository now validates that:
+
+- `SKILLSINDEX_SERVER_API_BASE_URL` exists
+- `NEXT_PUBLIC_API_BASE_URL` exists
+- both point to the same backend origin
+
 ## Verification Commands
 
 ### Frontend
@@ -178,6 +185,8 @@ go run honnef.co/go/tools/cmd/staticcheck@v0.7.0 ./...
 ## Environment Variables
 
 - `APP_PORT`: HTTP port, default `8080`
+- `SKILLSINDEX_SERVER_API_BASE_URL`: frontend server-side backend base URL for Next.js BFF and server rendering
+- `NEXT_PUBLIC_API_BASE_URL`: frontend browser-side backend base URL exposed to client code
 - `APP_ENV`: runtime environment (`development|production`), default `development`
 - `DATABASE_URL`: PostgreSQL DSN
 - `SESSION_SECRET`: HMAC secret for session cookies

@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help env-init postgres-up bootstrap init-local dev-backend dev-frontend dev dev-status verify-backend verify-frontend verify-frontend-real-backend check-lines
+.PHONY: help env-init postgres-up bootstrap init-local verify-frontend-env dev-backend dev-frontend dev dev-status verify-backend verify-frontend verify-frontend-real-backend check-lines
 
 help:
 	@printf '%s\n' \
@@ -10,6 +10,7 @@ help:
 		'  make postgres-up     Start local PostgreSQL with docker compose' \
 		'  make bootstrap       Run backend bootstrap once' \
 		'  make init-local      Prepare env, start PostgreSQL, and run bootstrap' \
+		'  make verify-frontend-env Verify frontend backend env alignment before startup' \
 		'  make dev-backend     Start or reuse backend lcode session' \
 		'  make dev-frontend    Start or reuse frontend lcode session' \
 		'  make dev             Start or reuse services and show current status' \
@@ -32,10 +33,13 @@ bootstrap:
 
 init-local: env-init postgres-up bootstrap
 
+verify-frontend-env:
+	python3 scripts/dev/check_frontend_backend_env.py
+
 dev-backend:
 	python3 scripts/dev/run_lcode_profile.py skillsindex-backend
 
-dev-frontend:
+dev-frontend: verify-frontend-env
 	python3 scripts/dev/run_lcode_profile.py skillsindex-frontend
 
 dev: dev-backend dev-frontend dev-status

@@ -64,8 +64,7 @@ async function proxyRequest(request: NextRequest, params: ProxyRouteProps["param
       status: backendResponse.status,
       headers: buildProxyResponseHeaders(backendResponse.headers)
     });
-  } catch (error) {
-    console.error("bff proxy request failed", error);
+  } catch {
     return createProxyErrorResponse();
   }
 }
