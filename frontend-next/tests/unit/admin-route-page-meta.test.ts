@@ -37,8 +37,8 @@ const pageMessages = createProtectedPageTestMessages({
     routeAlertsDescription: "Alerts description",
     routeReleaseGatesTitle: "Release Gates",
     routeReleaseGatesDescription: "Release gates description",
-    routeAuditExportTitle: "Audit Export",
-    routeAuditExportDescription: "Audit export description",
+    routeAuditExportTitle: "Audit",
+    routeAuditExportDescription: "Audit description",
     routeRecoveryDrillsTitle: "Recovery Drills",
     routeRecoveryDrillsDescription: "Recovery drills description",
     routeReleasesTitle: "Releases",
@@ -93,6 +93,14 @@ describe("admin route page meta", () => {
       description: "Backup plans description",
       endpoint: "/api/bff/admin/ops/backup/plans",
       createEndpoint: "/api/bff/admin/ops/backup/plans"
+    });
+  });
+
+  it("maps the dedicated audit route to the shared audit backend endpoint", () => {
+    expect(resolveAdminOperationsRecordsRouteMeta("/admin/audit", pageMessages.adminOperations)).toEqual({
+      title: "Audit",
+      description: "Audit description",
+      endpoint: "/api/bff/admin/ops/audit-export?format=json"
     });
   });
 

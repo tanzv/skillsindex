@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { gotoProtectedRoute, loginAsAdmin } from "./helpers/auth";
+
 test("renders the about compatibility route", async ({ page }) => {
   await page.goto("/about");
 
@@ -103,4 +105,18 @@ test("redirects the dashboard compatibility route to login when the viewer is an
 
   await expect(page).toHaveURL(/\/login\?redirect=%2Fdashboard/);
   await expect(page.getByRole("heading", { name: "Account Sign In" })).toBeVisible();
+});
+
+test("redirects dashboard section compatibility routes to login when the viewer is anonymous", async ({ page }) => {
+  await page.goto("/dashboard/access");
+
+  await expect(page).toHaveURL(/\/login\?redirect=%2Fdashboard%2Faccess/);
+  await expect(page.getByRole("heading", { name: "Account Sign In" })).toBeVisible();
+});
+
+test("redirects authenticated dashboard section compatibility routes to the matching admin page", async ({ page }) => {
+  await loginAsAdmin(page, "/admin/overview");
+
+  await gotoProtectedRoute(page, "/dashboard/audit", "/admin/audit");
+  await expect(page.getByRole("heading", { name: "Audit", level: 1 })).toBeVisible();
 });

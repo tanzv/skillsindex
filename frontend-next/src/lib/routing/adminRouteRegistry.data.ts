@@ -101,6 +101,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemOpsMetricsLabel,
     description: (messages) => messages.itemOpsMetricsDescription,
     renderTarget: "ops-dashboard",
+    requiredCapability: "view_all_admin",
     endpoint: "/api/v1/admin/ops/metrics"
   },
   {
@@ -109,6 +110,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemIntegrationsLabel,
     description: (messages) => messages.itemIntegrationsDescription,
     renderTarget: "integrations",
+    requiredCapability: "view_all_admin",
     endpoint: "/api/v1/admin/integrations",
     quickLink: true
   },
@@ -118,15 +120,27 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemOpsAlertsLabel,
     description: (messages) => messages.itemOpsAlertsDescription,
     renderTarget: "ops-dashboard",
+    requiredCapability: "view_all_admin",
     endpoint: "/api/v1/admin/ops/alerts"
   },
   {
-    path: "/admin/ops/audit-export",
-    groupId: "operations",
+    path: "/admin/audit",
+    groupId: "security",
     label: (messages) => messages.itemAuditExportLabel,
     description: (messages) => messages.itemAuditExportDescription,
     renderTarget: "ops-records",
+    requiredCapability: "view_all_admin",
     endpoint: "/api/v1/admin/ops/audit-export"
+  },
+  {
+    path: "/admin/ops/audit-export",
+    groupId: "security",
+    label: (messages) => messages.itemAuditExportLabel,
+    description: (messages) => messages.itemAuditExportDescription,
+    renderTarget: "ops-records",
+    requiredCapability: "view_all_admin",
+    endpoint: "/api/v1/admin/ops/audit-export",
+    hiddenFromNavigation: true
   },
   {
     path: "/admin/ops/release-gates",
@@ -134,6 +148,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemReleaseGatesLabel,
     description: (messages) => messages.itemReleaseGatesDescription,
     renderTarget: "ops-dashboard",
+    requiredCapability: "view_all_admin",
     endpoint: "/api/v1/admin/ops/release-gates"
   },
   {
@@ -142,6 +157,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemRecoveryDrillsLabel,
     description: (messages) => messages.itemRecoveryDrillsDescription,
     renderTarget: "ops-records",
+    requiredCapability: "view_all_admin",
     endpoint: "/api/v1/admin/ops/recovery-drills"
   },
   {
@@ -150,6 +166,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemReleasesLabel,
     description: (messages) => messages.itemReleasesDescription,
     renderTarget: "ops-records",
+    requiredCapability: "view_all_admin",
     endpoint: "/api/v1/admin/ops/releases"
   },
   {
@@ -158,6 +175,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemChangeApprovalsLabel,
     description: (messages) => messages.itemChangeApprovalsDescription,
     renderTarget: "ops-records",
+    requiredCapability: "view_all_admin",
     endpoint: "/api/v1/admin/ops/change-approvals"
   },
   {
@@ -166,6 +184,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemBackupPlansLabel,
     description: (messages) => messages.itemBackupPlansDescription,
     renderTarget: "ops-records",
+    requiredCapability: "view_all_admin",
     endpoint: "/api/v1/admin/ops/backup/plans"
   },
   {
@@ -174,6 +193,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemBackupRunsLabel,
     description: (messages) => messages.itemBackupRunsDescription,
     renderTarget: "ops-records",
+    requiredCapability: "view_all_admin",
     endpoint: "/api/v1/admin/ops/backup/runs"
   },
   {
@@ -182,6 +202,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemAccountsLabel,
     description: (messages) => messages.itemAccountsDescription,
     renderTarget: "accounts",
+    requiredCapability: "manage_users",
     endpoint: "/api/v1/admin/accounts"
   },
   {
@@ -190,6 +211,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemAccountsLabel,
     description: (messages) => messages.itemAccountsDescription,
     renderTarget: "accounts",
+    requiredCapability: "manage_users",
     hiddenFromNavigation: true
   },
   {
@@ -197,7 +219,8 @@ export const adminRouteDefinitions = [
     groupId: "users",
     label: (messages) => messages.itemRolesLabel,
     description: (messages) => messages.itemRolesDescription,
-    renderTarget: "accounts"
+    renderTarget: "accounts",
+    requiredCapability: "manage_users"
   },
   {
     path: "/admin/roles/new",
@@ -205,6 +228,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemRolesLabel,
     description: (messages) => messages.itemRolesDescription,
     renderTarget: "accounts",
+    requiredCapability: "manage_users",
     hiddenFromNavigation: true
   },
   {
@@ -213,6 +237,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemAccessLabel,
     description: (messages) => messages.itemAccessDescription,
     renderTarget: "access",
+    requiredCapability: "manage_users",
     quickLink: true
   },
   {
@@ -221,6 +246,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemOrganizationsLabel,
     description: (messages) => messages.itemOrganizationsDescription,
     renderTarget: "organizations",
+    requiredCapability: "view_all_admin",
     endpoint: "/api/v1/admin/organizations"
   },
   {
@@ -237,6 +263,7 @@ export const adminRouteDefinitions = [
     label: (messages) => messages.itemModerationLabel,
     description: (messages) => messages.itemModerationDescription,
     renderTarget: "moderation",
+    requiredCapability: "view_all_admin",
     endpoint: "/api/v1/admin/moderation"
   }
 ] as const satisfies readonly AdminRouteDescriptorDefinition[];

@@ -57,10 +57,17 @@ describe("admin route registry", () => {
       path: "/admin/ops/alerts",
       groupId: "operations",
       renderTarget: "ops-dashboard",
+      requiredCapability: "view_all_admin",
       endpoint: "/api/v1/admin/ops/alerts",
       quickLink: false,
       hiddenFromNavigation: false
     });
+  });
+
+  it("marks elevated governance routes with explicit capability contracts", () => {
+    expect(resolveAdminRouteDefinition("/admin/organizations")?.requiredCapability).toBe("view_all_admin");
+    expect(resolveAdminRouteDefinition("/admin/audit")?.requiredCapability).toBe("view_all_admin");
+    expect(resolveAdminRouteDefinition("/admin/ops/audit-export")?.hiddenFromNavigation).toBe(true);
   });
 
   it("keeps composite admin routes free from phantom backend endpoints", () => {
@@ -90,6 +97,7 @@ describe("admin route registry", () => {
       "/admin/ops/release-gates"
     ]);
     expect(adminOperationsRecordRoutePaths).toEqual([
+      "/admin/audit",
       "/admin/ops/audit-export",
       "/admin/ops/recovery-drills",
       "/admin/ops/releases",

@@ -38,6 +38,7 @@ export const protectedTopbarMessageFallbacks = {
   accountMenuThemeLightLabel: "Light",
   accountMenuThemeDarkLabel: "Dark",
   accountMenuLogoutLabel: "Sign Out",
+  accountMenuLogoutError: "Unable to sign out right now. Try again.",
   guestUser: "Guest User",
   guestRole: "guest",
   visitorStatus: "visitor",
@@ -54,6 +55,7 @@ export const protectedTopbarMessageFallbacks = {
   quickDocsLabel: "Docs",
   quickDocsDescription: "Open shared documentation and migration references.",
   overflowGroupCountAriaLabelTemplate: "{count} actions",
+  sessionRoleSuperAdmin: "super admin",
   sessionRoleAdmin: "admin",
   sessionRoleOwner: "owner",
   sessionRoleMember: "member",
@@ -105,8 +107,8 @@ export const adminNavigationMessageFallbacks = {
   itemIntegrationsDescription: "Review connector inventory and webhook delivery coverage.",
   itemOpsAlertsLabel: "Ops Alerts",
   itemOpsAlertsDescription: "Inspect active operational alerts and responder status.",
-  itemAuditExportLabel: "Audit Export",
-  itemAuditExportDescription: "Export operational evidence and audit-ready records.",
+  itemAuditExportLabel: "Audit",
+  itemAuditExportDescription: "Review audit logs and export-ready operational evidence.",
   itemReleaseGatesLabel: "Release Gates",
   itemReleaseGatesDescription: "Review release readiness checks and approval blockers.",
   itemRecoveryDrillsLabel: "Recovery Drills",
@@ -141,6 +143,8 @@ export const adminNavigationMessageFallbacks = {
 export function formatProtectedSessionRole(value: string | null | undefined, messages: ProtectedTopbarMessages) {
   const normalized = value?.trim().toLowerCase();
   switch (normalized) {
+    case "super_admin":
+      return messages.sessionRoleSuperAdmin;
     case "admin":
       return messages.sessionRoleAdmin;
     case "owner":

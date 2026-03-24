@@ -13,6 +13,7 @@ describe("admin route entrypoints", () => {
       "app/(admin)/admin/access/page.tsx",
       "app/(admin)/admin/accounts/new/page.tsx",
       "app/(admin)/admin/accounts/page.tsx",
+      "app/(admin)/admin/audit/page.tsx",
       "app/(admin)/admin/apikeys/page.tsx",
       "app/(admin)/admin/ingestion/manual/page.tsx",
       "app/(admin)/admin/ingestion/repository/page.tsx",

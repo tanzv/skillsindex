@@ -19,6 +19,8 @@ describe("protected surface links", () => {
 
   it("classifies protected surface paths through shared helpers", () => {
     expect(isProtectedSurfacePath(protectedDashboardRoute)).toBe(true);
+    expect(isProtectedSurfacePath("/dashboard/access")).toBe(true);
+    expect(isProtectedSurfacePath("/dashboard/audit")).toBe(true);
     expect(isProtectedSurfacePath("/workspace/queue")).toBe(true);
     expect(isProtectedSurfacePath("/admin/overview")).toBe(true);
     expect(isProtectedSurfacePath("/account/profile")).toBe(true);

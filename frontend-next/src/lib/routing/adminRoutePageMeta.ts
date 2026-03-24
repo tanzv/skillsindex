@@ -195,6 +195,11 @@ const adminOperationsRecordsRouteMetaResolvers: Record<
   AdminOperationsRecordsRoute,
   AdminRouteMetaResolver<OperationsRouteMetaMessages, AdminActionRouteMeta>
 > = {
+  "/admin/audit": (messages) => ({
+    title: messages.routeAuditExportTitle,
+    description: messages.routeAuditExportDescription,
+    endpoint: "/api/bff/admin/ops/audit-export?format=json"
+  }),
   "/admin/ops/audit-export": (messages, route) => ({
     title: messages.routeAuditExportTitle,
     description: messages.routeAuditExportDescription,

@@ -1,5 +1,6 @@
 export const marketplaceHomeRoute = "/" as const;
 export const protectedDashboardRoute = "/dashboard" as const;
+export const protectedDashboardRoutePrefix = "/dashboard" as const;
 
 export const workspaceOverviewRoute = "/workspace" as const;
 export const workspaceActivityRoute = "/workspace/activity" as const;
@@ -61,5 +62,9 @@ export function isAccountSurfacePath(pathname: string): boolean {
 }
 
 export function isProtectedSurfacePath(pathname: string): boolean {
-  return pathname === protectedDashboardRoute || protectedRoutePrefixes.some((prefix) => pathname.startsWith(prefix));
+  return (
+    pathname === protectedDashboardRoute ||
+    pathname.startsWith(`${protectedDashboardRoutePrefix}/`) ||
+    protectedRoutePrefixes.some((prefix) => pathname.startsWith(prefix))
+  );
 }
