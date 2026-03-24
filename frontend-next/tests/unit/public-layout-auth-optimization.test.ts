@@ -22,7 +22,8 @@ describe("public auth optimization", () => {
     const loginRouteSource = readAppFile("src/features/auth/renderLoginRoute.tsx");
 
     expect(loginPageSource).toContain('from "@/src/features/auth/renderLoginRoute"');
-    expect(loginPageSource).toContain("return renderLoginRoute(searchParams)");
+    expect(loginPageSource).toContain("await renderLoginRoute(searchParams)");
+    expect(loginPageSource).not.toContain("getServerSessionContext()");
     expect(loginRouteSource).toContain("if (!hasSessionCookie(requestHeaders))");
     expect(loginRouteSource).toContain("const session = await getServerSessionContext()");
     expect(loginRouteSource).toContain("if (isAuthenticatedSession(session))");

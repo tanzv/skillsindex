@@ -64,6 +64,7 @@ describe("route style imports", () => {
     const accountLayout = readAppFile("app/(account)/account/layout.tsx");
     const publicLayout = readAppFile("app/(public)/layout.tsx");
     const publicLandingPage = readAppFile("app/(public)/page.tsx");
+    const loginPage = readAppFile("app/login/page.tsx");
     const publicCategoriesLayout = readAppFile("app/(public)/categories/layout.tsx");
     const publicRankingsLayout = readAppFile("app/(public)/rankings/layout.tsx");
     const publicSkillDetailLayout = readAppFile("app/(public)/skills/[skillId]/layout.tsx");
@@ -79,6 +80,7 @@ describe("route style imports", () => {
 
     expect(publicLayout).toContain('import "../public-marketplace-route.css";');
     expect(publicLandingPage).toContain('import "../public-marketplace-landing-route.css";');
+    expect(loginPage).toContain('import styles from "./LoginPageRoute.module.scss";');
     expect(publicCategoriesLayout).toContain('import "../../public-marketplace-categories-route.css";');
     expect(publicRankingsLayout).toContain('import "../../public-marketplace-rankings-route.css";');
     expect(publicSkillDetailLayout).toContain('import "../../../public-skill-detail-route.css";');
