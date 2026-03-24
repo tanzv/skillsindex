@@ -144,29 +144,7 @@ func (a *App) handleAPIAdminSSOProviderCreate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	config := map[string]string{
-		"protocol":                  "oidc",
-		"issuer":                    strings.TrimSpace(input.Issuer),
-		"authorization_url":         strings.TrimSpace(input.AuthorizationURL),
-		"token_url":                 strings.TrimSpace(input.TokenURL),
-		"userinfo_url":              strings.TrimSpace(input.UserInfoURL),
-		"client_id":                 strings.TrimSpace(input.ClientID),
-		"client_secret":             strings.TrimSpace(input.ClientSecret),
-		"scope":                     defaultString(strings.TrimSpace(input.Scope), "openid profile email"),
-		"claim_external_id":         defaultString(strings.TrimSpace(input.ClaimExternalID), "sub"),
-		"claim_username":            defaultString(strings.TrimSpace(input.ClaimUsername), "preferred_username"),
-		"claim_email":               defaultString(strings.TrimSpace(input.ClaimEmail), "email"),
-		"claim_email_verified":      normalizeSSOClaimEmailVerified(input.ClaimEmailVerified),
-		"claim_groups":              normalizeSSOClaimGroups(input.ClaimGroups),
-		"offboarding_mode":          normalizeSSOOffboardingMode(input.OffboardingMode),
-		"mapping_mode":              normalizeSSOMappingMode(input.MappingMode),
-		"default_org_id":            strconv.FormatUint(uint64(input.DefaultOrgID), 10),
-		"default_org_role":          string(normalizeSSODefaultOrganizationRole(input.DefaultOrgRole)),
-		"default_org_group_rules":   serializeSSODefaultOrganizationGroupRulesJSON(input.DefaultOrgGroupRules),
-		"default_org_email_domains": serializeSSODomains(normalizeSSODefaultOrganizationEmailDomains(input.DefaultOrgEmailDomains)),
-		"default_user_role":         string(normalizeSSODefaultUserRole(input.DefaultUserRole)),
-	}
-	rawConfig, err := json.Marshal(config)
+	rawConfig, err := marshalSSOConnectorConfig(input)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "config_serialize_failed", "message": err.Error()})
 		return
@@ -181,7 +159,7 @@ func (a *App) handleAPIAdminSSOProviderCreate(w http.ResponseWriter, r *http.Req
 		Provider:    provider,
 		Description: defaultString(strings.TrimSpace(input.Description), "Enterprise SSO provider"),
 		BaseURL:     strings.TrimSpace(input.Issuer),
-		ConfigJSON:  string(rawConfig),
+		ConfigJSON:  rawConfig,
 		Enabled:     true,
 		CreatedBy:   user.ID,
 	})

@@ -68,9 +68,244 @@ export function createInitialMockState() {
       highlight_limit: 3,
       category_leader_limit: 5
     },
+    categoryCatalog: {
+      items: [
+        {
+          slug: "team-ops",
+          name: "Team Operations",
+          description: "Operational workflows for delivery teams.",
+          enabled: true,
+          sort_order: 10,
+          subcategories: [
+            {
+              slug: "release-management",
+              name: "Release Management",
+              enabled: true,
+              sort_order: 20
+            }
+          ]
+        }
+      ]
+    },
+    presentationTaxonomy: {
+      items: [
+        {
+          slug: "operations",
+          name: "Operations",
+          description: "Operational workflows and incident response guidance.",
+          enabled: true,
+          sort_order: 10,
+          subcategories: [
+            {
+              slug: "release-control",
+              name: "Release Control",
+              enabled: true,
+              sort_order: 10,
+              legacy_category_slugs: ["team-ops"],
+              legacy_subcategory_slugs: ["release-management"],
+              keywords: ["release", "change", "approval"]
+            }
+          ]
+        }
+      ]
+    },
     authProviders: {
       auth_providers: ["password", "github"],
-      available_auth_providers: ["password", "github", "google"]
+      available_auth_providers: ["password", "dingtalk", "feishu", "github", "google", "wecom", "microsoft"]
+    },
+    authProviderConfigs: {
+      items: [
+        {
+          key: "dingtalk",
+          display_name: "DingTalk",
+          management_kind: "oidc",
+          configurable: true,
+          enabled: false,
+          connected: false,
+          available: false,
+          start_path: "",
+          connector_id: 0,
+          description: "",
+          base_url: "",
+          updated_at: ""
+        },
+        {
+          key: "feishu",
+          display_name: "Feishu Workspace",
+          management_kind: "oidc",
+          configurable: true,
+          enabled: true,
+          connected: true,
+          available: true,
+          start_path: "/auth/sso/start/feishu",
+          connector_id: 41,
+          description: "Primary enterprise identity provider.",
+          base_url: "https://open.feishu.test",
+          updated_at: "2026-03-14T09:20:00Z"
+        },
+        {
+          key: "github",
+          display_name: "GitHub",
+          management_kind: "oidc",
+          configurable: true,
+          enabled: true,
+          connected: true,
+          available: true,
+          start_path: "/auth/sso/start/github",
+          connector_id: 42,
+          description: "Developer sign-in fallback.",
+          base_url: "https://github.com",
+          updated_at: "2026-03-14T09:18:00Z"
+        },
+        {
+          key: "google",
+          display_name: "Google",
+          management_kind: "oidc",
+          configurable: true,
+          enabled: false,
+          connected: false,
+          available: false,
+          start_path: "",
+          connector_id: 0,
+          description: "",
+          base_url: "",
+          updated_at: ""
+        },
+        {
+          key: "wecom",
+          display_name: "WeCom",
+          management_kind: "oidc",
+          configurable: true,
+          enabled: false,
+          connected: false,
+          available: false,
+          start_path: "",
+          connector_id: 0,
+          description: "",
+          base_url: "",
+          updated_at: ""
+        },
+        {
+          key: "microsoft",
+          display_name: "Microsoft",
+          management_kind: "oidc",
+          configurable: true,
+          enabled: false,
+          connected: false,
+          available: false,
+          start_path: "",
+          connector_id: 0,
+          description: "",
+          base_url: "",
+          updated_at: ""
+        }
+      ]
+    },
+    authProviderConfigDetails: {
+      dingtalk: {
+        key: "dingtalk",
+        provider: "dingtalk",
+        display_name: "DingTalk",
+        name: "DingTalk",
+        management_kind: "oidc",
+        configurable: true,
+        enabled: false,
+        connected: false,
+        available: false,
+        start_path: "",
+        connector_id: 0,
+        description: "",
+        base_url: "",
+        issuer: "",
+        authorization_url: "",
+        token_url: "",
+        userinfo_url: "",
+        client_id: "",
+        client_secret: "",
+        scope: "openid profile email",
+        claim_external_id: "sub",
+        claim_username: "preferred_username",
+        claim_email: "email",
+        claim_email_verified: "email_verified",
+        claim_groups: "groups",
+        offboarding_mode: "disable_only",
+        mapping_mode: "external_email_username",
+        default_org_id: 0,
+        default_org_role: "member",
+        default_org_group_rules: "[]",
+        default_org_email_domains: "",
+        default_user_role: "member"
+      },
+      feishu: {
+        key: "feishu",
+        provider: "feishu",
+        display_name: "Feishu Workspace",
+        name: "Feishu Workspace",
+        management_kind: "oidc",
+        configurable: true,
+        enabled: true,
+        connected: true,
+        available: true,
+        start_path: "/auth/sso/start/feishu",
+        connector_id: 41,
+        description: "Primary enterprise identity provider.",
+        base_url: "https://open.feishu.test",
+        issuer: "https://open.feishu.test",
+        authorization_url: "https://open.feishu.test/oauth/authorize",
+        token_url: "https://open.feishu.test/oauth/token",
+        userinfo_url: "https://open.feishu.test/oauth/userinfo",
+        client_id: "client-feishu",
+        client_secret: "secret-feishu",
+        scope: "openid profile email",
+        claim_external_id: "sub",
+        claim_username: "preferred_username",
+        claim_email: "email",
+        claim_email_verified: "email_verified",
+        claim_groups: "groups",
+        offboarding_mode: "disable_only",
+        mapping_mode: "external_email_username",
+        default_org_id: 0,
+        default_org_role: "member",
+        default_org_group_rules: "[]",
+        default_org_email_domains: "example.com",
+        default_user_role: "member",
+        updated_at: "2026-03-14T09:20:00Z"
+      },
+      github: {
+        key: "github",
+        provider: "github",
+        display_name: "GitHub",
+        name: "GitHub",
+        management_kind: "oidc",
+        configurable: true,
+        enabled: true,
+        connected: true,
+        available: true,
+        start_path: "/auth/sso/start/github",
+        connector_id: 42,
+        description: "Developer sign-in fallback.",
+        base_url: "https://github.com",
+        issuer: "https://github.com",
+        authorization_url: "https://github.com/login/oauth/authorize",
+        token_url: "https://github.com/login/oauth/access_token",
+        userinfo_url: "https://api.github.com/user",
+        client_id: "client-github",
+        client_secret: "secret-github",
+        scope: "read:user user:email",
+        claim_external_id: "id",
+        claim_username: "login",
+        claim_email: "email",
+        claim_email_verified: "email_verified",
+        claim_groups: "groups",
+        offboarding_mode: "disable_only",
+        mapping_mode: "external_email_username",
+        default_org_id: 0,
+        default_org_role: "member",
+        default_org_group_rules: "[]",
+        default_org_email_domains: "",
+        default_user_role: "member",
+        updated_at: "2026-03-14T09:18:00Z"
+      }
     },
     accounts: {
       total: 3,

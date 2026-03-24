@@ -346,6 +346,7 @@ func openAPISchemasCoreCatalogAndAuth() map[string]any {
 			"properties": map[string]any{
 				"key":        map[string]any{"type": "string"},
 				"start_path": map[string]any{"type": "string"},
+				"label":      map[string]any{"type": "string"},
 			},
 		},
 		"AuthProvidersResponse": map[string]any{

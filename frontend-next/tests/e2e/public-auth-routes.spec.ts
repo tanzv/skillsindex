@@ -18,6 +18,8 @@ test("renders the login route with the prototype-aligned auth layout", async ({ 
   await expect(page.getByTestId("login-info-card-item-redirect")).toBeVisible();
   await expect(page.getByTestId("login-form-card")).toBeVisible();
   await expect(page.getByTestId("login-form-brand")).toBeVisible();
+  await expect(page.getByTestId("login-provider-stack")).toBeVisible();
+  await expect(page.getByTestId("login-provider-feishu")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Account Sign In" })).toBeVisible();
   await expect(page.getByText("Choose enterprise identity sign-in, or use workspace credentials.")).toBeVisible();
   await expect(page.getByText("Use workspace credentials", { exact: true })).toBeVisible();

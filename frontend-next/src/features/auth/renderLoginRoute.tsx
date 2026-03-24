@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 
 import { defaultAuthenticatedRedirect, hasSessionCookie } from "@/src/lib/auth/middleware";
 import { getServerSessionContext, isAuthenticatedSession } from "@/src/lib/auth/session";
+import { loadPublicAuthProviders } from "@/src/lib/api/publicAuthProviders.server";
 import { loadPublicAuthMessages } from "@/src/lib/i18n/publicAuthMessages.server";
 import { publicLocaleCookieName } from "@/src/lib/i18n/publicLocale";
 
@@ -42,15 +43,17 @@ export async function renderLoginRoute(searchParams: Promise<LoginRouteSearchPar
     requestHeaders.get("accept-language")
   );
   const redirectTarget = normalizeLoginRedirectTarget(resolveLoginRedirectTarget(resolvedSearchParams));
-  const [messages, infoPanelModel] = await Promise.all([
+  const [messages, infoPanelModel, providers] = await Promise.all([
     loadPublicAuthMessages(locale),
-    loadLoginInfoPanelModel(locale, redirectTarget)
+    loadLoginInfoPanelModel(locale, redirectTarget),
+    loadPublicAuthProviders(requestHeaders.get("accept-language"))
   ]);
 
   return (
     <LoginForm
       redirectTarget={redirectTarget}
       initialLocale={locale}
+      providers={providers}
       infoPanelModel={infoPanelModel}
       messages={messages}
     />

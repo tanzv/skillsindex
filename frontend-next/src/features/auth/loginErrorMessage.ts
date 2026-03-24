@@ -7,7 +7,8 @@ const loginErrorMessageKeys = {
   service_unavailable: "loginServiceUnavailable",
   session_start_failed: "loginSessionStartFailed",
   too_many_requests: "loginTooManyRequests",
-  unauthorized: "loginInvalidCredentials"
+  unauthorized: "loginInvalidCredentials",
+  backend_unreachable: "loginServiceUnavailable"
 } satisfies Partial<Record<string, keyof PublicAuthMessages>>;
 
 function resolveLoginMessageKey(code: string | undefined): keyof PublicAuthMessages | undefined {

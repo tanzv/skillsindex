@@ -33,6 +33,39 @@ export interface AdminIntegrationsMessages {
   connectorBaseUrlLabel: string;
   connectorUpdatedLabel: string;
   connectorDescriptionLabel: string;
+  authProviderInventoryTitle: string;
+  authProviderInventoryDescription: string;
+  authProviderConfigureAction: string;
+  authProviderEditAction: string;
+  authProviderDisableAction: string;
+  authProviderConnectedLabel: string;
+  authProviderDisconnectedLabel: string;
+  authProviderAvailableLabel: string;
+  authProviderUnavailableLabel: string;
+  authProviderFormDescription: string;
+  authProviderFormNameLabel: string;
+  authProviderFormDescriptionLabel: string;
+  authProviderFormIssuerLabel: string;
+  authProviderFormAuthorizationUrlLabel: string;
+  authProviderFormTokenUrlLabel: string;
+  authProviderFormUserInfoUrlLabel: string;
+  authProviderFormClientIdLabel: string;
+  authProviderFormClientSecretLabel: string;
+  authProviderFormScopeLabel: string;
+  authProviderFormClaimExternalIdLabel: string;
+  authProviderFormClaimUsernameLabel: string;
+  authProviderFormClaimEmailLabel: string;
+  authProviderFormClaimEmailVerifiedLabel: string;
+  authProviderFormClaimGroupsLabel: string;
+  authProviderFormOffboardingModeLabel: string;
+  authProviderFormMappingModeLabel: string;
+  authProviderFormDefaultOrgIdLabel: string;
+  authProviderFormDefaultOrgRoleLabel: string;
+  authProviderFormDefaultOrgGroupRulesLabel: string;
+  authProviderFormDefaultOrgEmailDomainsLabel: string;
+  authProviderFormDefaultUserRoleLabel: string;
+  authProviderSaveAction: string;
+  authProviderSavingAction: string;
   loadError: string;
   metricTotalConnectors: string;
   metricEnabledConnectors: string;
@@ -85,6 +118,39 @@ export const adminIntegrationsMessageKeyMap = {
   connectorBaseUrlLabel: "admin_integrations_connector_base_url_label",
   connectorUpdatedLabel: "admin_integrations_connector_updated_label",
   connectorDescriptionLabel: "admin_integrations_connector_description_label",
+  authProviderInventoryTitle: "admin_integrations_auth_provider_inventory_title",
+  authProviderInventoryDescription: "admin_integrations_auth_provider_inventory_description",
+  authProviderConfigureAction: "admin_integrations_auth_provider_configure_action",
+  authProviderEditAction: "admin_integrations_auth_provider_edit_action",
+  authProviderDisableAction: "admin_integrations_auth_provider_disable_action",
+  authProviderConnectedLabel: "admin_integrations_auth_provider_connected_label",
+  authProviderDisconnectedLabel: "admin_integrations_auth_provider_disconnected_label",
+  authProviderAvailableLabel: "admin_integrations_auth_provider_available_label",
+  authProviderUnavailableLabel: "admin_integrations_auth_provider_unavailable_label",
+  authProviderFormDescription: "admin_integrations_auth_provider_form_description",
+  authProviderFormNameLabel: "admin_integrations_auth_provider_form_name_label",
+  authProviderFormDescriptionLabel: "admin_integrations_auth_provider_form_description_label",
+  authProviderFormIssuerLabel: "admin_integrations_auth_provider_form_issuer_label",
+  authProviderFormAuthorizationUrlLabel: "admin_integrations_auth_provider_form_authorization_url_label",
+  authProviderFormTokenUrlLabel: "admin_integrations_auth_provider_form_token_url_label",
+  authProviderFormUserInfoUrlLabel: "admin_integrations_auth_provider_form_userinfo_url_label",
+  authProviderFormClientIdLabel: "admin_integrations_auth_provider_form_client_id_label",
+  authProviderFormClientSecretLabel: "admin_integrations_auth_provider_form_client_secret_label",
+  authProviderFormScopeLabel: "admin_integrations_auth_provider_form_scope_label",
+  authProviderFormClaimExternalIdLabel: "admin_integrations_auth_provider_form_claim_external_id_label",
+  authProviderFormClaimUsernameLabel: "admin_integrations_auth_provider_form_claim_username_label",
+  authProviderFormClaimEmailLabel: "admin_integrations_auth_provider_form_claim_email_label",
+  authProviderFormClaimEmailVerifiedLabel: "admin_integrations_auth_provider_form_claim_email_verified_label",
+  authProviderFormClaimGroupsLabel: "admin_integrations_auth_provider_form_claim_groups_label",
+  authProviderFormOffboardingModeLabel: "admin_integrations_auth_provider_form_offboarding_mode_label",
+  authProviderFormMappingModeLabel: "admin_integrations_auth_provider_form_mapping_mode_label",
+  authProviderFormDefaultOrgIdLabel: "admin_integrations_auth_provider_form_default_org_id_label",
+  authProviderFormDefaultOrgRoleLabel: "admin_integrations_auth_provider_form_default_org_role_label",
+  authProviderFormDefaultOrgGroupRulesLabel: "admin_integrations_auth_provider_form_default_org_group_rules_label",
+  authProviderFormDefaultOrgEmailDomainsLabel: "admin_integrations_auth_provider_form_default_org_email_domains_label",
+  authProviderFormDefaultUserRoleLabel: "admin_integrations_auth_provider_form_default_user_role_label",
+  authProviderSaveAction: "admin_integrations_auth_provider_save_action",
+  authProviderSavingAction: "admin_integrations_auth_provider_saving_action",
   loadError: "admin_integrations_load_error",
   metricTotalConnectors: "admin_integrations_metric_total_connectors",
   metricEnabledConnectors: "admin_integrations_metric_enabled_connectors",
@@ -137,6 +203,39 @@ export const adminIntegrationsMessageFallbacks = {
   connectorBaseUrlLabel: "Base URL",
   connectorUpdatedLabel: "Updated",
   connectorDescriptionLabel: "Description",
+  authProviderInventoryTitle: "Identity Provider Inventory",
+  authProviderInventoryDescription: "Configure third-party sign-in providers from one shared control surface.",
+  authProviderConfigureAction: "Configure",
+  authProviderEditAction: "Edit",
+  authProviderDisableAction: "Disable",
+  authProviderConnectedLabel: "Connected",
+  authProviderDisconnectedLabel: "Not Connected",
+  authProviderAvailableLabel: "Live",
+  authProviderUnavailableLabel: "Unavailable",
+  authProviderFormDescription: "Manage issuer endpoints, client credentials, and user mapping defaults for the selected provider.",
+  authProviderFormNameLabel: "Display Name",
+  authProviderFormDescriptionLabel: "Provider Description",
+  authProviderFormIssuerLabel: "Issuer",
+  authProviderFormAuthorizationUrlLabel: "Authorization URL",
+  authProviderFormTokenUrlLabel: "Token URL",
+  authProviderFormUserInfoUrlLabel: "Userinfo URL",
+  authProviderFormClientIdLabel: "Client ID",
+  authProviderFormClientSecretLabel: "Client Secret",
+  authProviderFormScopeLabel: "Scope",
+  authProviderFormClaimExternalIdLabel: "External ID Claim",
+  authProviderFormClaimUsernameLabel: "Username Claim",
+  authProviderFormClaimEmailLabel: "Email Claim",
+  authProviderFormClaimEmailVerifiedLabel: "Email Verified Claim",
+  authProviderFormClaimGroupsLabel: "Groups Claim",
+  authProviderFormOffboardingModeLabel: "Offboarding Mode",
+  authProviderFormMappingModeLabel: "Mapping Mode",
+  authProviderFormDefaultOrgIdLabel: "Default Organization ID",
+  authProviderFormDefaultOrgRoleLabel: "Default Organization Role",
+  authProviderFormDefaultOrgGroupRulesLabel: "Default Organization Group Rules",
+  authProviderFormDefaultOrgEmailDomainsLabel: "Default Organization Email Domains",
+  authProviderFormDefaultUserRoleLabel: "Default User Role",
+  authProviderSaveAction: "Save Provider",
+  authProviderSavingAction: "Saving Provider...",
   loadError: "Failed to load integrations.",
   metricTotalConnectors: "Total Connectors",
   metricEnabledConnectors: "Enabled Connectors",

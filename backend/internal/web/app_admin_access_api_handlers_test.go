@@ -72,7 +72,7 @@ func TestAPIAdminAuthProvidersSettingSuccess(t *testing.T) {
 	if got := decodeStringSliceField(t, payload, "auth_providers"); strings.Join(got, ",") != "github,google,wecom" {
 		t.Fatalf("unexpected auth_providers: got=%v want=%v", got, []string{"github", "google", "wecom"})
 	}
-	if got := decodeStringSliceField(t, payload, "available_auth_providers"); strings.Join(got, ",") != "dingtalk,github,google,wecom,microsoft" {
+	if got := decodeStringSliceField(t, payload, "available_auth_providers"); strings.Join(got, ",") != "dingtalk,feishu,github,google,wecom,microsoft" {
 		t.Fatalf("unexpected available_auth_providers: got=%v", got)
 	}
 }

@@ -1,10 +1,12 @@
 "use client";
 
 import { AdminPageScaffold } from "@/src/components/admin/AdminPrimitives";
-import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
+import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 
+import type { ManagedAuthProviderDraft, ManagedAuthProviderInventoryItem } from "./adminAuthProvidersModel";
+import { AuthProviderInventoryPanel, ManagedAuthProviderForm } from "./AdminIntegrationsAuthPanels";
 import type { IntegrationConnector, IntegrationsOverview, WebhookLog } from "./integrationsModel";
 import {
   ConnectorInventoryPanel,
@@ -23,16 +25,30 @@ interface AdminIntegrationsContentProps {
   filteredConnectors: IntegrationConnector[];
   filteredLogs: WebhookLog[];
   detailConnector: IntegrationConnector | null;
-  detailDrawerOpen: boolean;
+  detailPaneOpen: boolean;
+  authProviderItems: ManagedAuthProviderInventoryItem[];
+  authProviderLoading: boolean;
+  authProviderError: string;
+  authProviderDraft: ManagedAuthProviderDraft | null;
+  authProviderPaneOpen: boolean;
+  authProviderDisplayName: string;
+  authProviderBusy: boolean;
+  authProviderBusyKey: string | null;
   overview: IntegrationsOverview;
   selectedConnectorName: string;
   onRefresh: () => void;
+  onAuthProviderReload: () => void;
   onClearSelection: () => void;
   onSearchChange: (value: string) => void;
   onConnectorFilterChange: (connectorId: number) => void;
   onToggleConnectorFilter: (connectorId: number) => void;
   onOpenConnectorDetail: (connectorId: number) => void;
-  onCloseDetailDrawer: () => void;
+  onCloseDetailPane: () => void;
+  onOpenAuthProvider: (provider: string) => void;
+  onCloseAuthProviderPane: () => void;
+  onAuthProviderDraftChange: (name: keyof ManagedAuthProviderDraft, value: string) => void;
+  onAuthProviderSubmit: () => void;
+  onAuthProviderDisable: (provider: string) => void;
 }
 
 export function AdminIntegrationsContent({
@@ -44,16 +60,30 @@ export function AdminIntegrationsContent({
   filteredConnectors,
   filteredLogs,
   detailConnector,
-  detailDrawerOpen,
+  detailPaneOpen,
+  authProviderItems,
+  authProviderLoading,
+  authProviderError,
+  authProviderDraft,
+  authProviderPaneOpen,
+  authProviderDisplayName,
+  authProviderBusy,
+  authProviderBusyKey,
   overview,
   selectedConnectorName,
   onRefresh,
+  onAuthProviderReload,
   onClearSelection,
   onSearchChange,
   onConnectorFilterChange,
   onToggleConnectorFilter,
   onOpenConnectorDetail,
-  onCloseDetailDrawer
+  onCloseDetailPane,
+  onOpenAuthProvider,
+  onCloseAuthProviderPane,
+  onAuthProviderDraftChange,
+  onAuthProviderSubmit,
+  onAuthProviderDisable
 }: AdminIntegrationsContentProps) {
   const { messages } = useProtectedI18n();
   const commonMessages = messages.adminCommon;
@@ -95,22 +125,47 @@ export function AdminIntegrationsContent({
         </div>
 
         <div className="space-y-6">
+          <AuthProviderInventoryPanel
+            items={authProviderItems}
+            loading={authProviderLoading}
+            error={authProviderError}
+            busyProviderKey={authProviderBusyKey}
+            onReload={onAuthProviderReload}
+            onOpen={onOpenAuthProvider}
+            onDisable={onAuthProviderDisable}
+          />
+          {detailPaneOpen && detailConnector ? (
+            <InlineWorkPaneSurface
+              title={detailConnector.name}
+              description={detailConnector.description || integrationMessages.connectorDetailDescription}
+              closeLabel={integrationMessages.closePanelAction}
+              onClose={onCloseDetailPane}
+              dataTestId="admin-integrations-detail-pane"
+            >
+              <SelectedConnectorSummary connector={detailConnector} />
+            </InlineWorkPaneSurface>
+          ) : null}
+          {authProviderPaneOpen && authProviderDraft ? (
+            <InlineWorkPaneSurface
+              title={authProviderDisplayName}
+              description={integrationMessages.authProviderFormDescription}
+              closeLabel={integrationMessages.closePanelAction}
+              onClose={onCloseAuthProviderPane}
+              dataTestId="admin-auth-provider-detail-pane"
+            >
+              <ManagedAuthProviderForm
+                providerDisplayName={authProviderDisplayName}
+                draft={authProviderDraft}
+                busy={authProviderBusy}
+                onChange={onAuthProviderDraftChange}
+                onSubmit={onAuthProviderSubmit}
+              />
+            </InlineWorkPaneSurface>
+          ) : null}
           <ProviderSpreadPanel overview={overview} />
           <OperationsSnapshotPanel selectedConnectorName={selectedConnectorName} overview={overview} />
         </div>
       </div>
-
-      <DetailFormSurface
-        open={detailDrawerOpen && Boolean(detailConnector)}
-        variant="drawer"
-        size="default"
-        title={detailConnector?.name || integrationMessages.connectorInventoryTitle}
-        description={detailConnector?.description || integrationMessages.connectorDetailDescription}
-        closeLabel={integrationMessages.closePanelAction}
-        onClose={onCloseDetailDrawer}
-      >
-        <SelectedConnectorSummary connector={detailConnector} />
-      </DetailFormSurface>
     </AdminPageScaffold>
   );
 }

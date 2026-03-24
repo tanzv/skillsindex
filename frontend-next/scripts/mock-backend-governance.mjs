@@ -117,6 +117,125 @@ function filteredModerationCases(state, url) {
   return { total: items.length, items };
 }
 
+function findAuthProviderConfigDetail(state, provider) {
+  return state.authProviderConfigDetails[String(provider).trim().toLowerCase()] || null;
+}
+
+function syncAuthProviderInventory(state, provider, detail) {
+  state.authProviderConfigs.items = state.authProviderConfigs.items.map((item) =>
+    item.key === provider
+      ? {
+          ...item,
+          ...detail,
+          provider,
+          updated_at: detail.updated_at || "2026-03-14T12:00:00Z"
+        }
+      : item
+  );
+}
+
+function upsertAuthProviderConfig(state, body) {
+  const provider = String(body.provider || "").trim().toLowerCase();
+  if (!provider) {
+    return null;
+  }
+
+  const existing = findAuthProviderConfigDetail(state, provider) || {
+    key: provider,
+    provider,
+    display_name: provider,
+    name: provider,
+    management_kind: "oidc",
+    configurable: true,
+    enabled: false,
+    connected: false,
+    available: false,
+    start_path: "",
+    connector_id: 0,
+    description: "",
+    base_url: "",
+    issuer: "",
+    authorization_url: "",
+    token_url: "",
+    userinfo_url: "",
+    client_id: "",
+    client_secret: "",
+    scope: "openid profile email",
+    claim_external_id: "sub",
+    claim_username: "preferred_username",
+    claim_email: "email",
+    claim_email_verified: "email_verified",
+    claim_groups: "groups",
+    offboarding_mode: "disable_only",
+    mapping_mode: "external_email_username",
+    default_org_id: 0,
+    default_org_role: "member",
+    default_org_group_rules: "[]",
+    default_org_email_domains: "",
+    default_user_role: "member"
+  };
+
+  const detail = {
+    ...existing,
+    provider,
+    key: provider,
+    display_name: String(body.name || existing.display_name || provider),
+    name: String(body.name || existing.name || provider),
+    management_kind: "oidc",
+    configurable: true,
+    enabled: true,
+    connected: true,
+    available: true,
+    start_path: `/auth/sso/start/${provider}`,
+    connector_id: Number(existing.connector_id || 0) || Number(nextIdentifier(state.authProviderConfigs.items)),
+    description: String(body.description || existing.description || ""),
+    base_url: String(body.issuer || existing.base_url || ""),
+    issuer: String(body.issuer || existing.issuer || ""),
+    authorization_url: String(body.authorization_url || existing.authorization_url || ""),
+    token_url: String(body.token_url || existing.token_url || ""),
+    userinfo_url: String(body.userinfo_url || existing.userinfo_url || ""),
+    client_id: String(body.client_id || existing.client_id || ""),
+    client_secret: String(body.client_secret || existing.client_secret || ""),
+    scope: String(body.scope || existing.scope || "openid profile email"),
+    claim_external_id: String(body.claim_external_id || existing.claim_external_id || "sub"),
+    claim_username: String(body.claim_username || existing.claim_username || "preferred_username"),
+    claim_email: String(body.claim_email || existing.claim_email || "email"),
+    claim_email_verified: String(body.claim_email_verified || existing.claim_email_verified || "email_verified"),
+    claim_groups: String(body.claim_groups || existing.claim_groups || "groups"),
+    offboarding_mode: String(body.offboarding_mode || existing.offboarding_mode || "disable_only"),
+    mapping_mode: String(body.mapping_mode || existing.mapping_mode || "external_email_username"),
+    default_org_id: Number(body.default_org_id || existing.default_org_id || 0),
+    default_org_role: String(body.default_org_role || existing.default_org_role || "member"),
+    default_org_group_rules: String(body.default_org_group_rules || existing.default_org_group_rules || "[]"),
+    default_org_email_domains: String(body.default_org_email_domains || existing.default_org_email_domains || ""),
+    default_user_role: String(body.default_user_role || existing.default_user_role || "member"),
+    updated_at: "2026-03-14T12:00:00Z"
+  };
+
+  state.authProviderConfigDetails[provider] = detail;
+  syncAuthProviderInventory(state, provider, detail);
+  return detail;
+}
+
+function disableAuthProviderConfig(state, provider) {
+  const detail = findAuthProviderConfigDetail(state, provider);
+  if (!detail) {
+    return null;
+  }
+
+  const disabledDetail = {
+    ...detail,
+    enabled: false,
+    connected: false,
+    available: false,
+    start_path: "",
+    updated_at: "2026-03-14T12:02:00Z"
+  };
+  state.authProviderConfigDetails[provider] = disabledDetail;
+  syncAuthProviderInventory(state, provider, disabledDetail);
+  return disabledDetail;
+}
+
 export async function handleGovernanceRequest({ method, pathname, url, request, response, state, json, parseJSONBody }) {
   if (method === "GET" && pathname === "/api/v1/admin/apikeys") {
     json(response, 200, filteredAdminAPIKeys(state, url));
@@ -198,6 +317,44 @@ export async function handleGovernanceRequest({ method, pathname, url, request, 
         : item
     );
     json(response, 200, { ok: true });
+    return true;
+  }
+
+  if (method === "GET" && pathname === "/api/v1/admin/auth-provider-configs") {
+    json(response, 200, state.authProviderConfigs);
+    return true;
+  }
+
+  if (method === "GET" && pathname.match(/^\/api\/v1\/admin\/auth-provider-configs\/[a-z0-9_-]+$/)) {
+    const provider = String(pathname.split("/")[5] || "").trim().toLowerCase();
+    const detail = findAuthProviderConfigDetail(state, provider);
+    if (!detail) {
+      json(response, 404, { error: "provider_not_found", message: "Provider was not found." });
+      return true;
+    }
+    json(response, 200, { item: detail });
+    return true;
+  }
+
+  if (method === "POST" && pathname === "/api/v1/admin/auth-provider-configs") {
+    const body = await parseJSONBody(request);
+    const detail = upsertAuthProviderConfig(state, body);
+    if (!detail) {
+      json(response, 400, { error: "provider_required", message: "Provider is required." });
+      return true;
+    }
+    json(response, 201, { ok: true, item: detail });
+    return true;
+  }
+
+  if (method === "POST" && pathname.match(/^\/api\/v1\/admin\/auth-provider-configs\/[a-z0-9_-]+\/disable$/)) {
+    const provider = String(pathname.split("/")[5] || "").trim().toLowerCase();
+    const detail = disableAuthProviderConfig(state, provider);
+    if (!detail) {
+      json(response, 404, { error: "provider_not_found", message: "Provider was not found." });
+      return true;
+    }
+    json(response, 200, { ok: true, item: detail });
     return true;
   }
 

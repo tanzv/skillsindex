@@ -27,7 +27,21 @@ func setupAccessSettingsTestApp(t *testing.T) *App {
 	if err := db.AutoMigrate(&models.SystemSetting{}); err != nil {
 		t.Fatalf("failed to migrate sqlite db: %v", err)
 	}
-	if err := db.AutoMigrate(&models.User{}, &models.UserSession{}, &models.Skill{}, &models.Tag{}, &models.SkillTag{}, &models.SyncPolicy{}, &models.SyncJobRun{}, &models.AsyncJob{}, &models.SkillVersion{}, &models.AuditLog{}); err != nil {
+	if err := db.AutoMigrate(
+		&models.User{},
+		&models.UserSession{},
+		&models.Skill{},
+		&models.Tag{},
+		&models.SkillTag{},
+		&models.SyncPolicy{},
+		&models.SyncJobRun{},
+		&models.AsyncJob{},
+		&models.SkillVersion{},
+		&models.AuditLog{},
+		&models.IntegrationConnector{},
+		&models.Organization{},
+		&models.OrganizationMember{},
+	); err != nil {
 		t.Fatalf("failed to migrate sqlite db for sync jobs, async jobs, and audit logs: %v", err)
 	}
 	settingsSvc := services.NewSettingsService(db)
@@ -38,6 +52,8 @@ func setupAccessSettingsTestApp(t *testing.T) *App {
 		authService:     services.NewAuthService(db),
 		userSessionSvc:  services.NewUserSessionService(db),
 		skillService:    services.NewSkillService(db),
+		integrationSvc:  services.NewIntegrationService(db),
+		organizationSvc: services.NewOrganizationService(db),
 		settingsService: settingsSvc,
 		syncPolicyService: services.NewRepositorySyncPolicyService(settingsSvc, services.RepositorySyncPolicy{
 			Enabled:   false,

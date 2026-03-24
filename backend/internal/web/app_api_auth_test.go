@@ -125,6 +125,55 @@ func TestHandleAPIAuthProvidersRespectsEnabledProviderSetting(t *testing.T) {
 	}
 }
 
+func TestHandleAPIAuthProvidersReturnsUnifiedManagedProviderStartPath(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	if _, err := app.integrationSvc.CreateConnector(context.Background(), services.CreateConnectorInput{
+		Name:       "Feishu Workspace",
+		Provider:   "feishu",
+		BaseURL:    "https://open.feishu.test",
+		ConfigJSON: `{"protocol":"oidc","issuer":"https://open.feishu.test","authorization_url":"https://open.feishu.test/oauth/authorize","token_url":"https://open.feishu.test/oauth/token","userinfo_url":"https://open.feishu.test/oauth/userinfo","client_id":"client-feishu","client_secret":"secret-feishu"}`,
+		Enabled:    true,
+		CreatedBy:  1,
+	}); err != nil {
+		t.Fatalf("failed to create feishu connector: %v", err)
+	}
+	if err := app.settingsService.Set(context.Background(), services.SettingAuthEnabledProviders, "feishu"); err != nil {
+		t.Fatalf("failed to seed auth provider setting: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/providers", nil)
+	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAuthProviders(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
+	}
+	payload := decodeBodyMap(t, recorder)
+	providerKeys := decodeStringSliceField(t, payload, "auth_providers")
+	if strings.Join(providerKeys, ",") != "feishu" {
+		t.Fatalf("unexpected auth_providers: got=%v want=%v", providerKeys, []string{"feishu"})
+	}
+	rawItems, ok := payload["items"].([]any)
+	if !ok || len(rawItems) != 1 {
+		t.Fatalf("unexpected items payload: %#v", payload["items"])
+	}
+	firstItem, ok := rawItems[0].(map[string]any)
+	if !ok {
+		t.Fatalf("unexpected first provider item type: %#v", rawItems[0])
+	}
+	if key, _ := firstItem["key"].(string); key != "feishu" {
+		t.Fatalf("unexpected provider key: got=%q", key)
+	}
+	if startPath, _ := firstItem["start_path"].(string); startPath != "/auth/sso/start/feishu" {
+		t.Fatalf("unexpected provider start path: got=%q", startPath)
+	}
+	if label, _ := firstItem["label"].(string); strings.TrimSpace(label) == "" {
+		t.Fatalf("expected localized provider label: %#v", firstItem)
+	}
+}
+
 func TestHandleAPIAuthCSRFSuccess(t *testing.T) {
 	app := &App{}
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/csrf", nil)

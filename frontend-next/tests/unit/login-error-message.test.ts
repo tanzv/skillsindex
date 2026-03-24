@@ -56,6 +56,12 @@ describe("resolveLoginErrorMessage", () => {
     );
   });
 
+  it("maps backend connectivity failures to the localized service unavailable copy", () => {
+    expect(resolveLoginErrorMessage(buildRequestError("backend_unreachable"), zhMessages)).toBe(
+      zhMessages.loginServiceUnavailable
+    );
+  });
+
   it("falls back to the generic localized failure copy for unknown errors", () => {
     expect(resolveLoginErrorMessage(buildRequestError("unknown_error"), zhMessages)).toBe(zhMessages.loginFailed);
     expect(resolveLoginErrorMessage(new Error("Network request failed"), zhMessages)).toBe(zhMessages.loginFailed);

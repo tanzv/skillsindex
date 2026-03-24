@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -49,33 +48,25 @@ func (a *App) startUserSession(w http.ResponseWriter, r *http.Request, userID ui
 
 func (a *App) buildAuthProviders(ctx context.Context, onlyEnabled bool) []AuthProviderOption {
 	enabledSet := a.loadEnabledAuthProviderSet(ctx)
-	connectorURLs := a.loadAuthProviderURLs(ctx)
+	runtimeState := a.loadAuthProviderRuntimeState(ctx)
 
 	options := make([]AuthProviderOption, 0, len(authProviderOrder))
 	for _, key := range authProviderOrder {
-		labelKey, hasLabel := authProviderLabelKeys[key]
-		if !hasLabel {
+		definition, ok := authProviderDefinitionFor(key)
+		if !ok {
 			continue
 		}
 
 		option := AuthProviderOption{
 			Key:           key,
-			LabelKey:      labelKey,
-			ShortLabelKey: authProviderShortLabelKeys[key],
-			IconPath:      authProviderIconPaths[key],
+			LabelKey:      definition.LabelKey,
+			ShortLabelKey: definition.ShortLabelKey,
+			IconPath:      definition.IconPath,
 			Enabled:       enabledSet[key],
 		}
-		switch key {
-		case "dingtalk":
-			option.Available = a.dingTalkService != nil && a.dingTalkService.Enabled()
-			if option.Available {
-				option.URL = "/auth/dingtalk/start"
-			}
-		default:
-			if authURL := connectorURLs[key]; authURL != "" {
-				option.Available = true
-				option.URL = authURL
-			}
+		if state, exists := runtimeState[key]; exists {
+			option.Available = state.Available
+			option.URL = state.StartPath
 		}
 
 		if onlyEnabled && !option.Enabled {
@@ -103,34 +94,63 @@ func (a *App) loadEnabledAuthProviderSet(ctx context.Context) map[string]bool {
 	return enabled
 }
 
-func (a *App) loadAuthProviderURLs(ctx context.Context) map[string]string {
-	urls := make(map[string]string)
+type authProviderRuntimeState struct {
+	Available bool
+	StartPath string
+}
+
+func (a *App) loadAuthProviderRuntimeState(ctx context.Context) map[string]authProviderRuntimeState {
+	state := make(map[string]authProviderRuntimeState)
 	if a.integrationSvc == nil {
-		return urls
+		if a.dingTalkService != nil && a.dingTalkService.Enabled() {
+			state["dingtalk"] = authProviderRuntimeState{
+				Available: true,
+				StartPath: "/auth/dingtalk/start",
+			}
+		}
+		return state
 	}
 	connectors, err := a.integrationSvc.ListConnectors(ctx, services.ListConnectorsInput{
 		IncludeDisabled: false,
 		Limit:           240,
 	})
 	if err != nil {
-		return urls
+		return state
 	}
 	for _, connector := range connectors {
 		key := strings.ToLower(strings.TrimSpace(connector.Provider))
-		if key == "" || key == "dingtalk" {
+		if key == "" {
 			continue
 		}
-		if _, supported := authProviderLabelKeys[key]; !supported {
+		if _, supported := authProviderDefinitionFor(key); !supported {
 			continue
 		}
-		if _, exists := urls[key]; exists {
+		if _, exists := state[key]; exists {
 			continue
 		}
-		if authURL := authURLFromConnector(connector); authURL != "" {
-			urls[key] = authURL
+		if !connectorSupportsManagedAuth(connector) {
+			continue
+		}
+		state[key] = authProviderRuntimeState{
+			Available: true,
+			StartPath: "/auth/sso/start/" + key,
 		}
 	}
-	return urls
+	if _, exists := state["dingtalk"]; !exists && a.dingTalkService != nil && a.dingTalkService.Enabled() {
+		state["dingtalk"] = authProviderRuntimeState{
+			Available: true,
+			StartPath: "/auth/dingtalk/start",
+		}
+	}
+	return state
+}
+
+func connectorSupportsManagedAuth(connector models.IntegrationConnector) bool {
+	if _, supported := authProviderDefinitionFor(strings.ToLower(strings.TrimSpace(connector.Provider))); !supported {
+		return false
+	}
+	_, err := parseSSOConnectorConfig(connector)
+	return err == nil
 }
 
 func normalizeAuthProviderList(values []string) []string {
@@ -138,7 +158,7 @@ func normalizeAuthProviderList(values []string) []string {
 	for _, raw := range values {
 		for _, segment := range strings.Split(raw, ",") {
 			key := strings.ToLower(strings.TrimSpace(segment))
-			if _, supported := authProviderLabelKeys[key]; !supported {
+			if _, supported := authProviderDefinitionFor(key); !supported {
 				continue
 			}
 			seen[key] = struct{}{}
@@ -154,22 +174,42 @@ func normalizeAuthProviderList(values []string) []string {
 	return ordered
 }
 
-func authURLFromConnector(connector models.IntegrationConnector) string {
-	rawConfig := strings.TrimSpace(connector.ConfigJSON)
-	if rawConfig != "" {
-		payload := make(map[string]any)
-		if err := json.Unmarshal([]byte(rawConfig), &payload); err == nil {
-			candidateKeys := []string{"auth_url", "authorization_url", "oauth_url", "login_url", "start_url"}
-			for _, key := range candidateKeys {
-				if value, ok := payload[key].(string); ok {
-					if normalized := normalizeAuthProviderURL(value); normalized != "" {
-						return normalized
-					}
-				}
-			}
-		}
+func (a *App) setEnabledAuthProvider(ctx context.Context, provider string, enabled bool) ([]string, error) {
+	if a.settingsService == nil {
+		return nil, fmt.Errorf("settings service unavailable")
 	}
-	return normalizeAuthProviderURL(connector.BaseURL)
+
+	normalizedProvider := strings.ToLower(strings.TrimSpace(provider))
+	if _, supported := authProviderDefinitionFor(normalizedProvider); !supported {
+		return nil, fmt.Errorf("unsupported auth provider")
+	}
+
+	raw, err := a.settingsService.Get(ctx, services.SettingAuthEnabledProviders, "")
+	if err != nil {
+		return nil, err
+	}
+
+	current := normalizeAuthProviderList([]string{raw})
+	next := make([]string, 0, len(current)+1)
+	seen := map[string]struct{}{}
+	if enabled {
+		current = append(current, normalizedProvider)
+	}
+	for _, key := range current {
+		if key == normalizedProvider && !enabled {
+			continue
+		}
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		next = append(next, key)
+	}
+	next = normalizeAuthProviderList(next)
+	if err := a.settingsService.Set(ctx, services.SettingAuthEnabledProviders, strings.Join(next, ",")); err != nil {
+		return nil, err
+	}
+	return next, nil
 }
 
 func normalizeAuthProviderURL(raw string) string {

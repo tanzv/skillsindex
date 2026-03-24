@@ -48,6 +48,39 @@ function createMessages() {
       connectorBaseUrlLabel: "Base URL",
       connectorUpdatedLabel: "Updated",
       connectorDescriptionLabel: "Description",
+      authProviderInventoryTitle: "Identity Provider Inventory",
+      authProviderInventoryDescription: "Identity provider summary",
+      authProviderConfigureAction: "Configure",
+      authProviderEditAction: "Edit",
+      authProviderDisableAction: "Disable",
+      authProviderConnectedLabel: "Connected",
+      authProviderDisconnectedLabel: "Not Connected",
+      authProviderAvailableLabel: "Live",
+      authProviderUnavailableLabel: "Unavailable",
+      authProviderFormDescription: "Manage provider settings",
+      authProviderFormNameLabel: "Display Name",
+      authProviderFormDescriptionLabel: "Provider Description",
+      authProviderFormIssuerLabel: "Issuer",
+      authProviderFormAuthorizationUrlLabel: "Authorization URL",
+      authProviderFormTokenUrlLabel: "Token URL",
+      authProviderFormUserInfoUrlLabel: "Userinfo URL",
+      authProviderFormClientIdLabel: "Client ID",
+      authProviderFormClientSecretLabel: "Client Secret",
+      authProviderFormScopeLabel: "Scope",
+      authProviderFormClaimExternalIdLabel: "External ID Claim",
+      authProviderFormClaimUsernameLabel: "Username Claim",
+      authProviderFormClaimEmailLabel: "Email Claim",
+      authProviderFormClaimEmailVerifiedLabel: "Email Verified Claim",
+      authProviderFormClaimGroupsLabel: "Groups Claim",
+      authProviderFormOffboardingModeLabel: "Offboarding Mode",
+      authProviderFormMappingModeLabel: "Mapping Mode",
+      authProviderFormDefaultOrgIdLabel: "Default Organization ID",
+      authProviderFormDefaultOrgRoleLabel: "Default Organization Role",
+      authProviderFormDefaultOrgGroupRulesLabel: "Default Organization Group Rules",
+      authProviderFormDefaultOrgEmailDomainsLabel: "Default Organization Email Domains",
+      authProviderFormDefaultUserRoleLabel: "Default User Role",
+      authProviderSaveAction: "Save Provider",
+      authProviderSavingAction: "Saving Provider...",
       loadError: "Failed to load integrations.",
       metricTotalConnectors: "Total Connectors",
       metricEnabledConnectors: "Enabled Connectors",
@@ -129,6 +162,52 @@ function renderIntegrationsContent() {
           updatedAt: "2026-03-12T08:00:00Z"
         },
         detailPaneOpen: true,
+        authProviderItems: [
+          {
+            key: "feishu",
+            displayName: "Feishu Workspace",
+            managementKind: "oidc",
+            configurable: true,
+            enabled: true,
+            connected: true,
+            available: true,
+            startPath: "/auth/sso/start/feishu",
+            connectorId: 41,
+            description: "Primary workspace provider",
+            baseUrl: "https://open.feishu.test",
+            updatedAt: "2026-03-12T11:00:00Z"
+          }
+        ],
+        authProviderLoading: false,
+        authProviderError: "",
+        authProviderDraft: {
+          provider: "feishu",
+          name: "Feishu Workspace",
+          description: "Primary workspace provider",
+          issuer: "https://open.feishu.test",
+          authorizationUrl: "https://open.feishu.test/oauth/authorize",
+          tokenUrl: "https://open.feishu.test/oauth/token",
+          userInfoUrl: "https://open.feishu.test/oauth/userinfo",
+          clientId: "client-feishu",
+          clientSecret: "secret-feishu",
+          scope: "openid profile email",
+          claimExternalId: "sub",
+          claimUsername: "preferred_username",
+          claimEmail: "email",
+          claimEmailVerified: "email_verified",
+          claimGroups: "groups",
+          offboardingMode: "disable_only",
+          mappingMode: "external_email_username",
+          defaultOrgId: "0",
+          defaultOrgRole: "member",
+          defaultOrgGroupRules: "[]",
+          defaultOrgEmailDomains: "example.com",
+          defaultUserRole: "member"
+        },
+        authProviderPaneOpen: true,
+        authProviderDisplayName: "Feishu Workspace",
+        authProviderBusy: false,
+        authProviderBusyKey: null,
         overview: {
           metrics: [
             { label: "Total Connectors", value: "2" },
@@ -140,19 +219,25 @@ function renderIntegrationsContent() {
         },
         selectedConnectorName: "GitHub App",
         onRefresh: () => undefined,
+        onAuthProviderReload: () => undefined,
         onClearSelection: () => undefined,
         onSearchChange: () => undefined,
         onConnectorFilterChange: () => undefined,
         onToggleConnectorFilter: () => undefined,
         onOpenConnectorDetail: () => undefined,
-        onCloseDetailPane: () => undefined
+        onCloseDetailPane: () => undefined,
+        onOpenAuthProvider: () => undefined,
+        onCloseAuthProviderPane: () => undefined,
+        onAuthProviderDraftChange: () => undefined,
+        onAuthProviderSubmit: () => undefined,
+        onAuthProviderDisable: () => undefined
       })
     )
   );
 }
 
 describe("admin integrations content", () => {
-  it("keeps detail drawer copy available in the protected message scaffold", () => {
+  it("keeps detail pane copy available in the protected message scaffold", () => {
     const messages = createProtectedPageTestMessages({
       adminIntegrations: {
         openConnectorDetailAction: "Open Details",
@@ -171,14 +256,17 @@ describe("admin integrations content", () => {
     expect(messages.adminIntegrations.connectorProviderLabel).toBe("Provider");
   });
 
-  it("renders drawer-based connector detail without dropping inventory actions", () => {
+  it("renders inline connector detail pane without dropping inventory actions", () => {
     const markup = renderIntegrationsContent();
 
     expect(markup).toContain("Connector Inventory");
+    expect(markup).toContain("Identity Provider Inventory");
     expect(markup).toContain("Open Details");
     expect(markup).toContain('data-testid="admin-integrations-detail-pane"');
+    expect(markup).toContain('data-testid="admin-auth-provider-detail-pane"');
     expect(markup).toContain("Close Panel");
     expect(markup).toContain("GitHub App");
+    expect(markup).toContain("Feishu Workspace");
     expect(markup).toContain("Provider: github");
     expect(markup).toContain("Base URL: https://api.github.com");
     expect(markup).toContain("Description");

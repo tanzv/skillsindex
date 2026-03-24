@@ -23,17 +23,7 @@ type apiAuthUserResponse struct {
 type apiAuthProviderItem struct {
 	Key       string `json:"key"`
 	StartPath string `json:"start_path"`
-}
-
-func authProviderStartPath(providerKey string) (string, bool) {
-	switch strings.ToLower(strings.TrimSpace(providerKey)) {
-	case "dingtalk":
-		return "/auth/dingtalk/start", true
-	case "github", "google", "wecom", "microsoft":
-		return "/auth/sso/start/" + strings.ToLower(strings.TrimSpace(providerKey)), true
-	default:
-		return "", false
-	}
+	Label     string `json:"label"`
 }
 
 func (a *App) handleAPIAuthProviders(w http.ResponseWriter, r *http.Request) {
@@ -42,17 +32,14 @@ func (a *App) handleAPIAuthProviders(w http.ResponseWriter, r *http.Request) {
 	keys := make([]string, 0, len(configured))
 
 	for _, option := range configured {
-		if !option.Available {
-			continue
-		}
-		startPath, ok := authProviderStartPath(option.Key)
-		if !ok {
+		if !option.Available || strings.TrimSpace(option.URL) == "" {
 			continue
 		}
 		keys = append(keys, option.Key)
 		items = append(items, apiAuthProviderItem{
 			Key:       option.Key,
-			StartPath: startPath,
+			StartPath: option.URL,
+			Label:     a.apiMessage(r, option.LabelKey, option.Key),
 		})
 	}
 

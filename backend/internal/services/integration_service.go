@@ -33,6 +33,15 @@ type CreateConnectorInput struct {
 	CreatedBy   uint
 }
 
+// UpdateConnectorInput stores mutable connector fields.
+type UpdateConnectorInput struct {
+	Name        string
+	Description string
+	BaseURL     string
+	ConfigJSON  string
+	Enabled     *bool
+}
+
 // ListConnectorsInput stores list filters for integration connectors.
 type ListConnectorsInput struct {
 	Provider        string
@@ -175,6 +184,32 @@ func (s *IntegrationService) SetConnectorEnabled(ctx context.Context, connectorI
 	}
 	item.Enabled = enabled
 	return item, nil
+}
+
+// UpdateConnector updates the mutable fields of one connector.
+func (s *IntegrationService) UpdateConnector(ctx context.Context, connectorID uint, input UpdateConnectorInput) (models.IntegrationConnector, error) {
+	item, err := s.GetConnectorByID(ctx, connectorID)
+	if err != nil {
+		return models.IntegrationConnector{}, err
+	}
+
+	updates := map[string]any{
+		"name":        strings.TrimSpace(input.Name),
+		"description": strings.TrimSpace(input.Description),
+		"base_url":    strings.TrimSpace(input.BaseURL),
+		"config_json": strings.TrimSpace(input.ConfigJSON),
+	}
+	if input.Enabled != nil {
+		updates["enabled"] = *input.Enabled
+	}
+
+	if err := s.db.WithContext(ctx).
+		Model(&models.IntegrationConnector{}).
+		Where("id = ?", connectorID).
+		Updates(updates).Error; err != nil {
+		return models.IntegrationConnector{}, fmt.Errorf("failed to update connector: %w", err)
+	}
+	return s.GetConnectorByID(ctx, item.ID)
 }
 
 // RecordWebhookDelivery stores one webhook delivery result.
