@@ -3,6 +3,9 @@
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from "react";
 import { X } from "lucide-react";
 
+import { MOTION_EXIT_DURATION_MS } from "@/src/lib/motion/contracts";
+import { usePresenceMotion } from "@/src/lib/motion/usePresenceMotion";
+import { useReducedMotion } from "@/src/lib/motion/useReducedMotion";
 import { cn } from "@/src/lib/utils";
 
 import styles from "./DetailFormSurface.module.scss";
@@ -43,9 +46,15 @@ export function DetailFormSurface({
   const titleId = useId();
   const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const reducedMotion = useReducedMotion();
+  const { isPresent, motionState } = usePresenceMotion({
+    open,
+    reducedMotion,
+    exitDurationMs: MOTION_EXIT_DURATION_MS
+  });
 
   useEffect(() => {
-    if (!open) {
+    if (!isPresent) {
       return;
     }
 
@@ -55,7 +64,7 @@ export function DetailFormSurface({
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [open]);
+  }, [isPresent]);
 
   useEffect(() => {
     if (!open) {
@@ -84,13 +93,14 @@ export function DetailFormSurface({
     nextFocusTarget?.focus();
   }, [initialFocusRef, open]);
 
-  if (!open) {
+  if (!isPresent) {
     return null;
   }
 
   return (
     <div
       className={cn(styles.backdrop, variant === "modal" ? styles.isModalBackdrop : styles.isDrawerBackdrop)}
+      data-motion-state={motionState}
       onClick={(event) => {
         if (closeOnBackdrop && event.target === event.currentTarget) {
           onClose();
@@ -105,6 +115,7 @@ export function DetailFormSurface({
         aria-describedby={description ? descriptionId : undefined}
         data-variant={variant}
         data-size={size}
+        data-motion-state={motionState}
         tabIndex={-1}
         className={cn(
           styles.surface,

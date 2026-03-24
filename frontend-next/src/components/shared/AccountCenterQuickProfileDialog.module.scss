@@ -1,4 +1,4 @@
-$dialog-transition: 160ms ease;
+$dialog-transition: var(--motion-duration-fast) var(--motion-ease-standard);
 
 %action-button {
   min-height: 40px;
@@ -118,7 +118,8 @@ $dialog-transition: 160ms ease;
 }
 
 .noticeSuccess,
-.noticeError {
+.noticeError,
+.noticeLoading {
   padding: 10px 12px;
   border-radius: 12px;
   font-size: 0.875rem;
@@ -135,6 +136,12 @@ $dialog-transition: 160ms ease;
   border: 1px solid color-mix(in srgb, var(--protected-shell-danger, #d14343) 45%, var(--protected-shell-border));
   background: color-mix(in srgb, var(--protected-shell-danger, #d14343) 10%, var(--protected-shell-card-alt));
   color: var(--protected-shell-text);
+}
+
+.noticeLoading {
+  border: 1px dashed var(--protected-shell-border);
+  background: var(--protected-shell-card-alt);
+  color: var(--protected-shell-text-secondary);
 }
 
 .input,
@@ -206,5 +213,14 @@ $dialog-transition: 160ms ease;
 
   .footerActions {
     flex-direction: column-reverse;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .secondaryAction,
+  .primaryAction,
+  .input,
+  .textarea {
+    transition: none;
   }
 }

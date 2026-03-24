@@ -75,6 +75,7 @@ export interface AccountCenterMessages {
   latestSecretRotatedTemplate: string;
   profileSectionTitle: string;
   profileSectionDescription: string;
+  profileLoadingMessage: string;
   profileDisplayNamePlaceholder: string;
   profileAvatarUrlPlaceholder: string;
   profileBioPlaceholder: string;
@@ -214,6 +215,7 @@ export const accountCenterMessageKeyMap = {
   latestSecretRotatedTemplate: "account_center_latest_secret_rotated_template",
   profileSectionTitle: "account_center_profile_section_title",
   profileSectionDescription: "account_center_profile_section_description",
+  profileLoadingMessage: "account_center_profile_loading_message",
   profileDisplayNamePlaceholder: "account_center_profile_display_name_placeholder",
   profileAvatarUrlPlaceholder: "account_center_profile_avatar_url_placeholder",
   profileBioPlaceholder: "account_center_profile_bio_placeholder",

@@ -126,6 +126,7 @@ function renderAccountRoute(route: AccountRoute) {
             latestSecretRotatedTemplate: "Rotated credential {name}: {plaintextKey}",
             profileSectionTitle: "Profile",
             profileSectionDescription: "Edit public identity fields.",
+            profileLoadingMessage: "Loading profile…",
             profileDisplayNamePlaceholder: "Display name",
             profileAvatarUrlPlaceholder: "Avatar URL",
             profileBioPlaceholder: "Bio",

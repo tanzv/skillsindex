@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -5,6 +8,15 @@ import { describe, expect, it } from "vitest";
 import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
 
 describe("DetailFormSurface", () => {
+  it("does not reference an undefined mount guard in runtime effects", () => {
+    const source = readFileSync(
+      path.resolve(process.cwd(), "src/components/shared/DetailFormSurface.tsx"),
+      "utf8"
+    );
+
+    expect(source).not.toContain("if (!isMounted)");
+  });
+
   it("renders nothing when closed", () => {
     const markup = renderToStaticMarkup(
       createElement(
@@ -44,6 +56,7 @@ describe("DetailFormSurface", () => {
     expect(markup).toContain('aria-modal="true"');
     expect(markup).toContain('data-variant="drawer"');
     expect(markup).toContain('data-size="wide"');
+    expect(markup).toContain('data-motion-state="open"');
     expect(markup).toContain("API Key");
     expect(markup).toContain("Manage lifecycle and scopes.");
     expect(markup).toContain("Drawer body");
@@ -68,6 +81,7 @@ describe("DetailFormSurface", () => {
     );
 
     expect(markup).toContain('data-variant="modal"');
+    expect(markup).toContain('data-motion-state="open"');
     expect(markup).toContain("Confirm rotation");
     expect(markup).toContain("Status");
     expect(markup).toContain("Modal body");

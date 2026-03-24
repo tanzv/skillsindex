@@ -4,15 +4,12 @@ import {
   ChevronDown,
   ChevronRight,
   Globe2,
-  Languages,
-  LayoutGrid,
   LogOut,
   MoonStar,
-  ShieldCheck,
   SunMedium,
-  UserCircle2
+  Languages
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import {
@@ -31,21 +28,21 @@ import { cn } from "@/src/lib/utils";
 import styles from "./AccountCenterMenu.module.scss";
 import { AccountCenterQuickProfileDialog } from "./AccountCenterQuickProfileDialog";
 import { useAccountCenterProfileEditor } from "./useAccountCenterProfileEditor";
+import {
+  accountMessageFallbacks,
+  resolveAccountCenterMenuEntryDescription
+} from "./accountCenterMenuContent";
+import {
+  resolveAccountCenterMenuIcon,
+  useOptionalRouter
+} from "./accountCenterMenuHelpers";
+import { performAccountMenuSignOut } from "./accountCenterMenuSignOut";
 
-import type { AccountCenterMenuConfig, AccountCenterMenuIcon } from "./accountCenterMenu.types";
+import type {
+  AccountCenterMenuConfig
+} from "./accountCenterMenu.types";
 
 type ProtectedThemePreference = "light" | "dark";
-
-const accountMessageFallbacks = {
-  closePanelAction: "Cancel",
-  profileSectionDescription: "Review personal identity, display name, avatar, and public profile details.",
-  profileDisplayNamePlaceholder: "Display name",
-  profileAvatarUrlPlaceholder: "https://example.com/avatar.png",
-  profileBioPlaceholder: "Short biography",
-  profileSaveAction: "Save Profile",
-  profileSaveSuccess: "Profile updated.",
-  profileSaveError: "Unable to update profile."
-} as const;
 
 interface AccountCenterMenuProps {
   session: SessionContext;
@@ -56,29 +53,6 @@ interface AccountCenterMenuProps {
   dataTestId: string;
   triggerVariant?: "pill" | "avatar";
   onExpandedChange?: (isExpanded: boolean) => void;
-}
-
-function useOptionalRouter() {
-  try {
-    return useRouter();
-  } catch {
-    return null;
-  }
-}
-
-function resolveAccountCenterMenuIcon(icon: AccountCenterMenuIcon) {
-  switch (icon) {
-    case "profile":
-      return UserCircle2;
-    case "security":
-      return ShieldCheck;
-    case "sessions":
-      return Languages;
-    case "credentials":
-      return LayoutGrid;
-    default:
-      return Globe2;
-  }
 }
 
 export function AccountCenterMenu({
@@ -97,6 +71,7 @@ export function AccountCenterMenu({
   const fallbackUserName = session.user?.displayName || session.user?.username || messages.guestUser;
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
   const rootRef = useRef<HTMLDivElement | null>(null);
   const menuId = `${dataTestId}-account-menu-region`;
   const {
@@ -122,6 +97,9 @@ export function AccountCenterMenu({
   const profileEditorAvatarInitials = resolveAvatarInitials(profileDraft.displayName || userName, messages.guestUser);
 
   function setExpandedState(nextExpanded: boolean) {
+    if (signOutError) {
+      setSignOutError("");
+    }
     setIsExpanded(nextExpanded);
     onExpandedChange?.(nextExpanded);
   }
@@ -164,19 +142,12 @@ export function AccountCenterMenu({
     }
 
     setIsSigningOut(true);
-    try {
-      const response = await fetch("/api/bff/auth/logout", {
-        method: "POST",
-        headers: {
-          accept: "application/json"
-        }
-      });
+    setSignOutError("");
+    const result = await performAccountMenuSignOut({
+      logoutErrorMessage: messages.accountMenuLogoutError
+    });
 
-      if (!response.ok) {
-        setIsSigningOut(false);
-        return;
-      }
-
+    if (result.ok) {
       setExpandedState(false);
       if (router) {
         router.push(publicLoginRoute);
@@ -184,9 +155,11 @@ export function AccountCenterMenu({
       } else if (typeof window !== "undefined") {
         window.location.assign(publicLoginRoute);
       }
-    } catch {
-      setIsSigningOut(false);
+      return;
     }
+
+    setIsSigningOut(false);
+    setSignOutError(result.errorMessage);
   }
 
   return (
@@ -251,40 +224,47 @@ export function AccountCenterMenu({
               <div className={styles.actions} role="list">
                 {section.entries.map((entry) => {
                   const Icon = resolveAccountCenterMenuIcon(entry.icon);
-
-                  return (
-                    <button
-                      key={entry.id}
-                      type="button"
-                      className={styles.accountLink}
-                      onClick={() => {
-                        if (entry.action === "quick-profile") {
-                          setExpandedState(false);
-                          void openProfileEditor();
-                          return;
-                        }
-
-                        setExpandedState(false);
-                        if (router) {
-                          router.push(entry.href);
-                          router.refresh();
-                          return;
-                        }
-
-                        if (typeof window !== "undefined") {
-                          window.location.assign(entry.href);
-                        }
-                      }}
-                    >
+                  const entryDescription = resolveAccountCenterMenuEntryDescription(entry, accountMessages);
+                  const entryContent = (
+                    <>
                       <span className={styles.iconShell} aria-hidden="true">
                         <Icon className={styles.linkIcon} />
                       </span>
                       <span className={styles.linkCopy}>
                         <span className={styles.linkTitle}>{entry.label}</span>
-                        <span className={styles.linkDescription}>{entry.description}</span>
+                        <span className={styles.linkDescription}>{entryDescription}</span>
                       </span>
                       <ChevronRight className={styles.linkArrow} aria-hidden="true" />
-                    </button>
+                    </>
+                  );
+
+                  if (entry.action === "quick-profile") {
+                    return (
+                      <button
+                        key={entry.id}
+                        type="button"
+                        className={styles.accountLink}
+                        onClick={() => {
+                          setExpandedState(false);
+                          void openProfileEditor();
+                        }}
+                      >
+                        {entryContent}
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={entry.id}
+                      href={entry.href}
+                      className={styles.accountLink}
+                      onClick={() => {
+                        setExpandedState(false);
+                      }}
+                    >
+                      {entryContent}
+                    </Link>
                   );
                 })}
               </div>
@@ -302,7 +282,10 @@ export function AccountCenterMenu({
                   className={cn(styles.segmentedButton, locale === "zh" && styles.segmentedButtonActive)}
                   data-testid={`${dataTestId}-locale-zh`}
                   aria-pressed={locale === "zh"}
-                  onClick={() => setLocale("zh")}
+                  onClick={() => {
+                    setSignOutError("");
+                    setLocale("zh");
+                  }}
                 >
                   <Languages className={styles.segmentedIcon} />
                   <span>{messages.accountMenuLocaleZhLabel}</span>
@@ -312,7 +295,10 @@ export function AccountCenterMenu({
                   className={cn(styles.segmentedButton, locale === "en" && styles.segmentedButtonActive)}
                   data-testid={`${dataTestId}-locale-en`}
                   aria-pressed={locale === "en"}
-                  onClick={() => setLocale("en")}
+                  onClick={() => {
+                    setSignOutError("");
+                    setLocale("en");
+                  }}
                 >
                   <Globe2 className={styles.segmentedIcon} />
                   <span>{messages.accountMenuLocaleEnLabel}</span>
@@ -328,7 +314,10 @@ export function AccountCenterMenu({
                   className={cn(styles.segmentedButton, theme === "light" && styles.segmentedButtonActive)}
                   data-testid={`${dataTestId}-theme-light`}
                   aria-pressed={theme === "light"}
-                  onClick={() => onThemeChange("light")}
+                  onClick={() => {
+                    setSignOutError("");
+                    onThemeChange("light");
+                  }}
                 >
                   <SunMedium className={styles.segmentedIcon} />
                   <span>{messages.accountMenuThemeLightLabel}</span>
@@ -338,7 +327,10 @@ export function AccountCenterMenu({
                   className={cn(styles.segmentedButton, theme === "dark" && styles.segmentedButtonActive)}
                   data-testid={`${dataTestId}-theme-dark`}
                   aria-pressed={theme === "dark"}
-                  onClick={() => onThemeChange("dark")}
+                  onClick={() => {
+                    setSignOutError("");
+                    onThemeChange("dark");
+                  }}
                 >
                   <MoonStar className={styles.segmentedIcon} />
                   <span>{messages.accountMenuThemeDarkLabel}</span>
@@ -351,6 +343,7 @@ export function AccountCenterMenu({
             type="button"
             className={styles.accountLogout}
             data-testid={`${dataTestId}-logout`}
+            disabled={isSigningOut}
             onClick={() => {
               void handleSignOut();
             }}
@@ -358,6 +351,11 @@ export function AccountCenterMenu({
             <LogOut className={styles.linkIcon} />
             <span>{isSigningOut ? `${messages.accountMenuLogoutLabel}...` : messages.accountMenuLogoutLabel}</span>
           </button>
+          {signOutError ? (
+            <p className={styles.actionError} role="alert">
+              {signOutError}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -366,9 +364,10 @@ export function AccountCenterMenu({
         closeLabel={messages.closeAccountCenterAriaLabel}
         title={messages.accountMenuProfileLabel}
         description={accountMessages.profileSectionDescription}
-        displayNameLabel="Display Name"
-        avatarURLLabel="Avatar URL"
-        bioLabel="Bio"
+        loadingMessage={accountMessages.profileLoadingMessage || accountMessageFallbacks.profileLoadingMessage}
+        displayNameLabel={accountMessages.profileDisplayNamePlaceholder}
+        avatarURLLabel={accountMessages.profileAvatarUrlPlaceholder}
+        bioLabel={accountMessages.profileBioPlaceholder}
         displayNamePlaceholder={accountMessages.profileDisplayNamePlaceholder}
         avatarURLPlaceholder={accountMessages.profileAvatarUrlPlaceholder}
         bioPlaceholder={accountMessages.profileBioPlaceholder}

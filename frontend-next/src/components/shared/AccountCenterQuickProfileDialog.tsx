@@ -12,6 +12,7 @@ interface AccountCenterQuickProfileDialogProps {
   closeLabel: string;
   title: string;
   description: string;
+  loadingMessage: string;
   displayNameLabel: string;
   avatarURLLabel: string;
   bioLabel: string;
@@ -36,6 +37,7 @@ export function AccountCenterQuickProfileDialog({
   closeLabel,
   title,
   description,
+  loadingMessage,
   displayNameLabel,
   avatarURLLabel,
   bioLabel,
@@ -56,6 +58,7 @@ export function AccountCenterQuickProfileDialog({
 }: AccountCenterQuickProfileDialogProps) {
   const formId = useId();
   const disableFields = loading || saving;
+  const showLoadingState = loading;
 
   return (
     <DetailFormSurface
@@ -92,57 +95,64 @@ export function AccountCenterQuickProfileDialog({
           </span>
           <div className={styles.summaryCopy}>
             <p className={styles.eyebrow}>{title}</p>
-            <p className={styles.summaryTitle}>{draft.displayName || displayNamePlaceholder}</p>
+            <p className={styles.summaryTitle}>{showLoadingState ? title : draft.displayName || displayNamePlaceholder}</p>
             <p className={styles.summaryDescription}>{description}</p>
           </div>
         </section>
 
         {statusMessage ? <div className={styles.noticeSuccess}>{statusMessage}</div> : null}
         {errorMessage ? <div className={styles.noticeError}>{errorMessage}</div> : null}
+        {showLoadingState ? (
+          <div className={styles.noticeLoading} role="status" aria-live="polite" aria-busy="true">
+            {loadingMessage}
+          </div>
+        ) : null}
 
-        <div className={styles.fields}>
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>{displayNameLabel}</span>
-            <input
-              type="text"
-              className={styles.input}
-              value={draft.displayName}
-              placeholder={displayNamePlaceholder}
-              aria-label={displayNameLabel}
-              maxLength={64}
-              disabled={disableFields}
-              onChange={(event) => onDraftChange({ displayName: event.target.value })}
-            />
-          </label>
+        {showLoadingState ? null : (
+          <div className={styles.fields}>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>{displayNameLabel}</span>
+              <input
+                type="text"
+                className={styles.input}
+                value={draft.displayName}
+                placeholder={displayNamePlaceholder}
+                aria-label={displayNameLabel}
+                maxLength={64}
+                disabled={disableFields}
+                onChange={(event) => onDraftChange({ displayName: event.target.value })}
+              />
+            </label>
 
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>{avatarURLLabel}</span>
-            <input
-              type="url"
-              className={styles.input}
-              value={draft.avatarURL}
-              placeholder={avatarURLPlaceholder}
-              aria-label={avatarURLLabel}
-              maxLength={512}
-              disabled={disableFields}
-              onChange={(event) => onDraftChange({ avatarURL: event.target.value })}
-            />
-          </label>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>{avatarURLLabel}</span>
+              <input
+                type="url"
+                className={styles.input}
+                value={draft.avatarURL}
+                placeholder={avatarURLPlaceholder}
+                aria-label={avatarURLLabel}
+                maxLength={512}
+                disabled={disableFields}
+                onChange={(event) => onDraftChange({ avatarURL: event.target.value })}
+              />
+            </label>
 
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>{bioLabel}</span>
-            <textarea
-              className={styles.textarea}
-              value={draft.bio}
-              placeholder={bioPlaceholder}
-              aria-label={bioLabel}
-              maxLength={500}
-              rows={5}
-              disabled={disableFields}
-              onChange={(event) => onDraftChange({ bio: event.target.value })}
-            />
-          </label>
-        </div>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>{bioLabel}</span>
+              <textarea
+                className={styles.textarea}
+                value={draft.bio}
+                placeholder={bioPlaceholder}
+                aria-label={bioLabel}
+                maxLength={500}
+                rows={5}
+                disabled={disableFields}
+                onChange={(event) => onDraftChange({ bio: event.target.value })}
+              />
+            </label>
+          </div>
+        )}
       </form>
     </DetailFormSurface>
   );
