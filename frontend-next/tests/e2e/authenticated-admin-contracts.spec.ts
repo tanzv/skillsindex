@@ -65,6 +65,42 @@ test("covers admin access filtering and catalog read contracts", async ({ page }
   await expect(page.getByTestId("admin-catalog-row-72")).toContainText(/failed/i);
 });
 
+test("persists marketplace ranking settings from the admin access policy drawer", async ({ page }) => {
+  await loginAsAdmin(page, "/admin/access");
+
+  await page.getByRole("button", { name: "Open Policy Panel" }).click();
+  const policyDialog = page.getByRole("dialog", { name: "Access Policy" });
+
+  await policyDialog.getByLabel("Default ranking sort").selectOption("quality");
+  await policyDialog.getByLabel("Ranking limit").fill("7");
+  await policyDialog.getByLabel("Highlight limit").fill("2");
+  await policyDialog.getByLabel("Category leader limit").fill("4");
+  await policyDialog.getByRole("button", { name: "Save Access Policy" }).click();
+
+  await expect(page.getByText("Access policy updated.")).toBeVisible();
+  await policyDialog.getByRole("button", { name: "Close Panel" }).click();
+  await expect(policyDialog).toHaveCount(0);
+
+  await expect(page.getByTestId("admin-access-ranking-default-sort")).toContainText("Quality");
+  await expect(page.getByTestId("admin-access-ranking-limit")).toContainText("7");
+  await expect(page.getByTestId("admin-access-highlight-limit")).toContainText("2");
+  await expect(page.getByTestId("admin-access-category-leader-limit")).toContainText("4");
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Access", level: 1 })).toBeVisible();
+  await expect(page.getByTestId("admin-access-ranking-default-sort")).toContainText("Quality");
+  await expect(page.getByTestId("admin-access-ranking-limit")).toContainText("7");
+  await expect(page.getByTestId("admin-access-highlight-limit")).toContainText("2");
+  await expect(page.getByTestId("admin-access-category-leader-limit")).toContainText("4");
+
+  await page.getByRole("button", { name: "Open Policy Panel" }).click();
+  const reloadedPolicyDialog = page.getByRole("dialog", { name: "Access Policy" });
+  await expect(reloadedPolicyDialog.getByLabel("Default ranking sort")).toHaveValue("quality");
+  await expect(reloadedPolicyDialog.getByLabel("Ranking limit")).toHaveValue("7");
+  await expect(reloadedPolicyDialog.getByLabel("Highlight limit")).toHaveValue("2");
+  await expect(reloadedPolicyDialog.getByLabel("Category leader limit")).toHaveValue("4");
+});
+
 test("filters integrations by selection and search", async ({ page }) => {
   await loginAsAdmin(page, "/admin/integrations");
 

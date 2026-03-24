@@ -282,21 +282,21 @@ export function AccessSnapshotPanel({
         </div>
       </AdminInsetBlock>
       <div className="grid gap-3 md:grid-cols-2">
-        <AdminInsetBlock>
+        <AdminInsetBlock data-testid="admin-access-ranking-default-sort">
           {accessMessages.rankingDefaultSortLabel}
           <div className="mt-1 font-semibold text-[color:var(--ui-text-primary)]">
             {data.rankingDefaultSort === "quality" ? accessMessages.rankingDefaultSortQuality : accessMessages.rankingDefaultSortStars}
           </div>
         </AdminInsetBlock>
-        <AdminInsetBlock>
+        <AdminInsetBlock data-testid="admin-access-ranking-limit">
           {accessMessages.rankingLimitLabel}
           <div className="mt-1 font-semibold text-[color:var(--ui-text-primary)]">{data.rankingLimit}</div>
         </AdminInsetBlock>
-        <AdminInsetBlock>
+        <AdminInsetBlock data-testid="admin-access-highlight-limit">
           {accessMessages.highlightLimitLabel}
           <div className="mt-1 font-semibold text-[color:var(--ui-text-primary)]">{data.highlightLimit}</div>
         </AdminInsetBlock>
-        <AdminInsetBlock>
+        <AdminInsetBlock data-testid="admin-access-category-leader-limit">
           {accessMessages.categoryLeaderLimitLabel}
           <div className="mt-1 font-semibold text-[color:var(--ui-text-primary)]">{data.categoryLeaderLimit}</div>
         </AdminInsetBlock>
