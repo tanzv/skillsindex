@@ -50,6 +50,8 @@ type App struct {
 	syncPolicyRecordSvc *services.SyncPolicyService
 	apiSpecRegistrySvc  *services.APISpecRegistryService
 	apiPublishSvc       *services.APIPublishService
+	apiPolicySvc        *services.APIPolicyService
+	apiContractRuntimeSvc *services.APIContractRuntimeService
 	loginThrottle       *loginThrottleState
 	allowRegistration   bool
 	apiKeys             map[string]struct{}

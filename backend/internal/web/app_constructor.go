@@ -41,6 +41,8 @@ type AppDependencies struct {
 	SyncPolicyRecordSvc   *services.SyncPolicyService
 	APISpecRegistrySvc    *services.APISpecRegistryService
 	APIPublishSvc         *services.APIPublishService
+	APIPolicySvc          *services.APIPolicyService
+	APIContractRuntimeSvc *services.APIContractRuntimeService
 	AllowRegistration     bool
 	CookieSecure          bool
 	APIOnly               bool
@@ -88,6 +90,8 @@ func NewApp(deps AppDependencies) (*App, error) {
 		syncPolicyRecordSvc: deps.SyncPolicyRecordSvc,
 		apiSpecRegistrySvc:  deps.APISpecRegistrySvc,
 		apiPublishSvc:       deps.APIPublishSvc,
+		apiPolicySvc:        deps.APIPolicySvc,
+		apiContractRuntimeSvc: deps.APIContractRuntimeSvc,
 		allowRegistration:   deps.AllowRegistration,
 		cookieSecure:        deps.CookieSecure,
 		apiKeys:             buildAPIKeySet(deps.APIKeys),

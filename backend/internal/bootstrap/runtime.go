@@ -292,7 +292,14 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 	skillMPService := services.NewSkillMPService(runtimeConfig.SkillMPBaseURL, runtimeConfig.SkillMPToken)
 	apiManagementStoragePath := filepath.Join(runtimeConfig.StoragePath, "api-management")
 	apiSpecRegistryService := services.NewAPISpecRegistryService(database, apiManagementStoragePath)
+	apiContractRuntimeService := services.NewAPIContractRuntimeService(database)
+	if err := apiContractRuntimeService.Reload(ctx); err != nil && !errors.Is(err, services.ErrAPISpecNotFound) {
+		return fmt.Errorf("failed to initialize api contract runtime service: %w", err)
+	}
 	apiPublishService := services.NewAPIPublishService(database)
+	apiPublishService.SetRuntimeReloader(apiContractRuntimeService)
+	apiPolicyService := services.NewAPIPolicyService(database)
+	apiPolicyService.SetRuntimeReloader(apiContractRuntimeService)
 
 	scheduler := services.NewRepositorySyncScheduler(
 		repositorySyncCoordinator,
@@ -333,6 +340,8 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 		SyncPolicyRecordSvc:   syncPolicyRecordService,
 		APISpecRegistrySvc:    apiSpecRegistryService,
 		APIPublishSvc:         apiPublishService,
+		APIPolicySvc:          apiPolicyService,
+		APIContractRuntimeSvc: apiContractRuntimeService,
 		AllowRegistration:     runtimeConfig.AllowRegistration,
 		CookieSecure:          runtimeConfig.SessionCookieSecure,
 		APIOnly:               runtimeConfig.APIOnly,
