@@ -30,6 +30,9 @@ func TestBuildOpenAPISpecAdminSyncRunErrorResponses(t *testing.T) {
 		if _, exists := responses["503"]; !exists {
 			t.Fatalf("path %s should include 503 response", pathKey)
 		}
+		if _, exists := responses["500"]; !exists {
+			t.Fatalf("path %s should include 500 response", pathKey)
+		}
 		if pathKey == "/api/v1/admin/sync-jobs" || pathKey == "/api/v1/admin/sync-runs" || pathKey == "/api/v1/admin/sync-jobs/{runID}" || pathKey == "/api/v1/admin/sync-runs/{runID}" {
 			if _, exists := responses["400"]; !exists {
 				t.Fatalf("path %s should include 400 response", pathKey)

@@ -56,4 +56,32 @@ func TestBuildOpenAPISpecProtectedSkillSyncRunListIncludesScopedFilters(t *testi
 	if _, exists := responses["400"]; !exists {
 		t.Fatalf("protected skill sync run list should include 400 response")
 	}
+	if _, exists := responses["500"]; !exists {
+		t.Fatalf("protected skill sync run list should include 500 response")
+	}
+}
+
+func TestBuildOpenAPISpecProtectedSkillSyncRunDetailIncludesServerErrorResponse(t *testing.T) {
+	spec := buildOpenAPISpec("http://127.0.0.1:8080")
+	paths, ok := spec["paths"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing paths object")
+	}
+
+	pathItem, ok := paths["/api/v1/skills/{skillID}/sync-runs/{runID}"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing protected skill sync run detail path")
+	}
+	getOp, ok := pathItem["get"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing protected skill sync run detail get operation")
+	}
+
+	responses, ok := getOp["responses"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing responses for protected skill sync run detail")
+	}
+	if _, exists := responses["500"]; !exists {
+		t.Fatalf("protected skill sync run detail should include 500 response")
+	}
 }

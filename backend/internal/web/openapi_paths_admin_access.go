@@ -197,6 +197,8 @@ func openAPIPathsAdminAccess() map[string]any {
 				"responses": map[string]any{
 					"200": jsonResponse("Organization list", "OrganizationsResponse"),
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
+					"500": jsonResponse("Server error", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
 			"post": map[string]any{
@@ -209,6 +211,7 @@ func openAPIPathsAdminAccess() map[string]any {
 					"201": jsonResponse("Organization created", "OrganizationItem"),
 					"400": jsonResponse("Invalid payload", "ErrorResponse"),
 					"401": jsonResponse("Unauthorized", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
 		},
@@ -223,8 +226,11 @@ func openAPIPathsAdminAccess() map[string]any {
 				},
 				"responses": map[string]any{
 					"200": jsonResponse("Organization members", "OrganizationMembersResponse"),
+					"400": jsonResponse("Invalid organization id", "ErrorResponse"),
+					"401": jsonResponse("Unauthorized", "ErrorResponse"),
 					"403": jsonResponse("Permission denied", "ErrorResponse"),
 					"404": jsonResponse("Organization or membership not found", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
 			"post": map[string]any{
@@ -239,8 +245,11 @@ func openAPIPathsAdminAccess() map[string]any {
 				"responses": map[string]any{
 					"200": jsonResponse("Membership updated", "SuccessResponse"),
 					"400": jsonResponse("Invalid payload", "ErrorResponse"),
+					"401": jsonResponse("Unauthorized", "ErrorResponse"),
 					"403": jsonResponse("Permission denied", "ErrorResponse"),
 					"404": jsonResponse("Organization not found", "ErrorResponse"),
+					"409": jsonResponse("Last owner guard", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
 		},
@@ -258,8 +267,11 @@ func openAPIPathsAdminAccess() map[string]any {
 				"responses": map[string]any{
 					"200": jsonResponse("Role updated", "SuccessResponse"),
 					"400": jsonResponse("Invalid payload", "ErrorResponse"),
+					"401": jsonResponse("Unauthorized", "ErrorResponse"),
 					"403": jsonResponse("Permission denied", "ErrorResponse"),
 					"404": jsonResponse("Organization or membership not found", "ErrorResponse"),
+					"409": jsonResponse("Last owner guard", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
 		},
@@ -275,9 +287,12 @@ func openAPIPathsAdminAccess() map[string]any {
 				},
 				"responses": map[string]any{
 					"200": jsonResponse("Membership removed", "SuccessResponse"),
+					"400": jsonResponse("Invalid organization or user id", "ErrorResponse"),
+					"401": jsonResponse("Unauthorized", "ErrorResponse"),
 					"403": jsonResponse("Permission denied", "ErrorResponse"),
 					"404": jsonResponse("Membership not found", "ErrorResponse"),
 					"409": jsonResponse("Last owner guard", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
 				},
 			},
 		},
