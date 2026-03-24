@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminPageScaffold } from "@/src/components/admin/AdminPrimitives";
-import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
+import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 
@@ -35,15 +35,13 @@ interface AdminOrganizationsContentProps {
   newOrganizationName: string;
   targetUserId: string;
   targetRole: string;
-  createDrawerOpen: boolean;
-  memberDrawerOpen: boolean;
+  activePane: "idle" | "create" | "memberAssign" | "memberDetail";
   onRefresh: () => void;
   onSelectOrganization: (organizationId: number) => void;
-  onOpenCreateDrawer: () => void;
-  onCloseCreateDrawer: () => void;
-  onOpenMemberAssignmentDrawer: () => void;
-  onOpenMemberDetailDrawer: (userId: number) => void;
-  onCloseMemberDrawer: () => void;
+  onOpenCreatePane: () => void;
+  onOpenMemberAssignmentPane: () => void;
+  onOpenMemberDetailPane: (userId: number) => void;
+  onClosePane: () => void;
   onNewOrganizationNameChange: (value: string) => void;
   onTargetUserIdChange: (value: string) => void;
   onTargetRoleChange: (value: string) => void;
@@ -71,15 +69,13 @@ export function AdminOrganizationsContent({
   newOrganizationName,
   targetUserId,
   targetRole,
-  createDrawerOpen,
-  memberDrawerOpen,
+  activePane,
   onRefresh,
   onSelectOrganization,
-  onOpenCreateDrawer,
-  onCloseCreateDrawer,
-  onOpenMemberAssignmentDrawer,
-  onOpenMemberDetailDrawer,
-  onCloseMemberDrawer,
+  onOpenCreatePane,
+  onOpenMemberAssignmentPane,
+  onOpenMemberDetailPane,
+  onClosePane,
   onNewOrganizationNameChange,
   onTargetUserIdChange,
   onTargetRoleChange,
@@ -92,6 +88,18 @@ export function AdminOrganizationsContent({
   const { messages } = useProtectedI18n();
   const commonMessages = messages.adminCommon;
   const organizationMessages = messages.adminOrganizations;
+  const activePaneTitle =
+    activePane === "memberDetail" && selectedMember
+      ? `${selectedMember.username} #${selectedMember.userId}`
+      : activePane === "create"
+        ? organizationMessages.createTitle
+        : organizationMessages.assignmentTitle;
+  const activePaneDescription =
+    activePane === "memberDetail" && selectedMember
+      ? organizationMessages.memberDetailDescription
+      : activePane === "create"
+        ? organizationMessages.createDescription
+        : organizationMessages.assignmentDescription;
 
   return (
     <AdminPageScaffold
@@ -116,7 +124,7 @@ export function AdminOrganizationsContent({
             totalMembers={totalMembers}
             membersLoading={membersLoading}
             loading={loading}
-            onOpenMemberDetail={onOpenMemberDetailDrawer}
+            onOpenMemberDetail={onOpenMemberDetailPane}
           />
         </div>
 
@@ -124,72 +132,61 @@ export function AdminOrganizationsContent({
           <CreateOrganizationTriggerPanel
             busyAction={busyAction}
             loading={loading}
-            onOpen={onOpenCreateDrawer}
+            onOpen={onOpenCreatePane}
           />
           <MemberAssignmentTriggerPanel
             selectedOrgId={selectedOrgId}
             busyAction={busyAction}
             loading={loading}
-            onOpen={onOpenMemberAssignmentDrawer}
+            onOpen={onOpenMemberAssignmentPane}
           />
+          {activePane !== "idle" ? (
+            <InlineWorkPaneSurface
+              title={activePaneTitle}
+              description={activePaneDescription}
+              closeLabel={organizationMessages.closePanelAction}
+              onClose={onClosePane}
+              dataTestId={activePane === "create" ? "admin-organizations-create-pane" : "admin-organizations-member-pane"}
+            >
+              {activePane === "create" ? (
+                <div data-testid="organization-create-pane">
+                  <CreateOrganizationForm
+                    value={newOrganizationName}
+                    busyAction={busyAction}
+                    onChange={onNewOrganizationNameChange}
+                    onCreate={onCreateOrganization}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <SelectedOrganizationSummary overview={overview} />
+                  {activePane === "memberDetail" && selectedMember ? (
+                    <OrganizationMemberDetailForm
+                      member={selectedMember}
+                      busyAction={busyAction}
+                      rowRoleDrafts={rowRoleDrafts}
+                      onRoleDraftChange={onRoleDraftChange}
+                      onUpdateMemberRole={onUpdateMemberRole}
+                      onRemoveMember={onRemoveMember}
+                    />
+                  ) : (
+                    <MemberAssignmentForm
+                      selectedOrgId={selectedOrgId}
+                      targetUserId={targetUserId}
+                      targetRole={targetRole}
+                      busyAction={busyAction}
+                      onTargetUserIdChange={onTargetUserIdChange}
+                      onTargetRoleChange={onTargetRoleChange}
+                      onSave={onSaveMember}
+                    />
+                  )}
+                </div>
+              )}
+            </InlineWorkPaneSurface>
+          ) : null}
           <SelectedOrganizationPanel overview={overview} />
         </div>
       </div>
-
-      <DetailFormSurface
-        open={createDrawerOpen}
-        variant="drawer"
-        size="default"
-        title={organizationMessages.createTitle}
-        description={organizationMessages.createDescription}
-        closeLabel={organizationMessages.closePanelAction}
-        onClose={onCloseCreateDrawer}
-      >
-        <CreateOrganizationForm
-          value={newOrganizationName}
-          busyAction={busyAction}
-          onChange={onNewOrganizationNameChange}
-          onCreate={onCreateOrganization}
-        />
-      </DetailFormSurface>
-
-      <DetailFormSurface
-        open={memberDrawerOpen && Boolean(selectedOrgId)}
-        variant="drawer"
-        size="default"
-        title={
-          selectedMember ? `${selectedMember.username} #${selectedMember.userId}` : organizationMessages.assignmentTitle
-        }
-        description={
-          selectedMember ? organizationMessages.memberDetailDescription : organizationMessages.assignmentDescription
-        }
-        closeLabel={organizationMessages.closePanelAction}
-        onClose={onCloseMemberDrawer}
-      >
-        <div className="space-y-6">
-          <SelectedOrganizationSummary overview={overview} />
-          {selectedMember ? (
-            <OrganizationMemberDetailForm
-              member={selectedMember}
-              busyAction={busyAction}
-              rowRoleDrafts={rowRoleDrafts}
-              onRoleDraftChange={onRoleDraftChange}
-              onUpdateMemberRole={onUpdateMemberRole}
-              onRemoveMember={onRemoveMember}
-            />
-          ) : (
-            <MemberAssignmentForm
-              selectedOrgId={selectedOrgId}
-              targetUserId={targetUserId}
-              targetRole={targetRole}
-              busyAction={busyAction}
-              onTargetUserIdChange={onTargetUserIdChange}
-              onTargetRoleChange={onTargetRoleChange}
-              onSave={onSaveMember}
-            />
-          )}
-        </div>
-      </DetailFormSurface>
     </AdminPageScaffold>
   );
 }

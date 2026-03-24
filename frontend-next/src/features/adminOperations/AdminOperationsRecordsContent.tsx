@@ -1,8 +1,8 @@
 "use client";
 
 import { AdminMessageBanner, AdminMetricGrid } from "@/src/components/admin/AdminPrimitives";
-import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
 import { ErrorState } from "@/src/components/shared/ErrorState";
+import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
 import { PageHeader } from "@/src/components/shared/PageHeader";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
@@ -44,14 +44,12 @@ export function AdminOperationsRecordsContent({
   createEndpoint,
   formFields,
   draft,
-  createDrawerOpen,
-  detailDrawerOpen,
+  activePane,
   selectedRecord,
   onRefresh,
-  onOpenCreateDrawer,
-  onCloseCreateDrawer,
-  onOpenDetailDrawer,
-  onCloseDetailDrawer,
+  onOpenCreatePane,
+  onClosePane,
+  onOpenDetailPane,
   onDraftChange,
   onSubmitCreate
 }: {
@@ -68,14 +66,12 @@ export function AdminOperationsRecordsContent({
   createEndpoint?: string;
   formFields: RecordsFormField[];
   draft: RecordsDraft;
-  createDrawerOpen: boolean;
-  detailDrawerOpen: boolean;
+  activePane: "idle" | "create" | "detail";
   selectedRecord: OperationsRecordDetailState | null;
   onRefresh: () => void;
-  onOpenCreateDrawer: () => void;
-  onCloseCreateDrawer: () => void;
-  onOpenDetailDrawer: (detail: OperationsRecordDetailState) => void;
-  onCloseDetailDrawer: () => void;
+  onOpenCreatePane: () => void;
+  onClosePane: () => void;
+  onOpenDetailPane: (detail: OperationsRecordDetailState) => void;
   onDraftChange: (key: string, value: string) => void;
   onSubmitCreate: () => void;
 }) {
@@ -93,7 +89,7 @@ export function AdminOperationsRecordsContent({
         actions={
           <>
             {createEndpoint ? (
-              <Button variant="outline" onClick={onOpenCreateDrawer}>
+              <Button variant="outline" onClick={onOpenCreatePane}>
                 {operationsMessages.openRecordEntryAction}
               </Button>
             ) : null}
@@ -115,43 +111,40 @@ export function AdminOperationsRecordsContent({
           ledgerTitle={ledgerTitle}
           ledgerDescription={operationsMessages.ledgerDescription}
           rows={rows}
-          onOpenDetail={onOpenDetailDrawer}
+          onOpenDetail={onOpenDetailPane}
         />
-
-        <OperationsEndpointStatusPanel endpoint={endpoint} createEndpoint={createEndpoint} />
+        <div className="space-y-6">
+          {activePane === "create" ? (
+            <InlineWorkPaneSurface
+              title={operationsMessages.recordEntryTitle}
+              description={operationsMessages.recordEntryDescription}
+              closeLabel={operationsMessages.closePanelAction}
+              onClose={onClosePane}
+              dataTestId="admin-ops-record-create-pane"
+            >
+              <OperationsRecordEntryForm
+                fields={formFields}
+                draft={draft}
+                busy={busyAction === "submit-create"}
+                onDraftChange={onDraftChange}
+                onSubmit={onSubmitCreate}
+              />
+            </InlineWorkPaneSurface>
+          ) : null}
+          {activePane === "detail" ? (
+            <InlineWorkPaneSurface
+              title={operationsMessages.recordDetailTitle}
+              description={operationsMessages.recordDetailDescription}
+              closeLabel={operationsMessages.closePanelAction}
+              onClose={onClosePane}
+              dataTestId="admin-ops-record-detail-pane"
+            >
+              <OperationsRecordDetailSummary detail={selectedRecord} />
+            </InlineWorkPaneSurface>
+          ) : null}
+          <OperationsEndpointStatusPanel endpoint={endpoint} createEndpoint={createEndpoint} />
+        </div>
       </div>
-
-      {createEndpoint ? (
-        <DetailFormSurface
-          open={createDrawerOpen}
-          variant="drawer"
-          size="default"
-          title={operationsMessages.recordEntryTitle}
-          description={operationsMessages.recordEntryDescription}
-          closeLabel={operationsMessages.closePanelAction}
-          onClose={onCloseCreateDrawer}
-        >
-          <OperationsRecordEntryForm
-            fields={formFields}
-            draft={draft}
-            busy={busyAction === "submit-create"}
-            onDraftChange={onDraftChange}
-            onSubmit={onSubmitCreate}
-          />
-        </DetailFormSurface>
-      ) : null}
-
-      <DetailFormSurface
-        open={detailDrawerOpen && Boolean(selectedRecord)}
-        variant="drawer"
-        size="default"
-        title={operationsMessages.recordDetailTitle}
-        description={operationsMessages.recordDetailDescription}
-        closeLabel={operationsMessages.closePanelAction}
-        onClose={onCloseDetailDrawer}
-      >
-        <OperationsRecordDetailSummary detail={selectedRecord} />
-      </DetailFormSurface>
     </div>
   );
 }

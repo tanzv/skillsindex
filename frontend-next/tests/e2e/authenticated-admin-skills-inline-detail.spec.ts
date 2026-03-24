@@ -4,7 +4,7 @@ import { loginAsAdmin } from "./helpers/auth";
 
 test.describe.configure({ timeout: 180_000 });
 
-test("keeps admin skills details inline without opening a drawer", async ({ page }) => {
+test("keeps admin skills details inline inside a work pane", async ({ page }) => {
   await loginAsAdmin(page, "/admin/skills");
 
   const rows = page.locator('[data-testid^="admin-catalog-row-"]');

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { resolveAccountRoleLabel, resolveAccountStatusLabel } from "@/src/lib/accountDisplay";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 import { resolveAccountRouteMeta } from "@/src/lib/routing/accountRouteMeta";
@@ -123,7 +124,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       setCredentialDraft(buildAccountAPIKeyCreateDraft(snapshot.credentialsPayload));
       setCredentialScopeDrafts(buildAccountAPIKeyScopeDrafts(snapshot.credentialsPayload));
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : accountMessages.loadError);
+      setError(resolveRequestErrorDisplayMessage(loadError, accountMessages.loadError));
     } finally {
       setLoading(false);
     }
@@ -160,7 +161,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       setMessage(accountMessages.profileSaveSuccess);
       await loadRouteData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accountMessages.profileSaveError);
+      setError(resolveRequestErrorDisplayMessage(actionError, accountMessages.profileSaveError));
     } finally {
       setSaving(false);
     }
@@ -186,7 +187,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       setMessage(accountMessages.passwordSaveSuccess);
       await loadRouteData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accountMessages.passwordSaveError);
+      setError(resolveRequestErrorDisplayMessage(actionError, accountMessages.passwordSaveError));
     } finally {
       setSaving(false);
     }
@@ -200,7 +201,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       setMessage(formatProtectedMessage(accountMessages.revokeSessionSuccess, { sessionId }));
       await loadRouteData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accountMessages.revokeSessionError);
+      setError(resolveRequestErrorDisplayMessage(actionError, accountMessages.revokeSessionError));
     } finally {
       setSaving(false);
     }
@@ -214,13 +215,13 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       setMessage(accountMessages.revokeOtherSessionsSuccess);
       await loadRouteData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accountMessages.revokeOtherSessionsError);
+      setError(resolveRequestErrorDisplayMessage(actionError, accountMessages.revokeOtherSessionsError));
     } finally {
       setSaving(false);
     }
   }
 
-  async function createCredential() {
+  async function createCredential(): Promise<boolean> {
     clearFeedback();
     setSaving(true);
     try {
@@ -231,8 +232,10 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       setLatestCredentialSecret({ action: "created", name: payload.item.name, plaintextKey: payload.plaintext_key });
       setMessage(accountMessages.credentialCreateSuccess);
       await loadRouteData();
+      return true;
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accountMessages.credentialCreateError);
+      setError(resolveRequestErrorDisplayMessage(actionError, accountMessages.credentialCreateError));
+      return false;
     } finally {
       setSaving(false);
     }
@@ -249,7 +252,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       setMessage(formatProtectedMessage(accountMessages.credentialRotateSuccess, { keyId }));
       await loadRouteData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accountMessages.credentialRotateError);
+      setError(resolveRequestErrorDisplayMessage(actionError, accountMessages.credentialRotateError));
     } finally {
       setSaving(false);
     }
@@ -263,7 +266,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       setMessage(formatProtectedMessage(accountMessages.credentialRevokeSuccess, { keyId }));
       await loadRouteData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accountMessages.credentialRevokeError);
+      setError(resolveRequestErrorDisplayMessage(actionError, accountMessages.credentialRevokeError));
     } finally {
       setSaving(false);
     }
@@ -280,7 +283,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       setMessage(formatProtectedMessage(accountMessages.credentialScopesSaveSuccess, { keyId }));
       await loadRouteData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accountMessages.credentialScopesSaveError);
+      setError(resolveRequestErrorDisplayMessage(actionError, accountMessages.credentialScopesSaveError));
     } finally {
       setSaving(false);
     }
@@ -340,7 +343,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
       onChangePassword={() => void changePassword()}
       onRevokeOtherSessions={() => void revokeOtherSessions()}
       onRevokeSession={(sessionId) => void revokeSession(sessionId)}
-      onCreateCredential={() => void createCredential()}
+      onCreateCredential={createCredential}
       onRotateCredential={(keyId) => void rotateCredential(keyId)}
       onRevokeCredential={(keyId) => void revokeCredential(keyId)}
       onApplyCredentialScopes={(keyId) => void applyCredentialScopes(keyId)}

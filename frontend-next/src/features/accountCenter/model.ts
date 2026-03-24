@@ -118,3 +118,7 @@ export function sanitizeAccountAPIKeyCreateDraft(draft: AccountAPIKeyCreateDraft
     scopes: Array.from(new Set((draft.scopes || []).map((item) => String(item || "").trim()).filter(Boolean)))
   };
 }
+
+export function shouldCloseCredentialCreatePaneAfterSubmit(createSucceeded: boolean): boolean {
+  return createSucceeded;
+}

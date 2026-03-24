@@ -231,7 +231,7 @@ function renderAccountRoute(route: AccountRoute) {
         onChangePassword: () => undefined,
         onRevokeOtherSessions: () => undefined,
         onRevokeSession: () => undefined,
-        onCreateCredential: () => undefined,
+        onCreateCredential: async () => true,
         onRotateCredential: () => undefined,
         onRevokeCredential: () => undefined,
         onApplyCredentialScopes: () => undefined
@@ -308,6 +308,6 @@ describe("account center content", () => {
       "Current section: Credentials",
       "credentials lane"
     ]);
-    expectMarkupToExcludeAll(markup, ["Change Password"]);
+    expectMarkupToExcludeAll(markup, ["Change Password", 'role="dialog"']);
   });
 });

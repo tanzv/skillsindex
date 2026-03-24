@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { resolveAdminOperationsRecordsRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 
 import { AdminOperationsRecordsContent } from "./AdminOperationsRecordsContent";
@@ -76,7 +77,7 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
       const payload = await clientFetchJSON(meta.endpoint);
       setRawPayload(payload);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : operationsMessages.recordsLoadError);
+      setError(resolveRequestErrorDisplayMessage(loadError, operationsMessages.recordsLoadError));
       setRawPayload(null);
     } finally {
       setLoading(false);
@@ -108,7 +109,7 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
       closeOverlay();
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : operationsMessages.recordsSaveError);
+      setError(resolveRequestErrorDisplayMessage(actionError, operationsMessages.recordsSaveError));
     } finally {
       setBusyAction("");
     }
@@ -145,19 +146,17 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
       createEndpoint={meta.createEndpoint}
       formFields={formFields}
       draft={draft}
-      createDrawerOpen={Boolean(overlay?.entity === "recordCreate")}
-      detailDrawerOpen={Boolean(overlay?.entity === "recordDetail")}
+      activePane={overlay?.entity === "recordCreate" ? "create" : overlay?.entity === "recordDetail" ? "detail" : "idle"}
       selectedRecord={selectedRecord}
       onRefresh={() => void loadData()}
-      onOpenCreateDrawer={() => openOverlay({ kind: "create", entity: "recordCreate" })}
-      onCloseCreateDrawer={closeOverlay}
-      onOpenDetailDrawer={(detail) => {
-        setSelectedRecord(detail);
-        openOverlay({ kind: "detail", entity: "recordDetail", entityId: detail.index });
-      }}
-      onCloseDetailDrawer={() => {
+      onOpenCreatePane={() => openOverlay({ kind: "create", entity: "recordCreate" })}
+      onClosePane={() => {
         closeOverlay();
         setSelectedRecord(null);
+      }}
+      onOpenDetailPane={(detail) => {
+        setSelectedRecord(detail);
+        openOverlay({ kind: "detail", entity: "recordDetail", entityId: detail.index });
       }}
       onDraftChange={updateDraftValue}
       onSubmitCreate={() => void submitCreate()}

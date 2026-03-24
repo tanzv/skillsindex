@@ -1,9 +1,10 @@
 import { AdminEmptyBlock, AdminFilterBar, AdminPageScaffold, AdminSectionCard } from "@/src/components/admin/AdminPrimitives";
-import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
+import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Select } from "@/src/components/ui/select";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
+import { resolveAccountUsernameLabel } from "@/src/lib/accountDisplay";
 import { resolveAdminAccountsPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 
 import {
@@ -45,7 +46,7 @@ interface AdminAccountsContentProps {
     userId: string;
     role: string;
   };
-  detailDrawerOpen: boolean;
+  detailPaneOpen: boolean;
   settingsDraft: {
     allowRegistration: boolean;
     marketplacePublicAccess: boolean;
@@ -61,7 +62,7 @@ interface AdminAccountsContentProps {
   onStatusFilterChange: (value: string) => void;
   onAccountEditorChange: (patch: Partial<AdminAccountsContentProps["accountEditor"]>) => void;
   onRoleEditorChange: (patch: Partial<AdminAccountsContentProps["roleEditor"]>) => void;
-  onCloseDetailDrawer: () => void;
+  onCloseDetailPane: () => void;
   onSettingsDraftChange: (patch: Partial<AdminAccountsContentProps["settingsDraft"]>) => void;
   onToggleProvider: (provider: string) => void;
   onApplyAccountStatus: () => void;
@@ -87,7 +88,7 @@ export function AdminAccountsContent({
   roleSummary,
   accountEditor,
   roleEditor,
-  detailDrawerOpen,
+  detailPaneOpen,
   settingsDraft,
   onRefresh,
   onSelectAccount,
@@ -95,7 +96,7 @@ export function AdminAccountsContent({
   onStatusFilterChange,
   onAccountEditorChange,
   onRoleEditorChange,
-  onCloseDetailDrawer,
+  onCloseDetailPane,
   onSettingsDraftChange,
   onToggleProvider,
   onApplyAccountStatus,
@@ -111,8 +112,16 @@ export function AdminAccountsContent({
   const showRolePanel = route === "/admin/roles" || route === "/admin/roles/new";
   const showSettingsPanel = route === "/admin/accounts/new";
   const showAccountActionsPanel = route === "/admin/accounts";
-  const showDetailDrawer = showAccountActionsPanel || showRolePanel;
+  const showDetailPane = showAccountActionsPanel || showRolePanel;
   const showDirectoryControls = route !== "/admin/accounts/new";
+  const detailPaneTitle = selectedAccount
+    ? `${resolveAccountUsernameLabel(selectedAccount.username, accountMessages)} #${selectedAccount.id}`
+    : showAccountActionsPanel
+      ? accountMessages.actionsTitle
+      : accountMessages.roleAssignmentTitle;
+  const detailPaneDescription = showAccountActionsPanel
+    ? accountMessages.actionsDescription
+    : accountMessages.roleAssignmentDescription;
 
   const directoryTitle = showSettingsPanel
     ? accountMessages.snapshotTitle
@@ -203,46 +212,45 @@ export function AdminAccountsContent({
               onSaveSettings={onSaveSettings}
             />
           ) : null}
+          {showDetailPane && detailPaneOpen && selectedAccount ? (
+            <InlineWorkPaneSurface
+              title={detailPaneTitle}
+              description={detailPaneDescription}
+              closeLabel={accountMessages.closePanelAction}
+              onClose={onCloseDetailPane}
+              dataTestId="admin-accounts-work-pane"
+            >
+              <div className="space-y-6">
+                <SelectedAccountSnapshot account={selectedAccount} />
+                {showAccountActionsPanel ? (
+                  <AccountActionsPanel
+                    accountEditor={accountEditor}
+                    busyAction={busyAction}
+                    selectedAccount={selectedAccount}
+                    onAccountEditorChange={onAccountEditorChange}
+                    onApplyAccountStatus={onApplyAccountStatus}
+                    onForceSignout={onForceSignout}
+                    onResetPassword={onResetPassword}
+                  />
+                ) : null}
+                {showRolePanel ? (
+                  <RoleAssignmentPanel
+                    roleEditor={roleEditor}
+                    busyAction={busyAction}
+                    selectedAccount={selectedAccount}
+                    onRoleEditorChange={onRoleEditorChange}
+                    onApplyRole={onApplyRole}
+                  />
+                ) : null}
+              </div>
+            </InlineWorkPaneSurface>
+          ) : null}
           {showRolePanel ? (
             route === "/admin/roles/new" ? <RolePlaybookPanel /> : null
           ) : null}
           <RoleSummaryPanel roleSummary={roleSummary} />
         </div>
       </div>
-
-      <DetailFormSurface
-        open={showDetailDrawer && detailDrawerOpen && Boolean(selectedAccount)}
-        variant="drawer"
-        size="default"
-        title={showAccountActionsPanel ? accountMessages.actionsTitle : accountMessages.roleAssignmentTitle}
-        description={showAccountActionsPanel ? accountMessages.actionsDescription : accountMessages.roleAssignmentDescription}
-        closeLabel={accountMessages.closePanelAction}
-        onClose={onCloseDetailDrawer}
-      >
-        <div className="space-y-6">
-          <SelectedAccountSnapshot account={selectedAccount} />
-          {showAccountActionsPanel ? (
-            <AccountActionsPanel
-              accountEditor={accountEditor}
-              busyAction={busyAction}
-              selectedAccount={selectedAccount}
-              onAccountEditorChange={onAccountEditorChange}
-              onApplyAccountStatus={onApplyAccountStatus}
-              onForceSignout={onForceSignout}
-              onResetPassword={onResetPassword}
-            />
-          ) : null}
-          {showRolePanel ? (
-            <RoleAssignmentPanel
-              roleEditor={roleEditor}
-              busyAction={busyAction}
-              selectedAccount={selectedAccount}
-              onRoleEditorChange={onRoleEditorChange}
-              onApplyRole={onApplyRole}
-            />
-          ) : null}
-        </div>
-      </DetailFormSurface>
     </AdminPageScaffold>
   );
 }

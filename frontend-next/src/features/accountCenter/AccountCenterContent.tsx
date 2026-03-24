@@ -54,7 +54,7 @@ interface AccountCenterContentProps {
   onChangePassword: () => void;
   onRevokeOtherSessions: () => void;
   onRevokeSession: (sessionId: string) => void;
-  onCreateCredential: () => void;
+  onCreateCredential: () => Promise<boolean>;
   onRotateCredential: (keyId: number) => void;
   onRevokeCredential: (keyId: number) => void;
   onApplyCredentialScopes: (keyId: number) => void;

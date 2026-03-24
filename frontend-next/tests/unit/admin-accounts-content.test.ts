@@ -179,6 +179,7 @@ function renderAdminAccountsRoute(route: AdminAccountsRoute) {
           userId: "2",
           role: "admin"
         },
+        detailPaneOpen: true,
         settingsDraft: {
           allowRegistration: true,
           marketplacePublicAccess: true,
@@ -190,6 +191,7 @@ function renderAdminAccountsRoute(route: AdminAccountsRoute) {
         onStatusFilterChange: () => undefined,
         onAccountEditorChange: () => undefined,
         onRoleEditorChange: () => undefined,
+        onCloseDetailPane: () => undefined,
         onSettingsDraftChange: () => undefined,
         onToggleProvider: () => undefined,
         onApplyAccountStatus: () => undefined,
@@ -208,6 +210,7 @@ describe("admin accounts content", () => {
 
     expect(markup).toContain("Account Directory");
     expect(markup).not.toContain('role="dialog"');
+    expect(markup).toContain('data-testid="admin-accounts-work-pane"');
     expect(markup).toContain("Account Actions");
     expect(markup).not.toContain("Provisioning Policy");
   });

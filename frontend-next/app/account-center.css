@@ -160,6 +160,21 @@
   align-items: start;
 }
 
+.account-center-credentials-layout,
+.account-center-credentials-main {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.account-center-credentials-work-pane {
+  --inline-work-pane-border: var(--protected-shell-border);
+  --inline-work-pane-bg: var(--protected-shell-panel-surface);
+  --inline-work-pane-shadow: var(--protected-shell-panel-shadow);
+  --inline-work-pane-title: var(--protected-shell-text);
+  --inline-work-pane-description: var(--protected-shell-text-secondary);
+}
+
 .account-center-left,
 .account-center-right {
   align-content: start;
@@ -267,6 +282,18 @@
 .account-center-side-panel-highlight .account-center-panel-description,
 .account-center-side-panel-highlight .account-center-surface-copy {
   color: var(--protected-shell-text);
+}
+
+@media (min-width: 1181px) {
+  .account-center-credentials-layout.has-work-pane {
+    grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr);
+    align-items: start;
+  }
+
+  .account-center-credentials-work-pane {
+    position: sticky;
+    top: 16px;
+  }
 }
 
 @media (max-width: 1180px) {

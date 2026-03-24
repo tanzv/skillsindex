@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import { AdminOrganizationsContent } from "./AdminOrganizationsContent";
@@ -133,7 +134,7 @@ export function AdminOrganizationsPage() {
           setRawMembers(null);
         }
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : organizationMessages.loadError);
+        setError(resolveRequestErrorDisplayMessage(loadError, organizationMessages.loadError));
         setRawOrganizations(null);
         setRawMembers(null);
       } finally {
@@ -156,7 +157,7 @@ export function AdminOrganizationsPage() {
   useEffect(() => {
     if (selectedOrgId) {
       void loadMembers(selectedOrgId).catch((loadError) => {
-        setError(loadError instanceof Error ? loadError.message : organizationMessages.loadError);
+        setError(resolveRequestErrorDisplayMessage(loadError, organizationMessages.loadError));
       });
     }
   }, [loadMembers, organizationMessages.loadError, selectedOrgId]);
@@ -188,7 +189,7 @@ export function AdminOrganizationsPage() {
       setMessage(organizationMessages.createSuccess);
       await refreshAll(nextOrgId);
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : organizationMessages.createError);
+      setError(resolveRequestErrorDisplayMessage(actionError, organizationMessages.createError));
     } finally {
       setBusyAction("");
     }
@@ -214,7 +215,7 @@ export function AdminOrganizationsPage() {
       setMessage(organizationMessages.addMemberSuccess);
       await loadMembers(selectedOrgId);
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : organizationMessages.addMemberError);
+      setError(resolveRequestErrorDisplayMessage(actionError, organizationMessages.addMemberError));
     } finally {
       setBusyAction("");
     }
@@ -232,7 +233,7 @@ export function AdminOrganizationsPage() {
       setMessage(formatProtectedMessage(organizationMessages.updateRoleSuccess, { userId }));
       await loadMembers(selectedOrgId);
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : organizationMessages.updateRoleError);
+      setError(resolveRequestErrorDisplayMessage(actionError, organizationMessages.updateRoleError));
     } finally {
       setBusyAction("");
     }
@@ -251,7 +252,7 @@ export function AdminOrganizationsPage() {
       setMessage(formatProtectedMessage(organizationMessages.removeMemberSuccess, { userId }));
       await loadMembers(selectedOrgId);
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : organizationMessages.removeMemberError);
+      setError(resolveRequestErrorDisplayMessage(actionError, organizationMessages.removeMemberError));
     } finally {
       setBusyAction("");
     }
@@ -287,23 +288,29 @@ export function AdminOrganizationsPage() {
       newOrganizationName={newOrganizationName}
       targetUserId={targetUserId}
       targetRole={targetRole}
-      createDrawerOpen={overlay?.entity === "organizationCreate"}
-      memberDrawerOpen={overlay?.entity === "organizationMember"}
+      activePane={
+        overlay?.entity === "organizationCreate"
+          ? "create"
+          : overlay?.entity === "organizationMember"
+            ? selectedMember
+              ? "memberDetail"
+              : "memberAssign"
+            : "idle"
+      }
       onRefresh={() => void refreshAll(selectedOrgId)}
       onSelectOrganization={setSelectedOrgId}
-      onOpenCreateDrawer={() => openOverlay({ kind: "create", entity: "organizationCreate" })}
-      onCloseCreateDrawer={closeOverlay}
-      onOpenMemberAssignmentDrawer={() => {
+      onOpenCreatePane={() => openOverlay({ kind: "create", entity: "organizationCreate" })}
+      onOpenMemberAssignmentPane={() => {
         setSelectedMemberId(null);
         setTargetUserId("");
         setTargetRole("member");
         openOverlay({ kind: "edit", entity: "organizationMember", entityId: selectedOrgId || null });
       }}
-      onOpenMemberDetailDrawer={(userId) => {
+      onOpenMemberDetailPane={(userId) => {
         setSelectedMemberId(userId);
         openOverlay({ kind: "detail", entity: "organizationMember", entityId: userId });
       }}
-      onCloseMemberDrawer={() => {
+      onClosePane={() => {
         setSelectedMemberId(null);
         closeOverlay();
       }}

@@ -43,7 +43,7 @@ export interface AccountCredentialsSectionProps {
   credentialsPayload: AccountAPIKeysPayload | null;
   onCredentialDraftChange: (patch: Partial<AccountAPIKeyCreateDraft>) => void;
   onCredentialScopeDraftChange: (keyId: number, rawValue: string) => void;
-  onCreateCredential: () => void;
+  onCreateCredential: () => Promise<boolean>;
   onRotateCredential: (keyId: number) => void;
   onRevokeCredential: (keyId: number) => void;
   onApplyCredentialScopes: (keyId: number) => void;

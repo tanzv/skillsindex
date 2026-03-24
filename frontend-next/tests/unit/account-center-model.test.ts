@@ -166,6 +166,28 @@ describe("admin access model", () => {
           }
         ]
       },
+      presentationTaxonomy: {
+        items: [
+          {
+            slug: "custom-operations",
+            name: "Custom Operations",
+            description: "Custom grouped operations category.",
+            enabled: true,
+            sort_order: 10,
+            subcategories: [
+              {
+                slug: "release-command",
+                name: "Release Command",
+                enabled: true,
+                sort_order: 10,
+                legacy_category_slugs: ["devops"],
+                legacy_subcategory_slugs: ["monitoring"],
+                keywords: ["ops", "governance"]
+              }
+            ]
+          }
+        ]
+      },
       authProviders: { auth_providers: ["password", "sso"], available_auth_providers: ["password", "sso", "oidc"] }
     });
 
@@ -192,6 +214,26 @@ describe("admin access model", () => {
         enabled: false,
         sortOrder: 20,
         subcategories: []
+      }
+    ]);
+    expect(data.presentationTaxonomy).toEqual([
+      {
+        slug: "custom-operations",
+        name: "Custom Operations",
+        description: "Custom grouped operations category.",
+        enabled: true,
+        sortOrder: 10,
+        subcategories: [
+          {
+            slug: "release-command",
+            name: "Release Command",
+            enabled: true,
+            sortOrder: 10,
+            legacyCategorySlugs: ["devops"],
+            legacySubcategorySlugs: ["monitoring"],
+            keywords: ["ops", "governance"]
+          }
+        ]
       }
     ]);
 

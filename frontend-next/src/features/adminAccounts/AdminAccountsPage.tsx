@@ -8,7 +8,10 @@ import {
 } from "@/src/features/admin/adminPageLoadState";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
-import { normalizeAdminMarketplaceRankingPayload } from "@/src/lib/admin/adminAccountSettingsModel";
+import {
+  normalizeAdminCategoryCatalogPayload,
+  normalizeAdminMarketplaceRankingPayload,
+} from "@/src/lib/admin/adminAccountSettingsModel";
 import {
   createAdminOverlayState,
   useAdminOverlayState,
@@ -19,6 +22,7 @@ import {
   type SaveAdminAccessSettingsInput,
 } from "@/src/lib/api/adminAccessSettings";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 import { resolveAdminAccountsPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 
@@ -57,6 +61,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   const [rawRegistration, setRawRegistration] = useState<unknown>(null);
   const [rawMarketplaceRanking, setRawMarketplaceRanking] =
     useState<unknown>(null);
+  const [rawCategoryCatalog, setRawCategoryCatalog] = useState<unknown>(null);
   const [rawAuthProviders, setRawAuthProviders] = useState<unknown>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(
     null,
@@ -85,6 +90,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       rankingLimit: 12,
       highlightLimit: 3,
       categoryLeaderLimit: 5,
+      categoryCatalog: [],
       enabledProviders: [],
     });
 
@@ -103,6 +109,10 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   const authProviders = useMemo(
     () => normalizeAuthProvidersPayload(rawAuthProviders),
     [rawAuthProviders],
+  );
+  const categoryCatalog = useMemo(
+    () => normalizeAdminCategoryCatalogPayload(rawCategoryCatalog),
+    [rawCategoryCatalog],
   );
   const overview = useMemo(
     () =>
@@ -149,6 +159,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
         accounts: accountsPayload,
         registration: registrationPayload,
         marketplaceRanking: marketplaceRankingPayload,
+        categoryCatalog: categoryCatalogPayload,
         authProviders: authProvidersPayload,
       } = await loadAdminAccessSettingsPayloads();
       if (requestId !== latestLoadRequestRef.current) {
@@ -157,19 +168,17 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       setRawAccounts(accountsPayload);
       setRawRegistration(registrationPayload);
       setRawMarketplaceRanking(marketplaceRankingPayload);
+      setRawCategoryCatalog(categoryCatalogPayload);
       setRawAuthProviders(authProvidersPayload);
     } catch (loadError) {
       if (requestId !== latestLoadRequestRef.current) {
         return;
       }
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : accountMessages.loadError,
-      );
+      setError(resolveRequestErrorDisplayMessage(loadError, accountMessages.loadError));
       setRawAccounts(null);
       setRawRegistration(null);
       setRawMarketplaceRanking(null);
+      setRawCategoryCatalog(null);
       setRawAuthProviders(null);
     } finally {
       if (requestId === latestLoadRequestRef.current) {
@@ -189,6 +198,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       rawAccounts !== null &&
       rawRegistration !== null &&
       rawMarketplaceRanking !== null &&
+      rawCategoryCatalog !== null &&
       rawAuthProviders !== null,
   });
 
@@ -217,11 +227,16 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       rankingLimit: marketplaceRanking.rankingLimit,
       highlightLimit: marketplaceRanking.highlightLimit,
       categoryLeaderLimit: marketplaceRanking.categoryLeaderLimit,
+      categoryCatalog: categoryCatalog.items.map((category) => ({
+        ...category,
+        subcategories: category.subcategories.map((subcategory) => ({ ...subcategory })),
+      })),
       enabledProviders: [...authProviders.authProviders],
     };
     setSettingsDraft(nextSettingsDraft);
   }, [
     authProviders.authProviders,
+    categoryCatalog.items,
     marketplaceRanking.categoryLeaderLimit,
     marketplaceRanking.defaultSort,
     marketplaceRanking.highlightLimit,
@@ -306,11 +321,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       );
       await loadData();
     } catch (actionError) {
-      setError(
-        actionError instanceof Error
-          ? actionError.message
-          : accountMessages.applyStatusError,
-      );
+      setError(resolveRequestErrorDisplayMessage(actionError, accountMessages.applyStatusError));
     } finally {
       setBusyAction("");
     }
@@ -329,11 +340,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       );
       await loadData();
     } catch (actionError) {
-      setError(
-        actionError instanceof Error
-          ? actionError.message
-          : accountMessages.forceSignOutError,
-      );
+      setError(resolveRequestErrorDisplayMessage(actionError, accountMessages.forceSignOutError));
     } finally {
       setBusyAction("");
     }
@@ -364,11 +371,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       );
       updateAccountEditor({ newPassword: "" });
     } catch (actionError) {
-      setError(
-        actionError instanceof Error
-          ? actionError.message
-          : accountMessages.resetPasswordError,
-      );
+      setError(resolveRequestErrorDisplayMessage(actionError, accountMessages.resetPasswordError));
     } finally {
       setBusyAction("");
     }
@@ -397,11 +400,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       );
       await loadData();
     } catch (actionError) {
-      setError(
-        actionError instanceof Error
-          ? actionError.message
-          : accountMessages.applyRoleError,
-      );
+      setError(resolveRequestErrorDisplayMessage(actionError, accountMessages.applyRoleError));
     } finally {
       setBusyAction("");
     }
@@ -416,11 +415,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       setMessage(accountMessages.saveSettingsSuccess);
       await loadData();
     } catch (actionError) {
-      setError(
-        actionError instanceof Error
-          ? actionError.message
-          : accountMessages.saveSettingsError,
-      );
+      setError(resolveRequestErrorDisplayMessage(actionError, accountMessages.saveSettingsError));
     } finally {
       setBusyAction("");
     }
@@ -461,7 +456,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       roleSummary={overview.roleSummary}
       accountEditor={accountEditor}
       roleEditor={roleEditor}
-      detailDrawerOpen={overlay?.entity === "accountDetail"}
+      detailPaneOpen={overlay?.entity === "accountDetail"}
       settingsDraft={settingsDraft}
       onRefresh={() => void loadData()}
       onSelectAccount={(accountId) => {
@@ -478,7 +473,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       }
       onAccountEditorChange={updateAccountEditor}
       onRoleEditorChange={updateRoleEditor}
-      onCloseDetailDrawer={closeOverlay}
+      onCloseDetailPane={closeOverlay}
       onSettingsDraftChange={(patch) =>
         setSettingsDraft((current) => ({ ...current, ...patch }))
       }
