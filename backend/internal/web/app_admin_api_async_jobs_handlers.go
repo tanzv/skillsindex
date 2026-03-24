@@ -14,11 +14,11 @@ import (
 func (a *App) handleAPIAdminJobs(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.asyncJobSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Async job service is unavailable")
 		return
 	}
 
@@ -29,7 +29,7 @@ func (a *App) handleAPIAdminJobs(w http.ResponseWriter, r *http.Request) {
 		if raw != "" {
 			value, err := strconv.ParseUint(raw, 10, 64)
 			if err != nil || value == 0 {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_owner_id"})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_owner_id", "Invalid owner id filter")
 				return
 			}
 			parsed := uint(value)
@@ -48,7 +48,7 @@ func (a *App) handleAPIAdminJobs(w http.ResponseWriter, r *http.Request) {
 		Limit:       limit,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "list_failed", "Failed to load async jobs")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": resultToAPIAdminAsyncJobItems(items), "total": len(items)})
@@ -57,30 +57,30 @@ func (a *App) handleAPIAdminJobs(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPIAdminJobDetail(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.asyncJobSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Async job service is unavailable")
 		return
 	}
 
 	jobID, err := parseUintURLParam(r, "jobID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_job_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_job_id", "Invalid async job id")
 		return
 	}
 	item, err := a.asyncJobSvc.GetByID(r.Context(), jobID)
 	if err != nil {
 		if errors.Is(err, services.ErrAsyncJobNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "job_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "job_not_found", "Async job not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "query_failed", "Failed to load async job")
 		return
 	}
 	if !canViewAsyncJobDetail(*user, item) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
@@ -90,40 +90,40 @@ func (a *App) handleAPIAdminJobDetail(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPIAdminJobRetry(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.asyncJobSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Async job service is unavailable")
 		return
 	}
 
 	jobID, err := parseUintURLParam(r, "jobID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_job_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_job_id", "Invalid async job id")
 		return
 	}
 	item, err := a.asyncJobSvc.GetByID(r.Context(), jobID)
 	if err != nil {
 		if errors.Is(err, services.ErrAsyncJobNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "job_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "job_not_found", "Async job not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "query_failed", "Failed to load async job")
 		return
 	}
 	if !canViewAsyncJobDetail(*user, item) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
 	updated, retryErr := a.retryAsyncJob(r.Context(), item, user.ID, time.Now().UTC())
 	if retryErr != nil {
 		if errors.Is(retryErr, services.ErrAsyncJobInvalidTransition) {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_transition"})
+			writeAPIError(w, r, http.StatusBadRequest, "invalid_transition", "Invalid async job state transition")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "retry_failed", "message": retryErr.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "retry_failed", "Failed to retry async job")
 		return
 	}
 
@@ -145,40 +145,40 @@ func (a *App) handleAPIAdminJobRetry(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPIAdminJobCancel(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.asyncJobSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Async job service is unavailable")
 		return
 	}
 
 	jobID, err := parseUintURLParam(r, "jobID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_job_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_job_id", "Invalid async job id")
 		return
 	}
 	item, err := a.asyncJobSvc.GetByID(r.Context(), jobID)
 	if err != nil {
 		if errors.Is(err, services.ErrAsyncJobNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "job_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "job_not_found", "Async job not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "query_failed", "Failed to load async job")
 		return
 	}
 	if !canViewAsyncJobDetail(*user, item) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
 	updated, cancelErr := a.cancelAsyncJob(r.Context(), item, user.ID, time.Now().UTC())
 	if cancelErr != nil {
 		if errors.Is(cancelErr, services.ErrAsyncJobInvalidTransition) {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_transition"})
+			writeAPIError(w, r, http.StatusBadRequest, "invalid_transition", "Invalid async job state transition")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "cancel_failed", "message": cancelErr.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "cancel_failed", "Failed to cancel async job")
 		return
 	}
 

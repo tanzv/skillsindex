@@ -9,17 +9,17 @@ import (
 func (a *App) handleAPIAdminOrganizations(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.organizationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Organization service is unavailable")
 		return
 	}
 
 	organizations, err := a.organizationSvc.ListOrganizations(r.Context(), *user)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "list_failed", "Failed to load organizations")
 		return
 	}
 
@@ -39,22 +39,22 @@ func (a *App) handleAPIAdminOrganizations(w http.ResponseWriter, r *http.Request
 func (a *App) handleAPIAdminOrganizationCreate(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.organizationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Organization service is unavailable")
 		return
 	}
 
 	name, err := readStringField(r, "name")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 	organization, err := a.organizationSvc.CreateOrganization(r.Context(), name, user.ID)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "create_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "create_failed", err, "Failed to create organization")
 		return
 	}
 

@@ -9,15 +9,15 @@ import (
 func (a *App) handleAPIAdminModerationList(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanViewAllSkills() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.moderationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Moderation service is unavailable")
 		return
 	}
 
@@ -27,7 +27,7 @@ func (a *App) handleAPIAdminModerationList(w http.ResponseWriter, r *http.Reques
 		Limit:  parsePositiveInt(r.URL.Query().Get("limit"), 80),
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "list_failed", "Failed to load moderation cases")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -39,15 +39,15 @@ func (a *App) handleAPIAdminModerationList(w http.ResponseWriter, r *http.Reques
 func (a *App) handleAPIAdminModerationCreate(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanViewAllSkills() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.moderationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Moderation service is unavailable")
 		return
 	}
 
@@ -61,12 +61,12 @@ func (a *App) handleAPIAdminModerationCreate(w http.ResponseWriter, r *http.Requ
 	}
 	var input payload
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 	targetType, ok := parseModerationTargetTypeValue(input.TargetType)
 	if !ok {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_target_type"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_target_type", "Invalid moderation target type")
 		return
 	}
 
@@ -79,7 +79,7 @@ func (a *App) handleAPIAdminModerationCreate(w http.ResponseWriter, r *http.Requ
 		ReasonDetail:   input.ReasonDetail,
 	})
 	if createErr != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "create_failed", "message": createErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "create_failed", createErr, "Failed to create moderation case")
 		return
 	}
 
@@ -100,21 +100,21 @@ func (a *App) handleAPIAdminModerationCreate(w http.ResponseWriter, r *http.Requ
 func (a *App) handleAPIAdminModerationResolve(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanViewAllSkills() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.moderationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Moderation service is unavailable")
 		return
 	}
 
 	caseID, err := parseUintURLParam(r, "caseID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_case_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_case_id", "Invalid moderation case id")
 		return
 	}
 	type payload struct {
@@ -123,7 +123,7 @@ func (a *App) handleAPIAdminModerationResolve(w http.ResponseWriter, r *http.Req
 	}
 	var input payload
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
@@ -134,7 +134,7 @@ func (a *App) handleAPIAdminModerationResolve(w http.ResponseWriter, r *http.Req
 		ResolutionNote: input.ResolutionNote,
 	})
 	if resolveErr != nil {
-		writeModerationServiceError(w, resolveErr)
+		writeModerationServiceError(w, r, resolveErr)
 		return
 	}
 
@@ -155,26 +155,26 @@ func (a *App) handleAPIAdminModerationResolve(w http.ResponseWriter, r *http.Req
 func (a *App) handleAPIAdminModerationReject(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanViewAllSkills() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.moderationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Moderation service is unavailable")
 		return
 	}
 
 	caseID, err := parseUintURLParam(r, "caseID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_case_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_case_id", "Invalid moderation case id")
 		return
 	}
 	rejectionNote, noteErr := readStringField(r, "rejection_note")
 	if noteErr != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": noteErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", noteErr, "Invalid request payload")
 		return
 	}
 
@@ -183,7 +183,7 @@ func (a *App) handleAPIAdminModerationReject(w http.ResponseWriter, r *http.Requ
 		RejectionNote:  rejectionNote,
 	})
 	if rejectErr != nil {
-		writeModerationServiceError(w, rejectErr)
+		writeModerationServiceError(w, r, rejectErr)
 		return
 	}
 

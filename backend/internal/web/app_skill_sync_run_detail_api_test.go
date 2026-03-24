@@ -17,6 +17,7 @@ func TestAPISkillSyncRunDetailUnauthorized(t *testing.T) {
 	app, _, _, _, _, skillA, _ := setupSkillSyncRunsTestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/1/sync-runs/1", nil)
+	req.Header.Set("X-Request-ID", "req-skill-sync-run-detail-unauthorized")
 	req = withURLParams(req, map[string]string{
 		"skillID": strconv.FormatUint(uint64(skillA.ID), 10),
 		"runID":   "1",
@@ -31,6 +32,12 @@ func TestAPISkillSyncRunDetailUnauthorized(t *testing.T) {
 	payload := decodeBodyMap(t, recorder)
 	if payload["error"] != "unauthorized" {
 		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-sync-run-detail-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -98,6 +105,7 @@ func TestAPISkillSyncRunDetailInvalidRunID(t *testing.T) {
 	app, _, owner, _, _, skillA, _ := setupSkillSyncRunsTestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/1/sync-runs/invalid", nil)
+	req.Header.Set("X-Request-ID", "req-skill-sync-run-detail-invalid-run")
 	req = withCurrentUser(req, &owner)
 	req = withURLParams(req, map[string]string{
 		"skillID": strconv.FormatUint(uint64(skillA.ID), 10),
@@ -113,6 +121,12 @@ func TestAPISkillSyncRunDetailInvalidRunID(t *testing.T) {
 	payload := decodeBodyMap(t, recorder)
 	if payload["error"] != "invalid_run_id" {
 		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Invalid sync run id" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-sync-run-detail-invalid-run" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 

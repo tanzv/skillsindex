@@ -76,6 +76,19 @@ func syncRunListFilterErrorCode(err error) string {
 	}
 }
 
+func syncRunListFilterMessage(err error) string {
+	switch {
+	case errors.Is(err, errInvalidSyncRunPolicyID):
+		return "Invalid policy id filter"
+	case errors.Is(err, errInvalidSyncRunJobID):
+		return "Invalid job id filter"
+	case errors.Is(err, errInvalidSyncRunTriggerType):
+		return "Invalid trigger type filter"
+	default:
+		return "Invalid sync run query filter"
+	}
+}
+
 func parseOptionalUintQuery(r *http.Request, key string) (*uint, error) {
 	raw := strings.TrimSpace(queryParamValue(r, key))
 	if raw == "" {

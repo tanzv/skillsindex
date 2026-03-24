@@ -73,6 +73,7 @@ func TestAPISkillSyncRunsUnauthorized(t *testing.T) {
 	app, _, _, _, _, skillA, _ := setupSkillSyncRunsTestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/1/sync-runs", nil)
+	req.Header.Set("X-Request-ID", "req-skill-sync-runs-unauthorized")
 	req = withURLParam(req, "skillID", strconv.FormatUint(uint64(skillA.ID), 10))
 	recorder := httptest.NewRecorder()
 
@@ -84,6 +85,12 @@ func TestAPISkillSyncRunsUnauthorized(t *testing.T) {
 	payload := decodeBodyMap(t, recorder)
 	if payload["error"] != "unauthorized" {
 		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-sync-runs-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -131,6 +138,7 @@ func TestAPISkillSyncRunsForbiddenForNonOwnerMember(t *testing.T) {
 	app, _, _, member, _, skillA, _ := setupSkillSyncRunsTestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/1/sync-runs", nil)
+	req.Header.Set("X-Request-ID", "req-skill-sync-runs-permission-denied")
 	req = withCurrentUser(req, &member)
 	req = withURLParam(req, "skillID", strconv.FormatUint(uint64(skillA.ID), 10))
 	recorder := httptest.NewRecorder()
@@ -143,6 +151,12 @@ func TestAPISkillSyncRunsForbiddenForNonOwnerMember(t *testing.T) {
 	payload := decodeBodyMap(t, recorder)
 	if payload["error"] != "permission_denied" {
 		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Permission denied" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-sync-runs-permission-denied" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 

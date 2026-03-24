@@ -10,27 +10,27 @@ import (
 func (a *App) handleAPIAdminSyncJobs(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.syncJobSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Sync job service is unavailable")
 		return
 	}
 
 	filters, err := parseSyncRunListCommonFilters(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": syncRunListFilterErrorCode(err)})
+		writeAPIError(w, r, http.StatusBadRequest, syncRunListFilterErrorCode(err), syncRunListFilterMessage(err))
 		return
 	}
 	ownerID, err := resolveSyncRunOwnerScope(r, user.CanViewAllSkills(), user.ID)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_owner_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_owner_id", "Invalid owner id filter")
 		return
 	}
 	targetSkillID, err := parseOptionalUintQuery(r, "target_skill_id")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_target_skill_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_target_skill_id", "Invalid target skill id filter")
 		return
 	}
 
@@ -40,7 +40,7 @@ func (a *App) handleAPIAdminSyncJobs(w http.ResponseWriter, r *http.Request) {
 
 	items, err := a.syncJobSvc.ListRuns(r.Context(), input)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "list_failed", "Failed to load sync jobs")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": resultToAPISyncRunItems(items), "total": len(items)})
@@ -49,31 +49,31 @@ func (a *App) handleAPIAdminSyncJobs(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPIAdminSyncJobDetail(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.syncJobSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Sync job service is unavailable")
 		return
 	}
 
 	runID, err := parseUintURLParam(r, "runID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_run_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_run_id", "Invalid sync run id")
 		return
 	}
 	item, err := a.syncJobSvc.GetRunByID(r.Context(), runID)
 	if err != nil {
 		if errors.Is(err, services.ErrSyncRunNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "sync_run_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "sync_run_not_found", "Sync run not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "query_failed", "Failed to load sync job detail")
 		return
 	}
 
 	if !canViewSyncRunDetail(*user, item) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 

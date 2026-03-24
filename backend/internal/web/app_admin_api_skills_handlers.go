@@ -9,7 +9,11 @@ import (
 func (a *App) handleAPIAdminSkills(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
+		return
+	}
+	if a.skillService == nil {
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill service is unavailable")
 		return
 	}
 

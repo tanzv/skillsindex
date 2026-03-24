@@ -70,6 +70,7 @@ func TestAPIAdminJobDetailPermission(t *testing.T) {
 	}
 
 	reqForbidden := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/admin/jobs/%d", created.ID), nil)
+	reqForbidden.Header.Set("X-Request-ID", "req-admin-jobs-detail-permission-denied")
 	reqForbidden = withCurrentUser(reqForbidden, &models.User{ID: 52, Role: models.RoleMember})
 	reqForbidden = withURLParam(reqForbidden, "jobID", fmt.Sprintf("%d", created.ID))
 	recorderForbidden := httptest.NewRecorder()
@@ -77,6 +78,16 @@ func TestAPIAdminJobDetailPermission(t *testing.T) {
 	app.handleAPIAdminJobDetail(recorderForbidden, reqForbidden)
 	if recorderForbidden.Code != http.StatusForbidden {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorderForbidden.Code, http.StatusForbidden)
+	}
+	forbiddenPayload := decodeBodyMap(t, recorderForbidden)
+	if forbiddenPayload["error"] != "permission_denied" {
+		t.Fatalf("unexpected forbidden payload: %#v", forbiddenPayload)
+	}
+	if forbiddenPayload["message"] != "Permission denied" {
+		t.Fatalf("unexpected forbidden message: %#v", forbiddenPayload)
+	}
+	if forbiddenPayload["request_id"] != "req-admin-jobs-detail-permission-denied" {
+		t.Fatalf("unexpected request id: %#v", forbiddenPayload)
 	}
 
 	reqOwner := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/admin/jobs/%d", created.ID), nil)
@@ -96,6 +107,28 @@ func TestAPIAdminJobDetailPermission(t *testing.T) {
 	}
 	if got, _ := item["job_type"].(string); got != string(models.AsyncJobTypeSyncRepository) {
 		t.Fatalf("unexpected job_type payload: got=%q item=%#v", got, item)
+	}
+}
+
+func TestAPIAdminJobsUnauthorized(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/jobs", nil)
+	req.Header.Set("X-Request-ID", "req-admin-jobs-unauthorized")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminJobs(recorder, req)
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-jobs-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 

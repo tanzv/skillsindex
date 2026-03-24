@@ -47,14 +47,14 @@ func parseModerationActionValue(raw string) models.ModerationAction {
 	}
 }
 
-func writeModerationServiceError(w http.ResponseWriter, err error) {
+func writeModerationServiceError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, services.ErrModerationCaseNotFound):
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "moderation_case_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "moderation_case_not_found", "Moderation case not found")
 	case errors.Is(err, services.ErrModerationCaseClosed):
-		writeJSON(w, http.StatusConflict, map[string]any{"error": "moderation_case_closed"})
+		writeAPIError(w, r, http.StatusConflict, "moderation_case_closed", "Moderation case is already closed")
 	default:
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "moderation_operation_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "moderation_operation_failed", err, "Moderation operation failed")
 	}
 }
 

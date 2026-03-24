@@ -11,21 +11,21 @@ import (
 func (a *App) handleAPISkillReport(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanAccessDashboard() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.moderationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Moderation service is unavailable")
 		return
 	}
 
 	skillID, err := parseUintURLParam(r, "skillID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_skill_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_skill_id", "Invalid skill id")
 		return
 	}
 
@@ -35,7 +35,7 @@ func (a *App) handleAPISkillReport(w http.ResponseWriter, r *http.Request) {
 	}
 	var input payload
 	if decodeErr := decodeJSONOrForm(r, &input); decodeErr != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": decodeErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", decodeErr, "Invalid request payload")
 		return
 	}
 
@@ -48,7 +48,7 @@ func (a *App) handleAPISkillReport(w http.ResponseWriter, r *http.Request) {
 		ReasonDetail:   input.ReasonDetail,
 	})
 	if createErr != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "create_failed", "message": createErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "create_failed", createErr, "Failed to create moderation report")
 		return
 	}
 
@@ -75,26 +75,26 @@ func (a *App) handleAPISkillReport(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPICommentReport(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanAccessDashboard() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.moderationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Moderation service is unavailable")
 		return
 	}
 
 	skillID, err := parseUintURLParam(r, "skillID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_skill_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_skill_id", "Invalid skill id")
 		return
 	}
 	commentID, err := parseUintURLParam(r, "commentID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_comment_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_comment_id", "Invalid comment id")
 		return
 	}
 
@@ -104,7 +104,7 @@ func (a *App) handleAPICommentReport(w http.ResponseWriter, r *http.Request) {
 	}
 	var input payload
 	if decodeErr := decodeJSONOrForm(r, &input); decodeErr != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": decodeErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", decodeErr, "Invalid request payload")
 		return
 	}
 
@@ -118,7 +118,7 @@ func (a *App) handleAPICommentReport(w http.ResponseWriter, r *http.Request) {
 		ReasonDetail:   input.ReasonDetail,
 	})
 	if createErr != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "create_failed", "message": createErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "create_failed", createErr, "Failed to create moderation report")
 		return
 	}
 

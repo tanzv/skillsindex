@@ -356,18 +356,18 @@ func parseUintURLParam(r *http.Request, key string) (uint, error) {
 	return uint(value), nil
 }
 
-func writeOrganizationServiceError(w http.ResponseWriter, err error) {
+func writeOrganizationServiceError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, services.ErrOrganizationPermissionDenied):
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 	case errors.Is(err, services.ErrOrganizationNotFound):
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "organization_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "organization_not_found", "Organization not found")
 	case errors.Is(err, services.ErrOrganizationMembershipNotFound):
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "membership_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "membership_not_found", "Organization membership not found")
 	case errors.Is(err, services.ErrOrganizationLastOwner):
-		writeJSON(w, http.StatusConflict, map[string]any{"error": "last_owner_guard"})
+		writeAPIError(w, r, http.StatusConflict, "last_owner_guard", "The last organization owner cannot be removed")
 	default:
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "organization_operation_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "organization_operation_failed", err, "Organization operation failed")
 	}
 }
 

@@ -5,23 +5,23 @@ import "net/http"
 func (a *App) handleAPIAdminOrganizationMembers(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.organizationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Organization service is unavailable")
 		return
 	}
 
 	organizationID, err := parseUintURLParam(r, "orgID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_organization_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_organization_id", "Invalid organization id")
 		return
 	}
 
 	members, err := a.organizationSvc.ListMembers(r.Context(), organizationID, *user)
 	if err != nil {
-		writeOrganizationServiceError(w, err)
+		writeOrganizationServiceError(w, r, err)
 		return
 	}
 	items := make([]apiOrganizationMemberItem, 0, len(members))
@@ -43,17 +43,17 @@ func (a *App) handleAPIAdminOrganizationMembers(w http.ResponseWriter, r *http.R
 func (a *App) handleAPIAdminOrganizationMemberUpsert(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.organizationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Organization service is unavailable")
 		return
 	}
 
 	organizationID, err := parseUintURLParam(r, "orgID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_organization_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_organization_id", "Invalid organization id")
 		return
 	}
 
@@ -63,21 +63,21 @@ func (a *App) handleAPIAdminOrganizationMemberUpsert(w http.ResponseWriter, r *h
 	}
 	var input payload
 	if decodeErr := decodeJSONOrForm(r, &input); decodeErr != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": decodeErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", decodeErr, "Invalid request payload")
 		return
 	}
 	role, ok := parseOrganizationRoleValue(input.Role)
 	if !ok {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_role"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_role", "Invalid organization role")
 		return
 	}
 	if input.UserID == 0 {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_user_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_user_id", "Invalid user id")
 		return
 	}
 
 	if err := a.organizationSvc.AddOrUpdateMember(r.Context(), organizationID, *user, input.UserID, role); err != nil {
-		writeOrganizationServiceError(w, err)
+		writeOrganizationServiceError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
@@ -86,38 +86,38 @@ func (a *App) handleAPIAdminOrganizationMemberUpsert(w http.ResponseWriter, r *h
 func (a *App) handleAPIAdminOrganizationMemberRoleUpdate(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.organizationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Organization service is unavailable")
 		return
 	}
 
 	organizationID, err := parseUintURLParam(r, "orgID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_organization_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_organization_id", "Invalid organization id")
 		return
 	}
 	targetUserID, err := parseUintURLParam(r, "userID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_user_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_user_id", "Invalid user id")
 		return
 	}
 
 	roleRaw, decodeErr := readStringField(r, "role")
 	if decodeErr != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": decodeErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", decodeErr, "Invalid request payload")
 		return
 	}
 	role, ok := parseOrganizationRoleValue(roleRaw)
 	if !ok {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_role"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_role", "Invalid organization role")
 		return
 	}
 
 	if err := a.organizationSvc.AddOrUpdateMember(r.Context(), organizationID, *user, targetUserID, role); err != nil {
-		writeOrganizationServiceError(w, err)
+		writeOrganizationServiceError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})

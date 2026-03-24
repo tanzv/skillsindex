@@ -10,15 +10,15 @@ import (
 func (a *App) handleAPISkillSyncRuns(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.syncJobSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Sync job service is unavailable")
 		return
 	}
 	if a.skillService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill service is unavailable")
 		return
 	}
 
@@ -29,17 +29,17 @@ func (a *App) handleAPISkillSyncRuns(w http.ResponseWriter, r *http.Request) {
 
 	skill, err := a.skillService.GetSkillByID(r.Context(), skillID)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 		return
 	}
 	if !user.CanManageSkill(skill.OwnerID) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
 	filters, err := parseSyncRunListCommonFilters(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": syncRunListFilterErrorCode(err)})
+		writeAPIError(w, r, http.StatusBadRequest, syncRunListFilterErrorCode(err), syncRunListFilterMessage(err))
 		return
 	}
 
@@ -48,7 +48,7 @@ func (a *App) handleAPISkillSyncRuns(w http.ResponseWriter, r *http.Request) {
 
 	items, listErr := a.syncJobSvc.ListRuns(r.Context(), input)
 	if listErr != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": listErr.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "list_failed", "Failed to load sync runs")
 		return
 	}
 
@@ -58,11 +58,11 @@ func (a *App) handleAPISkillSyncRuns(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPISkillSyncRunDetail(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.syncJobSvc == nil || a.skillService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Sync run services are unavailable")
 		return
 	}
 
@@ -72,31 +72,31 @@ func (a *App) handleAPISkillSyncRunDetail(w http.ResponseWriter, r *http.Request
 	}
 	runID, err := parseUintURLParam(r, "runID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_run_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_run_id", "Invalid sync run id")
 		return
 	}
 
 	skill, err := a.skillService.GetSkillByID(r.Context(), skillID)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 		return
 	}
 	if !user.CanManageSkill(skill.OwnerID) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
 	item, err := a.syncJobSvc.GetRunByID(r.Context(), runID)
 	if err != nil {
 		if errors.Is(err, services.ErrSyncRunNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "sync_run_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "sync_run_not_found", "Sync run not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "query_failed", "Failed to load sync run")
 		return
 	}
 	if item.TargetSkillID == nil || *item.TargetSkillID != skillID {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "sync_run_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "sync_run_not_found", "Sync run not found")
 		return
 	}
 
