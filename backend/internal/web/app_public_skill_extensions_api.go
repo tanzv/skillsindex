@@ -220,7 +220,8 @@ func (a *App) handleAPIPublicSkillCompare(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	items := resultToAPIItems([]models.Skill{leftSkill, rightSkill})
+	presentationTaxonomy := a.marketplacePresentationTaxonomy(r.Context())
+	items := resultToAPIItemsWithTaxonomy([]models.Skill{leftSkill, rightSkill}, presentationTaxonomy)
 	writeJSON(w, http.StatusOK, apiPublicSkillCompareResponse{
 		LeftSkill:  items[0],
 		RightSkill: items[1],

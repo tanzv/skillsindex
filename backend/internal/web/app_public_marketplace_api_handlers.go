@@ -46,7 +46,7 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	categoryCards, err := a.loadCategoryCards(r.Context(), "")
+	rawCategoryCards, err := a.loadCategoryCards(r.Context(), "")
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{
 			"error":   "category_query_failed",
@@ -54,6 +54,8 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 		})
 		return
 	}
+	presentationTaxonomy := a.marketplacePresentationTaxonomy(r.Context())
+	presentationCategoryCards := buildMarketplacePresentationCategoryCardsWithTaxonomy(rawCategoryCards, presentationTaxonomy)
 
 	topTags := []TagCard{}
 	if highlight, err := a.skillService.SearchPublicSkills(r.Context(), services.PublicSearchInput{
@@ -82,12 +84,13 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 		}
 
 		filteredSkills := filterMarketplaceSkillsByKeywordAndTags(allSkills, query, tags)
-		filteredSkills = filterSkillsByMarketplaceSelection(
+		filteredSkills = filterSkillsByMarketplaceSelectionWithTaxonomy(
 			filteredSkills,
 			category,
 			subcategory,
 			categoryGroup,
 			subcategoryGroup,
+			presentationTaxonomy,
 		)
 		sortMarketplaceSkillsInPlace(filteredSkills, sortBy)
 
@@ -105,12 +108,13 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 			})
 			return
 		}
-		semanticItems = filterSkillsByMarketplaceSelection(
+		semanticItems = filterSkillsByMarketplaceSelectionWithTaxonomy(
 			semanticItems,
 			category,
 			subcategory,
 			categoryGroup,
 			subcategoryGroup,
+			presentationTaxonomy,
 		)
 		items = semanticItems
 		totalItems = int64(len(semanticItems))
@@ -127,12 +131,13 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 		}
 
 		filteredSkills := filterMarketplaceSkillsByKeywordAndTags(allSkills, query, services.ParseTagInput(tagFilter))
-		filteredSkills = filterSkillsByMarketplaceSelection(
+		filteredSkills = filterSkillsByMarketplaceSelectionWithTaxonomy(
 			filteredSkills,
 			category,
 			subcategory,
 			categoryGroup,
 			subcategoryGroup,
+			presentationTaxonomy,
 		)
 		sortMarketplaceSkillsInPlace(filteredSkills, sortBy)
 
@@ -191,12 +196,14 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 	}
 
 	summary := buildAPIPublicMarketplaceSummary(publicMarketplaceSummaryInput{
-		CategoryCards:       categoryCards,
-		CategoryFilter:      category,
-		CategoryGroupFilter: categoryGroup,
-		MatchingSkills:      totalItems,
-		TopTags:             topTags,
-		TotalSkills:         totalSkills,
+		RawCategoryCards:          rawCategoryCards,
+		PresentationCategoryCards: presentationCategoryCards,
+		PresentationTaxonomy:      presentationTaxonomy,
+		CategoryFilter:            category,
+		CategoryGroupFilter:       categoryGroup,
+		MatchingSkills:            totalItems,
+		TopTags:                   topTags,
+		TotalSkills:               totalSkills,
 	})
 
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -224,10 +231,10 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 			"prev_page":   prevPage,
 			"next_page":   nextPage,
 		},
-		"categories":           mapCategoryCardsToAPI(categoryCards),
+		"categories":           mapCategoryCardsToAPI(presentationCategoryCards),
 		"top_tags":             topTags,
-		"filter_options":       buildMarketplaceFilterOptions(categoryCards),
-		"items":                resultToAPIItems(items),
+		"filter_options":       buildMarketplaceFilterOptions(rawCategoryCards),
+		"items":                resultToAPIItemsWithTaxonomy(items, presentationTaxonomy),
 		"summary":              summary,
 		"session_user":         sessionUser,
 		"can_access_dashboard": canAccessDashboard,
@@ -235,6 +242,7 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 }
 
 func (a *App) handleAPISearch(w http.ResponseWriter, r *http.Request) {
+	presentationTaxonomy := a.marketplacePresentationTaxonomy(r.Context())
 	result, err := a.skillService.SearchPublicSkills(r.Context(), services.PublicSearchInput{
 		Query:           strings.TrimSpace(r.URL.Query().Get("q")),
 		Tags:            services.ParseTagInput(strings.TrimSpace(r.URL.Query().Get("tags"))),
@@ -250,7 +258,7 @@ func (a *App) handleAPISearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"items": resultToAPIItems(result.Items),
+		"items": resultToAPIItemsWithTaxonomy(result.Items, presentationTaxonomy),
 		"page":  result.Page,
 		"limit": result.Limit,
 		"total": result.Total,
@@ -258,6 +266,7 @@ func (a *App) handleAPISearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleAPIAISearch(w http.ResponseWriter, r *http.Request) {
+	presentationTaxonomy := a.marketplacePresentationTaxonomy(r.Context())
 	page := parsePositiveInt(r.URL.Query().Get("page"), 1)
 	if page < 1 {
 		page = 1
@@ -289,7 +298,7 @@ func (a *App) handleAPIAISearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"items": resultToAPIItems(items),
+		"items": resultToAPIItemsWithTaxonomy(items, presentationTaxonomy),
 		"page":  page,
 		"limit": limit,
 		"total": total,

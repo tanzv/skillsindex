@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 
-	"skillsindex/internal/catalog"
 	"skillsindex/internal/models"
 	"skillsindex/internal/services"
 )
@@ -106,33 +105,6 @@ func extractSkillMPIdentifier(raw string) string {
 	return segments[len(segments)-1]
 }
 
-func resolveCategorySelection(categorySlug string, subcategorySlug string, fallbackCategory string, fallbackSub string) (string, string) {
-	categorySlug = strings.TrimSpace(categorySlug)
-	subcategorySlug = strings.TrimSpace(subcategorySlug)
-	if categorySlug == "" {
-		return fallbackCategory, fallbackSub
-	}
-	category, ok := catalog.FindCategory(categorySlug)
-	if !ok {
-		return fallbackCategory, fallbackSub
-	}
-	if subcategorySlug == "" {
-		if len(category.Subcategories) > 0 {
-			return category.Slug, category.Subcategories[0].Slug
-		}
-		return category.Slug, ""
-	}
-	for _, sub := range category.Subcategories {
-		if sub.Slug == subcategorySlug {
-			return category.Slug, subcategorySlug
-		}
-	}
-	if len(category.Subcategories) > 0 {
-		return category.Slug, category.Subcategories[0].Slug
-	}
-	return category.Slug, ""
-}
-
 func filterSkillsByCategory(skills []models.Skill, category string, subcategory string) []models.Skill {
 	category = strings.TrimSpace(category)
 	subcategory = strings.TrimSpace(subcategory)
@@ -174,6 +146,13 @@ func buildTimelineSVGPoints(points []services.TimelinePoint, width float64, heig
 }
 
 func resultToAPIItems(items []models.Skill) []apiSkillResponse {
+	return resultToAPIItemsWithTaxonomy(items, publicMarketplaceTaxonomy)
+}
+
+func resultToAPIItemsWithTaxonomy(
+	items []models.Skill,
+	taxonomy []marketplacePresentationCategoryDefinition,
+) []apiSkillResponse {
 	responses := make([]apiSkillResponse, 0, len(items))
 	for _, item := range items {
 		tagNames := make([]string, 0, len(item.Tags))
@@ -183,20 +162,25 @@ func resultToAPIItems(items []models.Skill) []apiSkillResponse {
 				tagNames = append(tagNames, name)
 			}
 		}
+		classification := resolveMarketplacePresentationClassificationForSkillWithTaxonomy(item, taxonomy)
 		responses = append(responses, apiSkillResponse{
-			ID:             item.ID,
-			Name:           item.Name,
-			Description:    item.Description,
-			Content:        item.Content,
-			Category:       item.CategorySlug,
-			Subcategory:    item.SubcategorySlug,
-			Tags:           tagNames,
-			SourceType:     string(item.SourceType),
-			SourceURL:      item.SourceURL,
-			StarCount:      item.StarCount,
-			QualityScore:   item.QualityScore,
-			InstallCommand: item.InstallCommand,
-			UpdatedAt:      item.UpdatedAt,
+			ID:                    item.ID,
+			Name:                  item.Name,
+			Description:           item.Description,
+			Content:               item.Content,
+			Category:              item.CategorySlug,
+			Subcategory:           item.SubcategorySlug,
+			CategoryGroup:         classification.CategorySlug,
+			CategoryGroupLabel:    classification.CategoryLabel,
+			SubcategoryGroup:      classification.SubcategorySlug,
+			SubcategoryGroupLabel: classification.SubcategoryLabel,
+			Tags:                  tagNames,
+			SourceType:            string(item.SourceType),
+			SourceURL:             item.SourceURL,
+			StarCount:             item.StarCount,
+			QualityScore:          item.QualityScore,
+			InstallCommand:        item.InstallCommand,
+			UpdatedAt:             item.UpdatedAt,
 		})
 	}
 	return responses

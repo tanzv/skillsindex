@@ -28,7 +28,7 @@ func (a *App) createManualSkillFromIngestion(
 		return adminIngestionMutationResult{}, newAdminIngestionOperationError(http.StatusServiceUnavailable, "Skill service unavailable")
 	}
 
-	category, subcategory := resolveCategorySelection(input.Category, input.Subcategory, "development", "backend")
+	category, subcategory := a.resolveCategorySelection(ctx, input.Category, input.Subcategory, "development", "backend")
 	createdSkill, err := a.skillService.CreateSkill(ctx, services.CreateSkillInput{
 		OwnerID:         user.ID,
 		Name:            input.Name,
@@ -88,7 +88,7 @@ func (a *App) createRepositorySkillFromIngestion(
 		return adminIngestionMutationResult{}, newAdminIngestionOperationError(http.StatusBadRequest, "Repository sync failed: "+err.Error())
 	}
 
-	category, subcategory := resolveCategorySelection(input.Category, input.Subcategory, "devops", "git-workflows")
+	category, subcategory := a.resolveCategorySelection(ctx, input.Category, input.Subcategory, "devops", "git-workflows")
 	now := time.Now().UTC()
 	tags := append(meta.Tags, services.ParseTagInput(input.Tags)...)
 	createdSkill, err := a.skillService.CreateSkill(ctx, services.CreateSkillInput{
@@ -186,7 +186,7 @@ func (a *App) createUploadSkillFromIngestion(
 		return adminIngestionMutationResult{}, newAdminIngestionOperationError(http.StatusBadRequest, "Failed to parse archive: "+err.Error())
 	}
 
-	category, subcategory := resolveCategorySelection(input.Category, input.Subcategory, "tools", "automation-tools")
+	category, subcategory := a.resolveCategorySelection(ctx, input.Category, input.Subcategory, "tools", "automation-tools")
 	tags := append(meta.Tags, services.ParseTagInput(input.Tags)...)
 	createdSkill, err := a.skillService.CreateSkill(ctx, services.CreateSkillInput{
 		OwnerID:         user.ID,
@@ -246,7 +246,7 @@ func (a *App) createSkillMPSkillFromIngestion(
 		return adminIngestionMutationResult{}, newAdminIngestionOperationError(http.StatusBadRequest, "SkillMP import failed: "+err.Error())
 	}
 
-	category, subcategory := resolveCategorySelection(input.Category, input.Subcategory, "data-ai", "llm-ai")
+	category, subcategory := a.resolveCategorySelection(ctx, input.Category, input.Subcategory, "data-ai", "llm-ai")
 	now := time.Now().UTC()
 	tags := append(meta.Tags, services.ParseTagInput(input.Tags)...)
 	createdSkill, err := a.skillService.CreateSkill(ctx, services.CreateSkillInput{

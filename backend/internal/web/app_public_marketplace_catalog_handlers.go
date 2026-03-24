@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"skillsindex/internal/catalog"
 	"skillsindex/internal/services"
 
 	"github.com/go-chi/chi/v5"
@@ -39,7 +38,7 @@ func (a *App) handleHome(w http.ResponseWriter, r *http.Request) {
 		Error:             strings.TrimSpace(r.URL.Query().Get("err")),
 		TotalSkills:       totalSkills,
 		Categories:        categoryCards,
-		CatalogCategories: catalog.Categories(),
+		CatalogCategories: a.marketplaceCatalogCategories(r.Context()),
 	}
 	a.populateHomeHighlights(r.Context(), &view)
 
@@ -100,13 +99,13 @@ func (a *App) handleCategories(w http.ResponseWriter, r *http.Request) {
 		Page:              "categories",
 		Title:             "Category Index",
 		Categories:        cards,
-		CatalogCategories: catalog.Categories(),
+		CatalogCategories: a.marketplaceCatalogCategories(r.Context()),
 	})
 }
 
 func (a *App) handleCategoryDetail(w http.ResponseWriter, r *http.Request) {
 	categorySlug := strings.TrimSpace(chi.URLParam(r, "categorySlug"))
-	categoryDef, ok := catalog.FindCategory(categorySlug)
+	categoryDef, ok := a.findMarketplaceCategory(r.Context(), categorySlug)
 	if !ok {
 		http.NotFound(w, r)
 		return
@@ -148,7 +147,7 @@ func (a *App) handleCategoryDetail(w http.ResponseWriter, r *http.Request) {
 		SelectedCategory:    selected,
 		SelectedSubcategory: subcategory,
 		Categories:          cards,
-		CatalogCategories:   catalog.Categories(),
+		CatalogCategories:   a.marketplaceCatalogCategories(r.Context()),
 	})
 }
 
@@ -178,10 +177,10 @@ func (a *App) handleTimeline(w http.ResponseWriter, r *http.Request) {
 		TimelineMonthURL:  "/timeline?interval=month",
 		TimelinePoints:    viewPoints,
 		TimelineSVGPoints: buildTimelineSVGPoints(points, 780, 220),
-		CatalogCategories: catalog.Categories(),
+		CatalogCategories: a.marketplaceCatalogCategories(r.Context()),
 	})
 }
 
 func (a *App) handleAbout(w http.ResponseWriter, r *http.Request) {
-	a.render(w, r, ViewData{Page: "about", Title: "About", CatalogCategories: catalog.Categories()})
+	a.render(w, r, ViewData{Page: "about", Title: "About", CatalogCategories: a.marketplaceCatalogCategories(r.Context())})
 }

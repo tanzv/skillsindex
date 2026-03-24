@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   buildMarketplacePresentationCategories,
   resolveMarketplaceCategorySummary,
+  resolveMarketplaceSkillCategorySlug,
   resolveMarketplaceSkillCategoryLabel,
+  resolveMarketplaceSkillSubcategorySlug,
   resolveMarketplaceSkillSubcategoryLabel
 } from "@/src/lib/marketplace/taxonomy";
 import { filterMarketplaceItems } from "@/src/features/public/marketplace/marketplaceViewModel";
@@ -139,6 +141,38 @@ describe("marketplace taxonomy", () => {
 
     expect(resolveMarketplaceSkillCategoryLabel(repositorySkill)).toBe("Programming & Development");
     expect(resolveMarketplaceSkillSubcategoryLabel(repositorySkill)).toBe("Git & GitHub");
+  });
+
+  it("prefers backend grouped category fields over local taxonomy heuristics", () => {
+    const backendGroupedSkill = {
+      id: 105,
+      name: "Operations Release Radar",
+      description: "Looks like an operations workflow but should follow backend grouping.",
+      content: "",
+      category: "operations",
+      subcategory: "release",
+      category_group: "productivity-writing",
+      category_group_label: "Productivity & Writing",
+      subcategory_group: "pdf-documents",
+      subcategory_group_label: "PDF & Documents",
+      tags: ["release", "operations"],
+      source_type: "manual",
+      source_url: "",
+      star_count: 153,
+      quality_score: 8.9,
+      install_command: "npx skill operations-release-radar",
+      updated_at: "2026-03-18T08:00:00Z"
+    } as MarketplaceSkill & {
+      category_group: string;
+      category_group_label: string;
+      subcategory_group: string;
+      subcategory_group_label: string;
+    };
+
+    expect(resolveMarketplaceSkillCategorySlug(backendGroupedSkill)).toBe("productivity-writing");
+    expect(resolveMarketplaceSkillCategoryLabel(backendGroupedSkill)).toBe("Productivity & Writing");
+    expect(resolveMarketplaceSkillSubcategorySlug(backendGroupedSkill)).toBe("pdf-documents");
+    expect(resolveMarketplaceSkillSubcategoryLabel(backendGroupedSkill)).toBe("PDF & Documents");
   });
 
   it("filters raw skill payloads by grouped route category and grouped subcategory", () => {

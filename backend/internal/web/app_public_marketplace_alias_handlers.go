@@ -4,8 +4,6 @@ import (
 	"context"
 	"net/http"
 	"strings"
-
-	"skillsindex/internal/catalog"
 )
 
 func (a *App) handleLocalizedAlias(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +56,7 @@ func (a *App) baseScenarioView(ctx context.Context, page string, title string) V
 		Title:             title,
 		TotalSkills:       totalSkills,
 		Categories:        categoryCards,
-		CatalogCategories: catalog.Categories(),
+		CatalogCategories: a.marketplaceCatalogCategories(ctx),
 	}
 	a.populateHomeHighlights(ctx, &view)
 	return view

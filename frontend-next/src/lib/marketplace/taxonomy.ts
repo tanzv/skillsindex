@@ -2,6 +2,7 @@ import type { MarketplaceCategory, MarketplaceSkill, PublicMarketplaceResponse }
 
 import {
   type MarketplaceClassificationInput,
+  type MarketplaceTaxonomyCategoryDefinition,
   type MarketplaceTaxonomyClassification,
   type MarketplaceTaxonomySubcategoryDefinition,
   marketplaceTaxonomy,
@@ -98,6 +99,50 @@ function resolveMarketplaceClassification(input: MarketplaceClassificationInput)
   };
 }
 
+function resolveBackendMarketplaceCategorySlug(item: MarketplaceSkill): string {
+  return normalizeMarketplaceSlug(item.category_group);
+}
+
+function resolveBackendMarketplaceSubcategorySlug(item: MarketplaceSkill): string {
+  return normalizeMarketplaceSlug(item.subcategory_group);
+}
+
+function hasBackendMarketplaceClassification(item: MarketplaceSkill): boolean {
+  return Boolean(resolveBackendMarketplaceCategorySlug(item) && resolveBackendMarketplaceSubcategorySlug(item));
+}
+
+function resolveMarketplaceCategoryDefinitionFromItem(item: MarketplaceSkill): MarketplaceTaxonomyCategoryDefinition | null {
+  const backendCategorySlug = resolveBackendMarketplaceCategorySlug(item);
+  if (backendCategorySlug) {
+    return taxonomyCategoryLookup.get(backendCategorySlug) || null;
+  }
+
+  return resolveMarketplaceClassification({
+    rawCategory: item.category,
+    rawSubcategory: item.subcategory,
+    rawLabel: item.name,
+    rawDescription: item.description,
+    tags: item.tags,
+    sourceType: item.source_type
+  }).category;
+}
+
+function resolveMarketplaceSubcategoryDefinitionFromItem(item: MarketplaceSkill): MarketplaceTaxonomySubcategoryDefinition | null {
+  const backendSubcategorySlug = resolveBackendMarketplaceSubcategorySlug(item);
+  if (backendSubcategorySlug) {
+    return taxonomySubcategoryLookup.get(backendSubcategorySlug) || null;
+  }
+
+  return resolveMarketplaceClassification({
+    rawCategory: item.category,
+    rawSubcategory: item.subcategory,
+    rawLabel: item.name,
+    rawDescription: item.description,
+    tags: item.tags,
+    sourceType: item.source_type
+  }).subcategory;
+}
+
 export function resolveMarketplaceCategorySummary(
   categories: MarketplaceCategory[],
   activeCategory: string | undefined,
@@ -123,47 +168,39 @@ export function resolveMarketplaceCategorySummary(
 }
 
 export function resolveMarketplaceSkillCategoryLabel(item: MarketplaceSkill): string {
-  return resolveMarketplaceClassification({
-    rawCategory: item.category,
-    rawSubcategory: item.subcategory,
-    rawLabel: item.name,
-    rawDescription: item.description,
-    tags: item.tags,
-    sourceType: item.source_type
-  }).category.name;
+  const backendLabel = String(item.category_group_label || "").trim();
+  if (backendLabel) {
+    return backendLabel;
+  }
+
+  return resolveMarketplaceCategoryDefinitionFromItem(item)?.name || "";
 }
 
 export function resolveMarketplaceSkillSubcategoryLabel(item: MarketplaceSkill): string {
-  return resolveMarketplaceClassification({
-    rawCategory: item.category,
-    rawSubcategory: item.subcategory,
-    rawLabel: item.name,
-    rawDescription: item.description,
-    tags: item.tags,
-    sourceType: item.source_type
-  }).subcategory.name;
+  const backendLabel = String(item.subcategory_group_label || "").trim();
+  if (backendLabel) {
+    return backendLabel;
+  }
+
+  return resolveMarketplaceSubcategoryDefinitionFromItem(item)?.name || "";
 }
 
 export function resolveMarketplaceSkillCategorySlug(item: MarketplaceSkill): string {
-  return resolveMarketplaceClassification({
-    rawCategory: item.category,
-    rawSubcategory: item.subcategory,
-    rawLabel: item.name,
-    rawDescription: item.description,
-    tags: item.tags,
-    sourceType: item.source_type
-  }).category.slug;
+  const backendCategorySlug = resolveBackendMarketplaceCategorySlug(item);
+  if (backendCategorySlug) {
+    return backendCategorySlug;
+  }
+
+  return resolveMarketplaceCategoryDefinitionFromItem(item)?.slug || "";
 }
 
 export function resolveMarketplaceSkillSubcategorySlug(item: MarketplaceSkill): string {
-  return resolveMarketplaceClassification({
-    rawCategory: item.category,
-    rawSubcategory: item.subcategory,
-    rawLabel: item.name,
-    rawDescription: item.description,
-    tags: item.tags,
-    sourceType: item.source_type
-  }).subcategory.slug;
+  const backendSubcategorySlug = resolveBackendMarketplaceSubcategorySlug(item);
+  if (backendSubcategorySlug) {
+    return backendSubcategorySlug;
+  }
+
+  return resolveMarketplaceSubcategoryDefinitionFromItem(item)?.slug || "";
 }
 
 export function isPresentationCategorySlug(categorySlug: string | undefined): boolean {
@@ -347,6 +384,22 @@ export function buildMarketplacePresentationCategories(rawCategories: Marketplac
 }
 
 export function buildMarketplacePresentationPayload(payload: PublicMarketplaceResponse): PublicMarketplaceResponse {
+  const categoriesAreAlreadyGrouped =
+    Array.isArray(payload.categories) &&
+    payload.categories.length > 0 &&
+    payload.categories.every(
+      (category) =>
+        taxonomyCategoryLookup.has(normalizeMarketplaceSlug(category.slug)) &&
+        category.subcategories.every((subcategory) => taxonomySubcategoryLookup.has(normalizeMarketplaceSlug(subcategory.slug)))
+    );
+  const itemsAlreadyCarryGroupedFields =
+    Array.isArray(payload.items) &&
+    (payload.items.length === 0 || payload.items.every((item) => hasBackendMarketplaceClassification(item)));
+
+  if (categoriesAreAlreadyGrouped && itemsAlreadyCarryGroupedFields) {
+    return payload;
+  }
+
   const rawCategories =
     Array.isArray(payload.categories) && payload.categories.length > 0
       ? payload.categories

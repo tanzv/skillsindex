@@ -128,7 +128,8 @@ func (a *App) handleAPIPublicSkillDetail(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	apiItems := resultToAPIItems([]models.Skill{skill})
+	presentationTaxonomy := a.marketplacePresentationTaxonomy(r.Context())
+	apiItems := resultToAPIItemsWithTaxonomy([]models.Skill{skill}, presentationTaxonomy)
 	detailSkill := apiSkillResponse{}
 	if len(apiItems) > 0 {
 		detailSkill = apiItems[0]
@@ -177,7 +178,7 @@ func (a *App) handleAPIPublicSkillDetail(w http.ResponseWriter, r *http.Request)
 
 	loadedRelatedSkills, relatedErr := a.skillService.ListMarketplaceRelatedSkills(r.Context(), skill.ID, viewerID, 6)
 	if relatedErr == nil {
-		relatedSkills = resultToAPIItems(loadedRelatedSkills)
+		relatedSkills = resultToAPIItemsWithTaxonomy(loadedRelatedSkills, presentationTaxonomy)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{

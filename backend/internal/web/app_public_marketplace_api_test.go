@@ -144,6 +144,39 @@ func TestHandleAPIPublicMarketplaceReturnsExpectedPayload(t *testing.T) {
 	if !strings.Contains(body, `"category_slug":"devops"`) {
 		t.Fatalf("missing expected devops category override payload: %s", body)
 	}
+
+	var payload struct {
+		Categories []struct {
+			Slug string `json:"slug"`
+		} `json:"categories"`
+		Items []struct {
+			Name                  string `json:"name"`
+			Category              string `json:"category"`
+			Subcategory           string `json:"subcategory"`
+			CategoryGroup         string `json:"category_group"`
+			CategoryGroupLabel    string `json:"category_group_label"`
+			SubcategoryGroup      string `json:"subcategory_group"`
+			SubcategoryGroupLabel string `json:"subcategory_group_label"`
+		} `json:"items"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("failed to decode marketplace payload: %v", err)
+	}
+	if len(payload.Categories) == 0 {
+		t.Fatalf("expected grouped categories in payload")
+	}
+	if payload.Categories[0].Slug != "programming-development" {
+		t.Fatalf("expected grouped category slug in payload, got=%s", payload.Categories[0].Slug)
+	}
+	if len(payload.Items) == 0 {
+		t.Fatalf("expected marketplace items in payload")
+	}
+	if payload.Items[0].CategoryGroup == "" || payload.Items[0].SubcategoryGroup == "" {
+		t.Fatalf("expected grouped category fields in marketplace items: %+v", payload.Items[0])
+	}
+	if payload.Items[0].CategoryGroupLabel == "" || payload.Items[0].SubcategoryGroupLabel == "" {
+		t.Fatalf("expected grouped category labels in marketplace items: %+v", payload.Items[0])
+	}
 }
 
 func TestHandleAPIPublicMarketplaceSupportsGroupedCategoryFilters(t *testing.T) {

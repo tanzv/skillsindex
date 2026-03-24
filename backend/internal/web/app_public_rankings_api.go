@@ -19,12 +19,15 @@ func normalizePublicRankingSort(raw string, defaultSort string) string {
 	}
 }
 
-func mapPublicRankingCategoryLeaders(items []services.PublicRankingCategoryLeader) []apiPublicRankingCategoryLeader {
+func mapPublicRankingCategoryLeaders(
+	items []services.PublicRankingCategoryLeader,
+	presentationTaxonomy []marketplacePresentationCategoryDefinition,
+) []apiPublicRankingCategoryLeader {
 	result := make([]apiPublicRankingCategoryLeader, 0, len(items))
 	for _, item := range items {
 		leadingSkill := apiSkillResponse{}
 		categorySlug := item.CategorySlug
-		if skillItems := resultToAPIItems([]models.Skill{item.LeadingSkill}); len(skillItems) > 0 {
+		if skillItems := resultToAPIItemsWithTaxonomy([]models.Skill{item.LeadingSkill}, presentationTaxonomy); len(skillItems) > 0 {
 			leadingSkill = skillItems[0]
 			if strings.TrimSpace(leadingSkill.CategoryGroup) != "" {
 				categorySlug = leadingSkill.CategoryGroup
@@ -76,17 +79,18 @@ func (a *App) handleAPIPublicRankings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	presentationTaxonomy := a.marketplacePresentationTaxonomy(r.Context())
 	writeJSON(w, http.StatusOK, map[string]any{
 		"sort":         result.SortBy,
-		"ranked_items": resultToAPIItems(result.RankedItems),
-		"highlights":   resultToAPIItems(result.Highlights),
-		"list_items":   resultToAPIItems(result.ListItems),
+		"ranked_items": resultToAPIItemsWithTaxonomy(result.RankedItems, presentationTaxonomy),
+		"highlights":   resultToAPIItemsWithTaxonomy(result.Highlights, presentationTaxonomy),
+		"list_items":   resultToAPIItemsWithTaxonomy(result.ListItems, presentationTaxonomy),
 		"summary": apiPublicRankingSummary{
 			TotalCompared:  result.Summary.TotalCompared,
 			TopStars:       result.Summary.TopStars,
 			TopQuality:     result.Summary.TopQuality,
 			AverageQuality: result.Summary.AverageQuality,
 		},
-		"category_leaders": mapPublicRankingCategoryLeaders(result.CategoryLeaders),
+		"category_leaders": mapPublicRankingCategoryLeaders(result.CategoryLeaders, presentationTaxonomy),
 	})
 }

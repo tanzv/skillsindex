@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"skillsindex/internal/catalog"
 	"skillsindex/internal/services"
 
 	"github.com/go-chi/chi/v5"
@@ -43,7 +42,7 @@ func (a *App) handleAuthPrototype(w http.ResponseWriter, r *http.Request) {
 	view := ViewData{
 		Page:              "prototype_auth",
 		Title:             "Auth and DingTalk OAuth Prototype",
-		CatalogCategories: catalog.Categories(),
+		CatalogCategories: a.marketplaceCatalogCategories(r.Context()),
 	}
 	a.render(w, r, view)
 }
@@ -51,7 +50,7 @@ func (a *App) handleAuthPrototype(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleStatePage(w http.ResponseWriter, r *http.Request) {
 	state := strings.ToLower(strings.TrimSpace(chi.URLParam(r, "state")))
 	view := ViewData{
-		CatalogCategories: catalog.Categories(),
+		CatalogCategories: a.marketplaceCatalogCategories(r.Context()),
 	}
 	switch state {
 	case "loading":

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"skillsindex/internal/catalog"
 	"skillsindex/internal/services"
 )
 
@@ -33,7 +32,7 @@ func (a *App) handleSkillDetail(w http.ResponseWriter, r *http.Request) {
 		Page:              "detail",
 		Title:             skill.Name,
 		Skill:             &skill,
-		CatalogCategories: catalog.Categories(),
+		CatalogCategories: a.marketplaceCatalogCategories(r.Context()),
 		Message:           strings.TrimSpace(r.URL.Query().Get("msg")),
 		Error:             strings.TrimSpace(r.URL.Query().Get("err")),
 	}

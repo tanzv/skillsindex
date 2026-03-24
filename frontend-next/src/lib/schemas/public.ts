@@ -26,6 +26,10 @@ export interface MarketplaceSkill {
   content: string;
   category: string;
   subcategory: string;
+  category_group?: string;
+  category_group_label?: string;
+  subcategory_group?: string;
+  subcategory_group_label?: string;
   tags: string[];
   source_type: string;
   source_url: string;

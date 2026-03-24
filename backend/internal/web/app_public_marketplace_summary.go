@@ -3,17 +3,19 @@ package web
 import "strings"
 
 type publicMarketplaceSummaryInput struct {
-	CategoryCards       []CategoryCard
-	CategoryFilter      string
-	CategoryGroupFilter string
-	MatchingSkills      int64
-	TopTags             []TagCard
-	TotalSkills         int64
+	RawCategoryCards          []CategoryCard
+	PresentationCategoryCards []CategoryCard
+	PresentationTaxonomy      []marketplacePresentationCategoryDefinition
+	CategoryFilter            string
+	CategoryGroupFilter       string
+	MatchingSkills            int64
+	TopTags                   []TagCard
+	TotalSkills               int64
 }
 
 func buildAPIPublicMarketplaceSummary(input publicMarketplaceSummaryInput) apiPublicMarketplaceSummary {
 	visibleCategoryCount := 0
-	for _, category := range input.CategoryCards {
+	for _, category := range input.PresentationCategoryCards {
 		if category.Count > 0 {
 			visibleCategoryCount++
 		}
@@ -38,7 +40,9 @@ func buildAPIPublicMarketplaceSummary(input publicMarketplaceSummaryInput) apiPu
 		Landing:     landingSummary,
 		CategoryHub: categoryHubSummary,
 		CategoryDetail: buildAPIPublicMarketplaceCategoryDetailSummary(
-			input.CategoryCards,
+			input.RawCategoryCards,
+			input.PresentationCategoryCards,
+			input.PresentationTaxonomy,
 			input.CategoryFilter,
 			input.CategoryGroupFilter,
 			input.MatchingSkills,
@@ -47,13 +51,20 @@ func buildAPIPublicMarketplaceSummary(input publicMarketplaceSummaryInput) apiPu
 }
 
 func buildAPIPublicMarketplaceCategoryDetailSummary(
-	cards []CategoryCard,
+	rawCards []CategoryCard,
+	presentationCards []CategoryCard,
+	presentationTaxonomy []marketplacePresentationCategoryDefinition,
 	categoryFilter string,
 	categoryGroupFilter string,
 	matchingSkills int64,
 ) *apiPublicMarketplaceCategoryDetailSummary {
 	if normalizedCategoryGroup := strings.TrimSpace(categoryGroupFilter); normalizedCategoryGroup != "" {
-		return buildMarketplacePresentationCategoryDetailSummary(cards, normalizedCategoryGroup, matchingSkills)
+		return buildMarketplacePresentationCategoryDetailSummaryWithTaxonomy(
+			presentationCards,
+			normalizedCategoryGroup,
+			matchingSkills,
+			presentationTaxonomy,
+		)
 	}
 
 	normalizedCategory := strings.TrimSpace(categoryFilter)
@@ -61,7 +72,7 @@ func buildAPIPublicMarketplaceCategoryDetailSummary(
 		return nil
 	}
 
-	for _, category := range cards {
+	for _, category := range rawCards {
 		if category.Slug != normalizedCategory {
 			continue
 		}

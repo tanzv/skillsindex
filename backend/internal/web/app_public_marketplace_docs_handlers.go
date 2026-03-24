@@ -2,12 +2,10 @@ package web
 
 import (
 	"net/http"
-
-	"skillsindex/internal/catalog"
 )
 
 func (a *App) handleDocs(w http.ResponseWriter, r *http.Request) {
-	a.render(w, r, ViewData{Page: "docs", Title: "Documentation", CatalogCategories: catalog.Categories()})
+	a.render(w, r, ViewData{Page: "docs", Title: "Documentation", CatalogCategories: a.marketplaceCatalogCategories(r.Context())})
 }
 
 func (a *App) handleAPIDocs(w http.ResponseWriter, r *http.Request) {
@@ -15,7 +13,7 @@ func (a *App) handleAPIDocs(w http.ResponseWriter, r *http.Request) {
 		Page:              "api_docs",
 		Title:             "API Documentation",
 		DocsDefaultAPIKey: a.firstAPIKey(),
-		CatalogCategories: catalog.Categories(),
+		CatalogCategories: a.marketplaceCatalogCategories(r.Context()),
 	})
 }
 
@@ -24,7 +22,7 @@ func (a *App) handleSwaggerDocs(w http.ResponseWriter, r *http.Request) {
 		Page:              "swagger",
 		Title:             "API Explorer",
 		DocsDefaultAPIKey: a.firstAPIKey(),
-		CatalogCategories: catalog.Categories(),
+		CatalogCategories: a.marketplaceCatalogCategories(r.Context()),
 	})
 }
 

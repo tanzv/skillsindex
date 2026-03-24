@@ -146,9 +146,18 @@ func TestHandleAPIPublicSkillDetailIncludesRelatedSkills(t *testing.T) {
 	}
 
 	var payload struct {
+		Skill struct {
+			CategoryGroup         string `json:"category_group"`
+			CategoryGroupLabel    string `json:"category_group_label"`
+			SubcategoryGroup      string `json:"subcategory_group"`
+			SubcategoryGroupLabel string `json:"subcategory_group_label"`
+		} `json:"skill"`
 		RelatedSkills []struct {
-			ID   uint   `json:"id"`
-			Name string `json:"name"`
+			ID                 uint   `json:"id"`
+			Name               string `json:"name"`
+			CategoryGroup      string `json:"category_group"`
+			SubcategoryGroup   string `json:"subcategory_group"`
+			CategoryGroupLabel string `json:"category_group_label"`
 		} `json:"related_skills"`
 	}
 	if err := json.Unmarshal(recorder.Body.Bytes(), &payload); err != nil {
@@ -157,8 +166,20 @@ func TestHandleAPIPublicSkillDetailIncludesRelatedSkills(t *testing.T) {
 	if len(payload.RelatedSkills) < 2 {
 		t.Fatalf("expected at least two related skills, got=%d", len(payload.RelatedSkills))
 	}
+	if payload.Skill.CategoryGroup == "" || payload.Skill.SubcategoryGroup == "" {
+		t.Fatalf("expected grouped fields in detail skill payload: %+v", payload.Skill)
+	}
+	if payload.Skill.CategoryGroupLabel == "" || payload.Skill.SubcategoryGroupLabel == "" {
+		t.Fatalf("expected grouped labels in detail skill payload: %+v", payload.Skill)
+	}
 	if payload.RelatedSkills[0].ID != relatedPrimary.ID {
 		t.Fatalf("expected most related skill first: got=%d want=%d", payload.RelatedSkills[0].ID, relatedPrimary.ID)
+	}
+	if payload.RelatedSkills[0].CategoryGroup == "" || payload.RelatedSkills[0].SubcategoryGroup == "" {
+		t.Fatalf("expected grouped fields in related skill payload: %+v", payload.RelatedSkills[0])
+	}
+	if payload.RelatedSkills[0].CategoryGroupLabel == "" {
+		t.Fatalf("expected grouped labels in related skill payload: %+v", payload.RelatedSkills[0])
 	}
 	for _, item := range payload.RelatedSkills {
 		if item.ID == skill.ID {

@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -175,12 +176,33 @@ func TestHandleAPIPublicSkillCompareReturnsRequestedSkills(t *testing.T) {
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
 	}
-	body := recorder.Body.String()
-	if !strings.Contains(body, `"left_skill"`) || !strings.Contains(body, `"right_skill"`) {
-		t.Fatalf("missing compare response keys: %s", body)
+	var payload struct {
+		LeftSkill struct {
+			Name                  string `json:"name"`
+			CategoryGroup         string `json:"category_group"`
+			CategoryGroupLabel    string `json:"category_group_label"`
+			SubcategoryGroup      string `json:"subcategory_group"`
+			SubcategoryGroupLabel string `json:"subcategory_group_label"`
+		} `json:"left_skill"`
+		RightSkill struct {
+			Name                  string `json:"name"`
+			CategoryGroup         string `json:"category_group"`
+			CategoryGroupLabel    string `json:"category_group_label"`
+			SubcategoryGroup      string `json:"subcategory_group"`
+			SubcategoryGroupLabel string `json:"subcategory_group_label"`
+		} `json:"right_skill"`
 	}
-	if !strings.Contains(body, `"Repository Sync Guard"`) || !strings.Contains(body, `"Quality Signal Lens"`) {
-		t.Fatalf("missing requested compare skills: %s", body)
+	if err := json.Unmarshal(recorder.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("failed to decode compare payload: %v", err)
+	}
+	if payload.LeftSkill.Name != "Repository Sync Guard" || payload.RightSkill.Name != "Quality Signal Lens" {
+		t.Fatalf("missing requested compare skills: %+v", payload)
+	}
+	if payload.LeftSkill.CategoryGroup == "" || payload.LeftSkill.SubcategoryGroup == "" {
+		t.Fatalf("expected grouped fields on left compare skill: %+v", payload.LeftSkill)
+	}
+	if payload.RightSkill.CategoryGroupLabel == "" || payload.RightSkill.SubcategoryGroupLabel == "" {
+		t.Fatalf("expected grouped labels on right compare skill: %+v", payload.RightSkill)
 	}
 }
 
