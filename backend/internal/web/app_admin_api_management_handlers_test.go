@@ -30,9 +30,17 @@ func setupAPIManagementTestApp(t *testing.T) *App {
 	}
 
 	storageDir := t.TempDir()
+	registry := services.NewAPISpecRegistryService(db, storageDir)
+	runtimeService := services.NewAPIContractRuntimeService(db)
+	policyService := services.NewAPIPolicyService(db)
+	policyService.SetRuntimeReloader(runtimeService)
+	publishService := services.NewAPIPublishService(db)
+	publishService.SetRuntimeReloader(runtimeService)
 	return &App{
-		apiSpecRegistrySvc: services.NewAPISpecRegistryService(db, storageDir),
-		apiPublishSvc:      services.NewAPIPublishService(db),
+		apiSpecRegistrySvc:    registry,
+		apiPublishSvc:         publishService,
+		apiPolicySvc:          policyService,
+		apiContractRuntimeSvc: runtimeService,
 	}
 }
 
@@ -135,5 +143,101 @@ func TestHandleAPIAdminPublishFlow(t *testing.T) {
 	app.handleAPIAdminPublishSpec(publishRecorder, publishReq)
 	if publishRecorder.Code != http.StatusOK {
 		t.Fatalf("unexpected publish status: got=%d want=%d", publishRecorder.Code, http.StatusOK)
+	}
+}
+
+func TestHandleAPIAdminCurrentOperationsListsPublishedOperations(t *testing.T) {
+	app := setupAPIManagementTestApp(t)
+	seedPublishedSpec(t, app, "skillsindex-api")
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/api-management/operations", nil)
+	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleSuperAdmin})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminCurrentOperations(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
+	}
+	if !bytes.Contains(recorder.Body.Bytes(), []byte(`"operation_id":"getCurrentPublishedSpec"`)) {
+		t.Fatalf("expected current published spec operation in payload")
+	}
+	if !bytes.Contains(recorder.Body.Bytes(), []byte(`"operation_id":"upsertCurrentAPIOperationPolicy"`)) {
+		t.Fatalf("expected policy upsert operation in payload")
+	}
+}
+
+func TestHandleAPIAdminCurrentOperationPolicyUpsertAndGet(t *testing.T) {
+	app := setupAPIManagementTestApp(t)
+	seedPublishedSpec(t, app, "skillsindex-api")
+
+	updateBody, err := json.Marshal(map[string]any{
+		"auth_mode":       "session",
+		"required_roles":  []string{"super_admin"},
+		"required_scopes": []string{},
+		"enabled":         false,
+		"mock_enabled":    true,
+		"export_enabled":  true,
+	})
+	if err != nil {
+		t.Fatalf("failed to marshal policy body: %v", err)
+	}
+
+	updateReq := httptest.NewRequest(http.MethodPost, "/api/v1/admin/api-management/operations/getCurrentPublishedSpec/policy", bytes.NewReader(updateBody))
+	updateReq.Header.Set("Content-Type", "application/json")
+	updateReq = withCurrentUser(updateReq, &models.User{ID: 1, Role: models.RoleSuperAdmin})
+	updateReq = withURLParam(updateReq, "operationID", "getCurrentPublishedSpec")
+	updateRecorder := httptest.NewRecorder()
+	app.handleAPIAdminCurrentOperationPolicyUpsert(updateRecorder, updateReq)
+
+	if updateRecorder.Code != http.StatusOK {
+		t.Fatalf("unexpected policy update status: got=%d want=%d", updateRecorder.Code, http.StatusOK)
+	}
+	if !bytes.Contains(updateRecorder.Body.Bytes(), []byte(`"enabled":false`)) {
+		t.Fatalf("expected disabled policy in update payload")
+	}
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/admin/api-management/operations/getCurrentPublishedSpec/policy", nil)
+	getReq = withCurrentUser(getReq, &models.User{ID: 1, Role: models.RoleSuperAdmin})
+	getReq = withURLParam(getReq, "operationID", "getCurrentPublishedSpec")
+	getRecorder := httptest.NewRecorder()
+	app.handleAPIAdminCurrentOperationPolicy(getRecorder, getReq)
+
+	if getRecorder.Code != http.StatusOK {
+		t.Fatalf("unexpected policy get status: got=%d want=%d", getRecorder.Code, http.StatusOK)
+	}
+	if !bytes.Contains(getRecorder.Body.Bytes(), []byte(`"required_roles":["super_admin"]`)) {
+		t.Fatalf("expected required roles in get payload")
+	}
+}
+
+func TestHandleAPIAdminCurrentSpecHonorsRuntimeOperationPolicy(t *testing.T) {
+	app := setupAPIManagementTestApp(t)
+	seedPublishedSpec(t, app, "skillsindex-api")
+
+	_, err := app.apiPolicySvc.UpsertCurrentOperationPolicy(context.Background(), services.UpsertCurrentAPIOperationPolicyInput{
+		OperationID:    "getCurrentPublishedSpec",
+		AuthMode:       "session",
+		RequiredRoles:  []string{"super_admin"},
+		Enabled:        false,
+		MockEnabled:    false,
+		ExportEnabled:  true,
+		ActorUserID:    1,
+	})
+	if err != nil {
+		t.Fatalf("failed to seed current operation policy: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/api-management/specs/current", nil)
+	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleSuperAdmin})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminCurrentSpec(recorder, req)
+
+	if recorder.Code != http.StatusForbidden {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusForbidden)
+	}
+	if !bytes.Contains(recorder.Body.Bytes(), []byte(`"error":"api_operation_disabled"`)) {
+		t.Fatalf("expected disabled operation error payload")
 	}
 }

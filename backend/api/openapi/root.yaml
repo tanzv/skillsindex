@@ -5,6 +5,20 @@ info:
 paths:
   /api/v1/admin/api-management/specs/current:
     $ref: ./paths/admin/api_management.yaml#/paths/~1api~1v1~1admin~1api-management~1specs~1current
+  /api/v1/admin/api-management/specs/import:
+    $ref: ./paths/admin/api_management.yaml#/paths/~1api~1v1~1admin~1api-management~1specs~1import
+  /api/v1/admin/api-management/specs/{specID}/validate:
+    $ref: ./paths/admin/api_management.yaml#/paths/~1api~1v1~1admin~1api-management~1specs~1{specID}~1validate
+  /api/v1/admin/api-management/specs/{specID}/publish:
+    $ref: ./paths/admin/api_management.yaml#/paths/~1api~1v1~1admin~1api-management~1specs~1{specID}~1publish
+  /api/v1/admin/api-management/specs/current/export.json:
+    $ref: ./paths/admin/api_management.yaml#/paths/~1api~1v1~1admin~1api-management~1specs~1current~1export.json
+  /api/v1/admin/api-management/specs/current/export.yaml:
+    $ref: ./paths/admin/api_management.yaml#/paths/~1api~1v1~1admin~1api-management~1specs~1current~1export.yaml
+  /api/v1/admin/api-management/operations:
+    $ref: ./paths/admin/api_management.yaml#/paths/~1api~1v1~1admin~1api-management~1operations
+  /api/v1/admin/api-management/operations/{operationID}/policy:
+    $ref: ./paths/admin/api_management.yaml#/paths/~1api~1v1~1admin~1api-management~1operations~1{operationID}~1policy
 components:
   schemas:
     HealthEnvelope:

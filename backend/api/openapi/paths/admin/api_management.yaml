@@ -2,6 +2,104 @@ paths:
   /api/v1/admin/api-management/specs/current:
     get:
       operationId: getCurrentPublishedSpec
+      summary: Get current published OpenAPI spec metadata
+      tags:
+        - admin-api-management
       responses:
         '200':
           description: Current published spec metadata
+  /api/v1/admin/api-management/specs/import:
+    post:
+      operationId: importAPISpecDraft
+      summary: Import an OpenAPI draft from the repository source tree
+      tags:
+        - admin-api-management
+      responses:
+        '201':
+          description: Imported draft metadata
+  /api/v1/admin/api-management/specs/{specID}/validate:
+    post:
+      operationId: validateAPISpecDraft
+      summary: Validate one imported OpenAPI draft
+      tags:
+        - admin-api-management
+      parameters:
+        - in: path
+          name: specID
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Validated draft metadata
+  /api/v1/admin/api-management/specs/{specID}/publish:
+    post:
+      operationId: publishAPISpec
+      summary: Publish one validated OpenAPI spec version
+      tags:
+        - admin-api-management
+      parameters:
+        - in: path
+          name: specID
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Published spec metadata
+  /api/v1/admin/api-management/specs/current/export.json:
+    get:
+      operationId: exportCurrentPublishedSpecJSON
+      summary: Export the current published OpenAPI document as JSON
+      tags:
+        - admin-api-management
+      responses:
+        '200':
+          description: Current published spec as JSON
+  /api/v1/admin/api-management/specs/current/export.yaml:
+    get:
+      operationId: exportCurrentPublishedSpecYAML
+      summary: Export the current published OpenAPI document as YAML
+      tags:
+        - admin-api-management
+      responses:
+        '200':
+          description: Current published spec as YAML
+  /api/v1/admin/api-management/operations:
+    get:
+      operationId: listCurrentAPIOperations
+      summary: List operations extracted from the current published OpenAPI spec
+      tags:
+        - admin-api-management
+      responses:
+        '200':
+          description: Current published API operations
+  /api/v1/admin/api-management/operations/{operationID}/policy:
+    get:
+      operationId: getCurrentAPIOperationPolicy
+      summary: Get the runtime policy for one published API operation
+      tags:
+        - admin-api-management
+      parameters:
+        - in: path
+          name: operationID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current runtime policy for the requested operation
+    post:
+      operationId: upsertCurrentAPIOperationPolicy
+      summary: Upsert the runtime policy for one published API operation
+      tags:
+        - admin-api-management
+      parameters:
+        - in: path
+          name: operationID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated runtime policy for the requested operation

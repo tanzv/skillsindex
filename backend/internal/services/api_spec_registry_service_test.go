@@ -50,6 +50,34 @@ func TestAPISpecRegistryServiceImportDraftCreatesSpecAndBundle(t *testing.T) {
 	if strings.TrimSpace(result.BundlePath) == "" {
 		t.Fatalf("expected bundle path")
 	}
+
+	var operations []models.APIOperation
+	if err := db.Where("spec_id = ?", result.Spec.ID).Order("operation_id ASC").Find(&operations).Error; err != nil {
+		t.Fatalf("failed to query extracted operations: %v", err)
+	}
+	if len(operations) < 8 {
+		t.Fatalf("expected extracted operations, got=%d", len(operations))
+	}
+	if operations[0].SpecID != result.Spec.ID {
+		t.Fatalf("expected extracted operation spec id to match imported spec")
+	}
+
+	operationIDs := make(map[string]struct{}, len(operations))
+	for _, operation := range operations {
+		operationIDs[operation.OperationID] = struct{}{}
+	}
+	for _, expected := range []string{
+		"getCurrentPublishedSpec",
+		"importAPISpecDraft",
+		"validateAPISpecDraft",
+		"publishAPISpec",
+		"listCurrentAPIOperations",
+		"upsertCurrentAPIOperationPolicy",
+	} {
+		if _, ok := operationIDs[expected]; !ok {
+			t.Fatalf("expected extracted operation id %s", expected)
+		}
+	}
 }
 
 func TestMigrateIncludesAPISpecModels(t *testing.T) {
@@ -59,7 +87,7 @@ func TestMigrateIncludesAPISpecModels(t *testing.T) {
 		t.Fatalf("expected migrate to succeed: %v", err)
 	}
 
-	for _, table := range []string{"api_specs", "api_publish_events"} {
+	for _, table := range []string{"api_specs", "api_operations", "api_operation_policies", "api_publish_events"} {
 		if !db.Migrator().HasTable(table) {
 			t.Fatalf("expected table %s to exist", table)
 		}
