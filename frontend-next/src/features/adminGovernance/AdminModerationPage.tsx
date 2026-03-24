@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import { AdminModerationContent } from "./AdminModerationContent";
@@ -83,7 +84,7 @@ export function AdminModerationPage() {
       setRawPayload(nextPayload);
       setSelectedCaseId((current) => current || normalized.items[0]?.id || 0);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : moderationMessages.loadError);
+      setError(resolveRequestErrorDisplayMessage(loadError, moderationMessages.loadError));
       setRawPayload(null);
       setSelectedCaseId(0);
     } finally {
@@ -135,7 +136,7 @@ export function AdminModerationPage() {
       setMessage(moderationMessages.createSuccess);
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : moderationMessages.createError);
+      setError(resolveRequestErrorDisplayMessage(actionError, moderationMessages.createError));
     } finally {
       setBusyAction("");
     }
@@ -161,7 +162,7 @@ export function AdminModerationPage() {
       setResolveDraft((current) => ({ ...current, resolutionNote: "" }));
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : moderationMessages.resolveError);
+      setError(resolveRequestErrorDisplayMessage(actionError, moderationMessages.resolveError));
     } finally {
       setBusyAction("");
     }
@@ -186,7 +187,7 @@ export function AdminModerationPage() {
       setResolveDraft((current) => ({ ...current, rejectionNote: "" }));
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : moderationMessages.rejectError);
+      setError(resolveRequestErrorDisplayMessage(actionError, moderationMessages.rejectError));
     } finally {
       setBusyAction("");
     }
@@ -217,18 +218,16 @@ export function AdminModerationPage() {
       query={query}
       createDraft={createDraft}
       resolveDraft={resolveDraft}
-      createDrawerOpen={overlay?.entity === "moderationCreate"}
-      detailDrawerOpen={overlay?.entity === "moderationDetail"}
+      activePane={overlay?.entity === "moderationCreate" ? "create" : overlay?.entity === "moderationDetail" ? "detail" : "idle"}
       onRefresh={() => void loadData()}
       onResetFilters={() => setQuery({ status: "", target_type: "", reason_code: "" })}
       onQueryChange={(patch) => setQuery((current) => ({ ...current, ...patch }))}
-      onOpenCreateDrawer={() => openOverlay({ kind: "create", entity: "moderationCreate" })}
-      onCloseCreateDrawer={closeOverlay}
+      onOpenCreatePane={() => openOverlay({ kind: "create", entity: "moderationCreate" })}
       onOpenCaseDetail={(caseId) => {
         setSelectedCaseId(caseId);
         openOverlay({ kind: "detail", entity: "moderationDetail", entityId: caseId });
       }}
-      onCloseCaseDetail={closeOverlay}
+      onClosePane={closeOverlay}
       onCreateDraftChange={(patch) => setCreateDraft((current) => ({ ...current, ...patch }))}
       onResolveDraftChange={(patch) => setResolveDraft((current) => ({ ...current, ...patch }))}
       onCreateCase={() => void createCase()}

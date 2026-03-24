@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { AdminCatalogContent } from "@/src/features/adminCatalog/AdminCatalogContent";
+import { CatalogDetailPane } from "@/src/features/adminCatalog/AdminCatalogShared";
 import { ProtectedI18nProvider } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import type { AdminCatalogRoute, AdminCatalogViewModel } from "@/src/features/adminCatalog/model";
 import { createProtectedPageTestMessages } from "./protected-page-test-messages";
@@ -229,7 +230,7 @@ describe("admin catalog content", () => {
     expectMarkupToExcludeAll(markup, ['role="dialog"']);
   });
 
-  it("renders the jobs route with queue actions while keeping the detail drawer closed by default", () => {
+  it("renders the jobs route with queue actions while keeping the detail pane closed by default", () => {
     const markup = renderCatalogRoute("/admin/jobs");
 
     expectMarkupToContainAll(markup, [
@@ -253,6 +254,44 @@ describe("admin catalog content", () => {
       'data-testid="admin-catalog-row-41"',
       "Selected",
       "Open Details"
+    ]);
+    expectMarkupToExcludeAll(markup, ['role="dialog"']);
+  });
+
+  it("renders the shared catalog detail surface inline when opened", () => {
+    const markup = renderToStaticMarkup(
+      createElement(
+        ProtectedI18nProvider,
+        {
+          locale: "en",
+          messages: createProtectedPageTestMessages({
+            adminCatalog: {
+              closePanelAction: "Close Panel"
+            }
+          })
+        },
+        createElement(CatalogDetailPane, {
+          open: true,
+          row: {
+            id: 81,
+            name: "import_archive #81",
+            summary: "Skill 101 · owner 7 · actor 7",
+            meta: ["Attempt 1/3", "Mar 10, 08:10 AM"],
+            status: "failed",
+            detail: "archive parse failed"
+          },
+          description: "Inspect the currently selected queue item before applying retry or cancel decisions.",
+          closeLabel: "Close Panel",
+          onClose: () => undefined
+        })
+      )
+    );
+
+    expectMarkupToContainAll(markup, [
+      'data-testid="admin-catalog-detail-pane"',
+      "import_archive #81",
+      "archive parse failed",
+      "Close Panel"
     ]);
     expectMarkupToExcludeAll(markup, ['role="dialog"']);
   });

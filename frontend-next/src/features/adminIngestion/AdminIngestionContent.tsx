@@ -1,7 +1,7 @@
 "use client";
 
-import { AdminDetailDrawer } from "@/src/components/admin/AdminOverlaySurface";
 import { AdminPageScaffold } from "@/src/components/admin/AdminPrimitives";
+import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import type { AdminIngestionRoute } from "@/src/lib/routing/adminRouteRegistry";
@@ -67,7 +67,7 @@ export function AdminIngestionContent({
   const commonMessages = messages.adminCommon;
   const ingestionMessages = messages.adminIngestion;
 
-  function renderOverlay() {
+  function renderWorkPane() {
     if (!overlay) {
       return null;
     }
@@ -75,67 +75,63 @@ export function AdminIngestionContent({
     switch (overlay.entity) {
       case "manualForm":
         return (
-          <AdminDetailDrawer
-            open
-            size="wide"
+          <InlineWorkPaneSurface
             title={ingestionMessages.manualAuthoringTitle}
             description={ingestionMessages.manualAuthoringDescription}
             closeLabel={ingestionMessages.closePanelAction}
             onClose={onCloseOverlay}
+            dataTestId="admin-ingestion-manual-pane"
           >
             <ManualAuthoringCard {...manualView} />
-          </AdminDetailDrawer>
+          </InlineWorkPaneSurface>
         );
       case "repositoryForm":
         return (
-          <AdminDetailDrawer
-            open
-            size="wide"
+          <InlineWorkPaneSurface
             title={ingestionMessages.repositoryIntakeTitle}
             description={ingestionMessages.repositoryIntakeDescription}
             closeLabel={ingestionMessages.closePanelAction}
             onClose={onCloseOverlay}
+            dataTestId="admin-ingestion-repository-pane"
           >
             <RepositoryIntakeCard {...repositoryView} />
-          </AdminDetailDrawer>
+          </InlineWorkPaneSurface>
         );
       case "repositoryPolicy":
         return (
-          <AdminDetailDrawer
-            open
+          <InlineWorkPaneSurface
             title={ingestionMessages.schedulerPolicyTitle}
             description={ingestionMessages.schedulerPolicyDescription}
             closeLabel={ingestionMessages.closePanelAction}
             onClose={onCloseOverlay}
+            dataTestId="admin-ingestion-policy-pane"
           >
             <SchedulerPolicyCard {...repositoryView} />
-          </AdminDetailDrawer>
+          </InlineWorkPaneSurface>
         );
       case "archiveForm":
         return (
-          <AdminDetailDrawer
-            open
-            size="wide"
+          <InlineWorkPaneSurface
             title={ingestionMessages.archiveImportTitle}
             description={ingestionMessages.archiveImportDescription}
             closeLabel={ingestionMessages.closePanelAction}
             onClose={onCloseOverlay}
+            dataTestId="admin-ingestion-archive-pane"
           >
             <ArchiveImportCard {...importsView} />
-          </AdminDetailDrawer>
+          </InlineWorkPaneSurface>
         );
       case "skillmpForm":
         return (
-          <AdminDetailDrawer
-            open
-            size="wide"
+          <InlineWorkPaneSurface
             title={ingestionMessages.skillmpImportTitle}
             description={ingestionMessages.skillmpImportDescription}
             closeLabel={ingestionMessages.closePanelAction}
             onClose={onCloseOverlay}
+            dataTestId="admin-ingestion-skillmp-pane"
           >
             <SkillMPImportCard {...importsView} />
-          </AdminDetailDrawer>
+          </InlineWorkPaneSurface>
         );
       case "skillDetail": {
         const selectedSkill = manualView.selectedSkill || repositoryView.selectedSkill || importsView.selectedSkill;
@@ -143,66 +139,65 @@ export function AdminIngestionContent({
           return null;
         }
         return (
-          <AdminDetailDrawer
-            open
+          <InlineWorkPaneSurface
             title={selectedSkill.name || ingestionMessages.valueUnnamedSkill}
             description={selectedSkill.description || ingestionMessages.valueNoDescription}
             closeLabel={ingestionMessages.closePanelAction}
             onClose={onCloseOverlay}
+            dataTestId="admin-ingestion-skill-pane"
           >
             <IngestionSkillDetail item={selectedSkill} />
-          </AdminDetailDrawer>
+          </InlineWorkPaneSurface>
         );
       }
       case "syncRunDetail":
         return repositoryView.selectedSyncRun ? (
-          <AdminDetailDrawer
-            open
+          <InlineWorkPaneSurface
             title={ingestionMessages.recentSyncRunsTitle}
             description={ingestionMessages.recentSyncRunsDescription}
             closeLabel={ingestionMessages.closePanelAction}
             onClose={onCloseOverlay}
+            dataTestId="admin-ingestion-sync-run-pane"
           >
             <IngestionSyncRunDetail run={repositoryView.selectedSyncRun} />
-          </AdminDetailDrawer>
+          </InlineWorkPaneSurface>
         ) : null;
       case "importJobDetail":
         return importsView.selectedJob ? (
-          <AdminDetailDrawer
-            open
+          <InlineWorkPaneSurface
             title={ingestionMessages.importJobsTitle}
             description={ingestionMessages.importJobsDescription}
             closeLabel={ingestionMessages.closePanelAction}
             onClose={onCloseOverlay}
+            dataTestId="admin-ingestion-job-pane"
           >
             <IngestionImportJobDetail
               job={importsView.selectedJob}
               busyAction={importsView.busyAction}
               onRunJobAction={importsView.onRunJobAction}
             />
-          </AdminDetailDrawer>
+          </InlineWorkPaneSurface>
         ) : null;
       default:
         return null;
     }
   }
 
+  const workPane = renderWorkPane();
+
   return (
-    <>
-      <AdminPageScaffold
-        eyebrow={commonMessages.adminEyebrow}
-        title={title}
-        description={description}
-        actions={<Button onClick={onRefresh}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>}
-        error={error}
-      >
-        <IngestionMessage message={message} />
-        <IngestionMetricGrid metrics={metrics} />
-        {route === "/admin/ingestion/manual" ? <ManualIngestionView {...manualView} /> : null}
-        {route === "/admin/ingestion/repository" ? <RepositoryIngestionView {...repositoryView} /> : null}
-        {route === "/admin/records/imports" ? <ImportsIngestionView {...importsView} /> : null}
-      </AdminPageScaffold>
-      {renderOverlay()}
-    </>
+    <AdminPageScaffold
+      eyebrow={commonMessages.adminEyebrow}
+      title={title}
+      description={description}
+      actions={<Button onClick={onRefresh}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>}
+      error={error}
+    >
+      <IngestionMessage message={message} />
+      <IngestionMetricGrid metrics={metrics} />
+      {route === "/admin/ingestion/manual" ? <ManualIngestionView {...manualView} workPane={workPane} /> : null}
+      {route === "/admin/ingestion/repository" ? <RepositoryIngestionView {...repositoryView} workPane={workPane} /> : null}
+      {route === "/admin/records/imports" ? <ImportsIngestionView {...importsView} workPane={workPane} /> : null}
+    </AdminPageScaffold>
   );
 }

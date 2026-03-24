@@ -4,7 +4,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { workspaceQueueRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 
 import { WorkspaceSectionCard } from "./WorkspaceRouteShared";
-import { WorkspaceEntryDetailDrawer, useWorkspaceEntryDetailState } from "./WorkspaceRouteDetailSurface";
+import { WorkspaceEntryDetailPane, useWorkspaceEntryDetailState } from "./WorkspaceRouteDetailSurface";
 import { QueueListButton, SectionPanel } from "./WorkspaceRouteViewPrimitives";
 import { formatWorkspaceMessage } from "./messages";
 import styles from "./WorkspaceRouteSurface.module.scss";
@@ -50,20 +50,19 @@ export function ActivityFeedView({ model }: { model: WorkspacePageModel }) {
       </div>
 
       <div className="space-y-6">
+        <WorkspaceEntryDetailPane
+          open={detailOpen}
+          entry={selectedEntry}
+          locale={model.locale}
+          messages={workspaceMessages}
+          actions={[{ label: workspaceMessages.actionOpenQueue, href: workspaceQueueRoute, variant: "default" }]}
+          onClose={() => setDetailOpen(false)}
+        />
         {ownerCoverageSection ? <WorkspaceSectionCard section={ownerCoverageSection} /> : null}
         {model.railSections.map((section) => (
           <WorkspaceSectionCard key={section.id} section={section} />
         ))}
       </div>
-
-      <WorkspaceEntryDetailDrawer
-        open={detailOpen}
-        entry={selectedEntry}
-        locale={model.locale}
-        messages={workspaceMessages}
-        actions={[{ label: workspaceMessages.actionOpenQueue, href: workspaceQueueRoute, variant: "default" }]}
-        onClose={() => setDetailOpen(false)}
-      />
     </div>
   );
 }
@@ -120,21 +119,20 @@ export function QueueExecutionView({ model }: { model: WorkspacePageModel }) {
       </div>
 
       <div className="space-y-6">
+        <WorkspaceEntryDetailPane
+          open={detailOpen}
+          entry={selectedEntry}
+          locale={model.locale}
+          messages={workspaceMessages}
+          actions={supplementalActions}
+          description={detailSection?.description || workspaceMessages.queueDetailDescription}
+          onClose={() => setDetailOpen(false)}
+        />
         {insightsSection ? <WorkspaceSectionCard section={insightsSection} /> : null}
         {model.railSections.map((section) => (
           <WorkspaceSectionCard key={section.id} section={section} />
         ))}
       </div>
-
-      <WorkspaceEntryDetailDrawer
-        open={detailOpen}
-        entry={selectedEntry}
-        locale={model.locale}
-        messages={workspaceMessages}
-        actions={supplementalActions}
-        description={detailSection?.description || workspaceMessages.queueDetailDescription}
-        onClose={() => setDetailOpen(false)}
-      />
     </div>
   );
 }

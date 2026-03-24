@@ -175,7 +175,7 @@ function renderModerationContent(options: {
         onRefresh: () => undefined,
         onResetFilters: () => undefined,
         onQueryChange: () => undefined,
-        onOpenCreateDrawer: () => undefined,
+        onOpenCreatePane: () => undefined,
         onOpenCaseDetail: () => undefined,
         onClosePane: () => undefined,
         onCreateDraftChange: () => undefined,

@@ -3,7 +3,7 @@
 import { type ReactNode, useMemo, useState } from "react";
 
 import { AdminEmptyBlock, AdminMetaChipList, AdminSelectableRecordCard } from "@/src/components/admin/AdminPrimitives";
-import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
+import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -143,52 +143,52 @@ export function RowSelectionButton({ row, selected, buttonLabel, onSelect, child
   );
 }
 
-interface CatalogDetailDrawerProps {
+interface CatalogDetailPaneProps {
   open: boolean;
   row: AdminCatalogRow | null;
   description: string;
   closeLabel: string;
   onClose: () => void;
   actions?: ReactNode;
+  dataTestId?: string;
 }
 
-export function CatalogDetailDrawer({
+export function CatalogDetailPane({
   open,
   row,
   description,
   closeLabel,
   onClose,
-  actions
-}: CatalogDetailDrawerProps) {
+  actions,
+  dataTestId = "admin-catalog-detail-pane"
+}: CatalogDetailPaneProps) {
+  if (!open || !row) {
+    return null;
+  }
+
   const statusLabel = row?.statusLabel || row?.status || "";
 
   return (
-    <DetailFormSurface
-      open={open && Boolean(row)}
-      variant="drawer"
-      size="default"
-      title={row?.name || ""}
+    <InlineWorkPaneSurface
+      title={row.name}
       description={description}
       closeLabel={closeLabel}
       onClose={onClose}
+      dataTestId={dataTestId}
+      footer={actions ? <div className={styles.detailActions}>{actions}</div> : undefined}
     >
-      {row ? (
-        <div className={styles.detailContent}>
-          <div className={styles.detailSurface}>
-            <div className={styles.detailHeader}>
-              <span className={styles.detailTitle}>{row.name}</span>
-              <Badge variant={statusTone(row.status)}>{statusLabel}</Badge>
-            </div>
-            <p className={styles.detailSummary}>{row.summary}</p>
-            <AdminMetaChipList items={row.meta} tone="control" />
-            {row.detail ? <div className={styles.rowDetail}>{row.detail}</div> : null}
+      <div className={styles.detailContent}>
+        <div className={styles.detailSurface}>
+          <div className={styles.detailHeader}>
+            <span className={styles.detailTitle}>{row.name}</span>
+            <Badge variant={statusTone(row.status)}>{statusLabel}</Badge>
           </div>
-          {actions ? <div className={styles.detailActions}>{actions}</div> : null}
+          <p className={styles.detailSummary}>{row.summary}</p>
+          <AdminMetaChipList items={row.meta} tone="control" />
+          {row.detail ? <div className={styles.rowDetail}>{row.detail}</div> : null}
         </div>
-      ) : (
-        <AdminEmptyBlock>{description}</AdminEmptyBlock>
-      )}
-    </DetailFormSurface>
+      </div>
+    </InlineWorkPaneSurface>
   );
 }
 

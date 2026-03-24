@@ -99,7 +99,7 @@ test("opens admin job and sync run details in inline work panes", async ({ page 
   await expect(syncRunPane.getByRole("link", { name: "Open Sync Policy" })).toBeVisible();
 });
 
-test("persists marketplace ranking settings from the admin access policy drawer", async ({ page }) => {
+test("persists marketplace ranking settings from the admin access policy pane", async ({ page }) => {
   await loginAsAdmin(page, "/admin/access");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 

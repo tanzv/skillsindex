@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminPageScaffold } from "@/src/components/admin/AdminPrimitives";
-import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
+import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 
@@ -29,15 +29,13 @@ interface AdminModerationContentProps {
   query: ModerationQueryState;
   createDraft: CreateModerationDraft;
   resolveDraft: ResolveModerationDraft;
-  createDrawerOpen: boolean;
-  detailDrawerOpen: boolean;
+  activePane: "idle" | "create" | "detail";
   onRefresh: () => void;
   onResetFilters: () => void;
   onQueryChange: (patch: Partial<ModerationQueryState>) => void;
-  onOpenCreateDrawer: () => void;
-  onCloseCreateDrawer: () => void;
+  onOpenCreatePane: () => void;
   onOpenCaseDetail: (caseId: number) => void;
-  onCloseCaseDetail: () => void;
+  onClosePane: () => void;
   onCreateDraftChange: (patch: Partial<CreateModerationDraft>) => void;
   onResolveDraftChange: (patch: Partial<ResolveModerationDraft>) => void;
   onCreateCase: () => void;
@@ -57,15 +55,13 @@ export function AdminModerationContent({
   query,
   createDraft,
   resolveDraft,
-  createDrawerOpen,
-  detailDrawerOpen,
+  activePane,
   onRefresh,
   onResetFilters,
   onQueryChange,
-  onOpenCreateDrawer,
-  onCloseCreateDrawer,
+  onOpenCreatePane,
   onOpenCaseDetail,
-  onCloseCaseDetail,
+  onClosePane,
   onCreateDraftChange,
   onResolveDraftChange,
   onCreateCase,
@@ -75,6 +71,9 @@ export function AdminModerationContent({
   const { messages } = useProtectedI18n();
   const commonMessages = messages.adminCommon;
   const moderationMessages = messages.adminModeration;
+  const detailTitle = selectedCase
+    ? moderationMessages.queueCasePrefix.replace("{caseId}", String(selectedCase.id))
+    : moderationMessages.selectedCaseTitle;
 
   return (
     <AdminPageScaffold
@@ -107,7 +106,46 @@ export function AdminModerationContent({
         </div>
 
         <div className="space-y-6">
-          <CreateModerationTriggerCard busyAction={busyAction} loading={loading} onOpen={onOpenCreateDrawer} />
+          {activePane === "idle" ? (
+            <CreateModerationTriggerCard busyAction={busyAction} loading={loading} onOpen={onOpenCreatePane} />
+          ) : null}
+          {activePane === "create" ? (
+            <InlineWorkPaneSurface
+              title={moderationMessages.createTitle}
+              description={moderationMessages.createDescription}
+              closeLabel={moderationMessages.closePanelAction}
+              onClose={onClosePane}
+              dataTestId="admin-moderation-create-pane"
+            >
+              <CreateModerationCaseForm
+                createDraft={createDraft}
+                busyAction={busyAction}
+                onCreateDraftChange={onCreateDraftChange}
+                onCreateCase={onCreateCase}
+              />
+            </InlineWorkPaneSurface>
+          ) : null}
+          {activePane === "detail" && selectedCase ? (
+            <InlineWorkPaneSurface
+              title={detailTitle}
+              description={moderationMessages.selectedCaseDescription}
+              closeLabel={moderationMessages.closePanelAction}
+              onClose={onClosePane}
+              dataTestId="admin-moderation-detail-pane"
+            >
+              <div className="space-y-6">
+                <SelectedModerationCaseSummary selectedCase={selectedCase} reasonSummary={reasonSummary} />
+                <ModerationDispositionForm
+                  resolveDraft={resolveDraft}
+                  busyAction={busyAction}
+                  selectedCase={selectedCase}
+                  onResolveDraftChange={onResolveDraftChange}
+                  onResolveCase={onResolveCase}
+                  onRejectCase={onRejectCase}
+                />
+              </div>
+            </InlineWorkPaneSurface>
+          ) : null}
           <SelectedModerationCaseCard
             selectedCase={selectedCase}
             reasonSummary={reasonSummary}
@@ -115,51 +153,6 @@ export function AdminModerationContent({
           />
         </div>
       </div>
-
-      <DetailFormSurface
-        open={createDrawerOpen}
-        variant="drawer"
-        size="default"
-        title={moderationMessages.createTitle}
-        description={moderationMessages.createDescription}
-        closeLabel={moderationMessages.closePanelAction}
-        onClose={onCloseCreateDrawer}
-      >
-        <CreateModerationCaseForm
-          createDraft={createDraft}
-          busyAction={busyAction}
-          onCreateDraftChange={onCreateDraftChange}
-          onCreateCase={onCreateCase}
-        />
-      </DetailFormSurface>
-
-      <DetailFormSurface
-        open={detailDrawerOpen && Boolean(selectedCase)}
-        variant="drawer"
-        size="default"
-        title={
-          selectedCase
-            ? moderationMessages.queueCasePrefix.replace("{caseId}", String(selectedCase.id))
-            : moderationMessages.selectedCaseTitle
-        }
-        description={moderationMessages.selectedCaseDescription}
-        closeLabel={moderationMessages.closePanelAction}
-        onClose={onCloseCaseDetail}
-      >
-        {selectedCase ? (
-          <div className="space-y-6">
-            <SelectedModerationCaseSummary selectedCase={selectedCase} reasonSummary={reasonSummary} />
-            <ModerationDispositionForm
-              resolveDraft={resolveDraft}
-              busyAction={busyAction}
-              selectedCase={selectedCase}
-              onResolveDraftChange={onResolveDraftChange}
-              onResolveCase={onResolveCase}
-              onRejectCase={onRejectCase}
-            />
-          </div>
-        ) : null}
-      </DetailFormSurface>
     </AdminPageScaffold>
   );
 }

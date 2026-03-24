@@ -51,6 +51,7 @@ test("renders the remaining admin catalog and ingestion routes", async ({ page }
 
 test("executes admin catalog job and sync policy actions", async ({ page }) => {
   await loginAsAdmin(page, "/admin/jobs");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 
   const failedJob = page.getByTestId("admin-catalog-row-81");
   const runningJob = page.getByTestId("admin-catalog-row-82");
@@ -66,11 +67,12 @@ test("executes admin catalog job and sync policy actions", async ({ page }) => {
   await expect(failedJob).toBeVisible();
 
   await failedJob.getByRole("button", { name: "Open Details" }).click();
-  const detailDialog = page.getByRole("dialog");
-  await expect(detailDialog).toBeVisible();
-  await expect(detailDialog).toContainText("archive parse failed");
-  await page.getByRole("button", { name: "Close Panel" }).click();
-  await expect(detailDialog).toHaveCount(0);
+  const detailPane = page.getByTestId("admin-jobs-detail-pane");
+  await expect(detailPane).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(detailPane).toContainText("archive parse failed");
+  await detailPane.getByRole("button", { name: "Close Panel" }).click();
+  await expect(detailPane).toHaveCount(0);
 
   await gotoProtectedRoute(page, "/admin/sync-policy/repository");
   const schedulerEnabled = page.getByLabel("Scheduler enabled");
@@ -92,49 +94,58 @@ test("executes admin catalog job and sync policy actions", async ({ page }) => {
 test("executes repository intake and import source actions", async ({ page }) => {
   const suffix = Date.now();
   await loginAsAdmin(page, "/admin/ingestion/repository");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Start Repository Intake" }).click();
-  const repositoryDialog = page.getByRole("dialog", { name: "Repository Intake" });
-  await repositoryDialog.getByLabel("Repository URL").fill(`https://github.com/example/repository-intake-${suffix}`);
-  await repositoryDialog.getByLabel("Repository Branch").fill("release");
-  await repositoryDialog.getByLabel("Repository Path").fill("skills/catalog");
-  await repositoryDialog.getByLabel("Tags").fill(`release repo-${suffix}`);
-  await repositoryDialog.getByLabel("Visibility").selectOption("public");
-  await repositoryDialog.getByLabel("Install Command").fill("uvx skillsindex install repository-intake");
-  await repositoryDialog.getByRole("button", { name: "Start Repository Intake" }).click();
+  const repositoryPane = page.getByTestId("admin-ingestion-repository-pane");
+  await expect(repositoryPane).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await repositoryPane.getByLabel("Repository URL").fill(`https://github.com/example/repository-intake-${suffix}`);
+  await repositoryPane.getByLabel("Repository Branch").fill("release");
+  await repositoryPane.getByLabel("Repository Path").fill("skills/catalog");
+  await repositoryPane.getByLabel("Tags").fill(`release repo-${suffix}`);
+  await repositoryPane.getByLabel("Visibility").selectOption("public");
+  await repositoryPane.getByLabel("Install Command").fill("uvx skillsindex install repository-intake");
+  await repositoryPane.getByRole("button", { name: "Start Repository Intake" }).click();
   await expect(page.getByText("Repository ingestion requested.")).toBeVisible();
 
   await page.getByRole("button", { name: "Save Policy" }).first().click();
-  const policyDialog = page.getByRole("dialog", { name: "Scheduler Policy" });
-  await policyDialog.getByLabel("Enabled").uncheck();
-  await policyDialog.getByLabel("Interval").fill("30m");
-  await policyDialog.getByLabel("Timeout").fill("6m");
-  await policyDialog.getByLabel("Batch Size").fill("24");
-  await policyDialog.getByRole("button", { name: "Save Policy" }).click();
+  const policyPane = page.getByTestId("admin-ingestion-policy-pane");
+  await expect(policyPane).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await policyPane.getByLabel("Enabled").uncheck();
+  await policyPane.getByLabel("Interval").fill("30m");
+  await policyPane.getByLabel("Timeout").fill("6m");
+  await policyPane.getByLabel("Batch Size").fill("24");
+  await policyPane.getByRole("button", { name: "Save Policy" }).click();
   await expect(page.getByText("Repository sync policy saved.")).toBeVisible();
 
   await gotoProtectedRoute(page, "/admin/records/imports");
   await page.getByRole("button", { name: "Import Archive" }).first().click();
-  const archiveDialog = page.getByRole("dialog", { name: "Archive Import" });
-  await archiveDialog.getByLabel("Archive File").setInputFiles({
+  const archivePane = page.getByTestId("admin-ingestion-archive-pane");
+  await expect(archivePane).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await archivePane.getByLabel("Archive File").setInputFiles({
     name: `archive-${suffix}.zip`,
     mimeType: "application/zip",
     buffer: Buffer.from("mock archive payload")
   });
-  await archiveDialog.getByLabel("Tags").fill(`archive-${suffix}`);
-  await archiveDialog.getByLabel("Visibility").selectOption("private");
-  await archiveDialog.getByLabel("Install Command").fill("npx skillsindex import archive-intake");
-  await archiveDialog.getByRole("button", { name: "Import Archive" }).click();
+  await archivePane.getByLabel("Tags").fill(`archive-${suffix}`);
+  await archivePane.getByLabel("Visibility").selectOption("private");
+  await archivePane.getByLabel("Install Command").fill("npx skillsindex import archive-intake");
+  await archivePane.getByRole("button", { name: "Import Archive" }).click();
   await expect(page.getByText("Archive import submitted.")).toBeVisible();
 
   await page.getByRole("button", { name: "Import SkillMP" }).first().click();
-  const skillmpDialog = page.getByRole("dialog", { name: "SkillMP Import" });
-  await skillmpDialog.getByLabel("SkillMP URL").fill(`https://skillmp.example.com/${suffix}`);
-  await skillmpDialog.getByLabel("SkillMP ID").fill(`skillmp-${suffix}`);
-  await skillmpDialog.getByLabel("SkillMP Token").fill("skillmp-token");
-  await skillmpDialog.getByLabel("Tags").fill(`skillmp-${suffix}`);
-  await skillmpDialog.getByLabel("Visibility").selectOption("public");
-  await skillmpDialog.getByLabel("Install Command").fill("npx skillsindex import skillmp-governance");
-  await skillmpDialog.getByRole("button", { name: "Import SkillMP" }).click();
+  const skillmpPane = page.getByTestId("admin-ingestion-skillmp-pane");
+  await expect(skillmpPane).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await skillmpPane.getByLabel("SkillMP URL").fill(`https://skillmp.example.com/${suffix}`);
+  await skillmpPane.getByLabel("SkillMP ID").fill(`skillmp-${suffix}`);
+  await skillmpPane.getByLabel("SkillMP Token").fill("skillmp-token");
+  await skillmpPane.getByLabel("Tags").fill(`skillmp-${suffix}`);
+  await skillmpPane.getByLabel("Visibility").selectOption("public");
+  await skillmpPane.getByLabel("Install Command").fill("npx skillsindex import skillmp-governance");
+  await skillmpPane.getByRole("button", { name: "Import SkillMP" }).click();
   await expect(page.getByText("SkillMP import submitted.")).toBeVisible();
 });

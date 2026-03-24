@@ -1,16 +1,14 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 
-import type {
-  ImportsIngestionViewProps,
-  ManualIngestionViewProps,
-  RepositoryIngestionViewProps
-} from "./AdminIngestionViewProps";
+import type { ImportsIngestionViewProps, ManualIngestionViewProps, RepositoryIngestionViewProps } from "./AdminIngestionViewProps";
 import { ImportJobsCard, ManualGuidanceCard, RecentSyncRunsCard } from "./AdminIngestionPanels";
 import { IngestionTriggerCard, SkillInventoryList } from "./shared";
 
-export function ManualIngestionView(props: ManualIngestionViewProps) {
+export function ManualIngestionView(props: ManualIngestionViewProps & { workPane?: ReactNode }) {
   const { messages } = useProtectedI18n();
   const ingestionMessages = messages.adminIngestion;
 
@@ -31,13 +29,14 @@ export function ManualIngestionView(props: ManualIngestionViewProps) {
           actionLabel={ingestionMessages.createManualAction}
           onAction={props.onOpenCreate}
         />
+        {props.workPane}
         <ManualGuidanceCard />
       </div>
     </div>
   );
 }
 
-export function RepositoryIngestionView(props: RepositoryIngestionViewProps) {
+export function RepositoryIngestionView(props: RepositoryIngestionViewProps & { workPane?: ReactNode }) {
   const { messages } = useProtectedI18n();
   const ingestionMessages = messages.adminIngestion;
 
@@ -64,13 +63,14 @@ export function RepositoryIngestionView(props: RepositoryIngestionViewProps) {
           actionLabel={ingestionMessages.savePolicyAction}
           onAction={props.onOpenPolicy}
         />
+        {props.workPane}
         <RecentSyncRunsCard syncRuns={props.syncRuns} onOpenDetail={props.onOpenSyncRunDetail} />
       </div>
     </div>
   );
 }
 
-export function ImportsIngestionView(props: ImportsIngestionViewProps) {
+export function ImportsIngestionView(props: ImportsIngestionViewProps & { workPane?: ReactNode }) {
   const { messages } = useProtectedI18n();
   const ingestionMessages = messages.adminIngestion;
 
@@ -90,6 +90,7 @@ export function ImportsIngestionView(props: ImportsIngestionViewProps) {
           onAction={props.onOpenSkillMPImport}
         />
       </div>
+      {props.workPane}
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <SkillInventoryList
           title={ingestionMessages.importedInventoryTitle}

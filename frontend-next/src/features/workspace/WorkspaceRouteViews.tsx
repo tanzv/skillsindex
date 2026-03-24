@@ -13,7 +13,7 @@ import type { WorkspaceRoute } from "@/src/lib/routing/routes";
 
 import { WorkspaceOverviewGrid, WorkspaceSectionCard } from "./WorkspaceRouteShared";
 import { ActivityFeedView, QueueExecutionView } from "./WorkspaceRouteActivityViews";
-import { WorkspaceEntryDetailDrawer, useWorkspaceEntryDetailState } from "./WorkspaceRouteDetailSurface";
+import { WorkspaceEntryDetailPane, useWorkspaceEntryDetailState } from "./WorkspaceRouteDetailSurface";
 import { QueueListButton, SectionPanel } from "./WorkspaceRouteViewPrimitives";
 import { buildRunbookResponseScriptSection } from "./pageSectionShared";
 import styles from "./WorkspaceRouteSurface.module.scss";
@@ -52,21 +52,20 @@ function PolicyView({ model }: { model: WorkspacePageModel }) {
       </div>
 
       <div className="space-y-6">
+        <WorkspaceEntryDetailPane
+          open={detailOpen}
+          entry={selectedEntry}
+          locale={model.locale}
+          messages={workspaceMessages}
+          actions={[{ label: workspaceMessages.actionOpenQueue, href: workspaceQueueRoute, variant: "outline" }]}
+          onClose={() => setDetailOpen(false)}
+        />
         {prioritiesSection ? <WorkspaceSectionCard section={prioritiesSection} /> : null}
         {reviewPressureSection ? <WorkspaceSectionCard section={reviewPressureSection} /> : null}
         {model.railSections.map((section) => (
           <WorkspaceSectionCard key={section.id} section={section} />
         ))}
       </div>
-
-      <WorkspaceEntryDetailDrawer
-        open={detailOpen}
-        entry={selectedEntry}
-        locale={model.locale}
-        messages={workspaceMessages}
-        actions={[{ label: workspaceMessages.actionOpenQueue, href: workspaceQueueRoute, variant: "outline" }]}
-        onClose={() => setDetailOpen(false)}
-      />
     </div>
   );
 }
@@ -103,22 +102,21 @@ function RunbookView({ model }: { model: WorkspacePageModel }) {
       </div>
 
       <div className="space-y-6">
+        <WorkspaceEntryDetailPane
+          open={detailOpen}
+          entry={selectedEntry}
+          locale={model.locale}
+          messages={workspaceMessages}
+          actions={[{ label: workspaceMessages.actionOpenQueue, href: workspaceQueueRoute, variant: "outline" }]}
+          description={workspaceMessages.sectionResponseScriptDescription}
+          onClose={() => setDetailOpen(false)}
+        >
+          {responseScript ? <WorkspaceSectionCard section={responseScript} /> : null}
+        </WorkspaceEntryDetailPane>
         {model.railSections.map((section) => (
           <WorkspaceSectionCard key={section.id} section={section} />
         ))}
       </div>
-
-      <WorkspaceEntryDetailDrawer
-        open={detailOpen}
-        entry={selectedEntry}
-        locale={model.locale}
-        messages={workspaceMessages}
-        actions={[{ label: workspaceMessages.actionOpenQueue, href: workspaceQueueRoute, variant: "outline" }]}
-        description={workspaceMessages.sectionResponseScriptDescription}
-        onClose={() => setDetailOpen(false)}
-      >
-        {responseScript ? <WorkspaceSectionCard section={responseScript} /> : null}
-      </WorkspaceEntryDetailDrawer>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import { AdminAPIKeysContent } from "./AdminAPIKeysContent";
@@ -67,6 +68,7 @@ export function AdminAPIKeysPage() {
     () => resolveSelectedAdminAPIKey(payload.items, overlay?.entity === "apiKeyDetail" ? Number(overlay.entityId || 0) : null),
     [overlay, payload.items]
   );
+  const activePane = overlay?.entity === "apiKeyCreate" ? "create" : overlay?.entity === "apiKeyDetail" && selectedItem ? "detail" : "idle";
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -82,7 +84,7 @@ export function AdminAPIKeysPage() {
         }, {})
       );
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : apiKeyMessages.loadError);
+      setError(resolveRequestErrorDisplayMessage(loadError, apiKeyMessages.loadError));
       setRawPayload(null);
     } finally {
       setLoading(false);
@@ -136,7 +138,7 @@ export function AdminAPIKeysPage() {
       closeOverlay();
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : apiKeyMessages.createError);
+      setError(resolveRequestErrorDisplayMessage(actionError, apiKeyMessages.createError));
     } finally {
       setBusyAction("");
     }
@@ -150,7 +152,7 @@ export function AdminAPIKeysPage() {
       setMessage(formatProtectedMessage(apiKeyMessages.revokeSuccess, { keyId }));
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : apiKeyMessages.revokeError);
+      setError(resolveRequestErrorDisplayMessage(actionError, apiKeyMessages.revokeError));
     } finally {
       setBusyAction("");
     }
@@ -165,7 +167,7 @@ export function AdminAPIKeysPage() {
       setPlaintextSecret(payload.plaintext_key || "");
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : apiKeyMessages.rotateError);
+      setError(resolveRequestErrorDisplayMessage(actionError, apiKeyMessages.rotateError));
     } finally {
       setBusyAction("");
     }
@@ -187,7 +189,7 @@ export function AdminAPIKeysPage() {
       setMessage(formatProtectedMessage(apiKeyMessages.updateScopesSuccess, { keyId }));
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : apiKeyMessages.updateScopesError);
+      setError(resolveRequestErrorDisplayMessage(actionError, apiKeyMessages.updateScopesError));
     } finally {
       setBusyAction("");
     }
@@ -217,6 +219,7 @@ export function AdminAPIKeysPage() {
       filters={filters}
       createDraft={createDraft}
       scopeDrafts={scopeDrafts}
+      activePane={activePane}
       selectedItem={selectedItem}
       onRefresh={() => void loadData()}
       onFiltersChange={(patch) => setFilters((current) => ({ ...current, ...patch }))}
@@ -228,11 +231,9 @@ export function AdminAPIKeysPage() {
           [keyId]: value
         }))
       }
-      createDrawerOpen={overlay?.entity === "apiKeyCreate"}
-      onOpenCreateDrawer={() => openOverlay({ kind: "create", entity: "apiKeyCreate" })}
-      onCloseCreateDrawer={closeOverlay}
+      onOpenCreatePane={() => openOverlay({ kind: "create", entity: "apiKeyCreate" })}
+      onClosePane={closeOverlay}
       onOpenDetail={(keyId) => openOverlay({ kind: "detail", entity: "apiKeyDetail", entityId: keyId })}
-      onCloseDetail={closeOverlay}
       onCreateKey={() => void createKey()}
       onRotateKey={(keyId) => void rotateKey(keyId)}
       onRevokeKey={(keyId) => void revokeKey(keyId)}

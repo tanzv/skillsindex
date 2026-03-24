@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 import { resolveAdminIngestionPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 import type { AdminIngestionRoute } from "@/src/lib/routing/adminRouteRegistry";
@@ -136,7 +137,7 @@ export function AdminIngestionPage({
       setRepositoryPolicy(createRepositorySyncPolicy());
       setLoadedRoute(route);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : ingestionMessages.loadError);
+      setError(resolveRequestErrorDisplayMessage(loadError, ingestionMessages.loadError));
     } finally {
       setLoading(false);
     }
@@ -178,7 +179,7 @@ export function AdminIngestionPage({
         setMessage(successMessage);
         await loadData();
       } catch (actionError) {
-        setError(actionError instanceof Error ? actionError.message : failureMessage);
+        setError(resolveRequestErrorDisplayMessage(actionError, failureMessage));
       } finally {
         setBusyAction("");
       }

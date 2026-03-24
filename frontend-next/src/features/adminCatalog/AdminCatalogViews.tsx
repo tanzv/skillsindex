@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src
 import { Input as TextInput } from "@/src/components/ui/input";
 
 import type { AdminCatalogRow, AdminCatalogViewModel, RepositorySyncPolicy } from "./model";
-import { CatalogDetailDrawer, DetailCard, RowSelectionButton, SidePanels, useSelectedRow } from "./AdminCatalogShared";
+import { CatalogDetailPane, DetailCard, RowSelectionButton, SidePanels, useSelectedRow } from "./AdminCatalogShared";
 import styles from "./AdminCatalogSurface.module.scss";
 
 export { QueryFilters } from "./AdminCatalogShared";
@@ -104,7 +104,7 @@ export function JobsView({
   const { messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
   const { selectedRow, selectedRowId, setSelectedRowId } = useSelectedRow(rows);
-  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [detailPaneOpen, setDetailPaneOpen] = useState(false);
 
   return (
     <div className={styles.splitLayout}>
@@ -133,7 +133,7 @@ export function JobsView({
                     variant="outline"
                     onClick={() => {
                       setSelectedRowId(row.id);
-                      setDetailDrawerOpen(true);
+                      setDetailPaneOpen(true);
                     }}
                   >
                     {adminCatalogMessages.openDetailAction}
@@ -156,43 +156,43 @@ export function JobsView({
         </Card>
       </div>
 
-      <div className={styles.column}>
+      <div className={`${styles.column} ${styles.detailRail}`}>
+        <CatalogDetailPane
+          open={detailPaneOpen}
+          row={selectedRow}
+          description={adminCatalogMessages.selectedJobDescription}
+          closeLabel={adminCatalogMessages.closePanelAction}
+          onClose={() => setDetailPaneOpen(false)}
+          dataTestId="admin-jobs-detail-pane"
+          actions={
+            selectedRow ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => onRunJobAction(selectedRow.id, "retry")}
+                  disabled={
+                    Boolean(busyAction) ||
+                    (!selectedRow.status.toLowerCase().includes("failed") && !selectedRow.status.toLowerCase().includes("canceled"))
+                  }
+                >
+                  {adminCatalogMessages.retrySelectedAction}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => onRunJobAction(selectedRow.id, "cancel")}
+                  disabled={
+                    Boolean(busyAction) ||
+                    (!selectedRow.status.toLowerCase().includes("running") && !selectedRow.status.toLowerCase().includes("pending"))
+                  }
+                >
+                  {adminCatalogMessages.cancelSelectedAction}
+                </Button>
+              </>
+            ) : null
+          }
+        />
         <SidePanels panels={sidePanels} />
       </div>
-
-      <CatalogDetailDrawer
-        open={detailDrawerOpen}
-        row={selectedRow}
-        description={adminCatalogMessages.selectedJobDescription}
-        closeLabel={adminCatalogMessages.closePanelAction}
-        onClose={() => setDetailDrawerOpen(false)}
-        actions={
-          selectedRow ? (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => onRunJobAction(selectedRow.id, "retry")}
-                disabled={
-                  Boolean(busyAction) ||
-                  (!selectedRow.status.toLowerCase().includes("failed") && !selectedRow.status.toLowerCase().includes("canceled"))
-                }
-              >
-                {adminCatalogMessages.retrySelectedAction}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => onRunJobAction(selectedRow.id, "cancel")}
-                disabled={
-                  Boolean(busyAction) ||
-                  (!selectedRow.status.toLowerCase().includes("running") && !selectedRow.status.toLowerCase().includes("pending"))
-                }
-              >
-                {adminCatalogMessages.cancelSelectedAction}
-              </Button>
-            </>
-          ) : null
-        }
-      />
     </div>
   );
 }
@@ -207,7 +207,7 @@ export function SyncRunsView({
   const { messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
   const { selectedRow, selectedRowId, setSelectedRowId } = useSelectedRow(rows);
-  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [detailPaneOpen, setDetailPaneOpen] = useState(false);
 
   return (
     <div className={styles.compactSplitLayout}>
@@ -231,7 +231,7 @@ export function SyncRunsView({
                   variant="outline"
                   onClick={() => {
                     setSelectedRowId(row.id);
-                    setDetailDrawerOpen(true);
+                    setDetailPaneOpen(true);
                   }}
                 >
                   {adminCatalogMessages.openDetailAction}
@@ -243,24 +243,24 @@ export function SyncRunsView({
         </Card>
       </div>
 
-      <div className={styles.column}>
+      <div className={`${styles.column} ${styles.detailRail}`}>
+        <CatalogDetailPane
+          open={detailPaneOpen}
+          row={selectedRow}
+          description={adminCatalogMessages.selectedSyncRunDescription}
+          closeLabel={adminCatalogMessages.closePanelAction}
+          onClose={() => setDetailPaneOpen(false)}
+          dataTestId="admin-sync-runs-detail-pane"
+          actions={
+            selectedRow ? (
+              <Button asChild variant="outline">
+                <Link href="/admin/sync-policy/repository">{adminCatalogMessages.openSyncPolicyAction}</Link>
+              </Button>
+            ) : null
+          }
+        />
         <SidePanels panels={sidePanels} />
       </div>
-
-      <CatalogDetailDrawer
-        open={detailDrawerOpen}
-        row={selectedRow}
-        description={adminCatalogMessages.selectedSyncRunDescription}
-        closeLabel={adminCatalogMessages.closePanelAction}
-        onClose={() => setDetailDrawerOpen(false)}
-        actions={
-          selectedRow ? (
-            <Button asChild variant="outline">
-              <Link href="/admin/sync-policy/repository">{adminCatalogMessages.openSyncPolicyAction}</Link>
-            </Button>
-          ) : null
-        }
-      />
     </div>
   );
 }

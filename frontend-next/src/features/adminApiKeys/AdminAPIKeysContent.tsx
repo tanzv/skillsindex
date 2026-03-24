@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminEmptyBlock, AdminInsetBlock, AdminMetaChipList, AdminPageScaffold, AdminSectionCard } from "@/src/components/admin/AdminPrimitives";
-import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
+import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
@@ -31,17 +31,16 @@ interface AdminAPIKeysContentProps {
     scopes: string;
   };
   scopeDrafts: Record<number, string>;
-  createDrawerOpen: boolean;
+  activePane: "idle" | "create" | "detail";
   selectedItem: AdminAPIKeyItem | null;
   onRefresh: () => void;
   onFiltersChange: (patch: Partial<AdminAPIKeysContentProps["filters"]>) => void;
   onResetFilters: () => void;
   onCreateDraftChange: (patch: Partial<AdminAPIKeysContentProps["createDraft"]>) => void;
   onScopeDraftChange: (keyId: number, value: string) => void;
-  onOpenCreateDrawer: () => void;
-  onCloseCreateDrawer: () => void;
+  onOpenCreatePane: () => void;
+  onClosePane: () => void;
   onOpenDetail: (keyId: number) => void;
-  onCloseDetail: () => void;
   onCreateKey: () => void;
   onRotateKey: (keyId: number) => void;
   onRevokeKey: (keyId: number) => void;
@@ -59,17 +58,16 @@ export function AdminAPIKeysContent({
   filters,
   createDraft,
   scopeDrafts,
-  createDrawerOpen,
+  activePane,
   selectedItem,
   onRefresh,
   onFiltersChange,
   onResetFilters,
   onCreateDraftChange,
   onScopeDraftChange,
-  onOpenCreateDrawer,
-  onCloseCreateDrawer,
+  onOpenCreatePane,
+  onClosePane,
   onOpenDetail,
-  onCloseDetail,
   onCreateKey,
   onRotateKey,
   onRevokeKey,
@@ -90,7 +88,7 @@ export function AdminAPIKeysContent({
             <Button variant="outline" onClick={onRefresh}>
               {loading ? commonMessages.refreshing : commonMessages.refresh}
             </Button>
-            <Button onClick={onOpenCreateDrawer}>{apiKeyMessages.createAction}</Button>
+            <Button onClick={onOpenCreatePane}>{apiKeyMessages.createAction}</Button>
           </div>
         }
         metrics={overview.metrics}
@@ -172,7 +170,7 @@ export function AdminAPIKeysContent({
 
           <div className="space-y-6">
             <AdminSectionCard title={apiKeyMessages.createTitle} description={apiKeyMessages.createDescription}>
-              <Button onClick={onOpenCreateDrawer}>{apiKeyMessages.createAction}</Button>
+              <Button onClick={onOpenCreatePane}>{apiKeyMessages.createAction}</Button>
             </AdminSectionCard>
 
             <AdminSectionCard title={apiKeyMessages.ownerSummaryTitle} description={apiKeyMessages.ownerSummaryDescription} contentClassName="space-y-3">
@@ -187,84 +185,73 @@ export function AdminAPIKeysContent({
         </div>
       </AdminPageScaffold>
 
-      <DetailFormSurface
-        open={createDrawerOpen}
-        variant="drawer"
-        size="default"
-        title={apiKeyMessages.createTitle}
-        description={apiKeyMessages.createDescription}
-        closeLabel={apiKeyMessages.closePanelAction}
-        onClose={onCloseCreateDrawer}
-      >
-        <form
-          className="space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            onCreateKey();
-          }}
+      {activePane === "create" ? (
+        <InlineWorkPaneSurface
+          title={apiKeyMessages.createTitle}
+          description={apiKeyMessages.createDescription}
+          closeLabel={apiKeyMessages.closePanelAction}
+          onClose={onClosePane}
+          dataTestId="admin-apikeys-create-pane"
         >
-          <Input
-            aria-label={apiKeyMessages.createNameAriaLabel}
-            value={createDraft.name}
-            placeholder={apiKeyMessages.createNamePlaceholder}
-            onChange={(event) => onCreateDraftChange({ name: event.target.value })}
-          />
-          <Input
-            aria-label={apiKeyMessages.createPurposeAriaLabel}
-            value={createDraft.purpose}
-            placeholder={apiKeyMessages.createPurposePlaceholder}
-            onChange={(event) => onCreateDraftChange({ purpose: event.target.value })}
-          />
-          <Input
-            aria-label={apiKeyMessages.createOwnerUserIdAriaLabel}
-            value={createDraft.ownerUserId}
-            placeholder={apiKeyMessages.createOwnerUserIdPlaceholder}
-            onChange={(event) => onCreateDraftChange({ ownerUserId: event.target.value })}
-          />
-          <Input
-            aria-label={apiKeyMessages.createExpiresInDaysAriaLabel}
-            value={createDraft.expiresInDays}
-            placeholder={apiKeyMessages.createExpiresInDaysPlaceholder}
-            onChange={(event) => onCreateDraftChange({ expiresInDays: event.target.value })}
-          />
-          <Input
-            aria-label={apiKeyMessages.createScopesAriaLabel}
-            value={createDraft.scopes}
-            placeholder={apiKeyMessages.createScopesPlaceholder}
-            onChange={(event) => onCreateDraftChange({ scopes: event.target.value })}
-          />
-          <div className="flex flex-wrap justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onCloseCreateDrawer}>
-              {apiKeyMessages.closePanelAction}
-            </Button>
-            <Button type="submit" disabled={Boolean(busyAction)}>
-              {busyAction === "create-key" ? apiKeyMessages.creatingAction : apiKeyMessages.createAction}
-            </Button>
-          </div>
-        </form>
-      </DetailFormSurface>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              onCreateKey();
+            }}
+          >
+            <Input
+              aria-label={apiKeyMessages.createNameAriaLabel}
+              value={createDraft.name}
+              placeholder={apiKeyMessages.createNamePlaceholder}
+              onChange={(event) => onCreateDraftChange({ name: event.target.value })}
+            />
+            <Input
+              aria-label={apiKeyMessages.createPurposeAriaLabel}
+              value={createDraft.purpose}
+              placeholder={apiKeyMessages.createPurposePlaceholder}
+              onChange={(event) => onCreateDraftChange({ purpose: event.target.value })}
+            />
+            <Input
+              aria-label={apiKeyMessages.createOwnerUserIdAriaLabel}
+              value={createDraft.ownerUserId}
+              placeholder={apiKeyMessages.createOwnerUserIdPlaceholder}
+              onChange={(event) => onCreateDraftChange({ ownerUserId: event.target.value })}
+            />
+            <Input
+              aria-label={apiKeyMessages.createExpiresInDaysAriaLabel}
+              value={createDraft.expiresInDays}
+              placeholder={apiKeyMessages.createExpiresInDaysPlaceholder}
+              onChange={(event) => onCreateDraftChange({ expiresInDays: event.target.value })}
+            />
+            <Input
+              aria-label={apiKeyMessages.createScopesAriaLabel}
+              value={createDraft.scopes}
+              placeholder={apiKeyMessages.createScopesPlaceholder}
+              onChange={(event) => onCreateDraftChange({ scopes: event.target.value })}
+            />
+            <div className="flex flex-wrap justify-end gap-3">
+              <Button type="submit" disabled={Boolean(busyAction)}>
+                {busyAction === "create-key" ? apiKeyMessages.creatingAction : apiKeyMessages.createAction}
+              </Button>
+            </div>
+          </form>
+        </InlineWorkPaneSurface>
+      ) : null}
 
-      <DetailFormSurface
-        open={Boolean(selectedItem)}
-        variant="drawer"
-        size="default"
-        title={selectedItem?.name || apiKeyMessages.unnamedKey}
-        description={
-          selectedItem
-            ? `${resolveApiKeyStatusLabel(selectedItem.status, apiKeyMessages)} · ${selectedItem.ownerUsername || apiKeyMessages.ownerUnknown}`
-            : undefined
-        }
-        closeLabel={apiKeyMessages.closePanelAction}
-        onClose={onCloseDetail}
-        actions={
-          selectedItem ? (
+      {activePane === "detail" && selectedItem ? (
+        <InlineWorkPaneSurface
+          title={selectedItem.name || apiKeyMessages.unnamedKey}
+          description={`${resolveApiKeyStatusLabel(selectedItem.status, apiKeyMessages)} · ${selectedItem.ownerUsername || apiKeyMessages.ownerUnknown}`}
+          closeLabel={apiKeyMessages.closePanelAction}
+          onClose={onClosePane}
+          dataTestId="admin-apikeys-detail-pane"
+          actions={
             <Badge variant={resolveApiKeyStatusTone(selectedItem.status)}>
               {resolveApiKeyStatusLabel(selectedItem.status, apiKeyMessages)}
             </Badge>
-          ) : null
-        }
-      >
-        {selectedItem ? (
+          }
+        >
           <div className="space-y-6">
             <div className="grid gap-3 md:grid-cols-2">
               <AdminInsetBlock>
@@ -350,8 +337,8 @@ export function AdminAPIKeysContent({
               </Button>
             </div>
           </div>
-        ) : null}
-      </DetailFormSurface>
+        </InlineWorkPaneSurface>
+      ) : null}
     </>
   );
 }
