@@ -40,6 +40,27 @@ body:has(.account-shell-root[data-protected-theme="dark"]) {
   background: #101010;
 }
 
+/* Bridge public marketplace theme backgrounds to the root document to avoid revealing the global fallback canvas on overscroll. */
+html:has(body > .marketplace-shell),
+body:has(.marketplace-shell) {
+  background: #101010;
+}
+
+html:has(body > .marketplace-shell.is-light-theme),
+body:has(.marketplace-shell.is-light-theme) {
+  background: #eef1f5;
+}
+
+html:has(body > .marketplace-shell.is-light-theme.is-landing-route),
+body:has(.marketplace-shell.is-light-theme.is-landing-route) {
+  background: #f4f6fb;
+}
+
+html:has(body > .marketplace-shell.is-light-theme:has(.skill-detail-page)),
+body:has(.marketplace-shell.is-light-theme:has(.skill-detail-page)) {
+  background: #f6f3ee;
+}
+
 a {
   color: inherit;
   text-decoration: none;
