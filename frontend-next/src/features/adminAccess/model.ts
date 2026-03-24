@@ -5,9 +5,11 @@ import {
   normalizeAdminAuthProvidersPayload,
   normalizeAdminCategoryCatalogPayload,
   normalizeAdminMarketplaceRankingPayload,
+  normalizeAdminPresentationTaxonomyPayload,
   normalizeAdminRegistrationPayload,
   type AdminNormalizedAccountItem,
-  type AdminNormalizedCategoryCatalogItem
+  type AdminNormalizedCategoryCatalogItem,
+  type AdminNormalizedPresentationTaxonomyCategory
 } from "@/src/lib/admin/adminAccountSettingsModel";
 
 export type AccessAccountItem = AdminNormalizedAccountItem;
@@ -22,6 +24,7 @@ export interface AdminAccessGovernanceData {
   highlightLimit: number;
   categoryLeaderLimit: number;
   categoryCatalog: AdminNormalizedCategoryCatalogItem[];
+  presentationTaxonomy: AdminNormalizedPresentationTaxonomyCategory[];
   enabledProviders: string[];
   availableProviders: string[];
 }
@@ -54,12 +57,14 @@ export function buildAdminAccessGovernanceData(payloads: {
   registration: unknown;
   marketplaceRanking: unknown;
   categoryCatalog: unknown;
+  presentationTaxonomy: unknown;
   authProviders: unknown;
 }): AdminAccessGovernanceData {
   const accounts = normalizeAdminAccountsPayload(payloads.accounts);
   const registration = normalizeAdminRegistrationPayload(payloads.registration);
   const marketplaceRanking = normalizeAdminMarketplaceRankingPayload(payloads.marketplaceRanking);
   const categoryCatalog = normalizeAdminCategoryCatalogPayload(payloads.categoryCatalog);
+  const presentationTaxonomy = normalizeAdminPresentationTaxonomyPayload(payloads.presentationTaxonomy);
   const authProviders = normalizeAdminAuthProvidersPayload(payloads.authProviders);
 
   return {
@@ -72,6 +77,7 @@ export function buildAdminAccessGovernanceData(payloads: {
     highlightLimit: marketplaceRanking.highlightLimit,
     categoryLeaderLimit: marketplaceRanking.categoryLeaderLimit,
     categoryCatalog: categoryCatalog.items,
+    presentationTaxonomy: presentationTaxonomy.items,
     enabledProviders: authProviders.authProviders,
     availableProviders: authProviders.availableAuthProviders
   };

@@ -165,3 +165,144 @@ describe("mock backend public marketplace endpoints", () => {
     ).toBe(true);
   }, mockBackendTestTimeoutMs);
 });
+
+describe("mock backend auth provider governance endpoints", () => {
+  const servers: Array<{ close: (callback: () => void) => void }> = [];
+
+  afterEach(async () => {
+    while (servers.length) {
+      const server = servers.pop();
+      if (server) {
+        await closeServer(server);
+      }
+    }
+  });
+
+  it("serves managed auth provider inventory and public auth providers after updates", async () => {
+    const { startMockBackend } = await importMockBackendModule();
+    const server = (await startMockBackend({ listenPort: 0 })) as {
+      address: () => { port: number } | string | null;
+      close: (callback: () => void) => void;
+    };
+    servers.push(server);
+
+    const address = server.address();
+    expect(address && typeof address !== "string").toBeTruthy();
+    const port = typeof address === "string" || !address ? 0 : address.port;
+    const baseURL = `http://127.0.0.1:${port}`;
+
+    const loginResponse = await fetch(`${baseURL}/api/v1/auth/login`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        username: "admin",
+        password: "Admin123456!"
+      })
+    });
+    expect(loginResponse.ok).toBe(true);
+    const sessionCookie = loginResponse.headers.get("set-cookie");
+    expect(sessionCookie).toContain("skillsindex_session=");
+
+    const sessionHeaders = {
+      cookie: String(sessionCookie)
+    };
+
+    const inventoryResponse = await fetch(`${baseURL}/api/v1/admin/auth-provider-configs`, {
+      headers: sessionHeaders
+    });
+    expect(inventoryResponse.ok).toBe(true);
+    const inventoryPayload = (await inventoryResponse.json()) as {
+      items: Array<{ key: string }>;
+    };
+    expect(inventoryPayload.items.some((item) => item.key === "feishu")).toBe(true);
+
+    const updateResponse = await fetch(`${baseURL}/api/v1/admin/auth-provider-configs`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...sessionHeaders
+      },
+      body: JSON.stringify({
+        provider: "dingtalk",
+        name: "DingTalk Workspace",
+        issuer: "https://open.dingtalk.test",
+        authorization_url: "https://open.dingtalk.test/oauth/authorize",
+        token_url: "https://open.dingtalk.test/oauth/token",
+        userinfo_url: "https://open.dingtalk.test/oauth/userinfo",
+        client_id: "client-dingtalk",
+        client_secret: "secret-dingtalk"
+      })
+    });
+    expect(updateResponse.ok).toBe(true);
+
+    const publicProvidersResponse = await fetch(`${baseURL}/api/v1/auth/providers`);
+    expect(publicProvidersResponse.ok).toBe(true);
+    const publicProvidersPayload = (await publicProvidersResponse.json()) as {
+      auth_providers: string[];
+    };
+    expect(publicProvidersPayload.auth_providers).toContain("dingtalk");
+    expect(publicProvidersPayload.auth_providers).toContain("feishu");
+  }, mockBackendTestTimeoutMs);
+});
+
+describe("mock backend admin access settings endpoints", () => {
+  const servers: Array<{ close: (callback: () => void) => void }> = [];
+
+  afterEach(async () => {
+    while (servers.length) {
+      const server = servers.pop();
+      if (server) {
+        await closeServer(server);
+      }
+    }
+  });
+
+  it("serves presentation taxonomy settings for admin access governance", async () => {
+    const { startMockBackend } = await importMockBackendModule();
+    const server = (await startMockBackend({ listenPort: 0 })) as {
+      address: () => { port: number } | string | null;
+      close: (callback: () => void) => void;
+    };
+    servers.push(server);
+
+    const address = server.address();
+    expect(address && typeof address !== "string").toBeTruthy();
+    const port = typeof address === "string" || !address ? 0 : address.port;
+    const baseURL = `http://127.0.0.1:${port}`;
+
+    const loginResponse = await fetch(`${baseURL}/api/v1/auth/login`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        username: "admin",
+        password: "Admin123456!"
+      })
+    });
+    expect(loginResponse.ok).toBe(true);
+    const sessionCookie = loginResponse.headers.get("set-cookie");
+    expect(sessionCookie).toContain("skillsindex_session=");
+
+    const response = await fetch(`${baseURL}/api/v1/admin/settings/presentation-taxonomy`, {
+      headers: {
+        cookie: String(sessionCookie)
+      }
+    });
+
+    expect(response.ok).toBe(true);
+    const payload = (await response.json()) as {
+      items: Array<{
+        slug: string;
+        subcategories: Array<{ slug: string; legacy_category_slugs: string[]; keywords: string[] }>;
+      }>;
+    };
+    expect(payload.items.length).toBeGreaterThan(0);
+    expect(payload.items[0]?.slug).toBeTruthy();
+    expect(payload.items[0]?.subcategories.length).toBeGreaterThan(0);
+    expect(payload.items[0]?.subcategories[0]?.legacy_category_slugs).toBeInstanceOf(Array);
+    expect(payload.items[0]?.subcategories[0]?.keywords).toBeInstanceOf(Array);
+  }, mockBackendTestTimeoutMs);
+});

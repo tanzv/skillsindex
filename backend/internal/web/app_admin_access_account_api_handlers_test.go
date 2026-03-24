@@ -40,6 +40,21 @@ func TestAPIAdminAccountsForbidden(t *testing.T) {
 	}
 }
 
+func TestAPIAdminAccountsServiceUnavailable(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	actor := createAdminAccessAPIUser(t, app, "access-service-unavailable-actor", models.RoleSuperAdmin)
+	app.authService = nil
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/accounts", nil)
+	req = withCurrentUser(req, &actor)
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminAccounts(recorder, req)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("unexpected status code: got=%d want=%d body=%s", recorder.Code, http.StatusServiceUnavailable, recorder.Body.String())
+	}
+}
+
 func TestAPIAdminAccountsSuccess(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	actor := createAdminAccessAPIUser(t, app, "access-actor", models.RoleSuperAdmin)
@@ -234,6 +249,28 @@ func TestAPIAdminAccountStatusSuccess(t *testing.T) {
 	assertLatestAuditAction(t, app, "api_user_update_status")
 }
 
+func TestAPIAdminAccountStatusServiceUnavailable(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	actor := createAdminAccessAPIUser(t, app, "status-service-unavailable-actor", models.RoleSuperAdmin)
+	app.authService = nil
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/admin/accounts/1/status",
+		strings.NewReader(`{"status":"disabled"}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req = withCurrentUser(req, &actor)
+	req = withURLParam(req, "userID", "1")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminAccountStatus(recorder, req)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("unexpected status code: got=%d want=%d body=%s", recorder.Code, http.StatusServiceUnavailable, recorder.Body.String())
+	}
+}
+
 func TestAPIAdminAccountForceSignoutSuccess(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	actor := createAdminAccessAPIUser(t, app, "force-signout-actor", models.RoleSuperAdmin)
@@ -261,6 +298,23 @@ func TestAPIAdminAccountForceSignoutSuccess(t *testing.T) {
 		t.Fatalf("expected force logout timestamp after force signout")
 	}
 	assertLatestAuditAction(t, app, "api_user_force_signout")
+}
+
+func TestAPIAdminAccountForceSignoutServiceUnavailable(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	actor := createAdminAccessAPIUser(t, app, "force-signout-service-unavailable-actor", models.RoleSuperAdmin)
+	app.authService = nil
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/accounts/1/force-signout", nil)
+	req = withCurrentUser(req, &actor)
+	req = withURLParam(req, "userID", "1")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminAccountForceSignout(recorder, req)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("unexpected status code: got=%d want=%d body=%s", recorder.Code, http.StatusServiceUnavailable, recorder.Body.String())
+	}
 }
 
 func TestAPIAdminAccountForceSignoutInvalidUserID(t *testing.T) {
@@ -332,6 +386,28 @@ func TestAPIAdminAccountPasswordResetSuccess(t *testing.T) {
 		t.Fatalf("expected force logout timestamp after password reset")
 	}
 	assertLatestAuditAction(t, app, "api_user_password_reset")
+}
+
+func TestAPIAdminAccountPasswordResetServiceUnavailable(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	actor := createAdminAccessAPIUser(t, app, "password-reset-service-unavailable-actor", models.RoleSuperAdmin)
+	app.authService = nil
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/admin/accounts/1/password-reset",
+		strings.NewReader(`{"new_password":"Reset123!"}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req = withCurrentUser(req, &actor)
+	req = withURLParam(req, "userID", "1")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminAccountPasswordReset(recorder, req)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("unexpected status code: got=%d want=%d body=%s", recorder.Code, http.StatusServiceUnavailable, recorder.Body.String())
+	}
 }
 
 func createAdminAccessAPIUser(t *testing.T, app *App, username string, role models.UserRole) models.User {

@@ -11,6 +11,7 @@ import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nPro
 import {
   normalizeAdminCategoryCatalogPayload,
   normalizeAdminMarketplaceRankingPayload,
+  normalizeAdminPresentationTaxonomyPayload,
 } from "@/src/lib/admin/adminAccountSettingsModel";
 import {
   createAdminOverlayState,
@@ -62,6 +63,8 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   const [rawMarketplaceRanking, setRawMarketplaceRanking] =
     useState<unknown>(null);
   const [rawCategoryCatalog, setRawCategoryCatalog] = useState<unknown>(null);
+  const [rawPresentationTaxonomy, setRawPresentationTaxonomy] =
+    useState<unknown>(null);
   const [rawAuthProviders, setRawAuthProviders] = useState<unknown>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(
     null,
@@ -91,6 +94,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       highlightLimit: 3,
       categoryLeaderLimit: 5,
       categoryCatalog: [],
+      presentationTaxonomy: [],
       enabledProviders: [],
     });
 
@@ -113,6 +117,10 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   const categoryCatalog = useMemo(
     () => normalizeAdminCategoryCatalogPayload(rawCategoryCatalog),
     [rawCategoryCatalog],
+  );
+  const presentationTaxonomy = useMemo(
+    () => normalizeAdminPresentationTaxonomyPayload(rawPresentationTaxonomy),
+    [rawPresentationTaxonomy],
   );
   const overview = useMemo(
     () =>
@@ -160,6 +168,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
         registration: registrationPayload,
         marketplaceRanking: marketplaceRankingPayload,
         categoryCatalog: categoryCatalogPayload,
+        presentationTaxonomy: presentationTaxonomyPayload,
         authProviders: authProvidersPayload,
       } = await loadAdminAccessSettingsPayloads();
       if (requestId !== latestLoadRequestRef.current) {
@@ -169,6 +178,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       setRawRegistration(registrationPayload);
       setRawMarketplaceRanking(marketplaceRankingPayload);
       setRawCategoryCatalog(categoryCatalogPayload);
+      setRawPresentationTaxonomy(presentationTaxonomyPayload);
       setRawAuthProviders(authProvidersPayload);
     } catch (loadError) {
       if (requestId !== latestLoadRequestRef.current) {
@@ -179,6 +189,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       setRawRegistration(null);
       setRawMarketplaceRanking(null);
       setRawCategoryCatalog(null);
+      setRawPresentationTaxonomy(null);
       setRawAuthProviders(null);
     } finally {
       if (requestId === latestLoadRequestRef.current) {
@@ -199,6 +210,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       rawRegistration !== null &&
       rawMarketplaceRanking !== null &&
       rawCategoryCatalog !== null &&
+      rawPresentationTaxonomy !== null &&
       rawAuthProviders !== null,
   });
 
@@ -231,6 +243,15 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
         ...category,
         subcategories: category.subcategories.map((subcategory) => ({ ...subcategory })),
       })),
+      presentationTaxonomy: presentationTaxonomy.items.map((category) => ({
+        ...category,
+        subcategories: category.subcategories.map((subcategory) => ({
+          ...subcategory,
+          legacyCategorySlugs: [...subcategory.legacyCategorySlugs],
+          legacySubcategorySlugs: [...subcategory.legacySubcategorySlugs],
+          keywords: [...subcategory.keywords],
+        })),
+      })),
       enabledProviders: [...authProviders.authProviders],
     };
     setSettingsDraft(nextSettingsDraft);
@@ -241,6 +262,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     marketplaceRanking.defaultSort,
     marketplaceRanking.highlightLimit,
     marketplaceRanking.rankingLimit,
+    presentationTaxonomy.items,
     registration.allowRegistration,
     registration.marketplacePublicAccess,
   ]);

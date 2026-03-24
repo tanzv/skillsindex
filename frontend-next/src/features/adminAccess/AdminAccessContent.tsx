@@ -6,7 +6,9 @@ import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import type {
   AdminNormalizedCategoryCatalogItem,
-  AdminNormalizedCategoryCatalogSubcategory
+  AdminNormalizedCategoryCatalogSubcategory,
+  AdminNormalizedPresentationTaxonomyCategory,
+  AdminNormalizedPresentationTaxonomySubcategory
 } from "@/src/lib/admin/adminAccountSettingsModel";
 
 import type { AccessAccountItem, AccessOverview, AdminAccessGovernanceData } from "./model";
@@ -38,6 +40,7 @@ interface AdminAccessContentProps {
     highlightLimit: number;
     categoryLeaderLimit: number;
     categoryCatalog: AdminNormalizedCategoryCatalogItem[];
+    presentationTaxonomy: AdminNormalizedPresentationTaxonomyCategory[];
     enabledProviders: string[];
   };
   onRefresh: () => void;
@@ -56,6 +59,7 @@ interface AdminAccessContentProps {
       highlightLimit: number;
       categoryLeaderLimit: number;
       categoryCatalog: AdminNormalizedCategoryCatalogItem[];
+      presentationTaxonomy: AdminNormalizedPresentationTaxonomyCategory[];
     }>
   ) => void;
   onAddCategory: () => void;
@@ -70,6 +74,21 @@ interface AdminAccessContentProps {
   ) => void;
   onRemoveSubcategory: (categoryIndex: number, subcategoryIndex: number) => void;
   onMoveSubcategory: (categoryIndex: number, subcategoryIndex: number, direction: -1 | 1) => void;
+  onAddPresentationCategory: () => void;
+  onUpdatePresentationCategory: (
+    categoryIndex: number,
+    patch: Partial<AdminNormalizedPresentationTaxonomyCategory>
+  ) => void;
+  onRemovePresentationCategory: (categoryIndex: number) => void;
+  onMovePresentationCategory: (categoryIndex: number, direction: -1 | 1) => void;
+  onAddPresentationSubcategory: (categoryIndex: number) => void;
+  onUpdatePresentationSubcategory: (
+    categoryIndex: number,
+    subcategoryIndex: number,
+    patch: Partial<AdminNormalizedPresentationTaxonomySubcategory>
+  ) => void;
+  onRemovePresentationSubcategory: (categoryIndex: number, subcategoryIndex: number) => void;
+  onMovePresentationSubcategory: (categoryIndex: number, subcategoryIndex: number, direction: -1 | 1) => void;
   onSavePolicy: () => void;
 }
 
@@ -101,6 +120,14 @@ export function AdminAccessContent({
   onUpdateSubcategory,
   onRemoveSubcategory,
   onMoveSubcategory,
+  onAddPresentationCategory,
+  onUpdatePresentationCategory,
+  onRemovePresentationCategory,
+  onMovePresentationCategory,
+  onAddPresentationSubcategory,
+  onUpdatePresentationSubcategory,
+  onRemovePresentationSubcategory,
+  onMovePresentationSubcategory,
   onSavePolicy
 }: AdminAccessContentProps) {
   const { messages } = useProtectedI18n();
@@ -153,6 +180,14 @@ export function AdminAccessContent({
                 onUpdateSubcategory={onUpdateSubcategory}
                 onRemoveSubcategory={onRemoveSubcategory}
                 onMoveSubcategory={onMoveSubcategory}
+                onAddPresentationCategory={onAddPresentationCategory}
+                onUpdatePresentationCategory={onUpdatePresentationCategory}
+                onRemovePresentationCategory={onRemovePresentationCategory}
+                onMovePresentationCategory={onMovePresentationCategory}
+                onAddPresentationSubcategory={onAddPresentationSubcategory}
+                onUpdatePresentationSubcategory={onUpdatePresentationSubcategory}
+                onRemovePresentationSubcategory={onRemovePresentationSubcategory}
+                onMovePresentationSubcategory={onMovePresentationSubcategory}
                 onSave={onSavePolicy}
               />
             </InlineWorkPaneSurface>

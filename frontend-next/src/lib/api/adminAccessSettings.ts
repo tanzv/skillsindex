@@ -1,11 +1,15 @@
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
-import type { AdminNormalizedCategoryCatalogItem } from "@/src/lib/admin/adminAccountSettingsModel";
+import type {
+  AdminNormalizedCategoryCatalogItem,
+  AdminNormalizedPresentationTaxonomyCategory
+} from "@/src/lib/admin/adminAccountSettingsModel";
 
 export interface AdminAccessSettingsPayloads {
   accounts: unknown;
   registration: unknown;
   marketplaceRanking: unknown;
   categoryCatalog: unknown;
+  presentationTaxonomy: unknown;
   authProviders: unknown;
 }
 
@@ -17,17 +21,19 @@ export interface SaveAdminAccessSettingsInput {
   highlightLimit: number;
   categoryLeaderLimit: number;
   categoryCatalog: AdminNormalizedCategoryCatalogItem[];
+  presentationTaxonomy: AdminNormalizedPresentationTaxonomyCategory[];
   enabledProviders: string[];
 }
 
 type ClientFetchJSON = typeof clientFetchJSON;
 
 export async function loadAdminAccessSettingsPayloads(fetchJSON: ClientFetchJSON = clientFetchJSON): Promise<AdminAccessSettingsPayloads> {
-  const [accounts, registration, marketplaceRanking, categoryCatalog, authProviders] = await Promise.all([
+  const [accounts, registration, marketplaceRanking, categoryCatalog, presentationTaxonomy, authProviders] = await Promise.all([
     fetchJSON("/api/bff/admin/accounts"),
     fetchJSON("/api/bff/admin/settings/registration"),
     fetchJSON("/api/bff/admin/settings/marketplace-ranking"),
     fetchJSON("/api/bff/admin/settings/category-catalog"),
+    fetchJSON("/api/bff/admin/settings/presentation-taxonomy"),
     fetchJSON("/api/bff/admin/settings/auth-providers")
   ]);
 
@@ -36,6 +42,7 @@ export async function loadAdminAccessSettingsPayloads(fetchJSON: ClientFetchJSON
     registration,
     marketplaceRanking,
     categoryCatalog,
+    presentationTaxonomy,
     authProviders
   };
 }
@@ -75,6 +82,27 @@ export async function saveAdminAccessSettings(
             name: subcategory.name,
             enabled: subcategory.enabled,
             sort_order: subcategory.sortOrder
+          }))
+        }))
+      }
+    }),
+    fetchJSON("/api/bff/admin/settings/presentation-taxonomy", {
+      method: "POST",
+      body: {
+        items: input.presentationTaxonomy.map((category) => ({
+          slug: category.slug,
+          name: category.name,
+          description: category.description,
+          enabled: category.enabled,
+          sort_order: category.sortOrder,
+          subcategories: category.subcategories.map((subcategory) => ({
+            slug: subcategory.slug,
+            name: subcategory.name,
+            enabled: subcategory.enabled,
+            sort_order: subcategory.sortOrder,
+            legacy_category_slugs: subcategory.legacyCategorySlugs,
+            legacy_subcategory_slugs: subcategory.legacySubcategorySlugs,
+            keywords: subcategory.keywords
           }))
         }))
       }

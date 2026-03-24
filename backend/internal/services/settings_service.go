@@ -28,6 +28,8 @@ const (
 	SettingMarketplaceRankingCategoryLeaderLimit = "marketplace_ranking_category_leader_limit"
 	// SettingMarketplaceCategoryCatalog stores the mutable marketplace category catalog definition payload.
 	SettingMarketplaceCategoryCatalog = "marketplace_category_catalog"
+	// SettingMarketplacePresentationTaxonomy stores the mutable marketplace grouped presentation taxonomy payload.
+	SettingMarketplacePresentationTaxonomy = "marketplace_presentation_taxonomy"
 	// SettingAuthEnabledProviders controls which third-party auth providers are visible on auth pages.
 	SettingAuthEnabledProviders = "auth_enabled_providers"
 	// SettingUserCenterPermissionOverrides stores per-user permissions for user center operations.

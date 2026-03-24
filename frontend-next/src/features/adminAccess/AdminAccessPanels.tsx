@@ -13,12 +13,15 @@ import { Input } from "@/src/components/ui/input";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import type {
   AdminNormalizedCategoryCatalogItem,
-  AdminNormalizedCategoryCatalogSubcategory
+  AdminNormalizedCategoryCatalogSubcategory,
+  AdminNormalizedPresentationTaxonomyCategory,
+  AdminNormalizedPresentationTaxonomySubcategory
 } from "@/src/lib/admin/adminAccountSettingsModel";
 import { resolveAccountRoleLabel, resolveAccountStatusLabel, resolveAccountUsernameLabel } from "@/src/lib/accountDisplay";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import { CategoryCatalogEditor } from "./AdminAccessCategoryCatalogEditor";
+import { PresentationTaxonomyEditor } from "./AdminAccessPresentationTaxonomyEditor";
 import type { AccessAccountItem, AccessOverview, AdminAccessGovernanceData } from "./model";
 import { formatDateTime } from "../adminGovernance/shared";
 
@@ -133,6 +136,14 @@ export function AccessPolicyForm({
   onUpdateSubcategory,
   onRemoveSubcategory,
   onMoveSubcategory,
+  onAddPresentationCategory,
+  onUpdatePresentationCategory,
+  onRemovePresentationCategory,
+  onMovePresentationCategory,
+  onAddPresentationSubcategory,
+  onUpdatePresentationSubcategory,
+  onRemovePresentationSubcategory,
+  onMovePresentationSubcategory,
   onSave
 }: {
   data: AdminAccessGovernanceData;
@@ -144,6 +155,7 @@ export function AccessPolicyForm({
     highlightLimit: number;
     categoryLeaderLimit: number;
     categoryCatalog: AdminNormalizedCategoryCatalogItem[];
+    presentationTaxonomy: AdminNormalizedPresentationTaxonomyCategory[];
     enabledProviders: string[];
   };
   busyAction: string;
@@ -157,6 +169,7 @@ export function AccessPolicyForm({
       highlightLimit: number;
       categoryLeaderLimit: number;
       categoryCatalog: AdminNormalizedCategoryCatalogItem[];
+      presentationTaxonomy: AdminNormalizedPresentationTaxonomyCategory[];
     }>
   ) => void;
   onAddCategory: () => void;
@@ -171,6 +184,21 @@ export function AccessPolicyForm({
   ) => void;
   onRemoveSubcategory: (categoryIndex: number, subcategoryIndex: number) => void;
   onMoveSubcategory: (categoryIndex: number, subcategoryIndex: number, direction: -1 | 1) => void;
+  onAddPresentationCategory: () => void;
+  onUpdatePresentationCategory: (
+    categoryIndex: number,
+    patch: Partial<AdminNormalizedPresentationTaxonomyCategory>
+  ) => void;
+  onRemovePresentationCategory: (categoryIndex: number) => void;
+  onMovePresentationCategory: (categoryIndex: number, direction: -1 | 1) => void;
+  onAddPresentationSubcategory: (categoryIndex: number) => void;
+  onUpdatePresentationSubcategory: (
+    categoryIndex: number,
+    subcategoryIndex: number,
+    patch: Partial<AdminNormalizedPresentationTaxonomySubcategory>
+  ) => void;
+  onRemovePresentationSubcategory: (categoryIndex: number, subcategoryIndex: number) => void;
+  onMovePresentationSubcategory: (categoryIndex: number, subcategoryIndex: number, direction: -1 | 1) => void;
   onSave: () => void;
 }) {
   const { messages } = useProtectedI18n();
@@ -276,6 +304,18 @@ export function AccessPolicyForm({
         onUpdateSubcategory={onUpdateSubcategory}
         onRemoveSubcategory={onRemoveSubcategory}
         onMoveSubcategory={onMoveSubcategory}
+      />
+
+      <PresentationTaxonomyEditor
+        categories={settingsDraft.presentationTaxonomy}
+        onAddCategory={onAddPresentationCategory}
+        onUpdateCategory={onUpdatePresentationCategory}
+        onRemoveCategory={onRemovePresentationCategory}
+        onMoveCategory={onMovePresentationCategory}
+        onAddSubcategory={onAddPresentationSubcategory}
+        onUpdateSubcategory={onUpdatePresentationSubcategory}
+        onRemoveSubcategory={onRemovePresentationSubcategory}
+        onMoveSubcategory={onMovePresentationSubcategory}
       />
 
       <AccessSnapshotPanel data={data} />

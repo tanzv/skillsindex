@@ -69,6 +69,10 @@ func (a *App) handleAPIAdminAccounts(w http.ResponseWriter, r *http.Request) {
 	if _, ok := requireAdminUserManagementAPI(w, r); !ok {
 		return
 	}
+	if a.authService == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		return
+	}
 
 	role, ok := parseOptionalAdminAccountRoleFilter(r.URL.Query().Get("role"))
 	if !ok {
@@ -110,6 +114,10 @@ func (a *App) handleAPIAdminAccounts(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPIAdminAccountStatus(w http.ResponseWriter, r *http.Request) {
 	user, ok := requireAdminUserManagementAPI(w, r)
 	if !ok {
+		return
+	}
+	if a.authService == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
 		return
 	}
 
@@ -161,6 +169,10 @@ func (a *App) handleAPIAdminAccountForceSignout(w http.ResponseWriter, r *http.R
 	if !ok {
 		return
 	}
+	if a.authService == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		return
+	}
 
 	targetUserID, target, ok := a.loadAdminManagedUserTarget(w, r)
 	if !ok {
@@ -187,6 +199,10 @@ func (a *App) handleAPIAdminAccountForceSignout(w http.ResponseWriter, r *http.R
 func (a *App) handleAPIAdminAccountPasswordReset(w http.ResponseWriter, r *http.Request) {
 	user, ok := requireAdminUserManagementAPI(w, r)
 	if !ok {
+		return
+	}
+	if a.authService == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
 		return
 	}
 	password, decodeErr := readStringField(r, "new_password")

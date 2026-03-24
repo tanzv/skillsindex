@@ -23,6 +23,28 @@ describe("admin access settings api", () => {
             }
           ]
         },
+        "/api/bff/admin/settings/presentation-taxonomy": {
+          items: [
+            {
+              slug: "custom-operations",
+              name: "Custom Operations",
+              description: "Custom grouped operations category.",
+              enabled: true,
+              sort_order: 10,
+              subcategories: [
+                {
+                  slug: "release-command",
+                  name: "Release Command",
+                  enabled: true,
+                  sort_order: 10,
+                  legacy_category_slugs: ["devops"],
+                  legacy_subcategory_slugs: ["monitoring"],
+                  keywords: ["ops", "governance"]
+                }
+              ]
+            }
+          ]
+        },
         "/api/bff/admin/settings/auth-providers": { auth_providers: ["password"] }
       };
 
@@ -45,15 +67,38 @@ describe("admin access settings api", () => {
           }
         ]
       },
+      presentationTaxonomy: {
+        items: [
+          {
+            slug: "custom-operations",
+            name: "Custom Operations",
+            description: "Custom grouped operations category.",
+            enabled: true,
+            sort_order: 10,
+            subcategories: [
+              {
+                slug: "release-command",
+                name: "Release Command",
+                enabled: true,
+                sort_order: 10,
+                legacy_category_slugs: ["devops"],
+                legacy_subcategory_slugs: ["monitoring"],
+                keywords: ["ops", "governance"]
+              }
+            ]
+          }
+        ]
+      },
       authProviders: { auth_providers: ["password"] }
     });
 
-    expect(fetchJSON).toHaveBeenCalledTimes(5);
+    expect(fetchJSON).toHaveBeenCalledTimes(6);
     expect(fetchJSON).toHaveBeenNthCalledWith(1, "/api/bff/admin/accounts");
     expect(fetchJSON).toHaveBeenNthCalledWith(2, "/api/bff/admin/settings/registration");
     expect(fetchJSON).toHaveBeenNthCalledWith(3, "/api/bff/admin/settings/marketplace-ranking");
     expect(fetchJSON).toHaveBeenNthCalledWith(4, "/api/bff/admin/settings/category-catalog");
-    expect(fetchJSON).toHaveBeenNthCalledWith(5, "/api/bff/admin/settings/auth-providers");
+    expect(fetchJSON).toHaveBeenNthCalledWith(5, "/api/bff/admin/settings/presentation-taxonomy");
+    expect(fetchJSON).toHaveBeenNthCalledWith(6, "/api/bff/admin/settings/auth-providers");
   });
 
   it("saves registration, category catalog, and provider settings through one shared boundary", async () => {
@@ -79,12 +124,32 @@ describe("admin access settings api", () => {
             subcategories: [{ slug: "release-management", name: "Release Management", enabled: true, sortOrder: 20 }]
           }
         ],
+        presentationTaxonomy: [
+          {
+            slug: "custom-operations",
+            name: "Custom Operations",
+            description: "Custom grouped operations category.",
+            enabled: true,
+            sortOrder: 10,
+            subcategories: [
+              {
+                slug: "release-command",
+                name: "Release Command",
+                enabled: true,
+                sortOrder: 10,
+                legacyCategorySlugs: ["devops"],
+                legacySubcategorySlugs: ["monitoring"],
+                keywords: ["ops", "governance"]
+              }
+            ]
+          }
+        ],
         enabledProviders: ["password", "oidc"]
       },
       fetchJSON
     );
 
-    expect(fetchJSON).toHaveBeenCalledTimes(4);
+    expect(fetchJSON).toHaveBeenCalledTimes(5);
     expect(fetchJSON).toHaveBeenNthCalledWith(1, "/api/bff/admin/settings/registration", {
       method: "POST",
       body: {
@@ -116,7 +181,32 @@ describe("admin access settings api", () => {
         ]
       }
     });
-    expect(fetchJSON).toHaveBeenNthCalledWith(4, "/api/bff/admin/settings/auth-providers", {
+    expect(fetchJSON).toHaveBeenNthCalledWith(4, "/api/bff/admin/settings/presentation-taxonomy", {
+      method: "POST",
+      body: {
+        items: [
+          {
+            slug: "custom-operations",
+            name: "Custom Operations",
+            description: "Custom grouped operations category.",
+            enabled: true,
+            sort_order: 10,
+            subcategories: [
+              {
+                slug: "release-command",
+                name: "Release Command",
+                enabled: true,
+                sort_order: 10,
+                legacy_category_slugs: ["devops"],
+                legacy_subcategory_slugs: ["monitoring"],
+                keywords: ["ops", "governance"]
+              }
+            ]
+          }
+        ]
+      }
+    });
+    expect(fetchJSON).toHaveBeenNthCalledWith(5, "/api/bff/admin/settings/auth-providers", {
       method: "POST",
       body: {
         auth_providers: ["password", "oidc"]

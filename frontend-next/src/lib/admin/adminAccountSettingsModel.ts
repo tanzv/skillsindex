@@ -50,6 +50,29 @@ export interface AdminNormalizedCategoryCatalogPayload {
   items: AdminNormalizedCategoryCatalogItem[];
 }
 
+export interface AdminNormalizedPresentationTaxonomySubcategory {
+  slug: string;
+  name: string;
+  enabled: boolean;
+  sortOrder: number;
+  legacyCategorySlugs: string[];
+  legacySubcategorySlugs: string[];
+  keywords: string[];
+}
+
+export interface AdminNormalizedPresentationTaxonomyCategory {
+  slug: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  sortOrder: number;
+  subcategories: AdminNormalizedPresentationTaxonomySubcategory[];
+}
+
+export interface AdminNormalizedPresentationTaxonomyPayload {
+  items: AdminNormalizedPresentationTaxonomyCategory[];
+}
+
 function asObject(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 }
@@ -172,6 +195,36 @@ export function normalizeAdminCategoryCatalogPayload(payload: unknown): AdminNor
           name: asString(subcategory.name),
           enabled: subcategory.enabled !== false,
           sortOrder: Math.max(1, asNumber(subcategory.sort_order) || (subcategoryIndex + 1) * 10)
+        }))
+        .sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
+
+      return {
+        slug: asString(item.slug),
+        name: asString(item.name),
+        description: asString(item.description),
+        enabled: item.enabled !== false,
+        sortOrder: Math.max(1, asNumber(item.sort_order) || (index + 1) * 10),
+        subcategories
+      };
+    })
+    .sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
+
+  return { items };
+}
+
+export function normalizeAdminPresentationTaxonomyPayload(payload: unknown): AdminNormalizedPresentationTaxonomyPayload {
+  const record = asObject(payload);
+  const items = asArray<Record<string, unknown>>(record.items)
+    .map((item, index) => {
+      const subcategories = asArray<Record<string, unknown>>(item.subcategories)
+        .map((subcategory, subcategoryIndex) => ({
+          slug: asString(subcategory.slug),
+          name: asString(subcategory.name),
+          enabled: subcategory.enabled !== false,
+          sortOrder: Math.max(1, asNumber(subcategory.sort_order) || (subcategoryIndex + 1) * 10),
+          legacyCategorySlugs: dedupeStringList(asArray(subcategory.legacy_category_slugs)),
+          legacySubcategorySlugs: dedupeStringList(asArray(subcategory.legacy_subcategory_slugs)),
+          keywords: dedupeStringList(asArray(subcategory.keywords))
         }))
         .sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
 

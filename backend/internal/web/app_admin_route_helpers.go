@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"skillsindex/internal/catalog"
 	"skillsindex/internal/models"
 
 	"github.com/go-chi/chi/v5"
@@ -27,8 +26,9 @@ func (a *App) loadCategoryCards(ctx context.Context, focusCategory string) ([]Ca
 		return nil, err
 	}
 
-	cards := make([]CategoryCard, 0)
-	for _, item := range catalog.Categories() {
+	definitions := a.marketplaceCatalogCategories(ctx)
+	cards := make([]CategoryCard, 0, len(definitions))
+	for _, item := range definitions {
 		card := CategoryCard{
 			Slug:        item.Slug,
 			Name:        item.Name,

@@ -112,6 +112,36 @@ function renderAccessContent(options: { activePane?: "idle" | "policy" | "accoun
           rankingLimit: 18,
           highlightLimit: 4,
           categoryLeaderLimit: 2,
+          categoryCatalog: [
+            {
+              slug: "team-ops",
+              name: "Team Operations",
+              description: "Operational workflows for delivery teams.",
+              enabled: true,
+              sortOrder: 10,
+              subcategories: [{ slug: "release-management", name: "Release Management", enabled: true, sortOrder: 20 }]
+            }
+          ],
+          presentationTaxonomy: [
+            {
+              slug: "custom-operations",
+              name: "Custom Operations",
+              description: "Custom grouped operations category.",
+              enabled: true,
+              sortOrder: 10,
+              subcategories: [
+                {
+                  slug: "release-command",
+                  name: "Release Command",
+                  enabled: true,
+                  sortOrder: 10,
+                  legacyCategorySlugs: ["devops"],
+                  legacySubcategorySlugs: ["monitoring"],
+                  keywords: ["ops", "governance"]
+                }
+              ]
+            }
+          ],
           enabledProviders: ["password"],
           availableProviders: ["password", "github"]
         },
@@ -160,6 +190,26 @@ function renderAccessContent(options: { activePane?: "idle" | "policy" | "accoun
               subcategories: [{ slug: "release-management", name: "Release Management", enabled: true, sortOrder: 20 }]
             }
           ],
+          presentationTaxonomy: [
+            {
+              slug: "custom-operations",
+              name: "Custom Operations",
+              description: "Custom grouped operations category.",
+              enabled: true,
+              sortOrder: 10,
+              subcategories: [
+                {
+                  slug: "release-command",
+                  name: "Release Command",
+                  enabled: true,
+                  sortOrder: 10,
+                  legacyCategorySlugs: ["devops"],
+                  legacySubcategorySlugs: ["monitoring"],
+                  keywords: ["ops", "governance"]
+                }
+              ]
+            }
+          ],
           enabledProviders: ["password"]
         },
         onRefresh: () => undefined,
@@ -180,6 +230,14 @@ function renderAccessContent(options: { activePane?: "idle" | "policy" | "accoun
         onUpdateSubcategory: () => undefined,
         onRemoveSubcategory: () => undefined,
         onMoveSubcategory: () => undefined,
+        onAddPresentationCategory: () => undefined,
+        onUpdatePresentationCategory: () => undefined,
+        onRemovePresentationCategory: () => undefined,
+        onMovePresentationCategory: () => undefined,
+        onAddPresentationSubcategory: () => undefined,
+        onUpdatePresentationSubcategory: () => undefined,
+        onRemovePresentationSubcategory: () => undefined,
+        onMovePresentationSubcategory: () => undefined,
         onSavePolicy: () => undefined
       })
     )
@@ -198,6 +256,7 @@ describe("admin access content", () => {
     expect(markup).toContain("Ranking limit");
     expect(markup).toContain("Highlight limit");
     expect(markup).toContain("Category leader limit");
+    expect(markup).toContain("Presentation Taxonomy");
     expect(markup).toContain("Policy Snapshot");
     expect(markup).toContain("Available providers");
   });

@@ -22,6 +22,16 @@ import {
   updateCategoryCatalogCategory,
   updateCategoryCatalogSubcategory,
 } from "./categoryCatalogDraft";
+import {
+  addPresentationTaxonomyCategory,
+  addPresentationTaxonomySubcategory,
+  movePresentationTaxonomyCategory,
+  movePresentationTaxonomySubcategory,
+  removePresentationTaxonomyCategory,
+  removePresentationTaxonomySubcategory,
+  updatePresentationTaxonomyCategory,
+  updatePresentationTaxonomySubcategory
+} from "./presentationTaxonomyDraft";
 import { AdminAccessContent } from "./AdminAccessContent";
 import { buildAccessOverview, buildAdminAccessGovernanceData, resolveSelectedAccessAccount } from "./model";
 
@@ -39,6 +49,7 @@ export function AdminAccessPage() {
   const [rawRegistration, setRawRegistration] = useState<unknown>(null);
   const [rawMarketplaceRanking, setRawMarketplaceRanking] = useState<unknown>(null);
   const [rawCategoryCatalog, setRawCategoryCatalog] = useState<unknown>(null);
+  const [rawPresentationTaxonomy, setRawPresentationTaxonomy] = useState<unknown>(null);
   const [rawAuthProviders, setRawAuthProviders] = useState<unknown>(null);
   const [settingsDraft, setSettingsDraft] = useState<SaveAdminAccessSettingsInput>({
     allowRegistration: false,
@@ -48,6 +59,7 @@ export function AdminAccessPage() {
     highlightLimit: 3,
     categoryLeaderLimit: 5,
     categoryCatalog: [],
+    presentationTaxonomy: [],
     enabledProviders: [],
   });
 
@@ -58,9 +70,10 @@ export function AdminAccessPage() {
         registration: rawRegistration,
         marketplaceRanking: rawMarketplaceRanking,
         categoryCatalog: rawCategoryCatalog,
+        presentationTaxonomy: rawPresentationTaxonomy,
         authProviders: rawAuthProviders
       }),
-    [rawAccounts, rawAuthProviders, rawCategoryCatalog, rawMarketplaceRanking, rawRegistration]
+    [rawAccounts, rawAuthProviders, rawCategoryCatalog, rawMarketplaceRanking, rawPresentationTaxonomy, rawRegistration]
   );
   const overview = useMemo(
     () =>
@@ -95,11 +108,12 @@ export function AdminAccessPage() {
     setLoading(true);
     setError("");
     try {
-      const { accounts, registration, marketplaceRanking, categoryCatalog, authProviders } = await loadAdminAccessSettingsPayloads();
+      const { accounts, registration, marketplaceRanking, categoryCatalog, presentationTaxonomy, authProviders } = await loadAdminAccessSettingsPayloads();
       setRawAccounts(accounts);
       setRawRegistration(registration);
       setRawMarketplaceRanking(marketplaceRanking);
       setRawCategoryCatalog(categoryCatalog);
+      setRawPresentationTaxonomy(presentationTaxonomy);
       setRawAuthProviders(authProviders);
     } catch (loadError) {
       setError(resolveRequestErrorDisplayMessage(loadError, accessMessages.loadError));
@@ -107,6 +121,7 @@ export function AdminAccessPage() {
       setRawRegistration(null);
       setRawMarketplaceRanking(null);
       setRawCategoryCatalog(null);
+      setRawPresentationTaxonomy(null);
       setRawAuthProviders(null);
     } finally {
       setLoading(false);
@@ -125,6 +140,7 @@ export function AdminAccessPage() {
       rawRegistration !== null &&
       rawMarketplaceRanking !== null &&
       rawCategoryCatalog !== null &&
+      rawPresentationTaxonomy !== null &&
       rawAuthProviders !== null
   });
 
@@ -140,6 +156,15 @@ export function AdminAccessPage() {
         ...category,
         subcategories: category.subcategories.map((subcategory) => ({ ...subcategory }))
       })),
+      presentationTaxonomy: data.presentationTaxonomy.map((category) => ({
+        ...category,
+        subcategories: category.subcategories.map((subcategory) => ({
+          ...subcategory,
+          legacyCategorySlugs: [...subcategory.legacyCategorySlugs],
+          legacySubcategorySlugs: [...subcategory.legacySubcategorySlugs],
+          keywords: [...subcategory.keywords]
+        }))
+      })),
       enabledProviders: [...data.enabledProviders]
     });
   }, [
@@ -149,6 +174,7 @@ export function AdminAccessPage() {
     data.enabledProviders,
     data.highlightLimit,
     data.marketplacePublicAccess,
+    data.presentationTaxonomy,
     data.rankingDefaultSort,
     data.rankingLimit
   ]);
@@ -266,6 +292,68 @@ export function AdminAccessPage() {
         setSettingsDraft((current) => ({
           ...current,
           categoryCatalog: moveCategoryCatalogSubcategory(current.categoryCatalog, categoryIndex, subcategoryIndex, direction)
+        }))
+      }
+      onAddPresentationCategory={() =>
+        setSettingsDraft((current) => ({
+          ...current,
+          presentationTaxonomy: addPresentationTaxonomyCategory(current.presentationTaxonomy)
+        }))
+      }
+      onUpdatePresentationCategory={(categoryIndex, patch) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          presentationTaxonomy: updatePresentationTaxonomyCategory(current.presentationTaxonomy, categoryIndex, patch)
+        }))
+      }
+      onRemovePresentationCategory={(categoryIndex) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          presentationTaxonomy: removePresentationTaxonomyCategory(current.presentationTaxonomy, categoryIndex)
+        }))
+      }
+      onMovePresentationCategory={(categoryIndex, direction) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          presentationTaxonomy: movePresentationTaxonomyCategory(current.presentationTaxonomy, categoryIndex, direction)
+        }))
+      }
+      onAddPresentationSubcategory={(categoryIndex) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          presentationTaxonomy: addPresentationTaxonomySubcategory(current.presentationTaxonomy, categoryIndex)
+        }))
+      }
+      onUpdatePresentationSubcategory={(categoryIndex, subcategoryIndex, patch) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          presentationTaxonomy: updatePresentationTaxonomySubcategory(
+            current.presentationTaxonomy,
+            categoryIndex,
+            subcategoryIndex,
+            patch
+          )
+        }))
+      }
+      onRemovePresentationSubcategory={(categoryIndex, subcategoryIndex) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          presentationTaxonomy: removePresentationTaxonomySubcategory(
+            current.presentationTaxonomy,
+            categoryIndex,
+            subcategoryIndex
+          )
+        }))
+      }
+      onMovePresentationSubcategory={(categoryIndex, subcategoryIndex, direction) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          presentationTaxonomy: movePresentationTaxonomySubcategory(
+            current.presentationTaxonomy,
+            categoryIndex,
+            subcategoryIndex,
+            direction
+          )
         }))
       }
       onSavePolicy={() => void saveAccessSettings()}

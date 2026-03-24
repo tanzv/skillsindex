@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"skillsindex/internal/catalog"
-
 	"github.com/go-chi/chi/v5"
 )
 
@@ -252,7 +250,7 @@ func (a *App) renderWithStatus(w http.ResponseWriter, r *http.Request, status in
 		}
 	}
 	if len(data.CatalogCategories) == 0 {
-		data.CatalogCategories = catalog.Categories()
+		data.CatalogCategories = a.marketplaceCatalogCategories(r.Context())
 	}
 	if strings.TrimSpace(data.CSRFToken) == "" {
 		data.CSRFToken = ensureCSRFToken(w, r, a.cookieSecure)

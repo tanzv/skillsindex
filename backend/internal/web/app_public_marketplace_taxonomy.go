@@ -9,6 +9,7 @@ import (
 
 type (
 	marketplacePresentationSubcategoryDefinition struct {
+		Name                   string
 		Slug                   string
 		LegacyCategorySlugs    []string
 		LegacySubcategorySlugs []string
@@ -16,6 +17,8 @@ type (
 	}
 
 	marketplacePresentationCategoryDefinition struct {
+		Name          string
+		Description   string
 		Slug          string
 		Subcategories []marketplacePresentationSubcategoryDefinition
 	}
@@ -30,13 +33,11 @@ type (
 	}
 
 	marketplacePresentationClassification struct {
-		CategorySlug    string
-		SubcategorySlug string
-	}
-
-	marketplaceCategoryAggregate struct {
-		TotalSkills          int64
-		VisibleSubcategories map[string]int64
+		CategorySlug        string
+		CategoryLabel       string
+		CategoryDescription string
+		SubcategorySlug     string
+		SubcategoryLabel    string
 	}
 )
 
@@ -163,6 +164,13 @@ func matchesMarketplacePresentationSubcategoryByHeuristics(
 }
 
 func resolveMarketplacePresentationClassification(input marketplacePresentationClassificationInput) marketplacePresentationClassification {
+	return resolveMarketplacePresentationClassificationWithTaxonomy(publicMarketplaceTaxonomy, input)
+}
+
+func resolveMarketplacePresentationClassificationWithTaxonomy(
+	taxonomy []marketplacePresentationCategoryDefinition,
+	input marketplacePresentationClassificationInput,
+) marketplacePresentationClassification {
 	keywords := buildMarketplacePresentationKeywordSet(
 		input.RawCategory,
 		input.RawSubcategory,
@@ -172,31 +180,53 @@ func resolveMarketplacePresentationClassification(input marketplacePresentationC
 		input.SourceType,
 	)
 
-	for _, category := range publicMarketplaceTaxonomy {
+	for _, category := range taxonomy {
 		for _, subcategory := range category.Subcategories {
 			if matchesMarketplacePresentationSubcategoryByLegacySlug(subcategory, input) {
-				return marketplacePresentationClassification{CategorySlug: category.Slug, SubcategorySlug: subcategory.Slug}
+				return marketplacePresentationClassification{
+					CategorySlug:        category.Slug,
+					CategoryLabel:       category.Name,
+					CategoryDescription: category.Description,
+					SubcategorySlug:     subcategory.Slug,
+					SubcategoryLabel:    subcategory.Name,
+				}
 			}
 		}
 	}
 
-	for _, category := range publicMarketplaceTaxonomy {
+	for _, category := range taxonomy {
 		for _, subcategory := range category.Subcategories {
 			if matchesMarketplacePresentationSubcategoryByHeuristics(subcategory, input, keywords) {
-				return marketplacePresentationClassification{CategorySlug: category.Slug, SubcategorySlug: subcategory.Slug}
+				return marketplacePresentationClassification{
+					CategorySlug:        category.Slug,
+					CategoryLabel:       category.Name,
+					CategoryDescription: category.Description,
+					SubcategorySlug:     subcategory.Slug,
+					SubcategoryLabel:    subcategory.Name,
+				}
 			}
 		}
 	}
 
 	return marketplacePresentationClassification{
-		CategorySlug:    "programming-development",
-		SubcategorySlug: "coding-agents-ides",
+		CategorySlug:        "programming-development",
+		CategoryLabel:       "Programming & Development",
+		CategoryDescription: "Coding workflows, agents, infra, security, and applied software delivery tracks.",
+		SubcategorySlug:     "coding-agents-ides",
+		SubcategoryLabel:    "Coding Agents & IDEs",
 	}
 }
 
 func isPresentationMarketplaceCategorySlug(categorySlug string) bool {
+	return isPresentationMarketplaceCategorySlugWithTaxonomy(publicMarketplaceTaxonomy, categorySlug)
+}
+
+func isPresentationMarketplaceCategorySlugWithTaxonomy(
+	taxonomy []marketplacePresentationCategoryDefinition,
+	categorySlug string,
+) bool {
 	normalizedCategory := normalizeMarketplacePresentationSlug(categorySlug)
-	for _, category := range publicMarketplaceTaxonomy {
+	for _, category := range taxonomy {
 		if category.Slug == normalizedCategory {
 			return true
 		}
@@ -210,6 +240,24 @@ func filterSkillsByMarketplaceSelection(
 	subcategory string,
 	categoryGroup string,
 	subcategoryGroup string,
+) []models.Skill {
+	return filterSkillsByMarketplaceSelectionWithTaxonomy(
+		skills,
+		category,
+		subcategory,
+		categoryGroup,
+		subcategoryGroup,
+		publicMarketplaceTaxonomy,
+	)
+}
+
+func filterSkillsByMarketplaceSelectionWithTaxonomy(
+	skills []models.Skill,
+	category string,
+	subcategory string,
+	categoryGroup string,
+	subcategoryGroup string,
+	taxonomy []marketplacePresentationCategoryDefinition,
 ) []models.Skill {
 	normalizedCategory := strings.TrimSpace(category)
 	normalizedSubcategory := strings.TrimSpace(subcategory)
@@ -229,14 +277,7 @@ func filterSkillsByMarketplaceSelection(
 			continue
 		}
 		if normalizedCategoryGroup != "" || normalizedSubcategoryGroup != "" {
-			classification := resolveMarketplacePresentationClassification(marketplacePresentationClassificationInput{
-				RawCategory:    skill.CategorySlug,
-				RawSubcategory: skill.SubcategorySlug,
-				RawLabel:       skill.Name,
-				RawDescription: skill.Description,
-				Tags:           skillTagNames(skill.Tags),
-				SourceType:     string(skill.SourceType),
-			})
+			classification := resolveMarketplacePresentationClassificationForSkillWithTaxonomy(skill, taxonomy)
 			if normalizedCategoryGroup != "" && classification.CategorySlug != normalizedCategoryGroup {
 				continue
 			}
@@ -249,17 +290,35 @@ func filterSkillsByMarketplaceSelection(
 	return filtered
 }
 
-func buildMarketplacePresentationCategoryDetailSummary(
-	cards []CategoryCard,
-	categoryGroup string,
-	matchingSkills int64,
-) *apiPublicMarketplaceCategoryDetailSummary {
-	normalizedCategoryGroup := normalizeMarketplacePresentationSlug(categoryGroup)
-	if normalizedCategoryGroup == "" {
-		return nil
-	}
+func resolveMarketplacePresentationClassificationForSkill(skill models.Skill) marketplacePresentationClassification {
+	return resolveMarketplacePresentationClassificationForSkillWithTaxonomy(skill, publicMarketplaceTaxonomy)
+}
 
-	aggregates := make(map[string]*marketplaceCategoryAggregate)
+func resolveMarketplacePresentationClassificationForSkillWithTaxonomy(
+	skill models.Skill,
+	taxonomy []marketplacePresentationCategoryDefinition,
+) marketplacePresentationClassification {
+	return resolveMarketplacePresentationClassificationWithTaxonomy(taxonomy, marketplacePresentationClassificationInput{
+		RawCategory:    skill.CategorySlug,
+		RawSubcategory: skill.SubcategorySlug,
+		RawLabel:       skill.Name,
+		RawDescription: skill.Description,
+		Tags:           skillTagNames(skill.Tags),
+		SourceType:     string(skill.SourceType),
+	})
+}
+
+func buildMarketplacePresentationCategoryCards(cards []CategoryCard) []CategoryCard {
+	return buildMarketplacePresentationCategoryCardsWithTaxonomy(cards, publicMarketplaceTaxonomy)
+}
+
+func buildMarketplacePresentationCategoryCardsWithTaxonomy(
+	cards []CategoryCard,
+	taxonomy []marketplacePresentationCategoryDefinition,
+) []CategoryCard {
+	groupedCategories := make(map[string]*CategoryCard)
+	groupedSubcategories := make(map[string]map[string]*SubcategoryCard)
+
 	for _, card := range cards {
 		rawSubcategories := card.Subcategories
 		if len(rawSubcategories) == 0 {
@@ -269,43 +328,105 @@ func buildMarketplacePresentationCategoryDetailSummary(
 			if subcategory.Count <= 0 {
 				continue
 			}
-			classification := resolveMarketplacePresentationClassification(marketplacePresentationClassificationInput{
+
+			classification := resolveMarketplacePresentationClassificationWithTaxonomy(taxonomy, marketplacePresentationClassificationInput{
 				RawCategory:    card.Slug,
 				RawSubcategory: subcategory.Slug,
 				RawLabel:       strings.TrimSpace(card.Name + " " + subcategory.Name),
 				RawDescription: strings.TrimSpace(card.Description + " " + subcategory.Name),
 			})
-			aggregate := aggregates[classification.CategorySlug]
-			if aggregate == nil {
-				aggregate = &marketplaceCategoryAggregate{VisibleSubcategories: make(map[string]int64)}
-				aggregates[classification.CategorySlug] = aggregate
+
+			groupedCategory := groupedCategories[classification.CategorySlug]
+			if groupedCategory == nil {
+				groupedCategory = &CategoryCard{
+					Slug:        classification.CategorySlug,
+					Name:        classification.CategoryLabel,
+					Description: classification.CategoryDescription,
+				}
+				groupedCategories[classification.CategorySlug] = groupedCategory
 			}
-			aggregate.TotalSkills += subcategory.Count
-			aggregate.VisibleSubcategories[classification.SubcategorySlug] += subcategory.Count
+			groupedCategory.Count += subcategory.Count
+
+			if groupedSubcategories[classification.CategorySlug] == nil {
+				groupedSubcategories[classification.CategorySlug] = make(map[string]*SubcategoryCard)
+			}
+			groupedSubcategory := groupedSubcategories[classification.CategorySlug][classification.SubcategorySlug]
+			if groupedSubcategory == nil {
+				groupedSubcategory = &SubcategoryCard{
+					Slug: classification.SubcategorySlug,
+					Name: classification.SubcategoryLabel,
+				}
+				groupedSubcategories[classification.CategorySlug][classification.SubcategorySlug] = groupedSubcategory
+			}
+			groupedSubcategory.Count += subcategory.Count
 		}
 	}
 
-	aggregate := aggregates[normalizedCategoryGroup]
-	if aggregate == nil {
+	result := make([]CategoryCard, 0, len(groupedCategories))
+	for _, category := range taxonomy {
+		groupedCategory := groupedCategories[category.Slug]
+		if groupedCategory == nil || groupedCategory.Count <= 0 {
+			continue
+		}
+
+		subcategories := make([]SubcategoryCard, 0, len(category.Subcategories))
+		for _, subcategory := range category.Subcategories {
+			groupedSubcategory := groupedSubcategories[category.Slug][subcategory.Slug]
+			if groupedSubcategory == nil || groupedSubcategory.Count <= 0 {
+				continue
+			}
+			subcategories = append(subcategories, *groupedSubcategory)
+		}
+		groupedCategory.Subcategories = subcategories
+		result = append(result, *groupedCategory)
+	}
+
+	return result
+}
+
+func buildMarketplacePresentationCategoryDetailSummary(
+	cards []CategoryCard,
+	categoryGroup string,
+	matchingSkills int64,
+) *apiPublicMarketplaceCategoryDetailSummary {
+	return buildMarketplacePresentationCategoryDetailSummaryWithTaxonomy(cards, categoryGroup, matchingSkills, publicMarketplaceTaxonomy)
+}
+
+func buildMarketplacePresentationCategoryDetailSummaryWithTaxonomy(
+	cards []CategoryCard,
+	categoryGroup string,
+	matchingSkills int64,
+	taxonomy []marketplacePresentationCategoryDefinition,
+) *apiPublicMarketplaceCategoryDetailSummary {
+	normalizedCategoryGroup := normalizeMarketplacePresentationSlug(categoryGroup)
+	if normalizedCategoryGroup == "" {
+		return nil
+	}
+
+	for _, category := range cards {
+		if normalizeMarketplacePresentationSlug(category.Slug) != normalizedCategoryGroup {
+			continue
+		}
+
+		visibleSubcategoryCount := 0
+		for _, subcategory := range category.Subcategories {
+			if subcategory.Count > 0 {
+				visibleSubcategoryCount++
+			}
+		}
+
 		return &apiPublicMarketplaceCategoryDetailSummary{
-			CategorySlug:     normalizedCategoryGroup,
-			TotalSkills:      0,
+			CategorySlug:     category.Slug,
+			TotalSkills:      category.Count,
 			MatchingSkills:   matchingSkills,
-			SubcategoryCount: 0,
-		}
-	}
-
-	visibleSubcategoryCount := 0
-	for _, count := range aggregate.VisibleSubcategories {
-		if count > 0 {
-			visibleSubcategoryCount++
+			SubcategoryCount: visibleSubcategoryCount,
 		}
 	}
 
 	return &apiPublicMarketplaceCategoryDetailSummary{
 		CategorySlug:     normalizedCategoryGroup,
-		TotalSkills:      aggregate.TotalSkills,
+		TotalSkills:      0,
 		MatchingSkills:   matchingSkills,
-		SubcategoryCount: visibleSubcategoryCount,
+		SubcategoryCount: 0,
 	}
 }

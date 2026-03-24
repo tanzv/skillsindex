@@ -381,6 +381,18 @@ function createMockBackendServer() {
     return json(response, 200, state.categoryCatalog);
   }
 
+  if (method === "GET" && pathname === "/api/v1/admin/settings/presentation-taxonomy") {
+    return json(response, 200, state.presentationTaxonomy);
+  }
+
+  if (method === "POST" && pathname === "/api/v1/admin/settings/presentation-taxonomy") {
+    const body = await parseJSONBody(request);
+    state.presentationTaxonomy = {
+      items: Array.isArray(body.items) ? body.items : state.presentationTaxonomy.items
+    };
+    return json(response, 200, state.presentationTaxonomy);
+  }
+
   if (method === "GET" && pathname === "/api/v1/admin/settings/auth-providers") {
     return json(response, 200, state.authProviders);
   }

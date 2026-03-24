@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"skillsindex/internal/catalog"
 	"skillsindex/internal/models"
 	"skillsindex/internal/services"
 )
@@ -18,7 +17,7 @@ func (a *App) buildAdminViewData(
 	adminSection string,
 	routeContext adminRouteContext,
 ) (ViewData, int, error) {
-	view := buildAdminBaseViewData(r, user, adminSection, routeContext)
+	view := a.buildAdminBaseViewData(r, user, adminSection, routeContext)
 
 	scopeCounts, err := a.skillService.CountDashboardSkills(r.Context(), user.ID, user.CanViewAllSkills())
 	if err != nil {
@@ -56,7 +55,7 @@ func (a *App) buildAdminViewData(
 	return view, http.StatusOK, nil
 }
 
-func buildAdminBaseViewData(
+func (a *App) buildAdminBaseViewData(
 	r *http.Request,
 	user *models.User,
 	adminSection string,
@@ -93,7 +92,7 @@ func buildAdminBaseViewData(
 		Message:           strings.TrimSpace(r.URL.Query().Get("msg")),
 		Error:             strings.TrimSpace(r.URL.Query().Get("err")),
 		Categories:        []CategoryCard{},
-		CatalogCategories: catalog.Categories(),
+		CatalogCategories: a.marketplaceCatalogCategories(r.Context()),
 	}
 }
 
