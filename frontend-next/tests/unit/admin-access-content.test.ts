@@ -82,7 +82,7 @@ function createMessages() {
   });
 }
 
-function renderAccessContent(options: { policyDrawerOpen?: boolean; accountDrawerOpen?: boolean } = {}) {
+function renderAccessContent(options: { activePane?: "idle" | "policy" | "account" } = {}) {
   return renderToStaticMarkup(
     createElement(
       ProtectedI18nProvider,
@@ -142,8 +142,7 @@ function renderAccessContent(options: { policyDrawerOpen?: boolean; accountDrawe
           updatedAt: "2026-03-16T11:00:00Z",
           forceLogoutAt: ""
         },
-        policyDrawerOpen: options.policyDrawerOpen ?? false,
-        accountDrawerOpen: options.accountDrawerOpen ?? false,
+        activePane: options.activePane ?? "idle",
         settingsDraft: {
           allowRegistration: true,
           marketplacePublicAccess: true,
@@ -151,19 +150,36 @@ function renderAccessContent(options: { policyDrawerOpen?: boolean; accountDrawe
           rankingLimit: 18,
           highlightLimit: 4,
           categoryLeaderLimit: 2,
+          categoryCatalog: [
+            {
+              slug: "team-ops",
+              name: "Team Operations",
+              description: "Operational workflows for delivery teams.",
+              enabled: true,
+              sortOrder: 10,
+              subcategories: [{ slug: "release-management", name: "Release Management", enabled: true, sortOrder: 20 }]
+            }
+          ],
           enabledProviders: ["password"]
         },
         onRefresh: () => undefined,
         onKeywordChange: () => undefined,
         onClearKeyword: () => undefined,
-        onOpenPolicyDrawer: () => undefined,
-        onClosePolicyDrawer: () => undefined,
-        onOpenAccountDrawer: (accountId: number) => {
+        onOpenPolicyPane: () => undefined,
+        onOpenAccountPane: (accountId: number) => {
           void accountId;
         },
-        onCloseAccountDrawer: () => undefined,
+        onClosePane: () => undefined,
         onToggleProvider: () => undefined,
         onSettingsDraftChange: () => undefined,
+        onAddCategory: () => undefined,
+        onUpdateCategory: () => undefined,
+        onRemoveCategory: () => undefined,
+        onMoveCategory: () => undefined,
+        onAddSubcategory: () => undefined,
+        onUpdateSubcategory: () => undefined,
+        onRemoveSubcategory: () => undefined,
+        onMoveSubcategory: () => undefined,
         onSavePolicy: () => undefined
       })
     )
@@ -171,11 +187,13 @@ function renderAccessContent(options: { policyDrawerOpen?: boolean; accountDrawe
 }
 
 describe("admin access content", () => {
-  it("renders marketplace ranking settings in the policy drawer", () => {
-    const markup = renderAccessContent({ policyDrawerOpen: true });
+  it("renders marketplace ranking settings in the policy pane", () => {
+    const markup = renderAccessContent({ activePane: "policy" });
 
     expect(markup).toContain("Marketplace Top");
     expect(markup).toContain("Manage public ranking defaults.");
+    expect(markup).toContain('data-testid="admin-access-policy-pane"');
+    expect(markup).not.toContain('role="dialog"');
     expect(markup).toContain("Default sort");
     expect(markup).toContain("Ranking limit");
     expect(markup).toContain("Highlight limit");
@@ -191,5 +209,16 @@ describe("admin access content", () => {
     expect(markup).toContain(">18<");
     expect(markup).toContain(">4<");
     expect(markup).toContain(">2<");
+  });
+
+  it("renders the selected account in the inline detail pane", () => {
+    const markup = renderAccessContent({ activePane: "account" });
+
+    expect(markup).toContain('data-testid="admin-access-account-pane"');
+    expect(markup).not.toContain('role="dialog"');
+    expect(markup).toContain("reviewer #3");
+    expect(markup).toContain("Status");
+    expect(markup).toContain("Role");
+    expect(markup).toContain("Close Panel");
   });
 });

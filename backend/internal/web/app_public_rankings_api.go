@@ -23,11 +23,15 @@ func mapPublicRankingCategoryLeaders(items []services.PublicRankingCategoryLeade
 	result := make([]apiPublicRankingCategoryLeader, 0, len(items))
 	for _, item := range items {
 		leadingSkill := apiSkillResponse{}
+		categorySlug := item.CategorySlug
 		if skillItems := resultToAPIItems([]models.Skill{item.LeadingSkill}); len(skillItems) > 0 {
 			leadingSkill = skillItems[0]
+			if strings.TrimSpace(leadingSkill.CategoryGroup) != "" {
+				categorySlug = leadingSkill.CategoryGroup
+			}
 		}
 		result = append(result, apiPublicRankingCategoryLeader{
-			CategorySlug:   item.CategorySlug,
+			CategorySlug:   categorySlug,
 			Count:          item.Count,
 			AverageQuality: item.AverageQuality,
 			LeadingSkill:   leadingSkill,

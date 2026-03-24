@@ -3,9 +3,11 @@ import {
   normalizeAdminAccountsPayload,
   normalizeAdminAccountStatus,
   normalizeAdminAuthProvidersPayload,
+  normalizeAdminCategoryCatalogPayload,
   normalizeAdminMarketplaceRankingPayload,
   normalizeAdminRegistrationPayload,
-  type AdminNormalizedAccountItem
+  type AdminNormalizedAccountItem,
+  type AdminNormalizedCategoryCatalogItem
 } from "@/src/lib/admin/adminAccountSettingsModel";
 
 export type AccessAccountItem = AdminNormalizedAccountItem;
@@ -19,6 +21,7 @@ export interface AdminAccessGovernanceData {
   rankingLimit: number;
   highlightLimit: number;
   categoryLeaderLimit: number;
+  categoryCatalog: AdminNormalizedCategoryCatalogItem[];
   enabledProviders: string[];
   availableProviders: string[];
 }
@@ -50,11 +53,13 @@ export function buildAdminAccessGovernanceData(payloads: {
   accounts: unknown;
   registration: unknown;
   marketplaceRanking: unknown;
+  categoryCatalog: unknown;
   authProviders: unknown;
 }): AdminAccessGovernanceData {
   const accounts = normalizeAdminAccountsPayload(payloads.accounts);
   const registration = normalizeAdminRegistrationPayload(payloads.registration);
   const marketplaceRanking = normalizeAdminMarketplaceRankingPayload(payloads.marketplaceRanking);
+  const categoryCatalog = normalizeAdminCategoryCatalogPayload(payloads.categoryCatalog);
   const authProviders = normalizeAdminAuthProvidersPayload(payloads.authProviders);
 
   return {
@@ -66,6 +71,7 @@ export function buildAdminAccessGovernanceData(payloads: {
     rankingLimit: marketplaceRanking.rankingLimit,
     highlightLimit: marketplaceRanking.highlightLimit,
     categoryLeaderLimit: marketplaceRanking.categoryLeaderLimit,
+    categoryCatalog: categoryCatalog.items,
     enabledProviders: authProviders.authProviders,
     availableProviders: authProviders.availableAuthProviders
   };

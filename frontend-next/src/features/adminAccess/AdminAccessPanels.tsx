@@ -11,9 +11,14 @@ import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
+import type {
+  AdminNormalizedCategoryCatalogItem,
+  AdminNormalizedCategoryCatalogSubcategory
+} from "@/src/lib/admin/adminAccountSettingsModel";
 import { resolveAccountRoleLabel, resolveAccountStatusLabel, resolveAccountUsernameLabel } from "@/src/lib/accountDisplay";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
+import { CategoryCatalogEditor } from "./AdminAccessCategoryCatalogEditor";
 import type { AccessAccountItem, AccessOverview, AdminAccessGovernanceData } from "./model";
 import { formatDateTime } from "../adminGovernance/shared";
 
@@ -120,6 +125,14 @@ export function AccessPolicyForm({
   busyAction,
   onToggleProvider,
   onSettingsDraftChange,
+  onAddCategory,
+  onUpdateCategory,
+  onRemoveCategory,
+  onMoveCategory,
+  onAddSubcategory,
+  onUpdateSubcategory,
+  onRemoveSubcategory,
+  onMoveSubcategory,
   onSave
 }: {
   data: AdminAccessGovernanceData;
@@ -130,6 +143,7 @@ export function AccessPolicyForm({
     rankingLimit: number;
     highlightLimit: number;
     categoryLeaderLimit: number;
+    categoryCatalog: AdminNormalizedCategoryCatalogItem[];
     enabledProviders: string[];
   };
   busyAction: string;
@@ -142,8 +156,21 @@ export function AccessPolicyForm({
       rankingLimit: number;
       highlightLimit: number;
       categoryLeaderLimit: number;
+      categoryCatalog: AdminNormalizedCategoryCatalogItem[];
     }>
   ) => void;
+  onAddCategory: () => void;
+  onUpdateCategory: (categoryIndex: number, patch: Partial<AdminNormalizedCategoryCatalogItem>) => void;
+  onRemoveCategory: (categoryIndex: number) => void;
+  onMoveCategory: (categoryIndex: number, direction: -1 | 1) => void;
+  onAddSubcategory: (categoryIndex: number) => void;
+  onUpdateSubcategory: (
+    categoryIndex: number,
+    subcategoryIndex: number,
+    patch: Partial<AdminNormalizedCategoryCatalogSubcategory>
+  ) => void;
+  onRemoveSubcategory: (categoryIndex: number, subcategoryIndex: number) => void;
+  onMoveSubcategory: (categoryIndex: number, subcategoryIndex: number, direction: -1 | 1) => void;
   onSave: () => void;
 }) {
   const { messages } = useProtectedI18n();
@@ -239,6 +266,18 @@ export function AccessPolicyForm({
         </div>
       </div>
 
+      <CategoryCatalogEditor
+        categories={settingsDraft.categoryCatalog}
+        onAddCategory={onAddCategory}
+        onUpdateCategory={onUpdateCategory}
+        onRemoveCategory={onRemoveCategory}
+        onMoveCategory={onMoveCategory}
+        onAddSubcategory={onAddSubcategory}
+        onUpdateSubcategory={onUpdateSubcategory}
+        onRemoveSubcategory={onRemoveSubcategory}
+        onMoveSubcategory={onMoveSubcategory}
+      />
+
       <AccessSnapshotPanel data={data} />
 
       <Button onClick={onSave} disabled={Boolean(busyAction)}>
@@ -262,7 +301,7 @@ export function AccessSnapshotPanel({
       description={accessMessages.snapshotDescription}
       contentClassName="space-y-3"
     >
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2" data-testid="admin-access-enabled-providers">
         <Badge variant={data.allowRegistration ? "soft" : "outline"}>
           {data.allowRegistration ? accessMessages.registrationEnabled : accessMessages.registrationDisabled}
         </Badge>

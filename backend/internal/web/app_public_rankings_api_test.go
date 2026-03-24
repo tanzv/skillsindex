@@ -90,8 +90,12 @@ func TestHandleAPIPublicRankingsReturnsBackendOwnedRankingPayload(t *testing.T) 
 	var payload struct {
 		Sort        string `json:"sort"`
 		RankedItems []struct {
-			ID   uint   `json:"id"`
-			Name string `json:"name"`
+			ID                    uint   `json:"id"`
+			Name                  string `json:"name"`
+			CategoryGroup         string `json:"category_group"`
+			SubcategoryGroup      string `json:"subcategory_group"`
+			CategoryGroupLabel    string `json:"category_group_label"`
+			SubcategoryGroupLabel string `json:"subcategory_group_label"`
 		} `json:"ranked_items"`
 		Highlights []struct {
 			ID uint `json:"id"`
@@ -109,8 +113,11 @@ func TestHandleAPIPublicRankingsReturnsBackendOwnedRankingPayload(t *testing.T) 
 			CategorySlug string `json:"category_slug"`
 			Count        int    `json:"count"`
 			LeadingSkill struct {
-				ID   uint   `json:"id"`
-				Name string `json:"name"`
+				ID                 uint   `json:"id"`
+				Name               string `json:"name"`
+				CategoryGroup      string `json:"category_group"`
+				SubcategoryGroup   string `json:"subcategory_group"`
+				CategoryGroupLabel string `json:"category_group_label"`
 			} `json:"leading_skill"`
 		} `json:"category_leaders"`
 	}
@@ -127,6 +134,12 @@ func TestHandleAPIPublicRankingsReturnsBackendOwnedRankingPayload(t *testing.T) 
 	if payload.RankedItems[0].ID != qualityLeader.ID {
 		t.Fatalf("expected quality leader first: got=%d want=%d", payload.RankedItems[0].ID, qualityLeader.ID)
 	}
+	if payload.RankedItems[0].CategoryGroup == "" || payload.RankedItems[0].SubcategoryGroup == "" {
+		t.Fatalf("expected grouped category fields in ranking items: %+v", payload.RankedItems[0])
+	}
+	if payload.RankedItems[0].CategoryGroupLabel == "" || payload.RankedItems[0].SubcategoryGroupLabel == "" {
+		t.Fatalf("expected grouped category labels in ranking items: %+v", payload.RankedItems[0])
+	}
 	if len(payload.Highlights) != 2 {
 		t.Fatalf("expected highlight payload to honor highlight limit, got=%d", len(payload.Highlights))
 	}
@@ -138,6 +151,12 @@ func TestHandleAPIPublicRankingsReturnsBackendOwnedRankingPayload(t *testing.T) 
 	}
 	if len(payload.CategoryLeaders) != 1 {
 		t.Fatalf("expected category leaders payload to honor category leader limit, got=%d", len(payload.CategoryLeaders))
+	}
+	if payload.CategoryLeaders[0].LeadingSkill.CategoryGroup == "" || payload.CategoryLeaders[0].LeadingSkill.SubcategoryGroup == "" {
+		t.Fatalf("expected grouped category fields in category leader payload: %+v", payload.CategoryLeaders[0].LeadingSkill)
+	}
+	if payload.CategoryLeaders[0].LeadingSkill.CategoryGroupLabel == "" {
+		t.Fatalf("expected grouped category labels in category leader payload: %+v", payload.CategoryLeaders[0].LeadingSkill)
 	}
 	for _, item := range payload.RankedItems {
 		if item.Name == "Seed Hidden Leader" || item.Name == "Private Hidden Leader" {

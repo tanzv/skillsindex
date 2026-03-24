@@ -10,7 +10,8 @@ import {
   profileCompletenessScore,
   resolveAvatarInitials,
   sanitizeAccountAPIKeyCreateDraft,
-  sanitizeAccountProfileDraft
+  sanitizeAccountProfileDraft,
+  shouldCloseCredentialCreatePaneAfterSubmit
 } from "@/src/features/accountCenter/model";
 import { buildAccessOverview, buildAdminAccessGovernanceData, resolveSelectedAccessAccount } from "@/src/features/adminAccess/model";
 
@@ -106,6 +107,11 @@ describe("account center model", () => {
       scopes: ["skills.search.read", "skills.ai_search.read"]
     });
   });
+
+  it("keeps the create pane open when credential creation fails", () => {
+    expect(shouldCloseCredentialCreatePaneAfterSubmit(true)).toBe(true);
+    expect(shouldCloseCredentialCreatePaneAfterSubmit(false)).toBe(false);
+  });
 });
 
 describe("admin access model", () => {
@@ -140,6 +146,26 @@ describe("admin access model", () => {
         highlight_limit: 4,
         category_leader_limit: 2
       },
+      categoryCatalog: {
+        items: [
+          {
+            slug: "team-ops",
+            name: "Team Operations",
+            description: "Operational workflows for delivery teams.",
+            enabled: true,
+            sort_order: 10,
+            subcategories: [{ slug: "release-management", name: "Release Management", enabled: true, sort_order: 20 }]
+          },
+          {
+            slug: "legacy-disabled",
+            name: "Legacy Disabled",
+            description: "Should stay in admin state.",
+            enabled: false,
+            sort_order: 20,
+            subcategories: []
+          }
+        ]
+      },
       authProviders: { auth_providers: ["password", "sso"], available_auth_providers: ["password", "sso", "oidc"] }
     });
 
@@ -150,6 +176,24 @@ describe("admin access model", () => {
     expect(data.rankingLimit).toBe(18);
     expect(data.highlightLimit).toBe(4);
     expect(data.categoryLeaderLimit).toBe(2);
+    expect(data.categoryCatalog).toEqual([
+      {
+        slug: "team-ops",
+        name: "Team Operations",
+        description: "Operational workflows for delivery teams.",
+        enabled: true,
+        sortOrder: 10,
+        subcategories: [{ slug: "release-management", name: "Release Management", enabled: true, sortOrder: 20 }]
+      },
+      {
+        slug: "legacy-disabled",
+        name: "Legacy Disabled",
+        description: "Should stay in admin state.",
+        enabled: false,
+        sortOrder: 20,
+        subcategories: []
+      }
+    ]);
 
     const overview = buildAccessOverview(data);
     expect(overview.metrics).toEqual(

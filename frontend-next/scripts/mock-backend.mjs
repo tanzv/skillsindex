@@ -77,6 +77,23 @@ function isAuthenticated(request) {
   return cookies.get("skillsindex_session") === sessionCookieValue;
 }
 
+function buildPublicAuthProvidersPayload(currentState) {
+  const inventory = Array.isArray(currentState.authProviderConfigs?.items) ? currentState.authProviderConfigs.items : [];
+  const items = inventory
+    .filter((item) => Boolean(item.enabled) && Boolean(item.connected) && Boolean(item.available) && String(item.start_path || "").trim())
+    .map((item) => ({
+      key: String(item.key || ""),
+      start_path: String(item.start_path || ""),
+      label: `Continue with ${String(item.display_name || item.key || "Provider")}`
+    }));
+
+  return {
+    ok: true,
+    auth_providers: items.map((item) => item.key),
+    items
+  };
+}
+
 function json(response, status, payload, extraHeaders = {}) {
   response.writeHead(status, {
     "content-type": "application/json",
@@ -199,6 +216,10 @@ function createMockBackendServer() {
         user: state.profile.user,
         marketplace_public_access: true
       });
+    }
+
+    if (method === "GET" && pathname === "/api/v1/auth/providers") {
+      return json(response, 200, buildPublicAuthProvidersPayload(state));
     }
 
     if (
@@ -346,6 +367,18 @@ function createMockBackendServer() {
       category_leader_limit: Number(body.category_leader_limit) || state.marketplaceRanking.category_leader_limit
     };
     return json(response, 200, state.marketplaceRanking);
+  }
+
+  if (method === "GET" && pathname === "/api/v1/admin/settings/category-catalog") {
+    return json(response, 200, state.categoryCatalog);
+  }
+
+  if (method === "POST" && pathname === "/api/v1/admin/settings/category-catalog") {
+    const body = await parseJSONBody(request);
+    state.categoryCatalog = {
+      items: Array.isArray(body.items) ? body.items : state.categoryCatalog.items
+    };
+    return json(response, 200, state.categoryCatalog);
   }
 
   if (method === "GET" && pathname === "/api/v1/admin/settings/auth-providers") {

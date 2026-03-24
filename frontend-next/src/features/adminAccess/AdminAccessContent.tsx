@@ -1,9 +1,13 @@
 "use client";
 
 import { AdminPageScaffold } from "@/src/components/admin/AdminPrimitives";
-import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
+import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
+import type {
+  AdminNormalizedCategoryCatalogItem,
+  AdminNormalizedCategoryCatalogSubcategory
+} from "@/src/lib/admin/adminAccountSettingsModel";
 
 import type { AccessAccountItem, AccessOverview, AdminAccessGovernanceData } from "./model";
 import {
@@ -25,8 +29,7 @@ interface AdminAccessContentProps {
   overview: AccessOverview;
   filteredAccounts: AccessAccountItem[];
   selectedAccount: AccessAccountItem | null;
-  policyDrawerOpen: boolean;
-  accountDrawerOpen: boolean;
+  activePane: "idle" | "policy" | "account";
   settingsDraft: {
     allowRegistration: boolean;
     marketplacePublicAccess: boolean;
@@ -34,15 +37,15 @@ interface AdminAccessContentProps {
     rankingLimit: number;
     highlightLimit: number;
     categoryLeaderLimit: number;
+    categoryCatalog: AdminNormalizedCategoryCatalogItem[];
     enabledProviders: string[];
   };
   onRefresh: () => void;
   onKeywordChange: (value: string) => void;
   onClearKeyword: () => void;
-  onOpenPolicyDrawer: () => void;
-  onClosePolicyDrawer: () => void;
-  onOpenAccountDrawer: (accountId: number) => void;
-  onCloseAccountDrawer: () => void;
+  onOpenPolicyPane: () => void;
+  onOpenAccountPane: (accountId: number) => void;
+  onClosePane: () => void;
   onToggleProvider: (provider: string) => void;
   onSettingsDraftChange: (
     patch: Partial<{
@@ -52,8 +55,21 @@ interface AdminAccessContentProps {
       rankingLimit: number;
       highlightLimit: number;
       categoryLeaderLimit: number;
+      categoryCatalog: AdminNormalizedCategoryCatalogItem[];
     }>
   ) => void;
+  onAddCategory: () => void;
+  onUpdateCategory: (categoryIndex: number, patch: Partial<AdminNormalizedCategoryCatalogItem>) => void;
+  onRemoveCategory: (categoryIndex: number) => void;
+  onMoveCategory: (categoryIndex: number, direction: -1 | 1) => void;
+  onAddSubcategory: (categoryIndex: number) => void;
+  onUpdateSubcategory: (
+    categoryIndex: number,
+    subcategoryIndex: number,
+    patch: Partial<AdminNormalizedCategoryCatalogSubcategory>
+  ) => void;
+  onRemoveSubcategory: (categoryIndex: number, subcategoryIndex: number) => void;
+  onMoveSubcategory: (categoryIndex: number, subcategoryIndex: number, direction: -1 | 1) => void;
   onSavePolicy: () => void;
 }
 
@@ -67,18 +83,24 @@ export function AdminAccessContent({
   overview,
   filteredAccounts,
   selectedAccount,
-  policyDrawerOpen,
-  accountDrawerOpen,
+  activePane,
   settingsDraft,
   onRefresh,
   onKeywordChange,
   onClearKeyword,
-  onOpenPolicyDrawer,
-  onClosePolicyDrawer,
-  onOpenAccountDrawer,
-  onCloseAccountDrawer,
+  onOpenPolicyPane,
+  onOpenAccountPane,
+  onClosePane,
   onToggleProvider,
   onSettingsDraftChange,
+  onAddCategory,
+  onUpdateCategory,
+  onRemoveCategory,
+  onMoveCategory,
+  onAddSubcategory,
+  onUpdateSubcategory,
+  onRemoveSubcategory,
+  onMoveSubcategory,
   onSavePolicy
 }: AdminAccessContentProps) {
   const { messages } = useProtectedI18n();
@@ -103,51 +125,53 @@ export function AdminAccessContent({
             accounts={filteredAccounts}
             onKeywordChange={onKeywordChange}
             onClear={onClearKeyword}
-            onOpenDetail={onOpenAccountDrawer}
+            onOpenDetail={onOpenAccountPane}
           />
         </div>
 
         <div className="space-y-6">
-          <AccessPolicyTriggerPanel loading={loading} busyAction={busyAction} onOpen={onOpenPolicyDrawer} />
+          <AccessPolicyTriggerPanel loading={loading} busyAction={busyAction} onOpen={onOpenPolicyPane} />
+          {activePane === "policy" ? (
+            <InlineWorkPaneSurface
+              title={accessMessages.policyTitle}
+              description={accessMessages.policyDescription}
+              closeLabel={accessMessages.closePanelAction}
+              onClose={onClosePane}
+              dataTestId="admin-access-policy-pane"
+            >
+              <AccessPolicyForm
+                data={data}
+                settingsDraft={settingsDraft}
+                busyAction={busyAction}
+                onToggleProvider={onToggleProvider}
+                onSettingsDraftChange={onSettingsDraftChange}
+                onAddCategory={onAddCategory}
+                onUpdateCategory={onUpdateCategory}
+                onRemoveCategory={onRemoveCategory}
+                onMoveCategory={onMoveCategory}
+                onAddSubcategory={onAddSubcategory}
+                onUpdateSubcategory={onUpdateSubcategory}
+                onRemoveSubcategory={onRemoveSubcategory}
+                onMoveSubcategory={onMoveSubcategory}
+                onSave={onSavePolicy}
+              />
+            </InlineWorkPaneSurface>
+          ) : null}
+          {activePane === "account" && selectedAccount ? (
+            <InlineWorkPaneSurface
+              title={`${selectedAccount.username || accessMessages.valueUnknownUser} #${selectedAccount.id}`}
+              description={accessMessages.selectedAccountDescription}
+              closeLabel={accessMessages.closePanelAction}
+              onClose={onClosePane}
+              dataTestId="admin-access-account-pane"
+            >
+              <SelectedAccessAccountSummary account={selectedAccount} />
+            </InlineWorkPaneSurface>
+          ) : null}
           <AccessSnapshotPanel data={data} />
           <AccessRoleSummaryPanel overview={overview} />
         </div>
       </div>
-
-      <DetailFormSurface
-        open={policyDrawerOpen}
-        variant="drawer"
-        size="default"
-        title={accessMessages.policyTitle}
-        description={accessMessages.policyDescription}
-        closeLabel={accessMessages.closePanelAction}
-        onClose={onClosePolicyDrawer}
-      >
-        <AccessPolicyForm
-          data={data}
-          settingsDraft={settingsDraft}
-          busyAction={busyAction}
-          onToggleProvider={onToggleProvider}
-          onSettingsDraftChange={onSettingsDraftChange}
-          onSave={onSavePolicy}
-        />
-      </DetailFormSurface>
-
-      <DetailFormSurface
-        open={accountDrawerOpen && Boolean(selectedAccount)}
-        variant="drawer"
-        size="default"
-        title={
-          selectedAccount
-            ? `${selectedAccount.username || accessMessages.valueUnknownUser} #${selectedAccount.id}`
-            : accessMessages.selectedAccountTitle
-        }
-        description={accessMessages.selectedAccountDescription}
-        closeLabel={accessMessages.closePanelAction}
-        onClose={onCloseAccountDrawer}
-      >
-        <SelectedAccessAccountSummary account={selectedAccount} />
-      </DetailFormSurface>
     </AdminPageScaffold>
   );
 }

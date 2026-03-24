@@ -28,6 +28,7 @@ test("redirects /admin to overview and keeps overview quick links working", asyn
 
 test("covers admin access filtering and catalog read contracts", async ({ page }) => {
   await loginAsAdmin(page, "/admin/access");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await page.getByLabel("Search accounts").fill("reviewer");
   await expect(page.getByTestId("admin-access-account-3")).toBeVisible();
@@ -37,19 +38,24 @@ test("covers admin access filtering and catalog read contracts", async ({ page }
   await expect(page.getByTestId("admin-access-account-1")).toBeVisible();
 
   await page.getByRole("button", { name: "Open Policy Panel" }).click();
-  const policyDialog = page.getByRole("dialog", { name: "Access Policy" });
-  await policyDialog.getByLabel("Allow registration").uncheck();
-  await policyDialog.getByLabel("Marketplace public access").uncheck();
-  await policyDialog.getByLabel("Provider google").check();
-  await policyDialog.getByRole("button", { name: "Save Access Policy" }).click();
+  const policyPane = page.getByTestId("admin-access-policy-pane");
+  await expect(policyPane).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await policyPane.getByLabel("Allow registration").uncheck();
+  await policyPane.getByLabel("Marketplace public access").uncheck();
+  await policyPane.getByLabel("Provider google").check();
+  await policyPane.getByRole("button", { name: "Save Access Policy" }).click();
   await expect(page.getByText("Access policy updated.")).toBeVisible();
-  await policyDialog.getByRole("button", { name: "Close Panel" }).click();
-  await expect(policyDialog).toHaveCount(0);
+  await policyPane.getByRole("button", { name: "Close Panel" }).click();
+  await expect(policyPane).toHaveCount(0);
 
   await page.getByRole("button", { name: "Refresh" }).click();
+  const enabledProviders = page.getByTestId("admin-access-enabled-providers");
   await expect(page.getByText("Registration disabled")).toBeVisible();
   await expect(page.getByText("Marketplace private")).toBeVisible();
-  await expect(page.getByText("password, github, google")).toBeVisible();
+  await expect(enabledProviders).toContainText("password");
+  await expect(enabledProviders).toContainText("github");
+  await expect(enabledProviders).toContainText("google");
 
   await gotoProtectedRoute(page, "/admin/skills");
   await page.getByLabel("Catalog keyword").fill("Repository");
@@ -65,21 +71,51 @@ test("covers admin access filtering and catalog read contracts", async ({ page }
   await expect(page.getByTestId("admin-catalog-row-72")).toContainText(/failed/i);
 });
 
+test("opens admin job and sync run details in inline work panes", async ({ page }) => {
+  await loginAsAdmin(page, "/admin/jobs");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  const jobRow = page.locator('[data-testid^="admin-catalog-row-"]').first();
+  await expect(jobRow).toBeVisible();
+  await jobRow.getByRole("button", { name: "Open Details" }).click();
+
+  const jobPane = page.getByTestId("admin-jobs-detail-pane");
+  await expect(jobPane).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(jobPane.getByRole("button", { name: "Close Panel" })).toBeVisible();
+  await jobPane.getByRole("button", { name: "Close Panel" }).click();
+  await expect(jobPane).toHaveCount(0);
+
+  await gotoProtectedRoute(page, "/admin/sync-jobs");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  const syncRunRow = page.locator('[data-testid^="admin-catalog-row-"]').first();
+  await expect(syncRunRow).toBeVisible();
+  await syncRunRow.getByRole("button", { name: "Open Details" }).click();
+
+  const syncRunPane = page.getByTestId("admin-sync-runs-detail-pane");
+  await expect(syncRunPane).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(syncRunPane.getByRole("link", { name: "Open Sync Policy" })).toBeVisible();
+});
+
 test("persists marketplace ranking settings from the admin access policy drawer", async ({ page }) => {
   await loginAsAdmin(page, "/admin/access");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Open Policy Panel" }).click();
-  const policyDialog = page.getByRole("dialog", { name: "Access Policy" });
+  const policyPane = page.getByTestId("admin-access-policy-pane");
+  await expect(policyPane).toBeVisible();
 
-  await policyDialog.getByLabel("Default ranking sort").selectOption("quality");
-  await policyDialog.getByLabel("Ranking limit").fill("7");
-  await policyDialog.getByLabel("Highlight limit").fill("2");
-  await policyDialog.getByLabel("Category leader limit").fill("4");
-  await policyDialog.getByRole("button", { name: "Save Access Policy" }).click();
+  await policyPane.getByLabel("Default ranking sort").selectOption("quality");
+  await policyPane.getByLabel("Ranking limit").fill("7");
+  await policyPane.getByLabel("Highlight limit").fill("2");
+  await policyPane.getByLabel("Category leader limit").fill("4");
+  await policyPane.getByRole("button", { name: "Save Access Policy" }).click();
 
   await expect(page.getByText("Access policy updated.")).toBeVisible();
-  await policyDialog.getByRole("button", { name: "Close Panel" }).click();
-  await expect(policyDialog).toHaveCount(0);
+  await policyPane.getByRole("button", { name: "Close Panel" }).click();
+  await expect(policyPane).toHaveCount(0);
 
   await expect(page.getByTestId("admin-access-ranking-default-sort")).toContainText("Quality");
   await expect(page.getByTestId("admin-access-ranking-limit")).toContainText("7");
@@ -94,11 +130,12 @@ test("persists marketplace ranking settings from the admin access policy drawer"
   await expect(page.getByTestId("admin-access-category-leader-limit")).toContainText("4");
 
   await page.getByRole("button", { name: "Open Policy Panel" }).click();
-  const reloadedPolicyDialog = page.getByRole("dialog", { name: "Access Policy" });
-  await expect(reloadedPolicyDialog.getByLabel("Default ranking sort")).toHaveValue("quality");
-  await expect(reloadedPolicyDialog.getByLabel("Ranking limit")).toHaveValue("7");
-  await expect(reloadedPolicyDialog.getByLabel("Highlight limit")).toHaveValue("2");
-  await expect(reloadedPolicyDialog.getByLabel("Category leader limit")).toHaveValue("4");
+  const reloadedPolicyPane = page.getByTestId("admin-access-policy-pane");
+  await expect(reloadedPolicyPane).toBeVisible();
+  await expect(reloadedPolicyPane.getByLabel("Default ranking sort")).toHaveValue("quality");
+  await expect(reloadedPolicyPane.getByLabel("Ranking limit")).toHaveValue("7");
+  await expect(reloadedPolicyPane.getByLabel("Highlight limit")).toHaveValue("2");
+  await expect(reloadedPolicyPane.getByLabel("Category leader limit")).toHaveValue("4");
 });
 
 test("filters integrations by selection and search", async ({ page }) => {
@@ -120,8 +157,9 @@ test("filters integrations by selection and search", async ({ page }) => {
   await expect(page.getByTestId("integration-connector-21")).toHaveCount(0);
 });
 
-test("opens integration details in a drawer without breaking ledger filtering", async ({ page }) => {
+test("opens integration details in an inline work pane without breaking ledger filtering", async ({ page }) => {
   await loginAsAdmin(page, "/admin/integrations");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 
   const webhookLedger = page.getByTestId("integration-webhook-ledger");
   await page.getByTestId("integration-connector-21").click();
@@ -131,16 +169,16 @@ test("opens integration details in a drawer without breaking ledger filtering", 
   const connectorCard = page.getByTestId("integration-connector-21");
   await connectorCard.getByRole("button", { name: "Open Details" }).click();
 
-  const detailDialog = page.getByRole("dialog", { name: "GitHub App" });
-  await expect(detailDialog).toBeVisible();
-  await expect(detailDialog.getByRole("button", { name: "Close Panel" })).toBeVisible();
-  await expect(detailDialog).toContainText("Provider: github");
+  const detailPane = page.getByTestId("admin-integrations-detail-pane");
+  await expect(detailPane).toBeVisible();
+  await expect(detailPane.getByRole("button", { name: "Close Panel" })).toBeVisible();
+  await expect(detailPane).toContainText("Provider: github");
   await expect(webhookLedger).toContainText("repository.sync.completed");
   await expect(webhookLedger).toContainText("repository.sync.failed");
   await expect(webhookLedger).not.toContainText("ops.alert.triggered");
 
-  await detailDialog.getByRole("button", { name: "Close Panel" }).click();
-  await expect(detailDialog).toHaveCount(0);
+  await detailPane.getByRole("button", { name: "Close Panel" }).click();
+  await expect(detailPane).toHaveCount(0);
   await expect(webhookLedger).toContainText("repository.sync.completed");
   await expect(webhookLedger).not.toContainText("ops.alert.triggered");
 
@@ -151,21 +189,22 @@ test("opens integration details in a drawer without breaking ledger filtering", 
 
   const opsConnectorCard = page.getByTestId("integration-connector-22");
   await opsConnectorCard.getByRole("button", { name: "Open Details" }).click();
-  const opsDetailDialog = page.getByRole("dialog", { name: "Ops Webhook" });
-  await expect(opsDetailDialog).toBeVisible();
-  await opsDetailDialog.getByRole("button", { name: "Close Panel" }).click();
+  await expect(detailPane).toBeVisible();
+  await expect(detailPane).toContainText("Provider: webhook");
+  await detailPane.getByRole("button", { name: "Close Panel" }).click();
   await expect(page.getByTestId("integration-connector-22")).toBeVisible();
   await expect(page.getByTestId("integration-connector-21")).toHaveCount(0);
 });
 
 test("rejects a moderation case from the moderation workspace", async ({ page }) => {
   await loginAsAdmin(page, "/admin/moderation");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 
   const moderationCase = page.getByTestId("moderation-case-card-61");
   await moderationCase.getByRole("button", { name: "Open Details" }).click();
-  const detailDialog = page.getByRole("dialog", { name: "Case #61" });
-  await detailDialog.getByLabel("Rejection note").fill("Rejected during moderation regression coverage.");
-  await detailDialog.getByRole("button", { name: "Reject Case" }).click();
+  const detailPane = page.getByTestId("admin-moderation-detail-pane");
+  await detailPane.getByLabel("Rejection note").fill("Rejected during moderation regression coverage.");
+  await detailPane.getByRole("button", { name: "Reject Case" }).click();
 
   await expect(page.getByText("Case 61 rejected.")).toBeVisible();
   await expect(moderationCase).toContainText("rejected");

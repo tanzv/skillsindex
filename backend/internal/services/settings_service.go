@@ -26,6 +26,8 @@ const (
 	SettingMarketplaceRankingHighlightLimit = "marketplace_ranking_highlight_limit"
 	// SettingMarketplaceRankingCategoryLeaderLimit controls the number of category leader cards in the public rankings payload.
 	SettingMarketplaceRankingCategoryLeaderLimit = "marketplace_ranking_category_leader_limit"
+	// SettingMarketplaceCategoryCatalog stores the mutable marketplace category catalog definition payload.
+	SettingMarketplaceCategoryCatalog = "marketplace_category_catalog"
 	// SettingAuthEnabledProviders controls which third-party auth providers are visible on auth pages.
 	SettingAuthEnabledProviders = "auth_enabled_providers"
 	// SettingUserCenterPermissionOverrides stores per-user permissions for user center operations.

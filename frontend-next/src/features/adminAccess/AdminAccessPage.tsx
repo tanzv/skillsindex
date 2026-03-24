@@ -5,12 +5,23 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
+import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import {
   loadAdminAccessSettingsPayloads,
   saveAdminAccessSettings,
   type SaveAdminAccessSettingsInput,
 } from "@/src/lib/api/adminAccessSettings";
 
+import {
+  addCategoryCatalogCategory,
+  addCategoryCatalogSubcategory,
+  moveCategoryCatalogCategory,
+  moveCategoryCatalogSubcategory,
+  removeCategoryCatalogCategory,
+  removeCategoryCatalogSubcategory,
+  updateCategoryCatalogCategory,
+  updateCategoryCatalogSubcategory,
+} from "./categoryCatalogDraft";
 import { AdminAccessContent } from "./AdminAccessContent";
 import { buildAccessOverview, buildAdminAccessGovernanceData, resolveSelectedAccessAccount } from "./model";
 
@@ -23,11 +34,11 @@ export function AdminAccessPage() {
   const [message, setMessage] = useState("");
   const [keyword, setKeyword] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
-  const [policyDrawerOpen, setPolicyDrawerOpen] = useState(false);
-  const [accountDrawerOpen, setAccountDrawerOpen] = useState(false);
+  const [activePane, setActivePane] = useState<"idle" | "policy" | "account">("idle");
   const [rawAccounts, setRawAccounts] = useState<unknown>(null);
   const [rawRegistration, setRawRegistration] = useState<unknown>(null);
   const [rawMarketplaceRanking, setRawMarketplaceRanking] = useState<unknown>(null);
+  const [rawCategoryCatalog, setRawCategoryCatalog] = useState<unknown>(null);
   const [rawAuthProviders, setRawAuthProviders] = useState<unknown>(null);
   const [settingsDraft, setSettingsDraft] = useState<SaveAdminAccessSettingsInput>({
     allowRegistration: false,
@@ -36,6 +47,7 @@ export function AdminAccessPage() {
     rankingLimit: 12,
     highlightLimit: 3,
     categoryLeaderLimit: 5,
+    categoryCatalog: [],
     enabledProviders: [],
   });
 
@@ -45,9 +57,10 @@ export function AdminAccessPage() {
         accounts: rawAccounts,
         registration: rawRegistration,
         marketplaceRanking: rawMarketplaceRanking,
+        categoryCatalog: rawCategoryCatalog,
         authProviders: rawAuthProviders
       }),
-    [rawAccounts, rawAuthProviders, rawMarketplaceRanking, rawRegistration]
+    [rawAccounts, rawAuthProviders, rawCategoryCatalog, rawMarketplaceRanking, rawRegistration]
   );
   const overview = useMemo(
     () =>
@@ -82,16 +95,18 @@ export function AdminAccessPage() {
     setLoading(true);
     setError("");
     try {
-      const { accounts, registration, marketplaceRanking, authProviders } = await loadAdminAccessSettingsPayloads();
+      const { accounts, registration, marketplaceRanking, categoryCatalog, authProviders } = await loadAdminAccessSettingsPayloads();
       setRawAccounts(accounts);
       setRawRegistration(registration);
       setRawMarketplaceRanking(marketplaceRanking);
+      setRawCategoryCatalog(categoryCatalog);
       setRawAuthProviders(authProviders);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : accessMessages.loadError);
+      setError(resolveRequestErrorDisplayMessage(loadError, accessMessages.loadError));
       setRawAccounts(null);
       setRawRegistration(null);
       setRawMarketplaceRanking(null);
+      setRawCategoryCatalog(null);
       setRawAuthProviders(null);
     } finally {
       setLoading(false);
@@ -105,7 +120,12 @@ export function AdminAccessPage() {
   const loadState = resolveAdminPageLoadState({
     loading,
     error,
-    hasData: rawAccounts !== null && rawRegistration !== null && rawMarketplaceRanking !== null && rawAuthProviders !== null
+    hasData:
+      rawAccounts !== null &&
+      rawRegistration !== null &&
+      rawMarketplaceRanking !== null &&
+      rawCategoryCatalog !== null &&
+      rawAuthProviders !== null
   });
 
   useEffect(() => {
@@ -116,10 +136,15 @@ export function AdminAccessPage() {
       rankingLimit: data.rankingLimit,
       highlightLimit: data.highlightLimit,
       categoryLeaderLimit: data.categoryLeaderLimit,
+      categoryCatalog: data.categoryCatalog.map((category) => ({
+        ...category,
+        subcategories: category.subcategories.map((subcategory) => ({ ...subcategory }))
+      })),
       enabledProviders: [...data.enabledProviders]
     });
   }, [
     data.allowRegistration,
+    data.categoryCatalog,
     data.categoryLeaderLimit,
     data.enabledProviders,
     data.highlightLimit,
@@ -131,7 +156,7 @@ export function AdminAccessPage() {
   useEffect(() => {
     if (selectedAccountId !== null && !selectedAccount) {
       setSelectedAccountId(null);
-      setAccountDrawerOpen(false);
+      setActivePane("idle");
     }
   }, [selectedAccount, selectedAccountId]);
 
@@ -144,7 +169,7 @@ export function AdminAccessPage() {
       setMessage(accessMessages.saveSuccess);
       await loadData();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : accessMessages.saveError);
+      setError(resolveRequestErrorDisplayMessage(actionError, accessMessages.saveError));
     } finally {
       setBusyAction("");
     }
@@ -182,21 +207,67 @@ export function AdminAccessPage() {
       overview={overview}
       filteredAccounts={filteredAccounts}
       selectedAccount={selectedAccount}
-      policyDrawerOpen={policyDrawerOpen}
-      accountDrawerOpen={accountDrawerOpen}
+      activePane={activePane}
       settingsDraft={settingsDraft}
       onRefresh={() => void loadData()}
       onKeywordChange={setKeyword}
       onClearKeyword={() => setKeyword("")}
-      onOpenPolicyDrawer={() => setPolicyDrawerOpen(true)}
-      onClosePolicyDrawer={() => setPolicyDrawerOpen(false)}
-      onOpenAccountDrawer={(accountId) => {
+      onOpenPolicyPane={() => setActivePane("policy")}
+      onOpenAccountPane={(accountId) => {
         setSelectedAccountId(accountId);
-        setAccountDrawerOpen(true);
+        setActivePane("account");
       }}
-      onCloseAccountDrawer={() => setAccountDrawerOpen(false)}
+      onClosePane={() => setActivePane("idle")}
       onToggleProvider={toggleProvider}
       onSettingsDraftChange={(patch) => setSettingsDraft((current) => ({ ...current, ...patch }))}
+      onAddCategory={() =>
+        setSettingsDraft((current) => ({
+          ...current,
+          categoryCatalog: addCategoryCatalogCategory(current.categoryCatalog)
+        }))
+      }
+      onUpdateCategory={(categoryIndex, patch) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          categoryCatalog: updateCategoryCatalogCategory(current.categoryCatalog, categoryIndex, patch)
+        }))
+      }
+      onRemoveCategory={(categoryIndex) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          categoryCatalog: removeCategoryCatalogCategory(current.categoryCatalog, categoryIndex)
+        }))
+      }
+      onMoveCategory={(categoryIndex, direction) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          categoryCatalog: moveCategoryCatalogCategory(current.categoryCatalog, categoryIndex, direction)
+        }))
+      }
+      onAddSubcategory={(categoryIndex) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          categoryCatalog: addCategoryCatalogSubcategory(current.categoryCatalog, categoryIndex)
+        }))
+      }
+      onUpdateSubcategory={(categoryIndex, subcategoryIndex, patch) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          categoryCatalog: updateCategoryCatalogSubcategory(current.categoryCatalog, categoryIndex, subcategoryIndex, patch)
+        }))
+      }
+      onRemoveSubcategory={(categoryIndex, subcategoryIndex) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          categoryCatalog: removeCategoryCatalogSubcategory(current.categoryCatalog, categoryIndex, subcategoryIndex)
+        }))
+      }
+      onMoveSubcategory={(categoryIndex, subcategoryIndex, direction) =>
+        setSettingsDraft((current) => ({
+          ...current,
+          categoryCatalog: moveCategoryCatalogSubcategory(current.categoryCatalog, categoryIndex, subcategoryIndex, direction)
+        }))
+      }
       onSavePolicy={() => void saveAccessSettings()}
     />
   );

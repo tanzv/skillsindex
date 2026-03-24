@@ -1,9 +1,11 @@
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import type { AdminNormalizedCategoryCatalogItem } from "@/src/lib/admin/adminAccountSettingsModel";
 
 export interface AdminAccessSettingsPayloads {
   accounts: unknown;
   registration: unknown;
   marketplaceRanking: unknown;
+  categoryCatalog: unknown;
   authProviders: unknown;
 }
 
@@ -14,16 +16,18 @@ export interface SaveAdminAccessSettingsInput {
   rankingLimit: number;
   highlightLimit: number;
   categoryLeaderLimit: number;
+  categoryCatalog: AdminNormalizedCategoryCatalogItem[];
   enabledProviders: string[];
 }
 
 type ClientFetchJSON = typeof clientFetchJSON;
 
 export async function loadAdminAccessSettingsPayloads(fetchJSON: ClientFetchJSON = clientFetchJSON): Promise<AdminAccessSettingsPayloads> {
-  const [accounts, registration, marketplaceRanking, authProviders] = await Promise.all([
+  const [accounts, registration, marketplaceRanking, categoryCatalog, authProviders] = await Promise.all([
     fetchJSON("/api/bff/admin/accounts"),
     fetchJSON("/api/bff/admin/settings/registration"),
     fetchJSON("/api/bff/admin/settings/marketplace-ranking"),
+    fetchJSON("/api/bff/admin/settings/category-catalog"),
     fetchJSON("/api/bff/admin/settings/auth-providers")
   ]);
 
@@ -31,6 +35,7 @@ export async function loadAdminAccessSettingsPayloads(fetchJSON: ClientFetchJSON
     accounts,
     registration,
     marketplaceRanking,
+    categoryCatalog,
     authProviders
   };
 }
@@ -54,6 +59,24 @@ export async function saveAdminAccessSettings(
         ranking_limit: input.rankingLimit,
         highlight_limit: input.highlightLimit,
         category_leader_limit: input.categoryLeaderLimit
+      }
+    }),
+    fetchJSON("/api/bff/admin/settings/category-catalog", {
+      method: "POST",
+      body: {
+        items: input.categoryCatalog.map((category) => ({
+          slug: category.slug,
+          name: category.name,
+          description: category.description,
+          enabled: category.enabled,
+          sort_order: category.sortOrder,
+          subcategories: category.subcategories.map((subcategory) => ({
+            slug: subcategory.slug,
+            name: subcategory.name,
+            enabled: subcategory.enabled,
+            sort_order: subcategory.sortOrder
+          }))
+        }))
       }
     }),
     fetchJSON("/api/bff/admin/settings/auth-providers", {
