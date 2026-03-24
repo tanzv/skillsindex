@@ -53,6 +53,29 @@ func TestHandleAPIAccountAPIKeysListOwnOnly(t *testing.T) {
 	}
 }
 
+func TestHandleAPIAccountAPIKeysUnauthorized(t *testing.T) {
+	app, _, _, _, _ := setupAdminAPIKeyAPITestApp(t)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/account/apikeys", nil)
+	req.Header.Set("X-Request-ID", "req-account-apikeys-unauthorized")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAccountAPIKeys(recorder, req)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-account-apikeys-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestHandleAPIAccountAPIKeysCreateSuccess(t *testing.T) {
 	app, svc, _, member, _ := setupAdminAPIKeyAPITestApp(t)
 	req := httptest.NewRequest(
@@ -163,5 +186,45 @@ func TestHandleAPIAccountAPIKeyScopesUpdateSuccess(t *testing.T) {
 	}
 	if services.APIKeyHasScope(updated, services.APIKeyScopeSkillsSearchRead) {
 		t.Fatalf("updated key should not retain keyword search scope")
+	}
+}
+
+func TestHandleAPIAccountAPIKeyScopesUpdateInvalidScope(t *testing.T) {
+	app, svc, _, member, _ := setupAdminAPIKeyAPITestApp(t)
+	key, _, err := svc.Create(context.Background(), services.CreateAPIKeyInput{
+		UserID: member.ID,
+		Name:   "scope-invalid",
+		Scopes: []string{services.APIKeyScopeSkillsSearchRead},
+	})
+	if err != nil {
+		t.Fatalf("failed to create key: %v", err)
+	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		fmt.Sprintf("/api/v1/account/apikeys/%d/scopes", key.ID),
+		strings.NewReader(`{"scopes":["invalid.scope"]}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-account-apikeys-invalid-scope")
+	req = withCurrentUser(req, &member)
+	req = withRouteParam(req, "keyID", fmt.Sprintf("%d", key.ID))
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAccountAPIKeyScopesUpdate(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status code: got=%d want=%d body=%s", recorder.Code, http.StatusBadRequest, recorder.Body.String())
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_scope" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	message, ok := payload["message"].(string)
+	if !ok || !strings.Contains(message, "invalid scope") {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-account-apikeys-invalid-scope" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

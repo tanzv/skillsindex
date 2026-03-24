@@ -13,15 +13,15 @@ import (
 func (a *App) requireOpsAdmin(w http.ResponseWriter, r *http.Request) (*models.User, bool) {
 	currentUser := currentUserFromContext(r.Context())
 	if currentUser == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return nil, false
 	}
 	if !currentUser.CanViewAllSkills() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return nil, false
 	}
 	if a.opsService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Operations service is unavailable")
 		return nil, false
 	}
 	return currentUser, true
@@ -35,7 +35,7 @@ func (a *App) handleAPIAdminOpsMetrics(w http.ResponseWriter, r *http.Request) {
 
 	metrics, err := a.opsService.BuildMetrics(r.Context(), time.Now().UTC())
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "metrics_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "metrics_failed", "Failed to compute operations metrics")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"item": metrics})
@@ -49,7 +49,7 @@ func (a *App) handleAPIAdminOpsAlerts(w http.ResponseWriter, r *http.Request) {
 
 	alerts, err := a.opsService.BuildAlerts(r.Context(), time.Now().UTC())
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "alerts_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "alerts_failed", "Failed to compute operations alerts")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": alerts, "total": len(alerts)})
@@ -74,7 +74,7 @@ func (a *App) handleAPIAdminOpsAuditExport(w http.ResponseWriter, r *http.Reques
 		Format: format,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "audit_export_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "audit_export_failed", err, "Failed to export audit records")
 		return
 	}
 
@@ -92,7 +92,7 @@ func (a *App) handleAPIAdminOpsReleaseGates(w http.ResponseWriter, r *http.Reque
 
 	snapshot, err := a.opsService.BuildReleaseGates(r.Context(), time.Now().UTC())
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "release_gates_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "release_gates_failed", "Failed to evaluate release gates")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"item": snapshot})
@@ -106,11 +106,11 @@ func (a *App) handleAPIAdminOpsReleaseGatesRun(w http.ResponseWriter, r *http.Re
 
 	snapshot, err := a.opsService.BuildReleaseGates(r.Context(), time.Now().UTC())
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "release_gates_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "release_gates_failed", "Failed to evaluate release gates")
 		return
 	}
 	if err := a.opsService.RecordReleaseGateRun(r.Context(), currentUser.ID, snapshot); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "release_gate_audit_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "release_gate_audit_failed", "Failed to record release gate audit")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"item": snapshot})
@@ -131,7 +131,7 @@ func (a *App) handleAPIAdminOpsRecoveryDrills(w http.ResponseWriter, r *http.Req
 
 	items, err := a.opsService.ListRecoveryDrills(r.Context(), limit)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "recovery_drills_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "recovery_drills_failed", "Failed to load recovery drill records")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": items, "total": len(items)})
@@ -145,7 +145,7 @@ func (a *App) handleAPIAdminOpsRecoveryDrillRun(w http.ResponseWriter, r *http.R
 
 	input, err := readOpsRecoveryDrillRunInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_recovery_drill_input", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_recovery_drill_input", err, "Invalid recovery drill input")
 		return
 	}
 
@@ -156,7 +156,7 @@ func (a *App) handleAPIAdminOpsRecoveryDrillRun(w http.ResponseWriter, r *http.R
 		OccurredAt: input.OccurredAt,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "recovery_drill_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "recovery_drill_failed", err, "Failed to record recovery drill")
 		return
 	}
 	writeJSON(w, http.StatusCreated, map[string]any{"item": record})
@@ -176,7 +176,7 @@ func (a *App) handleAPIAdminOpsReleases(w http.ResponseWriter, r *http.Request) 
 	}
 	items, err := a.opsService.ListReleases(r.Context(), limit)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "releases_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "releases_failed", "Failed to load release records")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": items, "total": len(items)})
@@ -190,12 +190,12 @@ func (a *App) handleAPIAdminOpsReleasesCreate(w http.ResponseWriter, r *http.Req
 
 	input, err := readOpsReleaseCreateInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_release_input", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_release_input", err, "Invalid release input")
 		return
 	}
 	record, err := a.opsService.RecordRelease(r.Context(), currentUser.ID, input)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "release_record_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "release_record_failed", err, "Failed to record release")
 		return
 	}
 	writeJSON(w, http.StatusCreated, map[string]any{"item": record})
@@ -215,7 +215,7 @@ func (a *App) handleAPIAdminOpsChangeApprovals(w http.ResponseWriter, r *http.Re
 	}
 	items, err := a.opsService.ListChangeApprovals(r.Context(), limit)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "change_approvals_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "change_approvals_failed", "Failed to load change approvals")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": items, "total": len(items)})
@@ -229,12 +229,12 @@ func (a *App) handleAPIAdminOpsChangeApprovalsCreate(w http.ResponseWriter, r *h
 
 	input, err := readOpsChangeApprovalCreateInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_change_approval_input", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_change_approval_input", err, "Invalid change approval input")
 		return
 	}
 	record, err := a.opsService.RecordChangeApproval(r.Context(), currentUser.ID, input)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "change_approval_record_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "change_approval_record_failed", err, "Failed to record change approval")
 		return
 	}
 	writeJSON(w, http.StatusCreated, map[string]any{"item": record})
@@ -254,7 +254,7 @@ func (a *App) handleAPIAdminOpsBackupPlans(w http.ResponseWriter, r *http.Reques
 	}
 	items, err := a.opsService.ListBackupPlans(r.Context(), limit)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "backup_plans_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "backup_plans_failed", "Failed to load backup plans")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": items, "total": len(items)})
@@ -268,12 +268,12 @@ func (a *App) handleAPIAdminOpsBackupPlansUpsert(w http.ResponseWriter, r *http.
 
 	input, err := readOpsBackupPlanUpsertInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_backup_plan_input", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_backup_plan_input", err, "Invalid backup plan input")
 		return
 	}
 	record, err := a.opsService.UpsertBackupPlan(r.Context(), currentUser.ID, input)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "backup_plan_record_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "backup_plan_record_failed", err, "Failed to record backup plan")
 		return
 	}
 	writeJSON(w, http.StatusCreated, map[string]any{"item": record})
@@ -293,7 +293,7 @@ func (a *App) handleAPIAdminOpsBackupRuns(w http.ResponseWriter, r *http.Request
 	}
 	items, err := a.opsService.ListBackupRuns(r.Context(), limit)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "backup_runs_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "backup_runs_failed", "Failed to load backup runs")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": items, "total": len(items)})
@@ -307,12 +307,12 @@ func (a *App) handleAPIAdminOpsBackupRunsCreate(w http.ResponseWriter, r *http.R
 
 	input, err := readOpsBackupRunCreateInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_backup_run_input", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_backup_run_input", err, "Invalid backup run input")
 		return
 	}
 	record, err := a.opsService.RecordBackupRun(r.Context(), currentUser.ID, input)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "backup_run_record_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "backup_run_record_failed", err, "Failed to record backup run")
 		return
 	}
 	writeJSON(w, http.StatusCreated, map[string]any{"item": record})

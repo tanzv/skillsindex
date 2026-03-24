@@ -11,48 +11,48 @@ import (
 func (a *App) handleAPISkillVersionRollback(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.skillVersionSvc == nil || a.skillService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill version service is unavailable")
 		return
 	}
 
 	skillID, err := parseUintURLParam(r, "skillID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_skill_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_skill_id", "Invalid skill id")
 		return
 	}
 	versionID, err := parseUintURLParam(r, "versionID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_version_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_version_id", "Invalid version id")
 		return
 	}
 	skill, err := a.skillService.GetSkillByID(r.Context(), skillID)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 		return
 	}
 	if !user.CanManageSkill(skill.OwnerID) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
 	targetVersion, versionErr := a.skillVersionSvc.GetByID(r.Context(), skillID, versionID)
 	if versionErr != nil {
 		if errors.Is(versionErr, services.ErrSkillNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "version_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "version_not_found", "Version not found")
 			return
 		}
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "version_query_failed", "message": versionErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "version_query_failed", versionErr, "Failed to load skill version")
 		return
 	}
 
 	actorID := user.ID
 	updated, rollbackErr := a.skillVersionSvc.RollbackVersion(r.Context(), skillID, versionID, skill.OwnerID, &actorID)
 	if rollbackErr != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "rollback_failed", "message": rollbackErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "rollback_failed", rollbackErr, "Failed to roll back skill version")
 		return
 	}
 
@@ -93,31 +93,31 @@ func (a *App) handleAPISkillVersionRollback(w http.ResponseWriter, r *http.Reque
 func (a *App) handleAPISkillVersionRestore(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.skillVersionSvc == nil || a.skillService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill version service is unavailable")
 		return
 	}
 
 	skillID, err := parseUintURLParam(r, "skillID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_skill_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_skill_id", "Invalid skill id")
 		return
 	}
 	versionID, err := parseUintURLParam(r, "versionID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_version_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_version_id", "Invalid version id")
 		return
 	}
 	skill, err := a.skillService.GetSkillByID(r.Context(), skillID)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 		return
 	}
 	if !user.CanManageSkill(skill.OwnerID) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
@@ -125,10 +125,10 @@ func (a *App) handleAPISkillVersionRestore(w http.ResponseWriter, r *http.Reques
 	updated, restoreErr := a.skillVersionSvc.RestoreVersion(r.Context(), skillID, versionID, skill.OwnerID, &actorID)
 	if restoreErr != nil {
 		if errors.Is(restoreErr, services.ErrSkillNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "version_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "version_not_found", "Version not found")
 			return
 		}
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "restore_failed", "message": restoreErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "restore_failed", restoreErr, "Failed to restore skill version")
 		return
 	}
 	a.recordAudit(r.Context(), user, services.RecordAuditInput{

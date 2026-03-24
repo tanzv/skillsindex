@@ -217,29 +217,37 @@ func (a *App) requireCSRF(next http.Handler) http.Handler {
 
 		cookie, err := r.Cookie(csrfCookieName)
 		if err != nil {
-			http.Error(w, "csrf validation failed", http.StatusForbidden)
+			a.writeCSRFValidationError(w, r)
 			return
 		}
 		expected := strings.TrimSpace(cookie.Value)
 		if expected == "" {
-			http.Error(w, "csrf validation failed", http.StatusForbidden)
+			a.writeCSRFValidationError(w, r)
 			return
 		}
 
 		provided := strings.TrimSpace(r.Header.Get("X-CSRF-Token"))
 		if provided == "" {
 			if err := r.ParseForm(); err != nil {
-				http.Error(w, "csrf validation failed", http.StatusForbidden)
+				a.writeCSRFValidationError(w, r)
 				return
 			}
 			provided = strings.TrimSpace(r.FormValue(csrfTokenFormField))
 		}
 		if provided == "" || subtle.ConstantTimeCompare([]byte(provided), []byte(expected)) != 1 {
-			http.Error(w, "csrf validation failed", http.StatusForbidden)
+			a.writeCSRFValidationError(w, r)
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (a *App) writeCSRFValidationError(w http.ResponseWriter, r *http.Request) {
+	if requestWantsJSON(r) {
+		writeAPIError(w, r, http.StatusForbidden, "csrf_validation_failed", "CSRF validation failed")
+		return
+	}
+	http.Error(w, "csrf validation failed", http.StatusForbidden)
 }
 
 func (a *App) requireAPIKey(next http.Handler) http.Handler {

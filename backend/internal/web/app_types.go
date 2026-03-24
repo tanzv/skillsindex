@@ -54,19 +54,23 @@ type adminRouteContext struct {
 }
 
 type apiSkillResponse struct {
-	ID             uint      `json:"id"`
-	Name           string    `json:"name"`
-	Description    string    `json:"description"`
-	Content        string    `json:"content"`
-	Category       string    `json:"category"`
-	Subcategory    string    `json:"subcategory"`
-	Tags           []string  `json:"tags"`
-	SourceType     string    `json:"source_type"`
-	SourceURL      string    `json:"source_url"`
-	StarCount      int       `json:"star_count"`
-	QualityScore   float64   `json:"quality_score"`
-	InstallCommand string    `json:"install_command"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID                    uint      `json:"id"`
+	Name                  string    `json:"name"`
+	Description           string    `json:"description"`
+	Content               string    `json:"content"`
+	Category              string    `json:"category"`
+	Subcategory           string    `json:"subcategory"`
+	CategoryGroup         string    `json:"category_group"`
+	CategoryGroupLabel    string    `json:"category_group_label"`
+	SubcategoryGroup      string    `json:"subcategory_group"`
+	SubcategoryGroupLabel string    `json:"subcategory_group_label"`
+	Tags                  []string  `json:"tags"`
+	SourceType            string    `json:"source_type"`
+	SourceURL             string    `json:"source_url"`
+	StarCount             int       `json:"star_count"`
+	QualityScore          float64   `json:"quality_score"`
+	InstallCommand        string    `json:"install_command"`
+	UpdatedAt             time.Time `json:"updated_at"`
 }
 
 type apiMarketplaceCategoryResponse struct {

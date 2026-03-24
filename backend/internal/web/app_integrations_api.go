@@ -9,15 +9,15 @@ import (
 func (a *App) handleAPIAdminIntegrations(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanViewAllSkills() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.integrationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Integration service is unavailable")
 		return
 	}
 
@@ -33,12 +33,12 @@ func (a *App) handleAPIAdminIntegrations(w http.ResponseWriter, r *http.Request)
 		Limit:           limit,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "list_failed", "Failed to load integration connectors")
 		return
 	}
 	logs, logErr := a.integrationSvc.ListWebhookLogs(r.Context(), services.ListWebhookLogsInput{Limit: limit})
 	if logErr != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": logErr.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "list_failed", "Failed to load webhook delivery logs")
 		return
 	}
 

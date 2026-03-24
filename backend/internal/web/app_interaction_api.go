@@ -20,15 +20,15 @@ type apiSkillCommentRequest struct {
 func (a *App) handleAPISkillFavorite(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.interaction == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill interaction service is unavailable")
 		return
 	}
 	if !user.CanAccessDashboard() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	skillID, ok := parseSkillID(w, r)
@@ -42,20 +42,20 @@ func (a *App) handleAPISkillFavorite(w http.ResponseWriter, r *http.Request) {
 
 	favorite, present, err := readOptionalBoolField(r, "favorite")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 	if !present {
 		current, currentErr := a.interaction.IsFavorite(r.Context(), skillID, user.ID)
 		if currentErr != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "favorite_query_failed", "message": currentErr.Error()})
+			writeAPIError(w, r, http.StatusInternalServerError, "favorite_query_failed", "Failed to load favorite state")
 			return
 		}
 		favorite = !current
 	}
 	favorited, setErr := a.interaction.SetFavorite(r.Context(), skillID, user.ID, favorite)
 	if setErr != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "favorite_update_failed", "message": setErr.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "favorite_update_failed", "Failed to update favorite state")
 		return
 	}
 
@@ -75,15 +75,15 @@ func (a *App) handleAPISkillFavorite(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPISkillRating(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.interaction == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill interaction service is unavailable")
 		return
 	}
 	if !user.CanAccessDashboard() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	skillID, ok := parseSkillID(w, r)
@@ -97,15 +97,15 @@ func (a *App) handleAPISkillRating(w http.ResponseWriter, r *http.Request) {
 
 	var input apiSkillRatingRequest
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 	if input.Score < 1 || input.Score > 5 {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_score"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_score", "Score must be between 1 and 5")
 		return
 	}
 	if err := a.interaction.UpsertRating(r.Context(), skillID, user.ID, input.Score); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "rating_update_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "rating_update_failed", err, "Failed to update rating")
 		return
 	}
 
@@ -125,15 +125,15 @@ func (a *App) handleAPISkillRating(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPISkillCommentCreate(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.interaction == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill interaction service is unavailable")
 		return
 	}
 	if !user.CanAccessDashboard() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	skillID, ok := parseSkillID(w, r)
@@ -147,7 +147,7 @@ func (a *App) handleAPISkillCommentCreate(w http.ResponseWriter, r *http.Request
 
 	var input apiSkillCommentRequest
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 	created, err := a.interaction.CreateComment(r.Context(), services.CreateSkillCommentInput{
@@ -156,7 +156,7 @@ func (a *App) handleAPISkillCommentCreate(w http.ResponseWriter, r *http.Request
 		Content: strings.TrimSpace(input.Content),
 	})
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "comment_create_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "comment_create_failed", err, "Failed to create comment")
 		return
 	}
 
@@ -175,15 +175,15 @@ func (a *App) handleAPISkillCommentCreate(w http.ResponseWriter, r *http.Request
 func (a *App) handleAPISkillCommentDelete(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.interaction == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill interaction service is unavailable")
 		return
 	}
 	if !user.CanAccessDashboard() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	skillID, ok := parseSkillID(w, r)
@@ -203,11 +203,11 @@ func (a *App) handleAPISkillCommentDelete(w http.ResponseWriter, r *http.Request
 	if deleteErr != nil {
 		switch {
 		case errors.Is(deleteErr, services.ErrCommentNotFound):
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "comment_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "comment_not_found", "Comment not found")
 		case errors.Is(deleteErr, services.ErrCommentPermissionDenied):
-			writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+			writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		default:
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "comment_delete_failed", "message": deleteErr.Error()})
+			writeAPIError(w, r, http.StatusInternalServerError, "comment_delete_failed", "Failed to delete comment")
 		}
 		return
 	}

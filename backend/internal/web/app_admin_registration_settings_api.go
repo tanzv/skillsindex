@@ -12,26 +12,26 @@ import (
 func (a *App) handleAPIAdminRegistrationSetting(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.settingsService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Settings service is unavailable")
 		return
 	}
 
 	allowRegistration, err := a.settingsService.GetBool(r.Context(), services.SettingAllowRegistration, a.allowRegistration)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "query_failed", "Failed to load registration settings")
 		return
 	}
 	marketplacePublicAccess, err := a.settingsService.GetBool(r.Context(), services.SettingMarketplacePublicAccess, true)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "query_failed", "Failed to load registration settings")
 		return
 	}
 
@@ -45,21 +45,21 @@ func (a *App) handleAPIAdminRegistrationSetting(w http.ResponseWriter, r *http.R
 func (a *App) handleAPIAdminRegistrationSettingUpdate(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.settingsService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Settings service is unavailable")
 		return
 	}
 
 	marketplacePublicAccess, err := a.settingsService.GetBool(r.Context(), services.SettingMarketplacePublicAccess, true)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "query_failed", "Failed to load registration settings")
 		return
 	}
 	contentType := strings.ToLower(strings.TrimSpace(r.Header.Get("Content-Type")))
@@ -69,48 +69,48 @@ func (a *App) handleAPIAdminRegistrationSettingUpdate(w http.ResponseWriter, r *
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&payload); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+			writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 			return
 		}
 		rawAllowRegistration, ok := payload["allow_registration"]
 		if !ok {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "missing allow_registration"})
+			writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "missing allow_registration")
 			return
 		}
 		parsedAllowRegistration, matched := parseBoolSettingValue(rawAllowRegistration)
 		if !matched {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "invalid bool value for allow_registration"})
+			writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "invalid bool value for allow_registration")
 			return
 		}
 		allowRegistration = parsedAllowRegistration
 		if rawMarketplacePublicAccess, exists := payload["marketplace_public_access"]; exists {
 			parsedMarketplacePublicAccess, matched := parseBoolSettingValue(rawMarketplacePublicAccess)
 			if !matched {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "invalid bool value for marketplace_public_access"})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "invalid bool value for marketplace_public_access")
 				return
 			}
 			marketplacePublicAccess = parsedMarketplacePublicAccess
 		}
 	} else {
 		if err := r.ParseForm(); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+			writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 			return
 		}
 		rawAllowRegistration := strings.TrimSpace(r.FormValue("allow_registration"))
 		if rawAllowRegistration == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "missing allow_registration"})
+			writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "missing allow_registration")
 			return
 		}
 		parsedAllowRegistration, matched := parseBoolSettingValue(rawAllowRegistration)
 		if !matched {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "invalid bool value for allow_registration"})
+			writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "invalid bool value for allow_registration")
 			return
 		}
 		allowRegistration = parsedAllowRegistration
 		if rawMarketplacePublicAccess := strings.TrimSpace(r.FormValue("marketplace_public_access")); rawMarketplacePublicAccess != "" {
 			parsedMarketplacePublicAccess, matched := parseBoolSettingValue(rawMarketplacePublicAccess)
 			if !matched {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "invalid bool value for marketplace_public_access"})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "invalid bool value for marketplace_public_access")
 				return
 			}
 			marketplacePublicAccess = parsedMarketplacePublicAccess
@@ -118,11 +118,11 @@ func (a *App) handleAPIAdminRegistrationSettingUpdate(w http.ResponseWriter, r *
 	}
 
 	if err := a.settingsService.SetBool(r.Context(), services.SettingAllowRegistration, allowRegistration); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "update_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "update_failed", "Failed to update registration settings")
 		return
 	}
 	if err := a.settingsService.SetBool(r.Context(), services.SettingMarketplacePublicAccess, marketplacePublicAccess); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "update_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "update_failed", "Failed to update registration settings")
 		return
 	}
 

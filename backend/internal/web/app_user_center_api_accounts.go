@@ -14,18 +14,18 @@ func (a *App) handleAPIUserCenterAccounts(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if a.authService == nil || a.oauthGrantService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "User center services are unavailable")
 		return
 	}
 
 	accounts, err := a.authService.ListUsers(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "list_failed", "Failed to load user center accounts")
 		return
 	}
 	grants, err := a.oauthGrantService.ListGrantsByProviders(r.Context(), []models.OAuthProvider{models.OAuthProviderFeishuSync, models.OAuthProviderDingTalkSync})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "mapping_query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "mapping_query_failed", "Failed to load user center account bindings")
 		return
 	}
 
@@ -44,7 +44,7 @@ func (a *App) handleAPIUserCenterAccounts(w http.ResponseWriter, r *http.Request
 
 	overrides, err := a.loadUserCenterPermissionOverrides(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "permission_query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "permission_query_failed", "Failed to load user center permission overrides")
 		return
 	}
 
@@ -52,7 +52,7 @@ func (a *App) handleAPIUserCenterAccounts(w http.ResponseWriter, r *http.Request
 	for _, account := range accounts {
 		permissions, permErr := a.resolveUserCenterPermissions(r.Context(), account)
 		if permErr != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "permission_query_failed", "message": permErr.Error()})
+			writeAPIError(w, r, http.StatusInternalServerError, "permission_query_failed", "Failed to resolve user center permissions")
 			return
 		}
 		source := "default"

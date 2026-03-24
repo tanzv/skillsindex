@@ -88,6 +88,7 @@ func TestHandleAPIAdminIntegrationsPermissionDenied(t *testing.T) {
 	app, _, member := setupIntegrationsAPITestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/integrations", nil)
+	req.Header.Set("X-Request-ID", "req-integrations-permission-denied")
 	req = withCurrentUser(req, &member)
 	recorder := httptest.NewRecorder()
 
@@ -96,7 +97,38 @@ func TestHandleAPIAdminIntegrationsPermissionDenied(t *testing.T) {
 	if recorder.Code != http.StatusForbidden {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusForbidden)
 	}
-	if !strings.Contains(recorder.Body.String(), `"error":"permission_denied"`) {
-		t.Fatalf("unexpected permission payload: %s", recorder.Body.String())
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "permission_denied" {
+		t.Fatalf("unexpected permission payload: %#v", payload)
+	}
+	if payload["message"] != "Permission denied" {
+		t.Fatalf("unexpected permission message: %#v", payload)
+	}
+	if payload["request_id"] != "req-integrations-permission-denied" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestHandleAPIAdminIntegrationsUnauthorized(t *testing.T) {
+	app, _, _ := setupIntegrationsAPITestApp(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/integrations", nil)
+	req.Header.Set("X-Request-ID", "req-integrations-unauthorized")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminIntegrations(recorder, req)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-integrations-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

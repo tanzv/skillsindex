@@ -58,16 +58,16 @@ type apiUserCenterAccountItem struct {
 func (a *App) requireUserCenterPermission(w http.ResponseWriter, r *http.Request, permission string) (*models.User, bool) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return nil, false
 	}
 	allowed, err := a.hasUserCenterPermission(r.Context(), *user, permission)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "permission_query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "permission_query_failed", "Failed to evaluate user center permissions")
 		return nil, false
 	}
 	if !allowed {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return nil, false
 	}
 	return user, true

@@ -320,3 +320,36 @@ func TestHandleAPISkillVersionRollbackCreatesAudit(t *testing.T) {
 		t.Fatalf("expected rollback audit log to be created")
 	}
 }
+
+func TestHandleAPISkillVersionRollbackUnauthorized(t *testing.T) {
+	app, _, _, _, skill := setupSkillVersionHandlersTestApp(t)
+	versionID, _ := loadSkillVersionIDs(t, app, skill.ID)
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/skills/"+strconv.FormatUint(uint64(skill.ID), 10)+"/versions/"+strconv.FormatUint(uint64(versionID), 10)+"/rollback",
+		nil,
+	)
+	req.Header.Set("X-Request-ID", "req-skill-version-rollback-unauthorized")
+	req = withURLParams(req, map[string]string{
+		"skillID":   strconv.FormatUint(uint64(skill.ID), 10),
+		"versionID": strconv.FormatUint(uint64(versionID), 10),
+	})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPISkillVersionRollback(recorder, req)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-version-rollback-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}

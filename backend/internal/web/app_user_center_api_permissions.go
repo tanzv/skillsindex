@@ -14,28 +14,28 @@ func (a *App) handleAPIUserCenterPermissionsGet(w http.ResponseWriter, r *http.R
 		return
 	}
 	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "User center services are unavailable")
 		return
 	}
 
 	targetUserID, err := parseUintURLParam(r, "userID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_user_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_user_id", "Invalid user id")
 		return
 	}
 	targetUser, err := a.authService.GetUserByID(r.Context(), targetUserID)
 	if err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "user_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "user_not_found", "User not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "query_failed", "Failed to load user")
 		return
 	}
 
 	overrides, err := a.loadUserCenterPermissionOverrides(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "permission_query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "permission_query_failed", "Failed to load permission overrides")
 		return
 	}
 	defaultPermissions := defaultUserCenterPermissions(targetUser.EffectiveRole())
@@ -65,33 +65,33 @@ func (a *App) handleAPIUserCenterPermissionsUpdate(w http.ResponseWriter, r *htt
 		return
 	}
 	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "User center services are unavailable")
 		return
 	}
 
 	targetUserID, err := parseUintURLParam(r, "userID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_user_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_user_id", "Invalid user id")
 		return
 	}
 	targetUser, err := a.authService.GetUserByID(r.Context(), targetUserID)
 	if err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "user_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "user_not_found", "User not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "query_failed", "Failed to load user")
 		return
 	}
 
 	input, err := readAPIUserCenterPermissionUpdateInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 	normalized := normalizeUserCenterPermissionList(input.Permissions)
 	if err := a.setUserCenterPermissionOverride(r.Context(), targetUserID, normalized); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "update_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "update_failed", "Failed to update permission override")
 		return
 	}
 

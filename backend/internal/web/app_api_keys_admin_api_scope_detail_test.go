@@ -55,6 +55,7 @@ func TestAPIAdminAPIKeyDetailPermissionDenied(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/admin/apikeys/%d", key.ID), nil)
+	req.Header.Set("X-Request-ID", "req-admin-apikey-detail-permission-denied")
 	req = withCurrentUser(req, &member)
 	req = withRouteParam(req, "keyID", fmt.Sprintf("%d", key.ID))
 	recorder := httptest.NewRecorder()
@@ -62,6 +63,47 @@ func TestAPIAdminAPIKeyDetailPermissionDenied(t *testing.T) {
 	app.handleAPIAdminAPIKeyDetail(recorder, req)
 	if recorder.Code != http.StatusForbidden {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusForbidden)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "permission_denied" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Permission denied" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-apikey-detail-permission-denied" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestAPIAdminAPIKeyDetailUnauthorized(t *testing.T) {
+	app, svc, _, member, _ := setupAdminAPIKeyAPITestApp(t)
+	key, _, err := svc.Create(context.Background(), services.CreateAPIKeyInput{
+		UserID: member.ID,
+		Name:   "member-detail-unauthorized",
+	})
+	if err != nil {
+		t.Fatalf("failed to create key: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/admin/apikeys/%d", key.ID), nil)
+	req.Header.Set("X-Request-ID", "req-admin-apikey-detail-unauthorized")
+	req = withRouteParam(req, "keyID", fmt.Sprintf("%d", key.ID))
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminAPIKeyDetail(recorder, req)
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-apikey-detail-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -166,6 +208,7 @@ func TestAPIAdminAPIKeyScopesUpdatePermissionDenied(t *testing.T) {
 		strings.NewReader(`{"scopes":["skills.search.read"]}`),
 	)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-admin-apikey-scopes-permission-denied")
 	req = withCurrentUser(req, &member)
 	req = withRouteParam(req, "keyID", fmt.Sprintf("%d", key.ID))
 	recorder := httptest.NewRecorder()
@@ -173,6 +216,16 @@ func TestAPIAdminAPIKeyScopesUpdatePermissionDenied(t *testing.T) {
 	app.handleAPIAdminAPIKeyScopesUpdate(recorder, req)
 	if recorder.Code != http.StatusForbidden {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusForbidden)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "permission_denied" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Permission denied" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-apikey-scopes-permission-denied" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -192,6 +245,7 @@ func TestAPIAdminAPIKeyScopesUpdateInvalidScope(t *testing.T) {
 		strings.NewReader(`{"scopes":["invalid.scope"]}`),
 	)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-admin-apikey-scopes-invalid-scope")
 	req = withCurrentUser(req, &member)
 	req = withRouteParam(req, "keyID", fmt.Sprintf("%d", key.ID))
 	recorder := httptest.NewRecorder()
@@ -203,5 +257,48 @@ func TestAPIAdminAPIKeyScopesUpdateInvalidScope(t *testing.T) {
 	payload := decodeBodyMap(t, recorder)
 	if got, _ := payload["error"].(string); got != "invalid_scope" {
 		t.Fatalf("unexpected error code: %#v", payload["error"])
+	}
+	message, ok := payload["message"].(string)
+	if !ok || !strings.Contains(message, "invalid scope") {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-apikey-scopes-invalid-scope" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestAPIAdminAPIKeyScopesUpdateUnauthorized(t *testing.T) {
+	app, svc, _, member, _ := setupAdminAPIKeyAPITestApp(t)
+	key, _, err := svc.Create(context.Background(), services.CreateAPIKeyInput{
+		UserID: member.ID,
+		Name:   "member-unauthorized-scope-key",
+	})
+	if err != nil {
+		t.Fatalf("failed to create key: %v", err)
+	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		fmt.Sprintf("/api/v1/admin/apikeys/%d/scopes", key.ID),
+		strings.NewReader(`{"scopes":["skills.search.read"]}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-admin-apikey-scopes-unauthorized")
+	req = withRouteParam(req, "keyID", fmt.Sprintf("%d", key.ID))
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminAPIKeyScopesUpdate(recorder, req)
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-apikey-scopes-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

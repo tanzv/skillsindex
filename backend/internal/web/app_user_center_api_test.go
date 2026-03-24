@@ -66,6 +66,7 @@ func TestAPIUserCenterAccountsPermissionDeniedWithoutPermission(t *testing.T) {
 	app, _, _, _, member := setupUserCenterTestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/user-center/accounts", nil)
+	req.Header.Set("X-Request-ID", "req-user-center-accounts-permission-denied")
 	req = withCurrentUser(req, &member)
 	recorder := httptest.NewRecorder()
 
@@ -73,6 +74,40 @@ func TestAPIUserCenterAccountsPermissionDeniedWithoutPermission(t *testing.T) {
 
 	if recorder.Code != http.StatusForbidden {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusForbidden)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "permission_denied" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Permission denied" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-user-center-accounts-permission-denied" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestAPIUserCenterAccountsUnauthorized(t *testing.T) {
+	app, _, _, _, _ := setupUserCenterTestApp(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/user-center/accounts", nil)
+	req.Header.Set("X-Request-ID", "req-user-center-accounts-unauthorized")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIUserCenterAccounts(recorder, req)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-user-center-accounts-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -212,6 +247,57 @@ func TestAPIUserCenterPermissionsUpdateAndGet(t *testing.T) {
 	}
 }
 
+func TestAPIUserCenterPermissionsGetUnauthorized(t *testing.T) {
+	app, _, _, _, _ := setupUserCenterTestApp(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/user-center/permissions/12", nil)
+	req.Header.Set("X-Request-ID", "req-user-center-permissions-unauthorized")
+	req = withURLParam(req, "userID", "12")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIUserCenterPermissionsGet(recorder, req)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-user-center-permissions-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestAPIUserCenterPermissionsGetInvalidUserID(t *testing.T) {
+	app, _, _, superAdmin, _ := setupUserCenterTestApp(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/user-center/permissions/invalid", nil)
+	req.Header.Set("X-Request-ID", "req-user-center-permissions-invalid-user")
+	req = withCurrentUser(req, &superAdmin)
+	req = withURLParam(req, "userID", "invalid")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIUserCenterPermissionsGet(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_user_id" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Invalid user id" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-user-center-permissions-invalid-user" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestAPIUserCenterPermissionOverrideAllowsMemberRead(t *testing.T) {
 	app, _, _, _, member := setupUserCenterTestApp(t)
 
@@ -231,5 +317,35 @@ func TestAPIUserCenterPermissionOverrideAllowsMemberRead(t *testing.T) {
 	payload := decodeBodyMap(t, recorder)
 	if got, ok := payload["total"].(float64); !ok || int(got) < 2 {
 		t.Fatalf("unexpected total count: %#v", payload["total"])
+	}
+}
+
+func TestAPIUserCenterSyncInvalidProvider(t *testing.T) {
+	app, _, _, superAdmin, _ := setupUserCenterTestApp(t)
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/admin/user-center/sync",
+		strings.NewReader(`{"provider":"unknown","mode":"incremental","users":[{"external_user_id":"x-1","username":"sync-user"}]}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-user-center-sync-invalid-provider")
+	req = withCurrentUser(req, &superAdmin)
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIUserCenterSync(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_provider" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Invalid sync provider" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-user-center-sync-invalid-provider" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

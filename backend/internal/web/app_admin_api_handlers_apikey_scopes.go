@@ -13,37 +13,37 @@ import (
 func (a *App) handleAPIAdminAPIKeyScopesUpdate(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.apiKeyService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API key service is unavailable")
 		return
 	}
 
 	keyID, err := parseUintURLParam(r, "keyID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_key_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_key_id", "Invalid API key id")
 		return
 	}
 
 	key, err := a.apiKeyService.GetByID(r.Context(), keyID)
 	if err != nil {
 		if errors.Is(err, services.ErrAPIKeyNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "api_key_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "api_key_not_found", "API key not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "query_failed", "Failed to load API key")
 		return
 	}
 	if !user.CanManageAPIKeys(key.UserID) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
 	inputScopes, err := readAPIKeyScopesInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
@@ -51,13 +51,13 @@ func (a *App) handleAPIAdminAPIKeyScopesUpdate(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		switch {
 		case errors.Is(err, services.ErrAPIKeyNotFound):
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "api_key_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "api_key_not_found", "API key not found")
 		case errors.Is(err, services.ErrAPIKeyScopesRequired):
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "scopes_required"})
+			writeAPIError(w, r, http.StatusBadRequest, "scopes_required", "At least one scope is required")
 		case strings.Contains(strings.ToLower(err.Error()), "invalid scope"):
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_scope", "message": err.Error()})
+			writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_scope", err, "Invalid API key scope")
 		default:
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "scope_update_failed", "message": err.Error()})
+			writeAPIError(w, r, http.StatusInternalServerError, "scope_update_failed", "Failed to update API key scopes")
 		}
 		return
 	}

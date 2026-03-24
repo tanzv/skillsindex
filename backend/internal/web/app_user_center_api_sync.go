@@ -17,23 +17,23 @@ func (a *App) handleAPIUserCenterSync(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if a.authService == nil || a.oauthGrantService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "User center services are unavailable")
 		return
 	}
 
 	input, err := readAPIUserCenterSyncInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 	providerLabel, providerKey, providerOK := normalizeUserCenterSyncProvider(input.Provider)
 	if !providerOK {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_provider"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_provider", "Invalid sync provider")
 		return
 	}
 	mode := normalizeUserCenterSyncMode(input.Mode)
 	if len(input.Users) == 0 {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "users_required"})
+		writeAPIError(w, r, http.StatusBadRequest, "users_required", "At least one user is required")
 		return
 	}
 
@@ -47,11 +47,11 @@ func (a *App) handleAPIUserCenterSync(w http.ResponseWriter, r *http.Request) {
 	for idx, sourceUser := range input.Users {
 		externalUserID := strings.TrimSpace(sourceUser.ExternalUserID)
 		if externalUserID == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": fmt.Sprintf("users[%d].external_user_id is required", idx)})
+			writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", fmt.Sprintf("users[%d].external_user_id is required", idx))
 			return
 		}
 		if _, exists := seenExternalIDs[externalUserID]; exists {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": fmt.Sprintf("duplicate external user id: %s", externalUserID)})
+			writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", fmt.Sprintf("duplicate external user id: %s", externalUserID))
 			return
 		}
 		seenExternalIDs[externalUserID] = struct{}{}
@@ -60,7 +60,7 @@ func (a *App) handleAPIUserCenterSync(w http.ResponseWriter, r *http.Request) {
 		if strings.TrimSpace(sourceUser.Role) != "" {
 			parsedRole, roleOK := parseRoleValue(sourceUser.Role)
 			if !roleOK {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": fmt.Sprintf("users[%d].role is invalid", idx)})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", fmt.Sprintf("users[%d].role is invalid", idx))
 				return
 			}
 			role = parsedRole
@@ -69,7 +69,7 @@ func (a *App) handleAPIUserCenterSync(w http.ResponseWriter, r *http.Request) {
 		if strings.TrimSpace(sourceUser.Status) != "" {
 			parsedStatus, statusOK := parseUserStatus(sourceUser.Status)
 			if !statusOK {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": fmt.Sprintf("users[%d].status is invalid", idx)})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", fmt.Sprintf("users[%d].status is invalid", idx))
 				return
 			}
 			status = parsedStatus
@@ -83,7 +83,7 @@ func (a *App) handleAPIUserCenterSync(w http.ResponseWriter, r *http.Request) {
 
 		targetUser, created, resolveErr := a.resolveUserCenterSyncTarget(r.Context(), providerKey, externalUserID, preferredUsername, role)
 		if resolveErr != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "resolve_user_failed", "message": resolveErr.Error()})
+			writeAPIError(w, r, http.StatusInternalServerError, "resolve_user_failed", "Failed to resolve sync target user")
 			return
 		}
 
@@ -95,13 +95,13 @@ func (a *App) handleAPIUserCenterSync(w http.ResponseWriter, r *http.Request) {
 
 		if targetUser.EffectiveRole() != role {
 			if err := a.authService.SetUserRole(r.Context(), targetUser.ID, role); err != nil {
-				writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "sync_role_failed", "message": err.Error()})
+				writeAPIError(w, r, http.StatusInternalServerError, "sync_role_failed", "Failed to synchronize user role")
 				return
 			}
 		}
 		if userStatusValue(targetUser) != string(status) {
 			if err := a.authService.SetUserStatus(r.Context(), targetUser.ID, status); err != nil {
-				writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "sync_status_failed", "message": err.Error()})
+				writeAPIError(w, r, http.StatusInternalServerError, "sync_status_failed", "Failed to synchronize user status")
 				return
 			}
 		}
@@ -126,14 +126,14 @@ func (a *App) handleAPIUserCenterSync(w http.ResponseWriter, r *http.Request) {
 			ExpiresAt:      time.Now().UTC().Add(24 * 365 * 10 * time.Hour),
 		})
 		if upsertErr != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "mapping_upsert_failed", "message": upsertErr.Error()})
+			writeAPIError(w, r, http.StatusInternalServerError, "mapping_upsert_failed", "Failed to update account binding")
 			return
 		}
 
 		normalizedPermissions := normalizeUserCenterPermissionList(sourceUser.Permissions)
 		if len(normalizedPermissions) > 0 {
 			if err := a.setUserCenterPermissionOverride(r.Context(), targetUser.ID, normalizedPermissions); err != nil {
-				writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "permission_update_failed", "message": err.Error()})
+				writeAPIError(w, r, http.StatusInternalServerError, "permission_update_failed", "Failed to update user permissions")
 				return
 			}
 			permissionConfiguredCount++
@@ -143,7 +143,7 @@ func (a *App) handleAPIUserCenterSync(w http.ResponseWriter, r *http.Request) {
 	if mode == "full" {
 		grants, err := a.oauthGrantService.ListGrantsByProviders(r.Context(), []models.OAuthProvider{providerKey})
 		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "mapping_query_failed", "message": err.Error()})
+			writeAPIError(w, r, http.StatusInternalServerError, "mapping_query_failed", "Failed to load existing account bindings")
 			return
 		}
 		for _, grant := range grants {
@@ -158,7 +158,7 @@ func (a *App) handleAPIUserCenterSync(w http.ResponseWriter, r *http.Request) {
 				disabledCount++
 			}
 			if err := a.authService.SetUserStatus(r.Context(), grant.UserID, models.UserStatusDisabled); err != nil {
-				writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "offboard_failed", "message": err.Error()})
+				writeAPIError(w, r, http.StatusInternalServerError, "offboard_failed", "Failed to disable missing account")
 				return
 			}
 			if forceSignOutDisabled {

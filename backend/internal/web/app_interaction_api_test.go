@@ -109,6 +109,7 @@ func TestHandleAPISkillRatingInvalidScore(t *testing.T) {
 		strings.NewReader(`{"score": 8}`),
 	)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-rating-invalid-score")
 	req = withCurrentUser(req, &user)
 	req = withURLParams(req, map[string]string{
 		"skillID": strconv.FormatUint(uint64(skill.ID), 10),
@@ -120,8 +121,47 @@ func TestHandleAPISkillRatingInvalidScore(t *testing.T) {
 	if recorder.Code != http.StatusBadRequest {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
 	}
-	if !strings.Contains(recorder.Body.String(), `"error":"invalid_score"`) {
-		t.Fatalf("expected invalid_score error, got=%s", recorder.Body.String())
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_score" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Score must be between 1 and 5" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-rating-invalid-score" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestHandleAPISkillFavoriteUnauthorized(t *testing.T) {
+	app, _, skill, _ := setupInteractionAPITestApp(t)
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/skills/"+strconv.FormatUint(uint64(skill.ID), 10)+"/favorite",
+		strings.NewReader(`{"favorite": true}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-favorite-unauthorized")
+	req = withURLParams(req, map[string]string{
+		"skillID": strconv.FormatUint(uint64(skill.ID), 10),
+	})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPISkillFavorite(recorder, req)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-favorite-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 

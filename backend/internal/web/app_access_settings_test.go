@@ -15,12 +15,23 @@ import (
 func TestAPIAdminRegistrationSettingUnauthorized(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/settings/registration", nil)
+	req.Header.Set("X-Request-ID", "req-registration-unauthorized")
 	recorder := httptest.NewRecorder()
 
 	app.handleAPIAdminRegistrationSetting(recorder, req)
 
 	if recorder.Code != http.StatusUnauthorized {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error code: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-registration-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -129,6 +140,7 @@ func TestAPIAdminRegistrationSettingUpdateInvalidPayload(t *testing.T) {
 		strings.NewReader(`{"allow_registration":"maybe"}`),
 	)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-registration-invalid-payload")
 	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleSuperAdmin})
 	recorder := httptest.NewRecorder()
 
@@ -136,6 +148,16 @@ func TestAPIAdminRegistrationSettingUpdateInvalidPayload(t *testing.T) {
 
 	if recorder.Code != http.StatusBadRequest {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_payload" {
+		t.Fatalf("unexpected error code: %#v", payload)
+	}
+	if payload["message"] != "invalid bool value for allow_registration" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-registration-invalid-payload" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -158,6 +180,37 @@ func TestEnsureMarketplaceAccessRedirectsAnonymousHTMLToVariantLoginWithRedirect
 	}
 	if got := recorder.Header().Get("Location"); got != "/light/login?redirect=%2Flight%2Fskills%2F11%3Ftab%3Dfiles" {
 		t.Fatalf("unexpected redirect location: got=%s", got)
+	}
+}
+
+func TestEnsureMarketplaceAccessBlocksAnonymousJSONWithStructuredError(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	if err := app.settingsService.SetBool(context.Background(), services.SettingMarketplacePublicAccess, false); err != nil {
+		t.Fatalf("failed to seed marketplace access setting: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/skills/11", nil)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Request-ID", "req-marketplace-access-unauthorized")
+	recorder := httptest.NewRecorder()
+
+	allowed := app.ensureMarketplaceAccess(recorder, req)
+
+	if allowed {
+		t.Fatalf("expected marketplace access guard to block anonymous json request")
+	}
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-marketplace-access-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 

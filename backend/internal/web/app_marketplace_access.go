@@ -18,10 +18,7 @@ func (a *App) ensureMarketplaceAccess(w http.ResponseWriter, r *http.Request) bo
 	marketplacePublicAccess, err := a.marketplacePublicAccessEnabled(r.Context())
 	if err != nil {
 		if requestWantsJSON(r) {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{
-				"error":   "settings_query_failed",
-				"message": "Failed to load marketplace access policy",
-			})
+			writeAPIError(w, r, http.StatusInternalServerError, "settings_query_failed", "Failed to load marketplace access policy")
 			return false
 		}
 		a.renderWithStatus(w, r, http.StatusInternalServerError, ViewData{
@@ -35,10 +32,7 @@ func (a *App) ensureMarketplaceAccess(w http.ResponseWriter, r *http.Request) bo
 		return true
 	}
 	if requestWantsJSON(r) {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{
-			"error":   "unauthorized",
-			"message": "Authentication required",
-		})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return false
 	}
 	http.Redirect(w, r, buildLoginRedirectPathFromRequest(r), http.StatusSeeOther)
