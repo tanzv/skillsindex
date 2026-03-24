@@ -23,13 +23,13 @@ type apiRuntimeReloader interface {
 
 // ResolvedAPIOperationPolicy represents the effective runtime policy for one API operation.
 type ResolvedAPIOperationPolicy struct {
-	OperationID    string                       `json:"operation_id"`
+	OperationID    string                      `json:"operation_id"`
 	AuthMode       models.APIOperationAuthMode `json:"auth_mode"`
-	RequiredRoles  []string                     `json:"required_roles"`
-	RequiredScopes []string                     `json:"required_scopes"`
-	Enabled        bool                         `json:"enabled"`
-	MockEnabled    bool                         `json:"mock_enabled"`
-	ExportEnabled  bool                         `json:"export_enabled"`
+	RequiredRoles  []string                    `json:"required_roles"`
+	RequiredScopes []string                    `json:"required_scopes"`
+	Enabled        bool                        `json:"enabled"`
+	MockEnabled    bool                        `json:"mock_enabled"`
+	ExportEnabled  bool                        `json:"export_enabled"`
 }
 
 func getCurrentPublishedSpecRecord(ctx context.Context, database *gorm.DB) (models.APISpec, error) {
@@ -129,4 +129,3 @@ func resolveAPIOperationPolicy(operation models.APIOperation, stored *models.API
 	resolved.ExportEnabled = stored.ExportEnabled
 	return resolved
 }
-

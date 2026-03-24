@@ -35,6 +35,9 @@ func (a *App) handleAPIAdminCurrentSpec(w http.ResponseWriter, r *http.Request) 
 		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
 		return
 	}
+	if !a.authorizePublishedOperation(w, r) {
+		return
+	}
 
 	spec, err := a.apiSpecRegistrySvc.CurrentPublished(r.Context())
 	if err != nil {
@@ -61,6 +64,9 @@ func (a *App) handleAPIAdminImportSpec(w http.ResponseWriter, r *http.Request) {
 	}
 	if a.apiSpecRegistrySvc == nil {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		return
+	}
+	if !a.authorizePublishedOperation(w, r) {
 		return
 	}
 
@@ -101,6 +107,9 @@ func (a *App) handleAPIAdminValidateSpec(w http.ResponseWriter, r *http.Request)
 		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
 		return
 	}
+	if !a.authorizePublishedOperation(w, r) {
+		return
+	}
 
 	specID, err := parseUintURLParam(r, "specID")
 	if err != nil {
@@ -133,6 +142,9 @@ func (a *App) handleAPIAdminPublishSpec(w http.ResponseWriter, r *http.Request) 
 	}
 	if a.apiPublishSvc == nil {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		return
+	}
+	if !a.authorizePublishedOperation(w, r) {
 		return
 	}
 
@@ -168,13 +180,27 @@ func (a *App) handleAPIAdminExportSpecJSON(w http.ResponseWriter, r *http.Reques
 		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
 		return
 	}
+	if a.apiExportSvc == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		return
+	}
+	if !a.authorizePublishedOperation(w, r) {
+		return
+	}
 
-	spec, _, err := loadCurrentOpenAPISpec(r.Context(), a.apiSpecRegistrySvc, resolveServerURL(r))
+	result, err := a.apiExportSvc.CreateCurrentExport(r.Context(), services.CreateAPIExportInput{
+		ExportType:  "raw-published",
+		Format:      "json",
+		Target:      "admin-download",
+		ActorUserID: user.ID,
+	})
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "export_failed", "message": err.Error()})
 		return
 	}
-	writeJSON(w, http.StatusOK, spec)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(result.ArtifactRaw)
 }
 
 func (a *App) handleAPIAdminExportSpecYAML(w http.ResponseWriter, r *http.Request) {
@@ -187,8 +213,20 @@ func (a *App) handleAPIAdminExportSpecYAML(w http.ResponseWriter, r *http.Reques
 		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
 		return
 	}
+	if a.apiExportSvc == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		return
+	}
+	if !a.authorizePublishedOperation(w, r) {
+		return
+	}
 
-	_, raw, err := loadCurrentOpenAPISpec(r.Context(), a.apiSpecRegistrySvc, resolveServerURL(r))
+	result, err := a.apiExportSvc.CreateCurrentExport(r.Context(), services.CreateAPIExportInput{
+		ExportType:  "raw-published",
+		Format:      "yaml",
+		Target:      "admin-download",
+		ActorUserID: user.ID,
+	})
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "export_failed", "message": err.Error()})
 		return
@@ -196,7 +234,7 @@ func (a *App) handleAPIAdminExportSpecYAML(w http.ResponseWriter, r *http.Reques
 
 	w.Header().Set("Content-Type", "application/yaml; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(raw)
+	_, _ = w.Write(result.ArtifactRaw)
 }
 
 func resultToAPIAdminSpecItem(spec models.APISpec) apiAdminSpecItem {

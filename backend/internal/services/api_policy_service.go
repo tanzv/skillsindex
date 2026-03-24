@@ -13,10 +13,10 @@ import (
 
 // APIOperationPolicySnapshot returns one published operation with its stored and effective runtime policy.
 type APIOperationPolicySnapshot struct {
-	Spec      models.APISpec               `json:"spec"`
-	Operation models.APIOperation          `json:"operation"`
-	Policy    *models.APIOperationPolicy   `json:"policy,omitempty"`
-	Resolved  ResolvedAPIOperationPolicy   `json:"resolved"`
+	Spec      models.APISpec             `json:"spec"`
+	Operation models.APIOperation        `json:"operation"`
+	Policy    *models.APIOperationPolicy `json:"policy,omitempty"`
+	Resolved  ResolvedAPIOperationPolicy `json:"resolved"`
 }
 
 // UpsertCurrentAPIOperationPolicyInput defines one runtime policy update for the current published spec.
@@ -156,12 +156,12 @@ func (s *APIPolicyService) UpsertCurrentOperationPolicy(ctx context.Context, inp
 		stored.UpdatedBy = input.ActorUserID
 
 		if stored.ID == 0 {
-			if err := tx.Create(&stored).Error; err != nil {
+			if err := tx.Select("*").Create(&stored).Error; err != nil {
 				return fmt.Errorf("failed to create api operation policy: %w", err)
 			}
 			return nil
 		}
-		if err := tx.Save(&stored).Error; err != nil {
+		if err := tx.Select("*").Save(&stored).Error; err != nil {
 			return fmt.Errorf("failed to update api operation policy: %w", err)
 		}
 		return nil
@@ -230,4 +230,3 @@ func (s *APIPolicyService) findOperationPolicy(ctx context.Context, specID uint,
 	}
 	return &policy, nil
 }
-

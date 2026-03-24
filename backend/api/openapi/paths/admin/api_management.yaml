@@ -65,6 +65,23 @@ paths:
       responses:
         '200':
           description: Current published spec as YAML
+  /api/v1/admin/api-management/exports:
+    get:
+      operationId: listCurrentAPIExports
+      summary: List export audit records for the current published OpenAPI spec
+      tags:
+        - admin-api-management
+      responses:
+        '200':
+          description: Current export audit records
+    post:
+      operationId: createCurrentAPIExport
+      summary: Generate one export artifact for the current published OpenAPI spec
+      tags:
+        - admin-api-management
+      responses:
+        '201':
+          description: Generated export artifact metadata
   /api/v1/admin/api-management/operations:
     get:
       operationId: listCurrentAPIOperations
@@ -103,3 +120,64 @@ paths:
       responses:
         '200':
           description: Updated runtime policy for the requested operation
+  /api/v1/admin/api-management/mock/profiles:
+    get:
+      operationId: listCurrentAPIMockProfiles
+      summary: List mock profiles for the current published OpenAPI spec
+      tags:
+        - admin-api-management
+      responses:
+        '200':
+          description: Mock profiles for the current published spec
+    post:
+      operationId: upsertCurrentAPIMockProfile
+      summary: Create or update a mock profile for the current published OpenAPI spec
+      tags:
+        - admin-api-management
+      responses:
+        '200':
+          description: Updated mock profile metadata
+  /api/v1/admin/api-management/mock/profiles/{profileID}/overrides:
+    get:
+      operationId: listCurrentAPIMockOverrides
+      summary: List mock overrides for one mock profile
+      tags:
+        - admin-api-management
+      parameters:
+        - in: path
+          name: profileID
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Mock overrides for the requested profile
+  /api/v1/admin/api-management/mock/profiles/{profileID}/overrides/{operationID}:
+    post:
+      operationId: upsertCurrentAPIMockOverride
+      summary: Create or update a mock override for one operation within a mock profile
+      tags:
+        - admin-api-management
+      parameters:
+        - in: path
+          name: profileID
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: operationID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated mock override metadata
+  /api/v1/admin/api-management/mock/resolve:
+    post:
+      operationId: resolveCurrentAPIMock
+      summary: Resolve one mock response for the current published OpenAPI spec
+      tags:
+        - admin-api-management
+      responses:
+        '200':
+          description: Generated mock response envelope

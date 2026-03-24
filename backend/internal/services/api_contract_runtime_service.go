@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -64,7 +63,7 @@ func (s *APIContractRuntimeService) Reload(ctx context.Context) error {
 		return err
 	}
 
-	document, err := loadOpenAPIDocumentFromBundle(spec.BundlePath)
+	document, err := loadOpenAPIDocumentFromPublishedSpec(spec)
 	if err != nil {
 		return err
 	}
@@ -163,6 +162,23 @@ func (s *APIContractRuntimeService) clearSnapshot() {
 	s.mutex.Unlock()
 }
 
+func loadOpenAPIDocumentFromPublishedSpec(spec models.APISpec) (*openapi3.T, error) {
+	document, bundleErr := loadOpenAPIDocumentFromBundle(spec.BundlePath)
+	if bundleErr == nil {
+		return document, nil
+	}
+
+	sourcePath, allowedRoots, sourceErr := resolveAPISpecSourcePath(spec.SourcePath)
+	if sourceErr != nil {
+		return nil, fmt.Errorf("failed to load published openapi bundle: %w", bundleErr)
+	}
+	document, _, sourceLoadErr := loadOpenAPIDocument(sourcePath, allowedRoots)
+	if sourceLoadErr != nil {
+		return nil, fmt.Errorf("failed to load published openapi bundle: %w; fallback source load failed: %v", bundleErr, sourceLoadErr)
+	}
+	return document, nil
+}
+
 func loadOpenAPIDocumentFromBundle(bundlePath string) (*openapi3.T, error) {
 	raw, err := os.ReadFile(bundlePath)
 	if err != nil {
@@ -242,4 +258,3 @@ func splitOpenAPIPathSegments(value string) []string {
 	}
 	return strings.Split(strings.Trim(clean, "/"), "/")
 }
-

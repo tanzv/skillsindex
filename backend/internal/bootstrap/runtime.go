@@ -300,6 +300,8 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 	apiPublishService.SetRuntimeReloader(apiContractRuntimeService)
 	apiPolicyService := services.NewAPIPolicyService(database)
 	apiPolicyService.SetRuntimeReloader(apiContractRuntimeService)
+	apiMockService := services.NewAPIMockService(database, apiContractRuntimeService)
+	apiExportService := services.NewAPIExportService(database, apiManagementStoragePath)
 
 	scheduler := services.NewRepositorySyncScheduler(
 		repositorySyncCoordinator,
@@ -341,6 +343,8 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 		APISpecRegistrySvc:    apiSpecRegistryService,
 		APIPublishSvc:         apiPublishService,
 		APIPolicySvc:          apiPolicyService,
+		APIMockSvc:            apiMockService,
+		APIExportSvc:          apiExportService,
 		APIContractRuntimeSvc: apiContractRuntimeService,
 		AllowRegistration:     runtimeConfig.AllowRegistration,
 		CookieSecure:          runtimeConfig.SessionCookieSecure,

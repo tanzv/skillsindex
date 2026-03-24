@@ -48,6 +48,9 @@ func Migrate(database *gorm.DB) error {
 		&models.APISpec{},
 		&models.APIOperation{},
 		&models.APIOperationPolicy{},
+		&models.APIMockProfile{},
+		&models.APIMockOverride{},
+		&models.APIExportRecord{},
 		&models.APIPublishEvent{},
 	}
 

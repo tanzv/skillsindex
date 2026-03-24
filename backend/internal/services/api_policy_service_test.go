@@ -61,14 +61,14 @@ func TestAPIPolicyServiceUpsertCurrentOperationPolicyPersistsAndReloadsRuntime(t
 	_, _, policyService, runtimeService, _ := setupPublishedAPIRuntimeServices(t)
 
 	result, err := policyService.UpsertCurrentOperationPolicy(context.Background(), UpsertCurrentAPIOperationPolicyInput{
-		OperationID:     "getCurrentPublishedSpec",
-		AuthMode:        string(models.APIAuthModeSession),
-		RequiredRoles:   []string{string(models.RoleSuperAdmin)},
-		RequiredScopes:  []string{},
-		Enabled:         false,
-		MockEnabled:     true,
-		ExportEnabled:   true,
-		ActorUserID:     9,
+		OperationID:    "getCurrentPublishedSpec",
+		AuthMode:       string(models.APIAuthModeSession),
+		RequiredRoles:  []string{string(models.RoleSuperAdmin)},
+		RequiredScopes: []string{},
+		Enabled:        false,
+		MockEnabled:    true,
+		ExportEnabled:  true,
+		ActorUserID:    9,
 	})
 	if err != nil {
 		t.Fatalf("expected upsert current operation policy to succeed: %v", err)
@@ -94,4 +94,3 @@ func TestAPIPolicyServiceUpsertCurrentOperationPolicyPersistsAndReloadsRuntime(t
 		t.Fatalf("expected runtime policy reload to reflect required roles")
 	}
 }
-

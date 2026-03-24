@@ -21,12 +21,12 @@ type APIOperationPolicy struct {
 	ID             uint                 `gorm:"primaryKey"`
 	SpecID         uint                 `gorm:"not null;index;uniqueIndex:idx_api_policy_spec_operation,priority:1"`
 	OperationID    string               `gorm:"size:191;not null;uniqueIndex:idx_api_policy_spec_operation,priority:2"`
-	AuthMode       APIOperationAuthMode `gorm:"type:varchar(32);not null;default:'inherit'"`
+	AuthMode       APIOperationAuthMode `gorm:"type:varchar(32);not null"`
 	RequiredRoles  []string             `gorm:"serializer:json"`
 	RequiredScopes []string             `gorm:"serializer:json"`
-	Enabled        bool                 `gorm:"not null;default:true"`
-	MockEnabled    bool                 `gorm:"not null;default:false"`
-	ExportEnabled  bool                 `gorm:"not null;default:true"`
+	Enabled        bool                 `gorm:"not null"`
+	MockEnabled    bool                 `gorm:"not null"`
+	ExportEnabled  bool                 `gorm:"not null"`
 	CreatedBy      uint                 `gorm:"not null"`
 	UpdatedBy      uint                 `gorm:"not null"`
 	CreatedAt      time.Time

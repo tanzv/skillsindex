@@ -101,4 +101,3 @@ func resolveOperationVisibility(path string) string {
 		return "public"
 	}
 }
-

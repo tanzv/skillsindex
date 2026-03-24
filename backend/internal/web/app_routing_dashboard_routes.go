@@ -43,6 +43,16 @@ func (a *App) registerAdminAPIManagementRoutes(r chi.Router) {
 	r.Post("/api/v1/admin/api-management/specs/{specID}/publish", a.handleAPIAdminPublishSpec)
 	r.Get("/api/v1/admin/api-management/specs/current/export.json", a.handleAPIAdminExportSpecJSON)
 	r.Get("/api/v1/admin/api-management/specs/current/export.yaml", a.handleAPIAdminExportSpecYAML)
+	r.Get("/api/v1/admin/api-management/exports", a.handleAPIAdminExports)
+	r.Post("/api/v1/admin/api-management/exports", a.handleAPIAdminExportsCreate)
+	r.Get("/api/v1/admin/api-management/operations", a.handleAPIAdminCurrentOperations)
+	r.Get("/api/v1/admin/api-management/operations/{operationID}/policy", a.handleAPIAdminCurrentOperationPolicy)
+	r.Post("/api/v1/admin/api-management/operations/{operationID}/policy", a.handleAPIAdminCurrentOperationPolicyUpsert)
+	r.Get("/api/v1/admin/api-management/mock/profiles", a.handleAPIAdminMockProfiles)
+	r.Post("/api/v1/admin/api-management/mock/profiles", a.handleAPIAdminMockProfilesUpsert)
+	r.Get("/api/v1/admin/api-management/mock/profiles/{profileID}/overrides", a.handleAPIAdminMockOverrides)
+	r.Post("/api/v1/admin/api-management/mock/profiles/{profileID}/overrides/{operationID}", a.handleAPIAdminMockOverrideUpsert)
+	r.Post("/api/v1/admin/api-management/mock/resolve", a.handleAPIAdminMockResolve)
 }
 
 func (a *App) registerAdminIngestionRoutes(r chi.Router) {

@@ -36,11 +36,16 @@ func setupAPIManagementTestApp(t *testing.T) *App {
 	policyService.SetRuntimeReloader(runtimeService)
 	publishService := services.NewAPIPublishService(db)
 	publishService.SetRuntimeReloader(runtimeService)
+	mockService := services.NewAPIMockService(db, runtimeService)
+	exportService := services.NewAPIExportService(db, storageDir)
 	return &App{
 		apiSpecRegistrySvc:    registry,
 		apiPublishSvc:         publishService,
 		apiPolicySvc:          policyService,
+		apiMockSvc:            mockService,
+		apiExportSvc:          exportService,
 		apiContractRuntimeSvc: runtimeService,
+		storagePath:           storageDir,
 	}
 }
 
@@ -216,13 +221,13 @@ func TestHandleAPIAdminCurrentSpecHonorsRuntimeOperationPolicy(t *testing.T) {
 	seedPublishedSpec(t, app, "skillsindex-api")
 
 	_, err := app.apiPolicySvc.UpsertCurrentOperationPolicy(context.Background(), services.UpsertCurrentAPIOperationPolicyInput{
-		OperationID:    "getCurrentPublishedSpec",
-		AuthMode:       "session",
-		RequiredRoles:  []string{"super_admin"},
-		Enabled:        false,
-		MockEnabled:    false,
-		ExportEnabled:  true,
-		ActorUserID:    1,
+		OperationID:   "getCurrentPublishedSpec",
+		AuthMode:      "session",
+		RequiredRoles: []string{"super_admin"},
+		Enabled:       false,
+		MockEnabled:   false,
+		ExportEnabled: true,
+		ActorUserID:   1,
 	})
 	if err != nil {
 		t.Fatalf("failed to seed current operation policy: %v", err)
@@ -239,5 +244,99 @@ func TestHandleAPIAdminCurrentSpecHonorsRuntimeOperationPolicy(t *testing.T) {
 	}
 	if !bytes.Contains(recorder.Body.Bytes(), []byte(`"error":"api_operation_disabled"`)) {
 		t.Fatalf("expected disabled operation error payload")
+	}
+}
+
+func TestHandleAPIAdminMockResolveReturnsOverride(t *testing.T) {
+	app := setupAPIManagementTestApp(t)
+	seedPublishedSpec(t, app, "skillsindex-api")
+
+	if _, err := app.apiPolicySvc.UpsertCurrentOperationPolicy(context.Background(), services.UpsertCurrentAPIOperationPolicyInput{
+		OperationID:    "getCurrentPublishedSpec",
+		AuthMode:       "session",
+		RequiredRoles:  []string{"super_admin"},
+		RequiredScopes: []string{},
+		Enabled:        true,
+		MockEnabled:    true,
+		ExportEnabled:  true,
+		ActorUserID:    1,
+	}); err != nil {
+		t.Fatalf("failed to seed mock-enabled policy: %v", err)
+	}
+	profile, err := app.apiMockSvc.UpsertCurrentProfile(context.Background(), services.UpsertCurrentAPIMockProfileInput{
+		Name:        "default",
+		Mode:        "inline",
+		IsDefault:   true,
+		ActorUserID: 1,
+	})
+	if err != nil {
+		t.Fatalf("failed to create mock profile: %v", err)
+	}
+	if _, err := app.apiMockSvc.UpsertProfileOverride(context.Background(), services.UpsertAPIMockOverrideInput{
+		ProfileID:      profile.ID,
+		OperationID:    "getCurrentPublishedSpec",
+		StatusCode:     202,
+		ContentType:    "application/json",
+		BodyPayload:    `{"mocked":true}`,
+		HeadersPayload: `{"x-mock":"enabled"}`,
+		LatencyMS:      20,
+		ActorUserID:    1,
+	}); err != nil {
+		t.Fatalf("failed to create mock override: %v", err)
+	}
+
+	body, err := json.Marshal(map[string]any{
+		"profile_name": "default",
+		"method":       "GET",
+		"path":         "/api/v1/admin/api-management/specs/current",
+	})
+	if err != nil {
+		t.Fatalf("failed to marshal mock resolve body: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/api-management/mock/resolve", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleSuperAdmin})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminMockResolve(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
+	}
+	if !bytes.Contains(recorder.Body.Bytes(), []byte(`"status_code":202`)) {
+		t.Fatalf("expected mock status code in payload")
+	}
+	if !bytes.Contains(recorder.Body.Bytes(), []byte(`"operation_id":"getCurrentPublishedSpec"`)) {
+		t.Fatalf("expected operation id in mock payload")
+	}
+}
+
+func TestHandleAPIAdminExportsCreateRecordsArtifact(t *testing.T) {
+	app := setupAPIManagementTestApp(t)
+	seedPublishedSpec(t, app, "skillsindex-api")
+
+	body, err := json.Marshal(map[string]any{
+		"export_type": "public-subset",
+		"format":      "yaml",
+		"target":      "partner-download",
+	})
+	if err != nil {
+		t.Fatalf("failed to marshal export body: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/api-management/exports", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleSuperAdmin})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminExportsCreate(recorder, req)
+
+	if recorder.Code != http.StatusCreated {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusCreated)
+	}
+	if !bytes.Contains(recorder.Body.Bytes(), []byte(`"export_type":"public-subset"`)) {
+		t.Fatalf("expected export type in payload")
+	}
+	if !bytes.Contains(recorder.Body.Bytes(), []byte(`"artifact_raw":"`)) {
+		t.Fatalf("expected artifact raw payload")
 	}
 }
