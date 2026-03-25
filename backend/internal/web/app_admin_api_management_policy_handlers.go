@@ -1,6 +1,7 @@
 package web
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -42,15 +43,15 @@ type apiAdminOperationPolicyUpsertInput struct {
 func (a *App) handleAPIAdminCurrentOperations(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiPolicySvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API policy service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -59,7 +60,7 @@ func (a *App) handleAPIAdminCurrentOperations(w http.ResponseWriter, r *http.Req
 
 	items, err := a.apiPolicySvc.ListCurrentOperations(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "query_failed", err, "Failed to load API operations")
 		return
 	}
 
@@ -73,15 +74,15 @@ func (a *App) handleAPIAdminCurrentOperations(w http.ResponseWriter, r *http.Req
 func (a *App) handleAPIAdminCurrentOperationPolicy(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiPolicySvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API policy service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -92,10 +93,14 @@ func (a *App) handleAPIAdminCurrentOperationPolicy(w http.ResponseWriter, r *htt
 	item, err := a.apiPolicySvc.GetCurrentOperationPolicy(r.Context(), operationID)
 	if err != nil {
 		status := http.StatusBadRequest
-		if err == services.ErrAPIOperationNotFound {
+		code := "query_failed"
+		message := "Failed to load API operation policy"
+		if errors.Is(err, services.ErrAPIOperationNotFound) {
 			status = http.StatusNotFound
+			code = "api_operation_not_found"
+			message = "API operation not found"
 		}
-		writeJSON(w, status, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, status, code, err, message)
 		return
 	}
 
@@ -105,15 +110,15 @@ func (a *App) handleAPIAdminCurrentOperationPolicy(w http.ResponseWriter, r *htt
 func (a *App) handleAPIAdminCurrentOperationPolicyUpsert(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiPolicySvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API policy service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -122,7 +127,7 @@ func (a *App) handleAPIAdminCurrentOperationPolicyUpsert(w http.ResponseWriter, 
 
 	var input apiAdminOperationPolicyUpsertInput
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
@@ -139,10 +144,14 @@ func (a *App) handleAPIAdminCurrentOperationPolicyUpsert(w http.ResponseWriter, 
 	})
 	if err != nil {
 		status := http.StatusBadRequest
-		if err == services.ErrAPIOperationNotFound {
+		code := "update_failed"
+		message := "Failed to update API operation policy"
+		if errors.Is(err, services.ErrAPIOperationNotFound) {
 			status = http.StatusNotFound
+			code = "api_operation_not_found"
+			message = "API operation not found"
 		}
-		writeJSON(w, status, map[string]any{"error": "update_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, status, code, err, message)
 		return
 	}
 

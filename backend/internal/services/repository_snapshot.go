@@ -12,6 +12,7 @@ func (s *RepositorySyncService) withClonedRepository(
 	source RepoSource,
 	reader func(rootPath string, preferredFile string) error,
 ) error {
+	source = NormalizeRepoSource(source)
 	if strings.TrimSpace(source.URL) == "" {
 		return fmt.Errorf("repository url is required")
 	}
@@ -51,6 +52,33 @@ func (s *RepositorySyncService) ListFiles(
 		return nil, err
 	}
 	return files, nil
+}
+
+func (s *RepositorySyncService) DescribeSource(
+	ctx context.Context,
+	source RepoSource,
+	limit int,
+) (SourceBrowseSnapshot, error) {
+	var snapshot SourceBrowseSnapshot
+	err := s.withClonedRepository(ctx, source, func(rootPath string, preferredFile string) error {
+		files, err := listSourceFiles(rootPath, preferredFile, limit)
+		if err != nil {
+			return err
+		}
+		topology, err := buildSourceTopology(rootPath, preferredFile)
+		if err != nil {
+			return err
+		}
+		snapshot = SourceBrowseSnapshot{
+			Files:    files,
+			Topology: topology,
+		}
+		return nil
+	})
+	if err != nil {
+		return SourceBrowseSnapshot{}, err
+	}
+	return snapshot, nil
 }
 
 func (s *RepositorySyncService) ReadFile(

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -28,6 +29,7 @@ func NewRepositorySyncService() *RepositorySyncService {
 
 // CloneAndExtract clones the repository and returns extracted skill metadata.
 func (s *RepositorySyncService) CloneAndExtract(ctx context.Context, source RepoSource) (ExtractedSkill, error) {
+	source = NormalizeRepoSource(source)
 	if strings.TrimSpace(source.URL) == "" {
 		return ExtractedSkill{}, fmt.Errorf("repository url is required")
 	}
@@ -43,6 +45,7 @@ func (s *RepositorySyncService) CloneAndExtract(ctx context.Context, source Repo
 	}
 
 	targetPath := tmpDir
+	preferredContentFile := ""
 	if p := strings.TrimSpace(source.Path); p != "" {
 		resolvedPath, resolveErr := resolvePathWithinBase(tmpDir, p, "repository path")
 		if resolveErr != nil {
@@ -56,15 +59,18 @@ func (s *RepositorySyncService) CloneAndExtract(ctx context.Context, source Repo
 			return ExtractedSkill{}, fmt.Errorf("failed to inspect repository path: %w", statErr)
 		}
 		if !info.IsDir() {
-			return ExtractedSkill{}, fmt.Errorf("repository path must be a directory")
+			targetPath = filepath.Dir(resolvedPath)
+			preferredContentFile = filepath.Base(resolvedPath)
+			return extractSkillFromRoot(targetPath, preferredContentFile)
 		}
 		targetPath = resolvedPath
 	}
 
-	return extractSkillFromDirectory(targetPath)
+	return extractSkillFromRoot(targetPath, preferredContentFile)
 }
 
 func cloneRepository(ctx context.Context, source RepoSource, targetDir string) error {
+	source = NormalizeRepoSource(source)
 	ctx, cancel := ensureCloneContext(ctx)
 	defer cancel()
 

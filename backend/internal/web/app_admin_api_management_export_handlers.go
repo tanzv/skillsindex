@@ -26,15 +26,15 @@ type apiAdminExportCreateInput struct {
 func (a *App) handleAPIAdminExports(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiExportSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API export service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -43,7 +43,7 @@ func (a *App) handleAPIAdminExports(w http.ResponseWriter, r *http.Request) {
 
 	items, err := a.apiExportSvc.ListCurrentExports(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "query_failed", err, "Failed to load API exports")
 		return
 	}
 
@@ -57,15 +57,15 @@ func (a *App) handleAPIAdminExports(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPIAdminExportsCreate(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiExportSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API export service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -74,7 +74,7 @@ func (a *App) handleAPIAdminExportsCreate(w http.ResponseWriter, r *http.Request
 
 	var input apiAdminExportCreateInput
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
@@ -85,7 +85,7 @@ func (a *App) handleAPIAdminExportsCreate(w http.ResponseWriter, r *http.Request
 		ActorUserID: user.ID,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "export_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "export_failed", err, "Failed to create API export")
 		return
 	}
 

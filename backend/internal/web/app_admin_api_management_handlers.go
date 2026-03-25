@@ -24,15 +24,15 @@ type apiAdminSpecItem struct {
 func (a *App) handleAPIAdminCurrentSpec(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiSpecRegistrySvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API spec registry service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -42,10 +42,10 @@ func (a *App) handleAPIAdminCurrentSpec(w http.ResponseWriter, r *http.Request) 
 	spec, err := a.apiSpecRegistrySvc.CurrentPublished(r.Context())
 	if err != nil {
 		if errors.Is(err, services.ErrAPISpecNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "api_spec_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "api_spec_not_found", "API spec not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "query_failed", err, "Failed to load current API spec")
 		return
 	}
 
@@ -55,15 +55,15 @@ func (a *App) handleAPIAdminCurrentSpec(w http.ResponseWriter, r *http.Request) 
 func (a *App) handleAPIAdminImportSpec(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiSpecRegistrySvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API spec registry service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -72,7 +72,7 @@ func (a *App) handleAPIAdminImportSpec(w http.ResponseWriter, r *http.Request) {
 
 	var input apiAdminImportSpecInput
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
@@ -83,7 +83,7 @@ func (a *App) handleAPIAdminImportSpec(w http.ResponseWriter, r *http.Request) {
 		ActorUserID: user.ID,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "import_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "import_failed", err, "Failed to import API spec")
 		return
 	}
 
@@ -96,15 +96,15 @@ func (a *App) handleAPIAdminImportSpec(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPIAdminValidateSpec(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiSpecRegistrySvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API spec registry service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -113,17 +113,17 @@ func (a *App) handleAPIAdminValidateSpec(w http.ResponseWriter, r *http.Request)
 
 	specID, err := parseUintURLParam(r, "specID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_spec_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_spec_id", "Invalid API spec id")
 		return
 	}
 
 	spec, err := a.apiSpecRegistrySvc.ValidateDraft(r.Context(), specID)
 	if err != nil {
 		if errors.Is(err, services.ErrAPISpecNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "api_spec_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "api_spec_not_found", "API spec not found")
 			return
 		}
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "validate_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "validate_failed", err, "Failed to validate API spec")
 		return
 	}
 
@@ -133,15 +133,15 @@ func (a *App) handleAPIAdminValidateSpec(w http.ResponseWriter, r *http.Request)
 func (a *App) handleAPIAdminPublishSpec(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiPublishSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API publish service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -150,7 +150,7 @@ func (a *App) handleAPIAdminPublishSpec(w http.ResponseWriter, r *http.Request) 
 
 	specID, err := parseUintURLParam(r, "specID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_spec_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_spec_id", "Invalid API spec id")
 		return
 	}
 
@@ -160,10 +160,10 @@ func (a *App) handleAPIAdminPublishSpec(w http.ResponseWriter, r *http.Request) 
 	})
 	if err != nil {
 		if errors.Is(err, services.ErrAPISpecNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "api_spec_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "api_spec_not_found", "API spec not found")
 			return
 		}
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "publish_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "publish_failed", err, "Failed to publish API spec")
 		return
 	}
 
@@ -173,15 +173,15 @@ func (a *App) handleAPIAdminPublishSpec(w http.ResponseWriter, r *http.Request) 
 func (a *App) handleAPIAdminExportSpecJSON(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiExportSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API export service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -195,7 +195,7 @@ func (a *App) handleAPIAdminExportSpecJSON(w http.ResponseWriter, r *http.Reques
 		ActorUserID: user.ID,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "export_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "export_failed", err, "Failed to export API spec")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -206,15 +206,15 @@ func (a *App) handleAPIAdminExportSpecJSON(w http.ResponseWriter, r *http.Reques
 func (a *App) handleAPIAdminExportSpecYAML(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiExportSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API export service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -228,7 +228,7 @@ func (a *App) handleAPIAdminExportSpecYAML(w http.ResponseWriter, r *http.Reques
 		ActorUserID: user.ID,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "export_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "export_failed", err, "Failed to export API spec")
 		return
 	}
 

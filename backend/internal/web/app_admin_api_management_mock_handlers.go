@@ -1,6 +1,7 @@
 package web
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -55,15 +56,15 @@ type apiAdminMockResolveInput struct {
 func (a *App) handleAPIAdminMockProfiles(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiMockSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API mock service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -72,7 +73,7 @@ func (a *App) handleAPIAdminMockProfiles(w http.ResponseWriter, r *http.Request)
 
 	items, err := a.apiMockSvc.ListCurrentProfiles(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "query_failed", err, "Failed to load API mock profiles")
 		return
 	}
 
@@ -86,15 +87,15 @@ func (a *App) handleAPIAdminMockProfiles(w http.ResponseWriter, r *http.Request)
 func (a *App) handleAPIAdminMockProfilesUpsert(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiMockSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API mock service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -103,7 +104,7 @@ func (a *App) handleAPIAdminMockProfilesUpsert(w http.ResponseWriter, r *http.Re
 
 	var input apiAdminMockProfileUpsertInput
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
@@ -114,7 +115,7 @@ func (a *App) handleAPIAdminMockProfilesUpsert(w http.ResponseWriter, r *http.Re
 		ActorUserID: user.ID,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "update_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "update_failed", err, "Failed to update API mock profile")
 		return
 	}
 
@@ -124,15 +125,15 @@ func (a *App) handleAPIAdminMockProfilesUpsert(w http.ResponseWriter, r *http.Re
 func (a *App) handleAPIAdminMockOverrides(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiMockSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API mock service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -141,17 +142,21 @@ func (a *App) handleAPIAdminMockOverrides(w http.ResponseWriter, r *http.Request
 
 	profileID, err := strconv.ParseUint(strings.TrimSpace(chi.URLParam(r, "profileID")), 10, 64)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_profile_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_profile_id", "Invalid API mock profile id")
 		return
 	}
 
 	items, err := a.apiMockSvc.ListProfileOverrides(r.Context(), uint(profileID))
 	if err != nil {
 		status := http.StatusBadRequest
-		if err == services.ErrAPIMockProfileNotFound {
+		code := "query_failed"
+		message := "Failed to load API mock overrides"
+		if errors.Is(err, services.ErrAPIMockProfileNotFound) {
 			status = http.StatusNotFound
+			code = "mock_profile_not_found"
+			message = "API mock profile not found"
 		}
-		writeJSON(w, status, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, status, code, err, message)
 		return
 	}
 
@@ -165,15 +170,15 @@ func (a *App) handleAPIAdminMockOverrides(w http.ResponseWriter, r *http.Request
 func (a *App) handleAPIAdminMockOverrideUpsert(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiMockSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API mock service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -182,13 +187,13 @@ func (a *App) handleAPIAdminMockOverrideUpsert(w http.ResponseWriter, r *http.Re
 
 	profileID, err := strconv.ParseUint(strings.TrimSpace(chi.URLParam(r, "profileID")), 10, 64)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_profile_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_profile_id", "Invalid API mock profile id")
 		return
 	}
 
 	var input apiAdminMockOverrideUpsertInput
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
@@ -205,10 +210,18 @@ func (a *App) handleAPIAdminMockOverrideUpsert(w http.ResponseWriter, r *http.Re
 	})
 	if err != nil {
 		status := http.StatusBadRequest
-		if err == services.ErrAPIMockProfileNotFound || err == services.ErrAPIOperationNotFound {
+		code := "update_failed"
+		message := "Failed to update API mock override"
+		if errors.Is(err, services.ErrAPIMockProfileNotFound) {
 			status = http.StatusNotFound
+			code = "mock_profile_not_found"
+			message = "API mock profile not found"
+		} else if errors.Is(err, services.ErrAPIOperationNotFound) {
+			status = http.StatusNotFound
+			code = "api_operation_not_found"
+			message = "API operation not found"
 		}
-		writeJSON(w, status, map[string]any{"error": "update_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, status, code, err, message)
 		return
 	}
 
@@ -218,15 +231,15 @@ func (a *App) handleAPIAdminMockOverrideUpsert(w http.ResponseWriter, r *http.Re
 func (a *App) handleAPIAdminMockResolve(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.apiMockSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API mock service is unavailable")
 		return
 	}
 	if !a.authorizePublishedOperation(w, r) {
@@ -235,7 +248,7 @@ func (a *App) handleAPIAdminMockResolve(w http.ResponseWriter, r *http.Request) 
 
 	var input apiAdminMockResolveInput
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
@@ -252,7 +265,7 @@ func (a *App) handleAPIAdminMockResolve(w http.ResponseWriter, r *http.Request) 
 		case services.ErrAPIMockDisabled:
 			status = http.StatusForbidden
 		}
-		writeJSON(w, status, map[string]any{"error": "mock_resolve_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, status, "mock_resolve_failed", err, "Failed to resolve API mock")
 		return
 	}
 

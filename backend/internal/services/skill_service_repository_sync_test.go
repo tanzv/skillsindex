@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -170,5 +171,117 @@ func TestUpdateSyncedSkillWithRunContextCapturesVersionRunID(t *testing.T) {
 	}
 	if versions[0].RunID == nil || *versions[0].RunID != run.ID {
 		t.Fatalf("expected latest version to link run id")
+	}
+}
+
+func TestCreateSkillPersistsSourceAnalysis(t *testing.T) {
+	db := setupSkillServiceTestDB(t)
+	svc := NewSkillService(db)
+
+	owner := models.User{Username: "analysis-owner", PasswordHash: "hash"}
+	if err := db.Create(&owner).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+
+	created, err := svc.CreateSkill(context.Background(), CreateSkillInput{
+		OwnerID:      owner.ID,
+		Name:         "Analysis Skill",
+		Description:  "persists analysis",
+		Content:      "# Analysis Skill",
+		Visibility:   models.VisibilityPrivate,
+		SourceType:   models.SourceTypeRepository,
+		CategorySlug: "development",
+		Analysis: SourceTopologySnapshot{
+			EntryFile:       "SKILL.md",
+			Mechanism:       "skill_manifest",
+			MetadataSources: []string{"skill.json", "skill.json.content_file"},
+			ReferencePaths:  []string{"references/guide.md"},
+			Dependencies: []SourceDependency{
+				{Kind: "file", Target: "references/guide.md"},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("failed to create skill: %v", err)
+	}
+
+	if strings.TrimSpace(created.SourceAnalysisJSON) == "" {
+		t.Fatalf("expected source analysis json to be persisted")
+	}
+
+	restored, err := DeserializeSourceTopology(created.SourceAnalysisJSON)
+	if err != nil {
+		t.Fatalf("failed to deserialize persisted analysis: %v", err)
+	}
+	if restored.EntryFile != "SKILL.md" {
+		t.Fatalf("unexpected restored entry file: %q", restored.EntryFile)
+	}
+	if restored.Mechanism != "skill_manifest" {
+		t.Fatalf("unexpected restored mechanism: %q", restored.Mechanism)
+	}
+	if len(restored.Dependencies) != 1 || restored.Dependencies[0].Target != "references/guide.md" {
+		t.Fatalf("unexpected restored dependencies: %#v", restored.Dependencies)
+	}
+}
+
+func TestUpdateSyncedSkillPersistsSourceAnalysis(t *testing.T) {
+	db := setupSkillServiceTestDB(t)
+	svc := NewSkillService(db)
+
+	owner := models.User{Username: "analysis-sync-owner", PasswordHash: "hash"}
+	if err := db.Create(&owner).Error; err != nil {
+		t.Fatalf("failed to create owner: %v", err)
+	}
+
+	created, err := svc.CreateSkill(context.Background(), CreateSkillInput{
+		OwnerID:      owner.ID,
+		Name:         "Analysis Sync Skill",
+		Description:  "before sync",
+		Content:      "before content",
+		Visibility:   models.VisibilityPrivate,
+		SourceType:   models.SourceTypeRepository,
+		CategorySlug: "development",
+	})
+	if err != nil {
+		t.Fatalf("failed to create skill: %v", err)
+	}
+
+	updated, err := svc.UpdateSyncedSkill(context.Background(), SyncUpdateInput{
+		SkillID:      created.ID,
+		OwnerID:      owner.ID,
+		SourceType:   models.SourceTypeRepository,
+		SourceURL:    "https://example.com/repo.git",
+		SourceBranch: "main",
+		SourcePath:   "skills/analysis-sync",
+		Meta: ExtractedSkill{
+			Name:        "Analysis Sync Skill Updated",
+			Description: "after sync",
+			Content:     "after content",
+			Tags:        []string{"sync", "analysis"},
+			Analysis: SourceTopologySnapshot{
+				EntryFile:       "SKILL.md",
+				Mechanism:       "skill_markdown_frontmatter",
+				MetadataSources: []string{"SKILL.md.frontmatter"},
+				ReferencePaths:  []string{"references/codex-tools.md"},
+				Dependencies: []SourceDependency{
+					{Kind: "file", Target: "references/codex-tools.md"},
+					{Kind: "skill", Target: "superpowers:test-driven-development"},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("failed to update synced skill: %v", err)
+	}
+
+	restored, err := DeserializeSourceTopology(updated.SourceAnalysisJSON)
+	if err != nil {
+		t.Fatalf("failed to deserialize updated analysis: %v", err)
+	}
+	if restored.Mechanism != "skill_markdown_frontmatter" {
+		t.Fatalf("unexpected restored mechanism: %q", restored.Mechanism)
+	}
+	if len(restored.Dependencies) != 2 {
+		t.Fatalf("unexpected restored dependencies: %#v", restored.Dependencies)
 	}
 }
