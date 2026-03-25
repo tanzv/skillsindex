@@ -26,6 +26,7 @@ export interface ProtectedTopbarMessages {
   accountMenuThemeLightLabel: string;
   accountMenuThemeDarkLabel: string;
   accountMenuLogoutLabel: string;
+  accountMenuLogoutError: string;
   guestUser: string;
   guestRole: string;
   visitorStatus: string;
@@ -42,6 +43,7 @@ export interface ProtectedTopbarMessages {
   quickDocsLabel: string;
   quickDocsDescription: string;
   overflowGroupCountAriaLabelTemplate: string;
+  sessionRoleSuperAdmin: string;
   sessionRoleAdmin: string;
   sessionRoleOwner: string;
   sessionRoleMember: string;
