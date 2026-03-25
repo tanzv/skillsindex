@@ -157,7 +157,7 @@ func (a *App) resolvePublicSkillResourceContent(
 	}
 }
 
-func writePublicSkillResourceContentError(w http.ResponseWriter, err error) {
+func writePublicSkillResourceContentError(w http.ResponseWriter, r *http.Request, err error) {
 	statusCode := http.StatusInternalServerError
 	errorCode := "resource_content_unavailable"
 	message := "Failed to load resource content"
@@ -181,10 +181,7 @@ func writePublicSkillResourceContentError(w http.ResponseWriter, err error) {
 		message = "Resource file is not previewable"
 	}
 
-	writeJSON(w, statusCode, map[string]any{
-		"error":   errorCode,
-		"message": message,
-	})
+	writeAPIError(w, r, statusCode, errorCode, message)
 }
 
 func (a *App) handleAPIPublicSkillResourceContent(w http.ResponseWriter, r *http.Request) {
@@ -192,16 +189,13 @@ func (a *App) handleAPIPublicSkillResourceContent(w http.ResponseWriter, r *http
 		return
 	}
 	if a.skillService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-			"error":   "service_unavailable",
-			"message": "Skill service unavailable",
-		})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill service unavailable")
 		return
 	}
 
 	skillID, ok := parseSkillIDParam(r)
 	if !ok {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 		return
 	}
 
@@ -219,7 +213,7 @@ func (a *App) handleAPIPublicSkillResourceContent(w http.ResponseWriter, r *http
 
 	content, err := a.resolvePublicSkillResourceContent(r, skill, r.URL.Query().Get("path"))
 	if err != nil {
-		writePublicSkillResourceContentError(w, err)
+		writePublicSkillResourceContentError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, content)

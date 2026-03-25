@@ -12,15 +12,52 @@ import (
 	"gorm.io/gorm"
 )
 
+func (s *SkillService) listOrganizationIDsByUser(ctx context.Context, userID uint) ([]uint, error) {
+	if userID == 0 {
+		return nil, nil
+	}
+
+	organizationIDs := make([]uint, 0)
+	if err := s.db.WithContext(ctx).
+		Model(&models.OrganizationMember{}).
+		Where("user_id = ?", userID).
+		Pluck("organization_id", &organizationIDs).Error; err != nil {
+		return nil, fmt.Errorf("failed to list organization memberships: %w", err)
+	}
+
+	return organizationIDs, nil
+}
+
+func applyViewerSkillVisibilityScope(
+	query *gorm.DB,
+	viewerUserID uint,
+	organizationIDs []uint,
+) *gorm.DB {
+	if viewerUserID == 0 {
+		return query.Where("skills.visibility = ?", models.VisibilityPublic)
+	}
+
+	if len(organizationIDs) == 0 {
+		return query.Where("(skills.visibility = ? OR skills.owner_id = ?)", models.VisibilityPublic, viewerUserID)
+	}
+
+	return query.Where(
+		"(skills.visibility = ? OR skills.owner_id = ? OR skills.organization_id IN ?)",
+		models.VisibilityPublic,
+		viewerUserID,
+		organizationIDs,
+	)
+}
+
 // SearchSkills returns skills visible to the viewer with optional text and tag filters.
 func (s *SkillService) SearchSkills(ctx context.Context, input SearchInput) ([]models.Skill, error) {
 	query := s.db.WithContext(ctx).Model(&models.Skill{})
 
-	if input.ViewerUserID == 0 {
-		query = query.Where("skills.visibility = ?", models.VisibilityPublic)
-	} else {
-		query = query.Where("(skills.visibility = ? OR skills.owner_id = ?)", models.VisibilityPublic, input.ViewerUserID)
+	organizationIDs, err := s.listOrganizationIDsByUser(ctx, input.ViewerUserID)
+	if err != nil {
+		return nil, err
 	}
+	query = applyViewerSkillVisibilityScope(query, input.ViewerUserID, organizationIDs)
 
 	if text := strings.TrimSpace(strings.ToLower(input.Query)); text != "" {
 		like := "%" + text + "%"
@@ -107,14 +144,14 @@ func (s *SkillService) GetVisibleSkillByID(ctx context.Context, skillID uint, vi
 		Preload("Tags").
 		Where("skills.id = ?", skillID)
 
-	if viewerUserID == 0 {
-		query = query.Where("skills.visibility = ?", models.VisibilityPublic)
-	} else {
-		query = query.Where("(skills.visibility = ? OR skills.owner_id = ?)", models.VisibilityPublic, viewerUserID)
+	organizationIDs, err := s.listOrganizationIDsByUser(ctx, viewerUserID)
+	if err != nil {
+		return models.Skill{}, err
 	}
+	query = applyViewerSkillVisibilityScope(query, viewerUserID, organizationIDs)
 
 	var skill models.Skill
-	err := query.First(&skill).Error
+	err = query.First(&skill).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return models.Skill{}, ErrSkillNotFound
 	}
@@ -132,14 +169,14 @@ func (s *SkillService) GetMarketplaceVisibleSkillByID(ctx context.Context, skill
 		Where("skills.id = ?", skillID).
 		Where("skills.record_origin = ?", models.RecordOriginImported)
 
-	if viewerUserID == 0 {
-		query = query.Where("skills.visibility = ?", models.VisibilityPublic)
-	} else {
-		query = query.Where("(skills.visibility = ? OR skills.owner_id = ?)", models.VisibilityPublic, viewerUserID)
+	organizationIDs, err := s.listOrganizationIDsByUser(ctx, viewerUserID)
+	if err != nil {
+		return models.Skill{}, err
 	}
+	query = applyViewerSkillVisibilityScope(query, viewerUserID, organizationIDs)
 
 	var skill models.Skill
-	err := query.First(&skill).Error
+	err = query.First(&skill).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return models.Skill{}, ErrSkillNotFound
 	}

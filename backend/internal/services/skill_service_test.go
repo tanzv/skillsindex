@@ -103,6 +103,58 @@ func TestSearchSkillsRespectsVisibilityAndFilters(t *testing.T) {
 	})
 }
 
+func TestSearchSkillsIncludesOrganizationSharedSkills(t *testing.T) {
+	db := setupSkillServiceTestDB(t)
+	svc := NewSkillService(db)
+
+	alice := models.User{Username: "alice-org-search", PasswordHash: "hash"}
+	bob := models.User{Username: "bob-org-search", PasswordHash: "hash"}
+	if err := db.Create(&alice).Error; err != nil {
+		t.Fatalf("failed to create alice: %v", err)
+	}
+	if err := db.Create(&bob).Error; err != nil {
+		t.Fatalf("failed to create bob: %v", err)
+	}
+
+	org := models.Organization{Name: "Search Scope", Slug: "search-scope"}
+	if err := db.Create(&org).Error; err != nil {
+		t.Fatalf("failed to create organization: %v", err)
+	}
+	if err := db.Create(&models.OrganizationMember{
+		OrganizationID: org.ID,
+		UserID:         alice.ID,
+		Role:           models.OrganizationRoleMember,
+	}).Error; err != nil {
+		t.Fatalf("failed to create organization membership: %v", err)
+	}
+
+	sharedSkill := models.Skill{
+		OwnerID:        bob.ID,
+		Name:           "Team Shared Search Skill",
+		Description:    "Organization shared private skill",
+		Visibility:     models.VisibilityPrivate,
+		SourceType:     models.SourceTypeManual,
+		OrganizationID: &org.ID,
+	}
+	if err := db.Create(&sharedSkill).Error; err != nil {
+		t.Fatalf("failed to create shared skill: %v", err)
+	}
+
+	items, err := svc.SearchSkills(context.Background(), SearchInput{
+		ViewerUserID: alice.ID,
+		Query:        "shared search",
+	})
+	if err != nil {
+		t.Fatalf("search failed: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("unexpected result count: got=%d want=1", len(items))
+	}
+	if items[0].ID != sharedSkill.ID {
+		t.Fatalf("unexpected visible skill: got=%d want=%d", items[0].ID, sharedSkill.ID)
+	}
+}
+
 func TestListSkillsForUserScopeIncludesOrganizationSkills(t *testing.T) {
 	db := setupSkillServiceTestDB(t)
 	svc := NewSkillService(db)
@@ -170,6 +222,97 @@ func TestListSkillsForUserScopeIncludesOrganizationSkills(t *testing.T) {
 	}
 	if names["Bob Other Skill"] {
 		t.Fatalf("should not include unrelated private skill")
+	}
+}
+
+func TestGetVisibleSkillByIDIncludesOrganizationSharedSkill(t *testing.T) {
+	db := setupSkillServiceTestDB(t)
+	svc := NewSkillService(db)
+
+	alice := models.User{Username: "alice-org-visible", PasswordHash: "hash"}
+	bob := models.User{Username: "bob-org-visible", PasswordHash: "hash"}
+	if err := db.Create(&alice).Error; err != nil {
+		t.Fatalf("failed to create alice: %v", err)
+	}
+	if err := db.Create(&bob).Error; err != nil {
+		t.Fatalf("failed to create bob: %v", err)
+	}
+
+	org := models.Organization{Name: "Visible Scope", Slug: "visible-scope"}
+	if err := db.Create(&org).Error; err != nil {
+		t.Fatalf("failed to create organization: %v", err)
+	}
+	if err := db.Create(&models.OrganizationMember{
+		OrganizationID: org.ID,
+		UserID:         alice.ID,
+		Role:           models.OrganizationRoleViewer,
+	}).Error; err != nil {
+		t.Fatalf("failed to create organization membership: %v", err)
+	}
+
+	sharedSkill := models.Skill{
+		OwnerID:        bob.ID,
+		Name:           "Team Visible Skill",
+		Visibility:     models.VisibilityPrivate,
+		SourceType:     models.SourceTypeManual,
+		OrganizationID: &org.ID,
+	}
+	if err := db.Create(&sharedSkill).Error; err != nil {
+		t.Fatalf("failed to create shared skill: %v", err)
+	}
+
+	item, err := svc.GetVisibleSkillByID(context.Background(), sharedSkill.ID, alice.ID)
+	if err != nil {
+		t.Fatalf("get visible skill failed: %v", err)
+	}
+	if item.ID != sharedSkill.ID {
+		t.Fatalf("unexpected visible skill: got=%d want=%d", item.ID, sharedSkill.ID)
+	}
+}
+
+func TestGetMarketplaceVisibleSkillByIDIncludesOrganizationSharedSkill(t *testing.T) {
+	db := setupSkillServiceTestDB(t)
+	svc := NewSkillService(db)
+
+	alice := models.User{Username: "alice-org-marketplace", PasswordHash: "hash"}
+	bob := models.User{Username: "bob-org-marketplace", PasswordHash: "hash"}
+	if err := db.Create(&alice).Error; err != nil {
+		t.Fatalf("failed to create alice: %v", err)
+	}
+	if err := db.Create(&bob).Error; err != nil {
+		t.Fatalf("failed to create bob: %v", err)
+	}
+
+	org := models.Organization{Name: "Marketplace Scope", Slug: "marketplace-scope"}
+	if err := db.Create(&org).Error; err != nil {
+		t.Fatalf("failed to create organization: %v", err)
+	}
+	if err := db.Create(&models.OrganizationMember{
+		OrganizationID: org.ID,
+		UserID:         alice.ID,
+		Role:           models.OrganizationRoleMember,
+	}).Error; err != nil {
+		t.Fatalf("failed to create organization membership: %v", err)
+	}
+
+	sharedSkill := models.Skill{
+		OwnerID:        bob.ID,
+		Name:           "Team Marketplace Skill",
+		Visibility:     models.VisibilityPrivate,
+		SourceType:     models.SourceTypeRepository,
+		RecordOrigin:   models.RecordOriginImported,
+		OrganizationID: &org.ID,
+	}
+	if err := db.Create(&sharedSkill).Error; err != nil {
+		t.Fatalf("failed to create shared marketplace skill: %v", err)
+	}
+
+	item, err := svc.GetMarketplaceVisibleSkillByID(context.Background(), sharedSkill.ID, alice.ID)
+	if err != nil {
+		t.Fatalf("get marketplace visible skill failed: %v", err)
+	}
+	if item.ID != sharedSkill.ID {
+		t.Fatalf("unexpected marketplace visible skill: got=%d want=%d", item.ID, sharedSkill.ID)
 	}
 }
 

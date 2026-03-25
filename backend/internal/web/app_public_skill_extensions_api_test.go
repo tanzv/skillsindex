@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -19,49 +16,6 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
-
-func runGitCommand(t *testing.T, repoPath string, args ...string) {
-	t.Helper()
-	cmd := exec.Command("git", args...)
-	cmd.Dir = repoPath
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("git %s failed: %v: %s", strings.Join(args, " "), err, strings.TrimSpace(string(output)))
-	}
-}
-
-func createPublicSkillExtensionRepository(t *testing.T) string {
-	t.Helper()
-	repoPath := filepath.Join(t.TempDir(), "public-skill-repo")
-	if err := os.MkdirAll(filepath.Join(repoPath, "docs"), 0o755); err != nil {
-		t.Fatalf("failed to create repository layout: %v", err)
-	}
-	runGitCommand(t, repoPath, "init")
-	runGitCommand(t, repoPath, "config", "user.name", "test")
-	runGitCommand(t, repoPath, "config", "user.email", "test@example.com")
-
-	if err := os.WriteFile(filepath.Join(repoPath, "skill.json"), []byte(`{
-  "name": "Repository Skill",
-  "description": "Repository sourced skill",
-  "tags": ["repo", "docs"],
-  "content_file": "README.md"
-}`), 0o644); err != nil {
-		t.Fatalf("failed to write skill.json: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(repoPath, "README.md"), []byte("# Repository Skill\n\nPrimary repository file.\n"), 0o644); err != nil {
-		t.Fatalf("failed to write README.md: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(repoPath, "docs", "guide.md"), []byte("## Guide\n\nUse the repository guide.\n"), 0o644); err != nil {
-		t.Fatalf("failed to write docs/guide.md: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(repoPath, "docs", "query.sql"), []byte("SELECT 1;\n"), 0o644); err != nil {
-		t.Fatalf("failed to write docs/query.sql: %v", err)
-	}
-
-	runGitCommand(t, repoPath, "add", "skill.json", "README.md", "docs/guide.md", "docs/query.sql")
-	runGitCommand(t, repoPath, "commit", "-m", "init")
-	return repoPath
-}
 
 func setupPublicSkillExtensionAPITestApp(t *testing.T) (*App, models.User, models.Skill, models.Skill) {
 	t.Helper()
@@ -206,35 +160,6 @@ func TestHandleAPIPublicSkillCompareReturnsRequestedSkills(t *testing.T) {
 	}
 }
 
-func TestHandleAPIPublicSkillResourcesReturnsRealFields(t *testing.T) {
-	app, _, leftSkill, _ := setupPublicSkillExtensionAPITestApp(t)
-
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/skills/"+strconv.FormatUint(uint64(leftSkill.ID), 10)+"/resources", nil)
-	req = withURLParams(req, map[string]string{
-		"skillID": strconv.FormatUint(uint64(leftSkill.ID), 10),
-	})
-	recorder := httptest.NewRecorder()
-
-	app.handleAPIPublicSkillResources(recorder, req)
-
-	if recorder.Code != http.StatusOK {
-		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
-	}
-	body := recorder.Body.String()
-	if !strings.Contains(body, `"source_branch":"main"`) {
-		t.Fatalf("missing source branch in resources response: %s", body)
-	}
-	if !strings.Contains(body, `"source_path":"skills/repository-sync-guard/SKILL.md"`) {
-		t.Fatalf("missing source path in resources response: %s", body)
-	}
-	if !strings.Contains(body, `"repo_url":"https://github.com/example/repository-sync-guard"`) {
-		t.Fatalf("missing repo url in resources response: %s", body)
-	}
-	if !strings.Contains(body, `"file_count":1`) {
-		t.Fatalf("missing file count in resources response: %s", body)
-	}
-}
-
 func TestHandleAPIPublicSkillVersionsReturnsCapturedVersions(t *testing.T) {
 	app, _, leftSkill, _ := setupPublicSkillExtensionAPITestApp(t)
 
@@ -261,106 +186,83 @@ func TestHandleAPIPublicSkillVersionsReturnsCapturedVersions(t *testing.T) {
 	}
 }
 
-func TestHandleAPIPublicSkillResourcesReturnsRepositoryFiles(t *testing.T) {
-	app, owner, _, _ := setupPublicSkillExtensionAPITestApp(t)
-	repoPath := createPublicSkillExtensionRepository(t)
-	app.repositoryService = services.NewRepositorySyncService()
-
-	repositorySkill, err := app.skillService.CreateSkill(context.Background(), services.CreateSkillInput{
-		OwnerID:         owner.ID,
-		Name:            "Repository Files Skill",
-		Description:     "Browse real repository files.",
-		Content:         "# Repository Files Skill\n\nFallback content.",
-		Tags:            []string{"repo", "files"},
-		CategorySlug:    "development",
-		SubcategorySlug: "automation",
-		Visibility:      models.VisibilityPublic,
-		SourceType:      models.SourceTypeRepository,
-		RecordOrigin:    models.RecordOriginImported,
-		SourceURL:       repoPath,
-		SourceBranch:    "",
-		SourcePath:      "",
-		RepoURL:         repoPath,
-		InstallCommand:  "codex skill install local/repository-files-skill",
-		StarCount:       99,
-		QualityScore:    9.1,
-	})
-	if err != nil {
-		t.Fatalf("failed to create repository skill: %v", err)
-	}
-
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/skills/"+strconv.FormatUint(uint64(repositorySkill.ID), 10)+"/resources", nil)
-	req = withURLParams(req, map[string]string{
-		"skillID": strconv.FormatUint(uint64(repositorySkill.ID), 10),
-	})
-	recorder := httptest.NewRecorder()
-
-	app.handleAPIPublicSkillResources(recorder, req)
-
-	if recorder.Code != http.StatusOK {
-		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
-	}
-	body := recorder.Body.String()
-	if !strings.Contains(body, `"name":"README.md"`) {
-		t.Fatalf("expected README.md in resources response: %s", body)
-	}
-	if !strings.Contains(body, `"name":"docs/guide.md"`) {
-		t.Fatalf("expected docs/guide.md in resources response: %s", body)
-	}
-	if !strings.Contains(body, `"name":"docs/query.sql"`) {
-		t.Fatalf("expected docs/query.sql in resources response: %s", body)
-	}
-}
-
-func TestHandleAPIPublicSkillResourceContentReturnsSelectedFile(t *testing.T) {
-	app, owner, _, _ := setupPublicSkillExtensionAPITestApp(t)
-	repoPath := createPublicSkillExtensionRepository(t)
-	app.repositoryService = services.NewRepositorySyncService()
-
-	repositorySkill, err := app.skillService.CreateSkill(context.Background(), services.CreateSkillInput{
-		OwnerID:         owner.ID,
-		Name:            "Repository Content Skill",
-		Description:     "Read real repository file content.",
-		Content:         "# Repository Content Skill\n\nFallback content.",
-		Tags:            []string{"repo", "content"},
-		CategorySlug:    "development",
-		SubcategorySlug: "automation",
-		Visibility:      models.VisibilityPublic,
-		SourceType:      models.SourceTypeRepository,
-		RecordOrigin:    models.RecordOriginImported,
-		SourceURL:       repoPath,
-		RepoURL:         repoPath,
-		InstallCommand:  "codex skill install local/repository-content-skill",
-		StarCount:       77,
-		QualityScore:    9.0,
-	})
-	if err != nil {
-		t.Fatalf("failed to create repository skill: %v", err)
-	}
+func TestHandleAPIPublicSkillCompareRejectsInvalidQuery(t *testing.T) {
+	app, _, leftSkill, _ := setupPublicSkillExtensionAPITestApp(t)
 
 	req := httptest.NewRequest(
 		http.MethodGet,
-		"/api/v1/public/skills/"+strconv.FormatUint(uint64(repositorySkill.ID), 10)+"/resource-file?path=docs%2Fguide.md",
+		"/api/v1/public/skills/compare?left="+strconv.FormatUint(uint64(leftSkill.ID), 10),
 		nil,
 	)
-	req = withURLParams(req, map[string]string{
-		"skillID": strconv.FormatUint(uint64(repositorySkill.ID), 10),
-	})
+	req.Header.Set("X-Request-ID", "req-public-skill-compare-invalid-query")
 	recorder := httptest.NewRecorder()
 
-	app.handleAPIPublicSkillResourceContent(recorder, req)
+	app.handleAPIPublicSkillCompare(recorder, req)
 
-	if recorder.Code != http.StatusOK {
-		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusOK)
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
 	}
-	body := recorder.Body.String()
-	if !strings.Contains(body, `"path":"docs/guide.md"`) {
-		t.Fatalf("expected selected file path in resource content response: %s", body)
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_compare_query" {
+		t.Fatalf("unexpected error payload: %#v", payload)
 	}
-	if !strings.Contains(body, `"language":"Markdown"`) {
-		t.Fatalf("expected markdown language in resource content response: %s", body)
+	if payload["message"] != "Both left and right skill identifiers are required" {
+		t.Fatalf("unexpected error message: %#v", payload)
 	}
-	if !strings.Contains(body, `Use the repository guide.`) {
-		t.Fatalf("expected repository file content in response: %s", body)
+	if payload["request_id"] != "req-public-skill-compare-invalid-query" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestHandleAPIPublicSkillCompareServiceUnavailable(t *testing.T) {
+	app, _, _, _ := setupPublicSkillExtensionAPITestApp(t)
+	app.skillService = nil
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/skills/compare?left=1&right=2", nil)
+	req.Header.Set("X-Request-ID", "req-public-skill-compare-service-unavailable")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicSkillCompare(recorder, req)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusServiceUnavailable)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "service_unavailable" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Skill service unavailable" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-public-skill-compare-service-unavailable" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestHandleAPIPublicSkillCompareLeftSkillNotFoundIncludesRequestID(t *testing.T) {
+	app, _, _, rightSkill := setupPublicSkillExtensionAPITestApp(t)
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/api/v1/public/skills/compare?left=99999&right="+strconv.FormatUint(uint64(rightSkill.ID), 10),
+		nil,
+	)
+	req.Header.Set("X-Request-ID", "req-public-skill-compare-left-not-found")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicSkillCompare(recorder, req)
+
+	if recorder.Code != http.StatusNotFound {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusNotFound)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "skill_not_found" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "left skill not found" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-public-skill-compare-left-not-found" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

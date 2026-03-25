@@ -47,6 +47,29 @@ func (s *UploadService) ListFiles(zipPath string, limit int) ([]SourceFileSnapsh
 	return files, nil
 }
 
+func (s *UploadService) DescribeSource(zipPath string, limit int) (SourceBrowseSnapshot, error) {
+	var snapshot SourceBrowseSnapshot
+	err := s.withUnpackedArchive(zipPath, func(rootPath string, preferredFile string) error {
+		files, err := listSourceFiles(rootPath, preferredFile, limit)
+		if err != nil {
+			return err
+		}
+		topology, err := buildSourceTopology(rootPath, preferredFile)
+		if err != nil {
+			return err
+		}
+		snapshot = SourceBrowseSnapshot{
+			Files:    files,
+			Topology: topology,
+		}
+		return nil
+	})
+	if err != nil {
+		return SourceBrowseSnapshot{}, err
+	}
+	return snapshot, nil
+}
+
 func (s *UploadService) ReadFile(zipPath string, requestedPath string, maxBytes int) (SourceFileContent, error) {
 	var result SourceFileContent
 	err := s.withUnpackedArchive(zipPath, func(rootPath string, preferredFile string) error {

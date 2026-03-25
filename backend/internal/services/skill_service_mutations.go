@@ -21,26 +21,31 @@ func (s *SkillService) CreateSkill(ctx context.Context, input CreateSkillInput) 
 	if name == "" {
 		return models.Skill{}, fmt.Errorf("name is required")
 	}
+	sourceAnalysisJSON, err := SerializeSourceTopology(input.Analysis)
+	if err != nil {
+		return models.Skill{}, err
+	}
 
 	skill := models.Skill{
-		OwnerID:         input.OwnerID,
-		OrganizationID:  input.OrganizationID,
-		Name:            name,
-		Description:     strings.TrimSpace(input.Description),
-		Content:         strings.TrimSpace(input.Content),
-		CategorySlug:    strings.TrimSpace(input.CategorySlug),
-		SubcategorySlug: strings.TrimSpace(input.SubcategorySlug),
-		Visibility:      normalizeVisibility(input.Visibility),
-		SourceType:      normalizeSourceType(input.SourceType),
-		RecordOrigin:    normalizeRecordOrigin(input.RecordOrigin),
-		SourceURL:       strings.TrimSpace(input.SourceURL),
-		SourceBranch:    strings.TrimSpace(input.SourceBranch),
-		SourcePath:      strings.TrimSpace(input.SourcePath),
-		RepoURL:         strings.TrimSpace(input.RepoURL),
-		InstallCommand:  strings.TrimSpace(input.InstallCommand),
-		StarCount:       input.StarCount,
-		QualityScore:    input.QualityScore,
-		LastSyncedAt:    input.LastSyncedAt,
+		OwnerID:            input.OwnerID,
+		OrganizationID:     input.OrganizationID,
+		Name:               name,
+		Description:        strings.TrimSpace(input.Description),
+		Content:            strings.TrimSpace(input.Content),
+		CategorySlug:       strings.TrimSpace(input.CategorySlug),
+		SubcategorySlug:    strings.TrimSpace(input.SubcategorySlug),
+		Visibility:         normalizeVisibility(input.Visibility),
+		SourceType:         normalizeSourceType(input.SourceType),
+		RecordOrigin:       normalizeRecordOrigin(input.RecordOrigin),
+		SourceURL:          strings.TrimSpace(input.SourceURL),
+		SourceBranch:       strings.TrimSpace(input.SourceBranch),
+		SourcePath:         strings.TrimSpace(input.SourcePath),
+		RepoURL:            strings.TrimSpace(input.RepoURL),
+		SourceAnalysisJSON: sourceAnalysisJSON,
+		InstallCommand:     strings.TrimSpace(input.InstallCommand),
+		StarCount:          input.StarCount,
+		QualityScore:       input.QualityScore,
+		LastSyncedAt:       input.LastSyncedAt,
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -224,6 +229,10 @@ func (s *SkillService) updateSyncedSkillWithVersionContext(
 		return models.Skill{}, fmt.Errorf("failed to start transaction: %w", tx.Error)
 	}
 	defer tx.Rollback()
+	sourceAnalysisJSON, err := SerializeSourceTopology(input.Meta.Analysis)
+	if err != nil {
+		return models.Skill{}, err
+	}
 
 	var skill models.Skill
 	if err := tx.Where("id = ? AND owner_id = ?", input.SkillID, input.OwnerID).First(&skill).Error; err != nil {
@@ -235,16 +244,17 @@ func (s *SkillService) updateSyncedSkillWithVersionContext(
 
 	now := time.Now().UTC()
 	updates := map[string]any{
-		"name":           strings.TrimSpace(input.Meta.Name),
-		"description":    strings.TrimSpace(input.Meta.Description),
-		"content":        strings.TrimSpace(input.Meta.Content),
-		"source_type":    normalizeSourceType(input.SourceType),
-		"record_origin":  models.RecordOriginImported,
-		"source_url":     strings.TrimSpace(input.SourceURL),
-		"source_branch":  strings.TrimSpace(input.SourceBranch),
-		"source_path":    strings.TrimSpace(input.SourcePath),
-		"repo_url":       strings.TrimSpace(input.SourceURL),
-		"last_synced_at": &now,
+		"name":                 strings.TrimSpace(input.Meta.Name),
+		"description":          strings.TrimSpace(input.Meta.Description),
+		"content":              strings.TrimSpace(input.Meta.Content),
+		"source_type":          normalizeSourceType(input.SourceType),
+		"record_origin":        models.RecordOriginImported,
+		"source_url":           strings.TrimSpace(input.SourceURL),
+		"source_branch":        strings.TrimSpace(input.SourceBranch),
+		"source_path":          strings.TrimSpace(input.SourcePath),
+		"repo_url":             strings.TrimSpace(input.SourceURL),
+		"source_analysis_json": sourceAnalysisJSON,
+		"last_synced_at":       &now,
 	}
 	if err := tx.Model(&skill).Updates(updates).Error; err != nil {
 		return models.Skill{}, fmt.Errorf("failed to update synced skill: %w", err)

@@ -17,6 +17,7 @@ type ExtractedSkill struct {
 	Description string
 	Content     string
 	Tags        []string
+	Analysis    SourceTopologySnapshot
 }
 
 type skillManifest struct {
@@ -33,17 +34,23 @@ type skillFrontmatter struct {
 }
 
 type extractedSkillContent struct {
-	Body        string
-	Frontmatter skillFrontmatter
+	Body           string
+	Frontmatter    skillFrontmatter
+	FilePath       string
+	HasFrontmatter bool
 }
 
 func extractSkillFromDirectory(basePath string) (ExtractedSkill, error) {
+	return extractSkillFromRoot(basePath, "")
+}
+
+func extractSkillFromRoot(basePath string, preferredContentFile string) (ExtractedSkill, error) {
 	manifest, _, err := readSkillManifest(basePath)
 	if err != nil {
 		return ExtractedSkill{}, err
 	}
 
-	content, err := extractSkillContent(basePath, manifest.ContentFile)
+	content, err := extractSkillContent(basePath, preferredContentFile, manifest.ContentFile)
 	if err != nil {
 		return ExtractedSkill{}, err
 	}
@@ -72,11 +79,17 @@ func extractSkillFromDirectory(basePath string) (ExtractedSkill, error) {
 		tags = normalizeTagSlice(content.Frontmatter.Tags)
 	}
 
+	analysis, err := buildSourceTopology(basePath, content.FilePath)
+	if err != nil {
+		return ExtractedSkill{}, err
+	}
+
 	return ExtractedSkill{
 		Name:        name,
 		Description: description,
 		Content:     content.Body,
 		Tags:        tags,
+		Analysis:    analysis,
 	}, nil
 }
 
@@ -97,8 +110,8 @@ func readSkillManifest(basePath string) (skillManifest, bool, error) {
 	return skillManifest{}, false, fmt.Errorf("failed to read skill.json: %w", err)
 }
 
-func extractSkillContent(basePath string, contentFile string) (extractedSkillContent, error) {
-	for _, candidate := range buildSkillContentCandidates(contentFile) {
+func extractSkillContent(basePath string, preferredContentFile string, manifestContentFile string) (extractedSkillContent, error) {
+	for _, candidate := range buildSkillContentCandidates(preferredContentFile, manifestContentFile) {
 		resolvedPath, err := resolvePathWithinBase(basePath, candidate, "content_file")
 		if err != nil {
 			return extractedSkillContent{}, err
@@ -121,12 +134,17 @@ func extractSkillContent(basePath string, contentFile string) (extractedSkillCon
 				continue
 			}
 			return extractedSkillContent{
-				Body:        body,
-				Frontmatter: frontmatter,
+				Body:           body,
+				Frontmatter:    frontmatter,
+				FilePath:       filepath.ToSlash(candidate),
+				HasFrontmatter: hasMeaningfulSkillFrontmatter(frontmatter),
 			}, nil
 		}
 
-		return extractedSkillContent{Body: content}, nil
+		return extractedSkillContent{
+			Body:     content,
+			FilePath: filepath.ToSlash(candidate),
+		}, nil
 	}
 
 	return extractedSkillContent{}, fmt.Errorf(
@@ -134,7 +152,7 @@ func extractSkillContent(basePath string, contentFile string) (extractedSkillCon
 	)
 }
 
-func buildSkillContentCandidates(contentFile string) []string {
+func buildSkillContentCandidates(values ...string) []string {
 	candidates := make([]string, 0, 3)
 	seen := make(map[string]struct{}, 3)
 	appendCandidate := func(value string) {
@@ -150,7 +168,9 @@ func buildSkillContentCandidates(contentFile string) []string {
 		candidates = append(candidates, trimmed)
 	}
 
-	appendCandidate(contentFile)
+	for _, value := range values {
+		appendCandidate(value)
+	}
 	appendCandidate("README.md")
 	appendCandidate("SKILL.md")
 	return candidates

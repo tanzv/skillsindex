@@ -45,6 +45,7 @@ type CreateSkillInput struct {
 	SourceBranch    string
 	SourcePath      string
 	RepoURL         string
+	Analysis        SourceTopologySnapshot
 	InstallCommand  string
 	StarCount       int
 	QualityScore    float64

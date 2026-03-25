@@ -81,6 +81,7 @@ func (s *SkillMPService) FetchSkill(ctx context.Context, input SkillMPFetchInput
 		if err != nil {
 			return ExtractedSkill{}, "", err
 		}
+		meta.Analysis = buildSkillMPJSONAnalysis(meta.Content)
 		return meta, resolvedURL, nil
 	}
 
@@ -93,6 +94,7 @@ func (s *SkillMPService) FetchSkill(ctx context.Context, input SkillMPFetchInput
 		Description: extractDescriptionFromMarkdown(content),
 		Content:     content,
 		Tags:        []string{"skillmp"},
+		Analysis:    buildSkillMPMarkdownAnalysis(content),
 	}, resolvedURL, nil
 }
 
@@ -135,13 +137,33 @@ func parseSkillMPJSON(body []byte) (ExtractedSkill, error) {
 		return ExtractedSkill{}, fmt.Errorf("SkillMP json content is empty")
 	}
 
-	name := strings.TrimSpace(firstNonEmptyString(payload.Name, payload.Title, extractTitleFromMarkdown(content)))
+	markdownContent, frontmatter, frontmatterErr := splitSkillMarkdownContent(content)
+	hasFrontmatter := frontmatterErr == nil && hasMeaningfulSkillFrontmatter(frontmatter)
+	markdownBody := content
+	if hasFrontmatter {
+		markdownBody = markdownContent
+	}
+
+	name := strings.TrimSpace(firstNonEmptyString(
+		payload.Name,
+		payload.Title,
+		frontmatter.Name,
+		extractTitleFromMarkdown(markdownBody),
+	))
 	if name == "" {
 		name = "SkillMP Skill"
 	}
 
-	description := strings.TrimSpace(firstNonEmptyString(payload.Description, payload.Summary, extractDescriptionFromMarkdown(content)))
+	description := strings.TrimSpace(firstNonEmptyString(
+		payload.Description,
+		payload.Summary,
+		frontmatter.Description,
+		extractDescriptionFromMarkdown(markdownBody),
+	))
 	tags := normalizeTagSlice(append(payload.Tags, payload.Labels...))
+	if len(tags) == 0 {
+		tags = normalizeTagSlice(frontmatter.Tags)
+	}
 	if len(tags) == 0 {
 		tags = []string{"skillmp"}
 	}
@@ -189,4 +211,27 @@ func firstNonEmptyString(values ...string) string {
 		}
 	}
 	return ""
+}
+
+func buildSkillMPJSONAnalysis(content string) SourceTopologySnapshot {
+	metadataSources := []string{"skillmp.json", "skillmp.json.content"}
+	if skillMPContentHasFrontmatter(content) {
+		metadataSources = append(metadataSources, "skillmp.json.content.frontmatter")
+	}
+	return buildInlineSourceTopology("skillmp.json", content, "skillmp_json", metadataSources)
+}
+
+func buildSkillMPMarkdownAnalysis(content string) SourceTopologySnapshot {
+	mechanism := "skillmp_markdown"
+	metadataSources := []string{"skillmp.markdown"}
+	if skillMPContentHasFrontmatter(content) {
+		mechanism = "skillmp_markdown_frontmatter"
+		metadataSources = append(metadataSources, "skillmp.markdown.frontmatter")
+	}
+	return buildInlineSourceTopology("SKILL.md", content, mechanism, metadataSources)
+}
+
+func skillMPContentHasFrontmatter(content string) bool {
+	_, frontmatter, err := splitSkillMarkdownContent(content)
+	return err == nil && hasMeaningfulSkillFrontmatter(frontmatter)
 }

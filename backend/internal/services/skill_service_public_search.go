@@ -66,6 +66,11 @@ func (s *SkillService) SearchPublicSkills(ctx context.Context, input PublicSearc
 		return PublicSearchResult{}, fmt.Errorf("failed to count public skills: %w", err)
 	}
 
+	totalPages := maxInt(int(math.Ceil(float64(total)/float64(limit))), 1)
+	if page > totalPages {
+		page = totalPages
+	}
+
 	sortBy := strings.TrimSpace(strings.ToLower(input.SortBy))
 	switch sortBy {
 	case "stars":
