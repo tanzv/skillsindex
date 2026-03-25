@@ -1,7 +1,7 @@
 const serverBackendBaseURLEnvName = "SKILLSINDEX_SERVER_API_BASE_URL";
 const htmlContentTypePattern = /\btext\/html\b/i;
 
-export const defaultBackendBaseURL = "http://localhost:8080";
+export const defaultBackendBaseURL = "http://127.0.0.1:38180";
 
 interface FetchBackendOptions {
   backendBaseURL?: string;
