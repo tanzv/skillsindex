@@ -125,4 +125,21 @@ describe("marketplace category collections", () => {
     });
     expect(cards[2]?.secondaryAction?.href).toBe("/skills/102");
   });
+
+  it("allows category pivot search actions to degrade to tag-only results links when no hub skill matches the leading tag", () => {
+    const hubModel = buildMarketplaceCategoryHubModel(payload.categories, payload.items, 6, "agent");
+    const cards = buildMarketplaceCategoryCollectionCards({
+      audience: "agent",
+      hubModel,
+      messages,
+      topTags: [{ name: "audit", count: 3 }],
+      toPublicPath: (route) => route
+    });
+
+    expect(cards[2]).toMatchObject({
+      key: "top-tags",
+      actionHref: "/results?tags=audit"
+    });
+    expect(cards[2]?.secondaryAction).toBeUndefined();
+  });
 });
