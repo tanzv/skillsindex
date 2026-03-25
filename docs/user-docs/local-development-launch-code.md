@@ -6,10 +6,12 @@
 
 当前推荐方式已经统一为：
 
-1. 前端通过 `frontend-next/.env` 读取环境变量
-2. 后端通过 `backend/.env` 自动加载环境变量
-3. `lcode` profile 只负责启动进程，不再内联业务环境变量
+1. 前端通过 `frontend-next/.env` 读取应用环境变量
+2. 后端通过 `backend/.env` 自动加载应用环境变量
+3. `lcode` profile 负责固化本地运行契约，包括受管启动方式和固定本地地址
 4. 仓库根目录 `Makefile` 作为最短命令入口，对常用 `lcode` / bootstrap 命令做聚合
+5. 前后端长生命周期进程统一由 `lcode` 托管，不再使用裸 `npm run dev`、`next start`、`go run` 作为常驻运行方式
+6. 仓库通过 `scripts/dev/lcode_profiles.json` 固化 profile 契约，并在启动前自动同步到本机 `lcode` 状态
 
 如果你只需要最短命令清单，请直接看：
 
@@ -24,6 +26,14 @@
 
 推荐直接使用 profile 名称，不依赖临时 session ID。
 
+## 2.1 强制约束
+
+1. 仓库本地系统运行统一使用 `lcode`
+2. 允许使用 `make dev`、`make dev-frontend`、`make dev-backend`，因为这些命令底层仍然委托给 `lcode`
+3. 不要把 `npm run dev`、`npm run start`、`next dev`、`next start`、`go run ./cmd/api`、`go run ./cmd/server` 当作常驻系统启动方式
+4. 如果需要临时诊断，先说明目的；诊断结束后仍应回到 `lcode` 托管状态
+5. 如果本机 `lcode` profile 与仓库约定不一致，启动包装会自动回写仓库约定并在必要时重启漂移会话
+
 ## 3. 环境变量来源
 
 ### 3.1 前端
@@ -35,8 +45,8 @@
 当前默认包含：
 
 ```bash
-SKILLSINDEX_SERVER_API_BASE_URL=http://localhost:8080
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+SKILLSINDEX_SERVER_API_BASE_URL=http://127.0.0.1:38180
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:38180
 NEXT_PUBLIC_APP_NAME=SkillsIndex
 ```
 
@@ -81,6 +91,7 @@ make dev-backend
 对应底层命令：
 
 ```bash
+python3 scripts/dev/ensure_lcode_profiles.py
 lcode config run --name skillsindex-backend
 lcode config run --name skillsindex-frontend
 ```
@@ -88,15 +99,29 @@ lcode config run --name skillsindex-frontend
 在执行 `make dev-frontend` 前，仓库会自动运行：
 
 ```bash
+python3 scripts/dev/ensure_lcode_profiles.py
 python3 scripts/dev/check_frontend_backend_env.py
 ```
 
 如果两个前端后端地址变量缺失或不一致，启动会被阻止。
 
+当前前端 profile 为稳定托管模式：
+
+1. `prelaunch_task`: `npm run build`
+2. runtime command: `next start --hostname 127.0.0.1 --port 3400`
+
+这样可以避开 `next dev --webpack` 缓存损坏导致的反复重启问题。
+
 默认访问地址：
 
-- 前端：`http://localhost:3000`
-- 后端：`http://localhost:8080`
+- 前端：`http://127.0.0.1:3400`
+- 后端：`http://127.0.0.1:38180`
+
+本地访问约束：
+
+1. 前端本地访问统一使用 `http://127.0.0.1:3400`
+2. 不要在浏览器中混用 `localhost:3400` 和 `127.0.0.1:3400`
+3. 后端本地访问统一使用 `http://127.0.0.1:38180`
 
 ### 4.3 初始化环境
 
@@ -176,9 +201,9 @@ lcode stop <session_id> --json
 检查：
 
 1. `lcode running --json` 中前端会话是否为 `running`
-2. 前端日志是否显示 `http://localhost:3000`
+2. 前端日志是否显示 `http://127.0.0.1:3400`
 3. `frontend-next/.env` 是否存在
-4. 后端 `http://localhost:8080` 是否已启动
+4. 后端 `http://127.0.0.1:38180` 是否已启动
 
 ### 8.2 后端启动失败
 
@@ -209,6 +234,7 @@ make dev
 如果希望看展开后的底层行为，对应命令为：
 
 ```bash
+python3 scripts/dev/ensure_lcode_profiles.py
 python3 scripts/dev/check_frontend_backend_env.py
 lcode config run --name skillsindex-backend
 lcode config run --name skillsindex-frontend

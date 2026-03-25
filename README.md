@@ -93,6 +93,8 @@ Recommended local development workflow:
 2. In `frontend-next/.env`, keep `SKILLSINDEX_SERVER_API_BASE_URL` and `NEXT_PUBLIC_API_BASE_URL` aligned to the same backend origin.
 3. Use the root `Makefile` as the shortest local-development entrypoint.
 4. Let `lcode` profiles manage frontend and backend processes underneath, while `make dev*` reuses existing sessions when possible.
+5. Treat `lcode` as the only supported manager for repository long-running services; do not keep local frontend or backend runtimes alive through ad hoc terminal commands outside `lcode`.
+6. Synchronize the repository `lcode` profile contract before startup so local runtime behavior stays aligned with the repository rule set.
 
 For the Chinese local-development guide and quick-reference commands, see:
 
@@ -137,13 +139,14 @@ lcode config show --name skillsindex-backend --json
 ### 4. Open
 
 ```text
-Frontend: http://localhost:3000
-Backend API: http://localhost:8080
+Frontend: http://127.0.0.1:3400
+Backend API: http://127.0.0.1:38180
 ```
 
 ### 5. Direct commands behind the make targets
 
 ```bash
+python3 scripts/dev/ensure_lcode_profiles.py
 lcode config run --name skillsindex-backend
 lcode config run --name skillsindex-frontend
 lcode running --json
@@ -184,14 +187,14 @@ go run honnef.co/go/tools/cmd/staticcheck@v0.7.0 ./...
 
 ## Environment Variables
 
-- `APP_PORT`: HTTP port, default `8080`
+- `APP_PORT`: HTTP port, local `backend/.env.example` defaults to `38180`
 - `SKILLSINDEX_SERVER_API_BASE_URL`: frontend server-side backend base URL for Next.js BFF and server rendering
 - `NEXT_PUBLIC_API_BASE_URL`: frontend browser-side backend base URL exposed to client code
 - `APP_ENV`: runtime environment (`development|production`), default `development`
 - `DATABASE_URL`: PostgreSQL DSN
 - `SESSION_SECRET`: HMAC secret for session cookies
 - `API_ONLY`: if `true`, backend only exposes API and OpenAPI endpoints
-- `CORS_ALLOWED_ORIGINS`: comma-separated frontend origins for credentialed CORS (example: `http://localhost:3000`)
+- `CORS_ALLOWED_ORIGINS`: comma-separated frontend origins for credentialed CORS (local example: `http://127.0.0.1:3400`)
 - `STORAGE_PATH`: path for uploaded archives, default `./storage`
 - `ALLOW_REGISTRATION`: bootstrap value for public registration policy on first start
 - `ADMIN_USERNAME`: bootstrap admin username (default `admin`)
@@ -201,7 +204,7 @@ go run honnef.co/go/tools/cmd/staticcheck@v0.7.0 ./...
 - `SKILLMP_TOKEN`: default SkillMP access token (optional)
 - `DINGTALK_CLIENT_ID`: DingTalk OAuth client id
 - `DINGTALK_CLIENT_SECRET`: DingTalk OAuth client secret
-- `DINGTALK_REDIRECT_URL`: OAuth callback URL, default `http://127.0.0.1:8080/auth/dingtalk/callback`
+- `DINGTALK_REDIRECT_URL`: OAuth callback URL, local `backend/.env.example` defaults to `http://127.0.0.1:38180/auth/dingtalk/callback`
 - `DINGTALK_SCOPE`: OAuth scope, default `openid`
 - `DINGTALK_AUTH_BASE_URL`: OAuth auth endpoint base, default `https://login.dingtalk.com/oauth2/auth`
 - `DINGTALK_API_BASE_URL`: DingTalk API base, default `https://api.dingtalk.com`
@@ -285,9 +288,9 @@ If your SkillMP skill requires authorization, provide token in:
 
 OpenAPI artifacts:
 
-- `http://localhost:8080/openapi.json`
-- `http://localhost:8080/openapi.yaml`
-- `http://localhost:8080/docs/swagger`
+- `http://127.0.0.1:38180/openapi.json`
+- `http://127.0.0.1:38180/openapi.yaml`
+- `http://127.0.0.1:38180/docs/swagger`
 
 Session endpoints (documented in OpenAPI as form-based operations):
 
@@ -339,14 +342,14 @@ Session JSON admin APIs (frontend-oriented):
 
 ```bash
 curl -H "Authorization: Bearer <API_KEY>" \
-  "http://localhost:8080/api/v1/skills/search?q=go&category=development&sort=stars"
+  "http://127.0.0.1:38180/api/v1/skills/search?q=go&category=development&sort=stars"
 ```
 
 ### AI Semantic Search
 
 ```bash
 curl -H "Authorization: Bearer <API_KEY>" \
-  "http://localhost:8080/api/v1/skills/ai-search?q=incident response runbook"
+  "http://127.0.0.1:38180/api/v1/skills/ai-search?q=incident response runbook"
 ```
 
 ## Tests

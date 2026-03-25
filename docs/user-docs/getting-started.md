@@ -15,6 +15,12 @@ make init-local
 make dev
 ```
 
+注意：
+
+1. 系统常驻运行统一使用 `lcode` 或 `make dev*`
+2. `go run ./cmd/bootstrap` 只是一次性初始化，不属于常驻服务
+3. 不要手动长期运行 `npm run dev`、`next start`、`go run ./cmd/api`、`go run ./cmd/server`
+
 展开后的底层命令：
 
 ```bash
@@ -23,14 +29,15 @@ cp .env.example .env
 cp backend/.env.example backend/.env
 cp frontend-next/.env.example frontend-next/.env
 go run ./cmd/bootstrap
+python3 scripts/dev/ensure_lcode_profiles.py
 lcode config run --name skillsindex-backend
 lcode config run --name skillsindex-frontend
 ```
 
 默认访问地址：
 
-- 前端：`http://localhost:3000`
-- 后端：`http://localhost:8080`
+- 前端：`http://127.0.0.1:3400`
+- 后端：`http://127.0.0.1:38180`
 
 如果只需要启动 API-only 服务，可使用：
 
@@ -60,6 +67,7 @@ lcode config run --name skillsindex-backend
 2. `make dev`：启动或复用前后端并输出当前会话状态
 3. `make dev-backend` / `make dev-frontend`：分别启动单个服务
 4. `make dev-status`：查看当前 `lcode` 会话
+5. `make sync-lcode-profiles`：把仓库约定的 profile 同步到本机 `lcode`
 
 
 当前后端命令已经按职责拆分：

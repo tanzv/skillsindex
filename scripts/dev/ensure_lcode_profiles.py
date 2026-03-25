@@ -7,6 +7,7 @@ import json
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -28,24 +29,46 @@ def repository_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def _resolve_string_template(value: str, variables: dict[str, str]) -> str:
+    resolved = value
+    for key, replacement in variables.items():
+        resolved = resolved.replace(f"${{{key}}}", replacement)
+    return resolved
+
+
+def _resolve_template_node(value: Any, variables: dict[str, str]) -> Any:
+    if isinstance(value, str):
+        return _resolve_string_template(value, variables)
+    if isinstance(value, list):
+        return [_resolve_template_node(item, variables) for item in value]
+    if isinstance(value, dict):
+        return {key: _resolve_template_node(item, variables) for key, item in value.items()}
+    return value
+
+
 def load_profile_specs(repo_root: Path) -> dict[str, LcodeProfileSpec]:
     config_path = repo_root / "scripts" / "dev" / "lcode_profiles.json"
     payload = json.loads(config_path.read_text(encoding="utf8"))
+    defaults = {
+        key: str(value)
+        for key, value in dict(payload.get("defaults", {})).items()
+    }
     profiles = payload.get("profiles", {})
     specs: dict[str, LcodeProfileSpec] = {}
     for name, raw_profile in profiles.items():
+        resolved_profile = _resolve_template_node(raw_profile, defaults)
         specs[name] = LcodeProfileSpec(
-            name=raw_profile["name"],
-            runtime=raw_profile["runtime"],
-            entry=raw_profile["entry"],
-            cwd=raw_profile["cwd"],
-            args=tuple(raw_profile.get("args", [])),
-            managed=bool(raw_profile.get("managed", True)),
-            mode=raw_profile.get("mode", "run"),
-            log_retention=raw_profile.get("log_retention", "temporary"),
-            env=dict(raw_profile.get("env", {})),
-            prelaunch_task=raw_profile.get("prelaunch_task"),
-            poststop_task=raw_profile.get("poststop_task"),
+            name=resolved_profile["name"],
+            runtime=resolved_profile["runtime"],
+            entry=resolved_profile["entry"],
+            cwd=resolved_profile["cwd"],
+            args=tuple(resolved_profile.get("args", [])),
+            managed=bool(resolved_profile.get("managed", True)),
+            mode=resolved_profile.get("mode", "run"),
+            log_retention=resolved_profile.get("log_retention", "temporary"),
+            env=dict(resolved_profile.get("env", {})),
+            prelaunch_task=resolved_profile.get("prelaunch_task"),
+            poststop_task=resolved_profile.get("poststop_task"),
         )
     return specs
 

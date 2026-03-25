@@ -1,4 +1,10 @@
 {
+  "defaults": {
+    "frontend_port": "3400",
+    "backend_port": "38180",
+    "frontend_base_url": "http://127.0.0.1:3400",
+    "backend_base_url": "http://127.0.0.1:38180"
+  },
   "profiles": {
     "skillsindex-backend": {
       "name": "skillsindex-backend",
@@ -9,7 +15,11 @@
       "managed": true,
       "mode": "run",
       "log_retention": "temporary",
-      "env": {},
+      "env": {
+        "APP_PORT": "${backend_port}",
+        "CORS_ALLOWED_ORIGINS": "${frontend_base_url}",
+        "DINGTALK_REDIRECT_URL": "${backend_base_url}/auth/dingtalk/callback"
+      },
       "prelaunch_task": null,
       "poststop_task": null
     },
@@ -23,12 +33,15 @@
         "--hostname",
         "127.0.0.1",
         "--port",
-        "3000"
+        "${frontend_port}"
       ],
       "managed": true,
       "mode": "run",
       "log_retention": "temporary",
-      "env": {},
+      "env": {
+        "NEXT_PUBLIC_API_BASE_URL": "${backend_base_url}",
+        "SKILLSINDEX_SERVER_API_BASE_URL": "${backend_base_url}"
+      },
       "prelaunch_task": "npm run build",
       "poststop_task": null
     }

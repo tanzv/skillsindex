@@ -16,22 +16,26 @@ from ensure_lcode_profiles import LcodeProfileSpec, ensure_profiles, load_profil
 class RuntimeGuard:
     profile_name: str
     service_label: str
-    listen_port: int
     prohibited_commands: tuple[str, ...]
+    listen_arg_flag: str | None = None
+    listen_env_key: str | None = None
+    fallback_port: int | None = None
 
 
 RUNTIME_GUARDS: dict[str, RuntimeGuard] = {
     "skillsindex-frontend": RuntimeGuard(
         profile_name="skillsindex-frontend",
         service_label="frontend",
-        listen_port=3000,
         prohibited_commands=("npm run dev", "next dev", "next start"),
+        listen_arg_flag="--port",
+        fallback_port=3400,
     ),
     "skillsindex-backend": RuntimeGuard(
         profile_name="skillsindex-backend",
         service_label="backend",
-        listen_port=8080,
         prohibited_commands=("go run ./cmd/server", "go run ./cmd/api"),
+        listen_env_key="APP_PORT",
+        fallback_port=38180,
     ),
 }
 
@@ -100,6 +104,8 @@ def _session_matches_contract(session_spec: dict[str, Any], expected_spec: Lcode
         ("args", list(expected_spec.args)),
         ("managed", expected_spec.managed),
         ("mode", expected_spec.mode),
+        ("log_retention", expected_spec.log_retention),
+        ("env", expected_spec.env),
         ("prelaunch_task", expected_spec.prelaunch_task),
         ("poststop_task", expected_spec.poststop_task),
     )
@@ -156,13 +162,64 @@ def _find_listening_pids(port: int) -> list[int]:
     return pids
 
 
+def _list_child_pids(parent_pid: int) -> list[int]:
+    result = subprocess.run(
+        ["pgrep", "-P", str(parent_pid)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode not in (0, 1):
+        raise RuntimeError(f"Unable to inspect child processes for pid {parent_pid}.")
+
+    child_pids: list[int] = []
+    for line in result.stdout.splitlines():
+        value = line.strip()
+        if value:
+            child_pids.append(int(value))
+    return child_pids
+
+
+def _collect_process_tree_pids(root_pid: int) -> set[int]:
+    discovered: set[int] = set()
+    pending = [root_pid]
+
+    while pending:
+        pid = pending.pop()
+        if pid in discovered:
+            continue
+        discovered.add(pid)
+        pending.extend(_list_child_pids(pid))
+
+    return discovered
+
+
 def _collect_allowed_lcode_pids(repo_root: Path) -> set[int]:
     allowed_pids: set[int] = set()
     for session in _load_running_sessions(repo_root):
         pid = session.get("pid")
         if isinstance(pid, int):
-            allowed_pids.add(pid)
+            allowed_pids.update(_collect_process_tree_pids(pid))
     return allowed_pids
+
+
+def _resolve_listen_port(spec: LcodeProfileSpec, guard: RuntimeGuard) -> int:
+    if guard.listen_env_key:
+        raw_value = spec.env.get(guard.listen_env_key, "").strip()
+        if raw_value:
+            return int(raw_value)
+
+    if guard.listen_arg_flag:
+        for index, arg in enumerate(spec.args):
+            if arg == guard.listen_arg_flag and index + 1 < len(spec.args):
+                return int(spec.args[index + 1])
+            if arg.startswith(f"{guard.listen_arg_flag}="):
+                return int(arg.split("=", 1)[1])
+
+    if guard.fallback_port is not None:
+        return guard.fallback_port
+
+    raise RuntimeError(f"Unable to resolve listen port for {spec.name}.")
 
 
 def _find_unmanaged_repo_processes(
@@ -208,6 +265,7 @@ def _find_unmanaged_repo_processes(
 def _assert_runtime_guard(
     repo_root: Path,
     profile_name: str,
+    profile_spec: LcodeProfileSpec,
     allowed_pids: set[int] | None = None,
 ) -> None:
     guard = RUNTIME_GUARDS.get(profile_name)
@@ -215,7 +273,8 @@ def _assert_runtime_guard(
         return
 
     allowed = allowed_pids or set()
-    port_pids = _find_listening_pids(guard.listen_port)
+    listen_port = _resolve_listen_port(profile_spec, guard)
+    port_pids = _find_listening_pids(listen_port)
     conflicting_pids = [pid for pid in port_pids if pid not in allowed]
     if conflicting_pids:
         pid = conflicting_pids[0]
@@ -223,7 +282,7 @@ def _assert_runtime_guard(
         raise SystemExit(
             "\n".join(
                 [
-                    f"Port conflict detected for {profile_name}: port {guard.listen_port} is already in use.",
+                    f"Port conflict detected for {profile_name}: port {listen_port} is already in use.",
                     f"Conflicting pid={pid} command={command}",
                     "Repository services must be managed through lcode or make dev*.",
                     f"Stop the conflicting process and retry: lcode stop <session_id> --json or kill {pid}",
@@ -275,7 +334,7 @@ def main(argv: list[str]) -> int:
             allowed_for_reuse = set(allowed_lcode_pids)
             if isinstance(session_pid, int):
                 allowed_for_reuse.add(session_pid)
-            _assert_runtime_guard(repo_root, profile_name, allowed_for_reuse)
+            _assert_runtime_guard(repo_root, profile_name, expected_spec, allowed_for_reuse)
             _print_existing_session(existing_session)
             return 0
         print(
@@ -283,7 +342,7 @@ def main(argv: list[str]) -> int:
         )
         _stop_session(session_id)
 
-    _assert_runtime_guard(repo_root, profile_name, allowed_lcode_pids)
+    _assert_runtime_guard(repo_root, profile_name, expected_spec, allowed_lcode_pids)
     return _start_profile(profile_name)
 
 

@@ -18,6 +18,7 @@ make dev-frontend
 ```
 
 底层实际仍然使用 `lcode` profile；如果当前仓库已存在运行中的同名会话，`make dev*` 会直接复用。
+在启动前，仓库会自动把 profile 配置同步为仓库约定，避免本机残留旧配置。
 
 ## 1. 环境文件
 
@@ -30,8 +31,8 @@ frontend-next/.env
 前端环境变量必须至少包含：
 
 ```bash
-SKILLSINDEX_SERVER_API_BASE_URL=http://localhost:8080
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+SKILLSINDEX_SERVER_API_BASE_URL=http://127.0.0.1:38180
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:38180
 ```
 
 后端：
@@ -65,24 +66,36 @@ make dev-frontend
 对应底层命令：
 
 ```bash
+python3 scripts/dev/ensure_lcode_profiles.py
 python3 scripts/dev/check_frontend_backend_env.py
 lcode config run --name skillsindex-backend
 lcode config run --name skillsindex-frontend
 ```
+
+约束：
+
+1. 常驻服务统一使用 `lcode` 或 `make dev*`
+2. `go run ./cmd/bootstrap` 仅用于一次性初始化
+3. 不要把裸 `npm run dev`、`next start`、`go run ./cmd/api`、`go run ./cmd/server` 当作系统常驻启动方式
 
 ## 4. 默认地址
 
 前端：
 
 ```bash
-http://localhost:3000
+http://127.0.0.1:3400
 ```
 
 后端：
 
 ```bash
-http://localhost:8080
+http://127.0.0.1:38180
 ```
+
+说明：
+
+1. 前端本地访问统一使用 `127.0.0.1:3400`
+2. 不要混用 `localhost:3400` 和 `127.0.0.1:3400`
 
 ## 5. 查看当前运行中的会话
 
@@ -145,6 +158,7 @@ docker compose up -d postgres
 cp backend/.env.example backend/.env
 cp frontend-next/.env.example frontend-next/.env
 go run ./cmd/bootstrap
+python3 scripts/dev/ensure_lcode_profiles.py
 python3 scripts/dev/check_frontend_backend_env.py
 lcode config run --name skillsindex-backend
 lcode config run --name skillsindex-frontend

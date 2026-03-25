@@ -53,6 +53,7 @@ describe("repository real backend smoke tooling", () => {
       "utf8",
     );
     const payload = JSON.parse(rawProfiles) as {
+      defaults: Record<string, string>;
       profiles: Record<
         string,
         {
@@ -61,26 +62,61 @@ describe("repository real backend smoke tooling", () => {
           cwd: string;
           args: string[];
           managed: boolean;
+          env?: Record<string, string>;
           prelaunch_task: string | null;
         }
       >;
     };
 
+    expect(payload.defaults).toMatchObject({
+      frontend_port: "3400",
+      backend_port: "38180",
+      frontend_base_url: "http://127.0.0.1:3400",
+      backend_base_url: "http://127.0.0.1:38180",
+    });
     expect(payload.profiles["skillsindex-backend"]).toMatchObject({
       runtime: "go",
       entry: "./cmd/api",
       cwd: "backend",
       args: [],
       managed: true,
+      env: {
+        APP_PORT: "${backend_port}",
+        CORS_ALLOWED_ORIGINS: "${frontend_base_url}",
+        DINGTALK_REDIRECT_URL: "${backend_base_url}/auth/dingtalk/callback",
+      },
       prelaunch_task: null,
     });
     expect(payload.profiles["skillsindex-frontend"]).toMatchObject({
       runtime: "node",
       entry: "node_modules/next/dist/bin/next",
       cwd: "frontend-next",
-      args: ["start", "--hostname", "127.0.0.1", "--port", "3000"],
+      args: ["start", "--hostname", "127.0.0.1", "--port", "${frontend_port}"],
+      env: {
+        NEXT_PUBLIC_API_BASE_URL: "${backend_base_url}",
+        SKILLSINDEX_SERVER_API_BASE_URL: "${backend_base_url}",
+      },
       managed: true,
       prelaunch_task: "npm run build",
     });
+  });
+
+  it("keeps example env defaults aligned with the repository lcode contract", async () => {
+    const frontendEnvExample = await readFile(
+      path.join(repositoryRoot, "frontend-next", ".env.example"),
+      "utf8",
+    );
+    const backendEnvExample = await readFile(
+      path.join(repositoryRoot, "backend", ".env.example"),
+      "utf8",
+    );
+
+    expect(frontendEnvExample).toContain("SKILLSINDEX_SERVER_API_BASE_URL=http://127.0.0.1:38180");
+    expect(frontendEnvExample).toContain("NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:38180");
+    expect(backendEnvExample).toContain("APP_PORT=38180");
+    expect(backendEnvExample).toContain("CORS_ALLOWED_ORIGINS=http://127.0.0.1:3400");
+    expect(backendEnvExample).toContain(
+      "DINGTALK_REDIRECT_URL=http://127.0.0.1:38180/auth/dingtalk/callback",
+    );
   });
 });
