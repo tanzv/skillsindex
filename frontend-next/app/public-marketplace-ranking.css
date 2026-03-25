@@ -80,9 +80,9 @@
   display: block;
   background: var(--marketplace-section-emphasis-background);
   transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    transform 160ms ease;
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .marketplace-ranking-highlight-card:hover,
@@ -149,9 +149,9 @@
   display: grid;
   background: var(--marketplace-section-emphasis-background);
   transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    transform 160ms ease;
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .marketplace-ranking-table-row > span {
@@ -196,5 +196,17 @@
 
   .marketplace-ranking-table-head {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketplace-ranking-highlight-card,
+  .marketplace-ranking-table-row {
+    transition: none;
+  }
+
+  .marketplace-ranking-highlight-card:hover,
+  .marketplace-ranking-table-row:hover {
+    transform: none;
   }
 }

@@ -164,10 +164,10 @@
   font-size: 13px;
   font-weight: 700;
   transition:
-    transform 160ms ease,
-    background-color 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease;
+    transform var(--motion-duration-fast) var(--motion-ease-standard),
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    color var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .action:hover {
@@ -267,7 +267,7 @@
   inset: 0;
   background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.24) 50%, transparent 100%);
   transform: translateX(-100%);
-  animation: statusShimmer 1.4s ease-in-out infinite;
+  animation: statusShimmer var(--motion-duration-loading-loop) var(--motion-ease-standard) infinite;
 }
 
 .skeletonPulseRow {

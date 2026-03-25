@@ -10,11 +10,11 @@
   justify-content: center;
   line-height: 1;
   transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    color 160ms ease,
-    transform 160ms ease;
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
+    color var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .protected-topbar-nav-button {
@@ -39,7 +39,9 @@
   border-radius: 999px;
   background: transparent;
   opacity: 0;
-  transition: opacity 160ms ease, background-color 160ms ease;
+  transition:
+    opacity var(--motion-duration-fast) var(--motion-ease-standard),
+    background-color var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .protected-topbar-nav-button:hover,
@@ -214,11 +216,21 @@
 .protected-topbar-overflow-toggle-icon {
   width: 13px;
   height: 13px;
-  transition: transform 160ms ease;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .protected-topbar-overflow-toggle.is-expanded .protected-topbar-overflow-toggle-icon {
   transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .protected-topbar-nav-button,
+  .protected-topbar-overflow-toggle,
+  .protected-topbar-overflow-metric,
+  .protected-topbar-nav-button::after,
+  .protected-topbar-overflow-toggle-icon {
+    transition: none;
+  }
 }
 
 .protected-topbar-overflow-toggle-badge {

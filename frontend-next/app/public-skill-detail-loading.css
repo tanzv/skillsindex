@@ -43,7 +43,7 @@
   inset: 0;
   transform: translateX(-100%);
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
-  animation: skill-detail-skeleton-shimmer 1.4s ease-in-out infinite;
+  animation: skill-detail-skeleton-shimmer var(--motion-duration-loading-loop) var(--motion-ease-standard) infinite;
 }
 
 .skill-detail-loading-line {

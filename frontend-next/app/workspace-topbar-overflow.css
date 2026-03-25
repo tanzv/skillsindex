@@ -9,7 +9,10 @@
   opacity: 0;
   visibility: hidden;
   transform: translateY(-8px);
-  transition: opacity 170ms ease, transform 170ms ease, visibility 170ms ease;
+  transition:
+    opacity var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard),
+    visibility var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .protected-topbar-overflow-wrapper.is-expanded {
@@ -190,5 +193,12 @@
 
   .protected-topbar-overflow-groups {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .protected-topbar-overflow-wrapper {
+    transition: none;
+    transform: none;
   }
 }

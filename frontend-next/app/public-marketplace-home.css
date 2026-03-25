@@ -112,10 +112,10 @@
   background: transparent;
   color: var(--marketplace-toggle-text);
   transition:
-    background-color 160ms ease,
-    color 160ms ease,
-    border-color 160ms ease,
-    transform 160ms ease;
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    color var(--motion-duration-fast) var(--motion-ease-standard),
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .marketplace-home-icon-button svg {
@@ -229,5 +229,15 @@
 
   .marketplace-home-card-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketplace-home-icon-button {
+    transition: none;
+  }
+
+  .marketplace-home-icon-button:hover {
+    transform: none;
   }
 }

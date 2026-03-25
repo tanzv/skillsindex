@@ -105,9 +105,9 @@
     line-height: 1.5;
     text-decoration: none;
     transition:
-      background-color 120ms ease,
-      color 120ms ease,
-      outline-color 120ms ease;
+      background-color var(--motion-duration-fast) var(--motion-ease-standard),
+      color var(--motion-duration-fast) var(--motion-ease-standard),
+      outline-color var(--motion-duration-fast) var(--motion-ease-standard);
 
     &:hover {
       background: var(--sidebar-link-bg-hover);
@@ -152,6 +152,12 @@
     line-height: 1.5;
     overflow-wrap: anywhere;
     white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel .link {
+    transition: none;
   }
 }
 

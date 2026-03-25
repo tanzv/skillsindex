@@ -85,9 +85,9 @@
   font-size: 12px;
   font-weight: 700;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease;
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    color var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .admin-overview-action:hover,
@@ -226,5 +226,13 @@
   .admin-overview-action,
   .admin-overview-nav-link {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-overview-action,
+  .admin-overview-badge,
+  .admin-overview-nav-link {
+    transition: none;
   }
 }

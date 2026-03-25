@@ -16,10 +16,10 @@
 .skill-detail-secondary-action,
 .skill-detail-primary-action {
   transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease,
-    transform 160ms ease;
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    color var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .skill-detail-file-button {
@@ -174,5 +174,21 @@
 
   .skill-detail-preview-stage-body {
     max-height: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-detail-file-button,
+  .skill-detail-related-card,
+  .skill-detail-secondary-action,
+  .skill-detail-primary-action {
+    transition: none;
+  }
+
+  .skill-detail-file-button:hover,
+  .skill-detail-related-card:hover,
+  .skill-detail-secondary-action:hover,
+  .skill-detail-primary-action:hover {
+    transform: none;
   }
 }

@@ -181,9 +181,9 @@
   background: color-mix(in srgb, var(--marketplace-chip-background) 72%, transparent);
   color: var(--marketplace-link-text);
   transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    transform 160ms ease;
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 .marketplace-category-nav-item:hover {
   border-color: var(--marketplace-card-border-soft);
@@ -382,5 +382,15 @@
   .marketplace-category-action-card,
   .marketplace-category-browse-card {
     padding: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketplace-category-nav-item {
+    transition: none;
+  }
+
+  .marketplace-category-nav-item:hover {
+    transform: none;
   }
 }

@@ -75,9 +75,9 @@
   text-align: left;
   cursor: pointer;
   transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    transform 160ms ease;
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .skill-detail-directory-row:hover {
@@ -136,5 +136,15 @@
   .skill-detail-directory-current {
     max-width: none;
     text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-detail-directory-row {
+    transition: none;
+  }
+
+  .skill-detail-directory-row:hover {
+    transform: none;
   }
 }

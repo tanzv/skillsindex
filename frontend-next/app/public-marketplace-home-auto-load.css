@@ -23,7 +23,7 @@
   justify-content: center;
   gap: 7px;
   height: 16px;
-  animation: marketplaceHomeAutoLoadSwing 1200ms ease-in-out infinite;
+  animation: marketplaceHomeAutoLoadSwing var(--motion-duration-loading-loop) var(--motion-ease-standard) infinite;
 }
 
 .marketplace-shell.is-landing-route .marketplace-pagination-loading-arrow {
@@ -33,7 +33,7 @@
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
-  animation: marketplaceHomeAutoLoadArrowSlide 1200ms ease-in-out infinite;
+  animation: marketplaceHomeAutoLoadArrowSlide var(--motion-duration-loading-loop) var(--motion-ease-standard) infinite;
 }
 
 .marketplace-shell.is-landing-route .marketplace-pagination-loading-ring {
@@ -43,7 +43,7 @@
   border: 2px solid #8a8a8a;
   border-top-color: #f0f0f0;
   opacity: 0.92;
-  animation: marketplaceHomeAutoLoadRingSpin 2200ms linear infinite;
+  animation: marketplaceHomeAutoLoadRingSpin var(--motion-duration-loading-spin) var(--motion-ease-linear) infinite;
 }
 
 .marketplace-shell.is-landing-route .marketplace-pagination-loading-dots {
@@ -59,17 +59,17 @@
   border-radius: 999px;
   background: #7a7a7a;
   opacity: 0.88;
-  animation: marketplaceHomeAutoLoadDotPulse 1200ms ease-in-out infinite;
+  animation: marketplaceHomeAutoLoadDotPulse var(--motion-duration-loading-loop) var(--motion-ease-standard) infinite;
 }
 
 .marketplace-shell.is-landing-route .marketplace-pagination-loading-dots span:nth-of-type(2) {
   background: #8a8a8a;
-  animation-delay: 140ms;
+  animation-delay: var(--motion-delay-sm);
 }
 
 .marketplace-shell.is-landing-route .marketplace-pagination-loading-dots span:nth-of-type(3) {
   background: #9a9a9a;
-  animation-delay: 260ms;
+  animation-delay: var(--motion-delay-xl);
 }
 
 .marketplace-shell.is-light-theme.is-landing-route .marketplace-pagination-loading-ring {
@@ -158,5 +158,15 @@
   100% {
     transform: translateY(0);
     opacity: 0.65;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketplace-shell.is-landing-route .marketplace-pagination-load-indicator,
+  .marketplace-shell.is-landing-route .marketplace-pagination-loading-arrow,
+  .marketplace-shell.is-landing-route .marketplace-pagination-loading-ring,
+  .marketplace-shell.is-landing-route .marketplace-pagination-loading-dots span {
+    animation: none;
+    transform: none;
   }
 }

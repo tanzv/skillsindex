@@ -10,10 +10,10 @@
   gap: 8px;
   justify-content: space-between;
   transition:
-    border-color 180ms ease,
-    background-color 180ms ease,
-    box-shadow 220ms ease,
-    transform 220ms ease;
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-medium) var(--motion-ease-standard),
+    transform var(--motion-duration-medium) var(--motion-ease-standard);
 }
 
 .marketplace-home-deck-card:hover {
@@ -187,4 +187,14 @@
 .marketplace-home-deck-card .marketplace-home-deck-foot span:last-child {
   -webkit-line-clamp: 1;
   max-width: min(100%, 18ch);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketplace-home-deck-card {
+    transition: none;
+  }
+
+  .marketplace-home-deck-card:hover {
+    transform: none;
+  }
 }

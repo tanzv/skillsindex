@@ -50,10 +50,10 @@
   border-radius: 11px;
   justify-content: center;
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    box-shadow 120ms ease,
-    color 120ms ease;
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
+    color var(--motion-duration-fast) var(--motion-ease-standard);
 }
 .account-shell-chip {
   border-color: var(--account-shell-border);
@@ -70,5 +70,11 @@
 
   &.is-mono {
     font-family: "JetBrains Mono", monospace;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-shell-chip {
+    transition: none;
   }
 }

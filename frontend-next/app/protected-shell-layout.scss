@@ -71,7 +71,7 @@
   background: var(--protected-shell-drawer-backdrop);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 160ms ease;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-standard);
   z-index: 49;
 }
 
@@ -91,7 +91,7 @@
   background: var(--protected-shell-bg-alt);
   box-shadow: var(--protected-shell-drawer-shadow);
   transform: translateX(calc(-100% - 18px));
-  transition: transform 180ms ease;
+  transition: transform var(--motion-duration-medium) var(--motion-ease-emphasized);
   z-index: 50;
 }
 
@@ -124,5 +124,12 @@
   .protected-console-sidebar-drawer,
   .protected-console-drawer-backdrop {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .protected-console-drawer-backdrop,
+  .protected-console-sidebar-drawer {
+    transition: none;
   }
 }

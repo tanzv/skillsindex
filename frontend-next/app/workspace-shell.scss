@@ -44,11 +44,11 @@
   align-items: center;
   border: 1px solid transparent;
   transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    color 160ms ease,
-    transform 160ms ease;
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
+    color var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .workspace-shell-chip {
@@ -65,5 +65,11 @@
     border-color: var(--protected-shell-chip-accent-border);
     background: var(--protected-shell-chip-accent-bg);
     color: var(--workspace-shell-text);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-shell-chip {
+    transition: none;
   }
 }

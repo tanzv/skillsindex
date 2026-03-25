@@ -23,10 +23,10 @@
 .queueEntryCard {
   padding: 16px;
   transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    box-shadow 160ms ease,
-    transform 160ms ease;
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .queueEntryCardIdle:hover,
@@ -191,9 +191,9 @@
 .actionLinkCard {
   padding: 16px;
   transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    transform 160ms ease;
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 @media (max-width: 900px) {
@@ -206,5 +206,17 @@
 @media (max-width: 640px) {
   .detailStatGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .queueEntryCard,
+  .actionLinkCard {
+    transition: none;
+  }
+
+  .queueEntryCardIdle:hover,
+  .actionLinkCard:hover {
+    transform: none;
   }
 }
