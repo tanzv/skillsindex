@@ -1,27 +1,58 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
-  formatPublicDate,
-  normalizePublicLocale,
-  resolvePreferredPublicLocale
+  applyBrowserPublicLocale,
+  buildBrowserLocaleReloadTarget,
+  persistBrowserPublicLocale
 } from "@/src/lib/i18n/publicLocale";
 
-describe("public locale helpers", () => {
-  it("normalizes supported locales and falls back to the default locale", () => {
-    expect(normalizePublicLocale("en")).toBe("en");
-    expect(normalizePublicLocale("zh")).toBe("zh");
-    expect(normalizePublicLocale("de")).toBe("zh");
-    expect(normalizePublicLocale(null)).toBe("zh");
+describe("publicLocale browser helpers", () => {
+  it("persists locale preference to storage, cookie, and document language", () => {
+    const storage = { setItem: vi.fn() };
+    const documentRef = {
+      cookie: "",
+      documentElement: { lang: "en" }
+    };
+
+    const locale = persistBrowserPublicLocale("zh", storage, documentRef);
+
+    expect(locale).toBe("zh");
+    expect(storage.setItem).toHaveBeenCalledWith("skillsindex.locale", "zh");
+    expect(documentRef.cookie).toContain("skillsindex_locale=zh");
+    expect(documentRef.documentElement.lang).toBe("zh");
   });
 
-  it("resolves locale from accept-language values", () => {
-    expect(resolvePreferredPublicLocale("zh-CN,zh;q=0.9,en;q=0.8")).toBe("zh");
-    expect(resolvePreferredPublicLocale("en-US,en;q=0.7")).toBe("en");
-    expect(resolvePreferredPublicLocale("fr-FR,fr;q=0.9")).toBe("zh");
+  it("builds a same-route reload target from the active browser location", () => {
+    expect(
+      buildBrowserLocaleReloadTarget({
+        pathname: "/workspace",
+        search: "?tab=profile",
+        hash: "#details",
+        assign: () => {}
+      })
+    ).toBe("/workspace?tab=profile#details");
   });
 
-  it("formats dates using the selected locale", () => {
-    expect(formatPublicDate("2026-03-14T12:00:00Z", "en")).toContain("2026");
-    expect(formatPublicDate("2026-03-14T12:00:00Z", "zh")).toContain("2026");
+  it("reloads the current route after persisting the locale change", () => {
+    const storage = { setItem: vi.fn() };
+    const documentRef = {
+      cookie: "",
+      documentElement: { lang: "en" }
+    };
+    const locationRef = {
+      pathname: "/workspace",
+      search: "?tab=profile",
+      hash: "#details",
+      assign: vi.fn()
+    };
+
+    const locale = applyBrowserPublicLocale("zh", {
+      storage,
+      documentRef,
+      locationRef
+    });
+
+    expect(locale).toBe("zh");
+    expect(locationRef.assign).toHaveBeenCalledWith("/workspace?tab=profile#details");
   });
 });

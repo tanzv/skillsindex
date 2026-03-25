@@ -1,13 +1,11 @@
 "use client";
 
 import { createContext, useContext, useMemo } from "react";
-import { useRouter } from "next/navigation";
 
 import {
+  applyBrowserPublicLocale,
   defaultPublicLocale,
   normalizePublicLocale,
-  publicLocaleCookieName,
-  publicLocaleStorageKey,
   type PublicLocale
 } from "@/src/lib/i18n/publicLocale";
 import type { PublicMarketplaceMessages } from "@/src/lib/i18n/publicMessages";
@@ -27,22 +25,24 @@ interface PublicI18nProviderProps {
 }
 
 export function PublicI18nProvider({ locale, messages, children }: PublicI18nProviderProps) {
-  const router = useRouter();
-
   const value = useMemo<PublicI18nContextValue>(
     () => ({
       locale,
       messages,
       setLocale(nextLocale) {
         const normalizedLocale = normalizePublicLocale(nextLocale);
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem(publicLocaleStorageKey, normalizedLocale);
-          document.cookie = `${publicLocaleCookieName}=${normalizedLocale}; path=/; max-age=31536000; samesite=lax`;
+        if (normalizedLocale === locale || typeof window === "undefined") {
+          return;
         }
-        router.refresh();
+
+        applyBrowserPublicLocale(normalizedLocale, {
+          storage: window.localStorage,
+          documentRef: document,
+          locationRef: window.location
+        });
       }
     }),
-    [locale, messages, router]
+    [locale, messages]
   );
 
   return <PublicI18nContext.Provider value={value}>{children}</PublicI18nContext.Provider>;
