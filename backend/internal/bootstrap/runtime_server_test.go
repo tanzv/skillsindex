@@ -17,12 +17,24 @@ type fakeHTTPServer struct {
 	stopListen    chan struct{}
 }
 
+type fakeScheduler struct {
+	started chan struct{}
+	done    chan struct{}
+}
+
 func newFakeHTTPServer(listenError error, shutdownError error) *fakeHTTPServer {
 	return &fakeHTTPServer{
 		listenError:   listenError,
 		listenStarted: make(chan struct{}, 1),
 		shutdownError: shutdownError,
 		stopListen:    make(chan struct{}),
+	}
+}
+
+func newFakeScheduler() *fakeScheduler {
+	return &fakeScheduler{
+		started: make(chan struct{}, 1),
+		done:    make(chan struct{}),
 	}
 }
 
@@ -42,6 +54,17 @@ func (f *fakeHTTPServer) Shutdown(context.Context) error {
 	f.shutdownCalls++
 	close(f.stopListen)
 	return f.shutdownError
+}
+
+func (f *fakeScheduler) Start(ctx context.Context) {
+	select {
+	case f.started <- struct{}{}:
+	default:
+	}
+	go func() {
+		<-ctx.Done()
+		close(f.done)
+	}()
 }
 
 func TestRunHTTPServerReturnsListenError(t *testing.T) {
@@ -96,6 +119,30 @@ func TestRunHTTPServerShutsDownOnContextCancel(t *testing.T) {
 
 	if fake.shutdownCalls != 1 {
 		t.Fatalf("expected one shutdown call, got %d", fake.shutdownCalls)
+	}
+}
+
+func TestRunHTTPServerWithSchedulerCancelsSchedulerContextOnServerExit(t *testing.T) {
+	fakeServer := newFakeHTTPServer(errors.New("listen failed"), nil)
+	fakeScheduler := newFakeScheduler()
+	listener := newTestListener(t)
+	defer listener.Close()
+
+	err := runHTTPServerWithScheduler(context.Background(), fakeServer, listener, fakeScheduler, 50*time.Millisecond)
+	if err == nil {
+		t.Fatalf("expected server error")
+	}
+
+	select {
+	case <-fakeScheduler.started:
+	case <-time.After(time.Second):
+		t.Fatalf("expected scheduler to start")
+	}
+
+	select {
+	case <-fakeScheduler.done:
+	case <-time.After(time.Second):
+		t.Fatalf("expected scheduler context to be canceled after server exit")
 	}
 }
 

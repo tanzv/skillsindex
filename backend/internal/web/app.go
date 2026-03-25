@@ -1,7 +1,6 @@
 package web
 
 import (
-	"context"
 	"html/template"
 	"net/http"
 	"time"
@@ -21,48 +20,36 @@ const csrfTokenFormField = "csrf_token"
 
 // App wires handlers, templates, and domain services for web delivery.
 type App struct {
-	authService           *services.AuthService
-	sessionService        *services.SessionService
-	sessionStarter        func(http.ResponseWriter, *http.Request, uint) error
-	userSessionSvc        *services.UserSessionService
-	skillService          *services.SkillService
-	apiKeyService         *services.APIKeyService
-	interaction           *services.SkillInteractionService
-	auditService          *services.AuditService
-	integrationSvc        *services.IntegrationService
-	incidentSvc           *services.IncidentService
-	moderationSvc         *services.ModerationService
-	opsService            *services.OpsService
-	asyncJobSvc           *services.AsyncJobService
-	syncJobSvc            *services.SyncJobService
-	syncGovernanceSvc     *services.SyncGovernanceService
-	skillVersionSvc       *services.SkillVersionService
-	organizationSvc       *services.OrganizationService
-	oauthGrantService     *services.OAuthGrantService
-	dingTalkService       *services.DingTalkService
-	uploadService         *services.UploadService
-	repositoryService     *services.RepositorySyncService
-	repoSyncRunner        *services.RepositorySyncCoordinator
-	repoSyncBatchRunner   func(context.Context, *uint, *time.Time, int) (services.RepositorySyncSummary, error)
-	skillMPService        *services.SkillMPService
-	settingsService       *services.SettingsService
-	syncPolicyService     *services.RepositorySyncPolicyService
-	syncPolicyRecordSvc   *services.SyncPolicyService
-	apiSpecRegistrySvc    *services.APISpecRegistryService
-	apiPublishSvc         *services.APIPublishService
-	apiPolicySvc          *services.APIPolicyService
-	apiMockSvc            *services.APIMockService
-	apiExportSvc          *services.APIExportService
-	apiContractRuntimeSvc *services.APIContractRuntimeService
-	loginThrottle         *loginThrottleState
-	allowRegistration     bool
-	apiKeys               map[string]struct{}
-	translations          translationCatalog
-	templates             *template.Template
-	storagePath           string
-	cookieSecure          bool
-	apiOnly               bool
-	corsOrigins           map[string]struct{}
+	authService       *services.AuthService
+	sessionService    *services.SessionService
+	sessionStarter    func(http.ResponseWriter, *http.Request, uint) error
+	userSessionSvc    *services.UserSessionService
+	skillService      *services.SkillService
+	apiKeyService     *services.APIKeyService
+	interaction       *services.SkillInteractionService
+	auditService      *services.AuditService
+	integrationSvc    *services.IntegrationService
+	incidentSvc       *services.IncidentService
+	moderationSvc     *services.ModerationService
+	opsService        *services.OpsService
+	skillVersionSvc   *services.SkillVersionService
+	organizationSvc   *services.OrganizationService
+	oauthGrantService *services.OAuthGrantService
+	dingTalkService   *services.DingTalkService
+	uploadService     *services.UploadService
+	syncRuntimeDependencies
+	apiRuntimeDependencies
+	skillMPService    *services.SkillMPService
+	settingsService   *services.SettingsService
+	loginThrottle     *loginThrottleState
+	allowRegistration bool
+	apiKeys           map[string]struct{}
+	translations      translationCatalog
+	templates         *template.Template
+	storagePath       string
+	cookieSecure      bool
+	apiOnly           bool
+	corsOrigins       map[string]struct{}
 }
 
 // ViewData is rendered by the shared template.

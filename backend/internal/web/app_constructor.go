@@ -15,43 +15,33 @@ import (
 
 // AppDependencies groups web-layer dependencies and runtime options.
 type AppDependencies struct {
-	AuthService           *services.AuthService
-	SessionService        *services.SessionService
-	UserSessionService    *services.UserSessionService
-	SkillService          *services.SkillService
-	APIKeyService         *services.APIKeyService
-	InteractionService    *services.SkillInteractionService
-	AuditService          *services.AuditService
-	IntegrationService    *services.IntegrationService
-	IncidentService       *services.IncidentService
-	ModerationService     *services.ModerationService
-	OpsService            *services.OpsService
-	AsyncJobService       *services.AsyncJobService
-	SyncJobService        *services.SyncJobService
-	SyncGovernanceService *services.SyncGovernanceService
-	SkillVersionService   *services.SkillVersionService
-	OrganizationService   *services.OrganizationService
-	OAuthGrantService     *services.OAuthGrantService
-	DingTalkService       *services.DingTalkService
-	UploadService         *services.UploadService
-	RepositoryService     *services.RepositorySyncService
-	SkillMPService        *services.SkillMPService
-	SettingsService       *services.SettingsService
-	SyncPolicyService     *services.RepositorySyncPolicyService
-	SyncPolicyRecordSvc   *services.SyncPolicyService
-	APISpecRegistrySvc    *services.APISpecRegistryService
-	APIPublishSvc         *services.APIPublishService
-	APIPolicySvc          *services.APIPolicyService
-	APIMockSvc            *services.APIMockService
-	APIExportSvc          *services.APIExportService
-	APIContractRuntimeSvc *services.APIContractRuntimeService
-	AllowRegistration     bool
-	CookieSecure          bool
-	APIOnly               bool
-	CORSAllowedOrigins    []string
-	APIKeys               []string
-	TemplateGlob          string
-	StoragePath           string
+	AuthService         *services.AuthService
+	SessionService      *services.SessionService
+	UserSessionService  *services.UserSessionService
+	SkillService        *services.SkillService
+	APIKeyService       *services.APIKeyService
+	InteractionService  *services.SkillInteractionService
+	AuditService        *services.AuditService
+	IntegrationService  *services.IntegrationService
+	IncidentService     *services.IncidentService
+	ModerationService   *services.ModerationService
+	OpsService          *services.OpsService
+	SkillVersionService *services.SkillVersionService
+	OrganizationService *services.OrganizationService
+	OAuthGrantService   *services.OAuthGrantService
+	DingTalkService     *services.DingTalkService
+	UploadService       *services.UploadService
+	SyncDependencies    SyncDependencies
+	APIDependencies     APIDependencies
+	SkillMPService      *services.SkillMPService
+	SettingsService     *services.SettingsService
+	AllowRegistration   bool
+	CookieSecure        bool
+	APIOnly             bool
+	CORSAllowedOrigins  []string
+	APIKeys             []string
+	TemplateGlob        string
+	StoragePath         string
 }
 
 // NewApp initializes the HTTP app with optional template rendering support.
@@ -61,49 +51,36 @@ func NewApp(deps AppDependencies) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	repoSyncCoordinator := services.NewRepositorySyncCoordinator(deps.SkillService, deps.RepositoryService)
 
 	return &App{
-		authService:           deps.AuthService,
-		sessionService:        deps.SessionService,
-		userSessionSvc:        deps.UserSessionService,
-		skillService:          deps.SkillService,
-		apiKeyService:         deps.APIKeyService,
-		interaction:           deps.InteractionService,
-		auditService:          deps.AuditService,
-		integrationSvc:        deps.IntegrationService,
-		incidentSvc:           deps.IncidentService,
-		moderationSvc:         deps.ModerationService,
-		opsService:            deps.OpsService,
-		asyncJobSvc:           deps.AsyncJobService,
-		syncJobSvc:            deps.SyncJobService,
-		syncGovernanceSvc:     deps.SyncGovernanceService,
-		skillVersionSvc:       deps.SkillVersionService,
-		organizationSvc:       deps.OrganizationService,
-		oauthGrantService:     deps.OAuthGrantService,
-		dingTalkService:       deps.DingTalkService,
-		uploadService:         deps.UploadService,
-		repositoryService:     deps.RepositoryService,
-		repoSyncRunner:        repoSyncCoordinator,
-		repoSyncBatchRunner:   repoSyncCoordinator.SyncBatch,
-		skillMPService:        deps.SkillMPService,
-		settingsService:       deps.SettingsService,
-		syncPolicyService:     deps.SyncPolicyService,
-		syncPolicyRecordSvc:   deps.SyncPolicyRecordSvc,
-		apiSpecRegistrySvc:    deps.APISpecRegistrySvc,
-		apiPublishSvc:         deps.APIPublishSvc,
-		apiPolicySvc:          deps.APIPolicySvc,
-		apiMockSvc:            deps.APIMockSvc,
-		apiExportSvc:          deps.APIExportSvc,
-		apiContractRuntimeSvc: deps.APIContractRuntimeSvc,
-		allowRegistration:     deps.AllowRegistration,
-		cookieSecure:          deps.CookieSecure,
-		apiKeys:               buildAPIKeySet(deps.APIKeys),
-		translations:          translations,
-		templates:             tmpl,
-		storagePath:           deps.StoragePath,
-		apiOnly:               deps.APIOnly,
-		corsOrigins:           buildOriginSet(deps.CORSAllowedOrigins),
+		authService:             deps.AuthService,
+		sessionService:          deps.SessionService,
+		userSessionSvc:          deps.UserSessionService,
+		skillService:            deps.SkillService,
+		apiKeyService:           deps.APIKeyService,
+		interaction:             deps.InteractionService,
+		auditService:            deps.AuditService,
+		integrationSvc:          deps.IntegrationService,
+		incidentSvc:             deps.IncidentService,
+		moderationSvc:           deps.ModerationService,
+		opsService:              deps.OpsService,
+		skillVersionSvc:         deps.SkillVersionService,
+		organizationSvc:         deps.OrganizationService,
+		oauthGrantService:       deps.OAuthGrantService,
+		dingTalkService:         deps.DingTalkService,
+		uploadService:           deps.UploadService,
+		syncRuntimeDependencies: deps.SyncDependencies.runtimeDependencies(),
+		apiRuntimeDependencies:  deps.APIDependencies.runtimeDependencies(),
+		skillMPService:          deps.SkillMPService,
+		settingsService:         deps.SettingsService,
+		allowRegistration:       deps.AllowRegistration,
+		cookieSecure:            deps.CookieSecure,
+		apiKeys:                 buildAPIKeySet(deps.APIKeys),
+		translations:            translations,
+		templates:               tmpl,
+		storagePath:             deps.StoragePath,
+		apiOnly:                 deps.APIOnly,
+		corsOrigins:             buildOriginSet(deps.CORSAllowedOrigins),
 	}, nil
 }
 

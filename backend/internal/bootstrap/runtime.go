@@ -8,17 +8,11 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"skillsindex/internal/config"
-	"skillsindex/internal/db"
-	"skillsindex/internal/models"
-	"skillsindex/internal/services"
 	"skillsindex/internal/web"
-
-	"gorm.io/gorm"
 )
 
 const defaultCORSOrigin = "http://localhost:5173"
@@ -126,81 +120,6 @@ func APIStateInitializationOptions() *StateInitializationOptions {
 	return &options
 }
 
-func initializeRuntimeState(
-	ctx context.Context,
-	runtimeConfig config.Config,
-	options StateInitializationOptions,
-	database *gorm.DB,
-	authService *services.AuthService,
-	settingsService *services.SettingsService,
-	repoSyncPolicyService *services.RepositorySyncPolicyService,
-	syncPolicyRecordService *services.SyncPolicyService,
-) error {
-	if options.SeedData {
-		if err := db.EnsureSeedData(database); err != nil {
-			return fmt.Errorf("failed to seed database: %w", err)
-		}
-	}
-	if options.DefaultAccount {
-		if _, err := authService.EnsureDefaultAccount(
-			ctx,
-			runtimeConfig.AdminUsername,
-			runtimeConfig.AdminPassword,
-			models.NormalizeUserRole(runtimeConfig.AdminRole),
-		); err != nil {
-			return fmt.Errorf("failed to ensure default admin account: %w", err)
-		}
-	}
-	if options.RegistrationSetting {
-		if _, err := settingsService.EnsureBool(ctx, services.SettingAllowRegistration, runtimeConfig.AllowRegistration); err != nil {
-			return fmt.Errorf("failed to initialize allow_registration setting: %w", err)
-		}
-		if _, err := settingsService.Ensure(
-			ctx,
-			services.SettingMarketplaceRankingDefaultSort,
-			services.DefaultMarketplaceRankingSort,
-		); err != nil {
-			return fmt.Errorf("failed to initialize marketplace_ranking_default_sort setting: %w", err)
-		}
-		if _, err := settingsService.EnsureInt(
-			ctx,
-			services.SettingMarketplaceRankingLimit,
-			services.DefaultMarketplaceRankingLimit,
-		); err != nil {
-			return fmt.Errorf("failed to initialize marketplace_ranking_limit setting: %w", err)
-		}
-		if _, err := settingsService.EnsureInt(
-			ctx,
-			services.SettingMarketplaceRankingHighlightLimit,
-			services.DefaultMarketplaceRankingHighlightLimit,
-		); err != nil {
-			return fmt.Errorf("failed to initialize marketplace_ranking_highlight_limit setting: %w", err)
-		}
-		if _, err := settingsService.EnsureInt(
-			ctx,
-			services.SettingMarketplaceRankingCategoryLeaderLimit,
-			services.DefaultMarketplaceCategoryLeaderLimit,
-		); err != nil {
-			return fmt.Errorf("failed to initialize marketplace_ranking_category_leader_limit setting: %w", err)
-		}
-	}
-	if options.RepositorySyncPolicy {
-		if _, err := repoSyncPolicyService.Ensure(ctx); err != nil {
-			return fmt.Errorf("failed to initialize repository sync policy: %w", err)
-		}
-	}
-	if options.RepositorySyncMirror {
-		ensuredPolicy, err := repoSyncPolicyService.Get(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to load initialized repository sync policy: %w", err)
-		}
-		if _, err := syncPolicyRecordService.UpsertRepositoryMirror(ctx, ensuredPolicy, nil); err != nil {
-			return fmt.Errorf("failed to initialize repository sync policy mirror: %w", err)
-		}
-	}
-	return nil
-}
-
 // RunAPIServer bootstraps all dependencies and starts the HTTP API server.
 func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) error {
 	if ctx == nil {
@@ -217,155 +136,29 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 		return fmt.Errorf("failed to create storage path: %w", err)
 	}
 
-	database, err := db.Open(runtimeConfig.DatabaseURL)
+	core, err := prepareRuntimeBootstrapCore(ctx, runtimeConfig, resolveStateInitializationOptions(options.StateInit))
 	if err != nil {
-		return fmt.Errorf("failed to connect database: %w", err)
+		return err
 	}
-	if err := db.Migrate(database); err != nil {
-		return fmt.Errorf("failed to migrate database: %w", err)
-	}
-	sqlDB, err := database.DB()
-	if err != nil {
-		return fmt.Errorf("failed to access sql db handle: %w", err)
-	}
-	defer func() {
-		if closeErr := sqlDB.Close(); closeErr != nil {
-			log.Printf("failed to close database: %v", closeErr)
-		}
-	}()
+	defer core.close()
 
-	authService := services.NewAuthService(database)
-	settingsService := services.NewSettingsService(database)
-	repoSyncPolicyService := services.NewRepositorySyncPolicyService(settingsService, services.RepositorySyncPolicy{
-		Enabled:   runtimeConfig.RepoSyncEnabled,
-		Interval:  runtimeConfig.RepoSyncInterval,
-		Timeout:   runtimeConfig.RepoSyncTimeout,
-		BatchSize: runtimeConfig.RepoSyncBatchSize,
-	})
-	syncPolicyRecordService := services.NewSyncPolicyService(database)
-	stateInitOptions := resolveStateInitializationOptions(options.StateInit)
-	if err := initializeRuntimeState(
+	serviceSet, err := buildRuntimeServices(
 		ctx,
 		runtimeConfig,
-		stateInitOptions,
-		database,
-		authService,
-		settingsService,
-		repoSyncPolicyService,
-		syncPolicyRecordService,
-	); err != nil {
+		core.database,
+		core.authService,
+		core.settingsService,
+		core.repoSyncPolicyService,
+		core.syncPolicyRecordService,
+	)
+	if err != nil {
 		return err
 	}
 
-	sessionService := services.NewSessionService(runtimeConfig.SessionSecret, runtimeConfig.SessionCookieSecure)
-	userSessionService := services.NewUserSessionService(database)
-	skillService := services.NewSkillService(database)
-	apiKeyService := services.NewAPIKeyService(database)
-	interactionService := services.NewSkillInteractionService(database)
-	auditService := services.NewAuditService(database)
-	integrationService := services.NewIntegrationService(database)
-	incidentService := services.NewIncidentService(database)
-	moderationService := services.NewModerationService(database)
-	opsService := services.NewOpsService(database)
-	asyncJobService := services.NewAsyncJobService(database)
-	syncJobService := services.NewSyncJobService(database)
-	skillVersionService := services.NewSkillVersionService(database)
-	syncGovernanceService := services.NewSyncGovernanceService(
-		asyncJobService,
-		syncJobService,
-		skillVersionService,
-		auditService,
-	)
-	organizationService := services.NewOrganizationService(database)
-	oauthGrantService := services.NewOAuthGrantService(database)
-	dingTalkService := services.NewDingTalkService(services.DingTalkConfig{
-		ClientID:     runtimeConfig.DingTalkClientID,
-		ClientSecret: runtimeConfig.DingTalkSecret,
-		RedirectURL:  runtimeConfig.DingTalkRedirect,
-		Scope:        runtimeConfig.DingTalkScope,
-		AuthBaseURL:  runtimeConfig.DingTalkAuthBase,
-		APIBaseURL:   runtimeConfig.DingTalkAPIBase,
-	})
-	uploadService := services.NewUploadService()
-	repositoryService := services.NewRepositorySyncService()
-	repositorySyncCoordinator := services.NewRepositorySyncCoordinator(skillService, repositoryService)
-	skillMPService := services.NewSkillMPService(runtimeConfig.SkillMPBaseURL, runtimeConfig.SkillMPToken)
-	apiManagementStoragePath := filepath.Join(runtimeConfig.StoragePath, "api-management")
-	apiSpecRegistryService := services.NewAPISpecRegistryService(database, apiManagementStoragePath)
-	apiContractRuntimeService := services.NewAPIContractRuntimeService(database)
-	if err := apiContractRuntimeService.Reload(ctx); err != nil && !errors.Is(err, services.ErrAPISpecNotFound) {
-		return fmt.Errorf("failed to initialize api contract runtime service: %w", err)
-	}
-	apiPublishService := services.NewAPIPublishService(database)
-	apiPublishService.SetRuntimeReloader(apiContractRuntimeService)
-	apiPolicyService := services.NewAPIPolicyService(database)
-	apiPolicyService.SetRuntimeReloader(apiContractRuntimeService)
-	apiMockService := services.NewAPIMockService(database, apiContractRuntimeService)
-	apiExportService := services.NewAPIExportService(database, apiManagementStoragePath)
-
-	scheduler := services.NewRepositorySyncScheduler(
-		repositorySyncCoordinator,
-		syncGovernanceService,
-		runtimeConfig.RepoSyncInterval,
-		runtimeConfig.RepoSyncTimeout,
-		runtimeConfig.RepoSyncBatchSize,
-		log.Default(),
-		func(policyContext context.Context) (services.RepositorySyncPolicy, error) {
-			return repoSyncPolicyService.Get(policyContext)
-		},
-	)
-
-	app, err := web.NewApp(web.AppDependencies{
-		AuthService:           authService,
-		SessionService:        sessionService,
-		UserSessionService:    userSessionService,
-		SkillService:          skillService,
-		APIKeyService:         apiKeyService,
-		InteractionService:    interactionService,
-		AuditService:          auditService,
-		IntegrationService:    integrationService,
-		IncidentService:       incidentService,
-		ModerationService:     moderationService,
-		OpsService:            opsService,
-		AsyncJobService:       asyncJobService,
-		SyncJobService:        syncJobService,
-		SyncGovernanceService: syncGovernanceService,
-		SkillVersionService:   skillVersionService,
-		OrganizationService:   organizationService,
-		OAuthGrantService:     oauthGrantService,
-		DingTalkService:       dingTalkService,
-		UploadService:         uploadService,
-		RepositoryService:     repositoryService,
-		SkillMPService:        skillMPService,
-		SettingsService:       settingsService,
-		SyncPolicyService:     repoSyncPolicyService,
-		SyncPolicyRecordSvc:   syncPolicyRecordService,
-		APISpecRegistrySvc:    apiSpecRegistryService,
-		APIPublishSvc:         apiPublishService,
-		APIPolicySvc:          apiPolicyService,
-		APIMockSvc:            apiMockService,
-		APIExportSvc:          apiExportService,
-		APIContractRuntimeSvc: apiContractRuntimeService,
-		AllowRegistration:     runtimeConfig.AllowRegistration,
-		CookieSecure:          runtimeConfig.SessionCookieSecure,
-		APIOnly:               runtimeConfig.APIOnly,
-		CORSAllowedOrigins:    runtimeConfig.CORSAllowedOrigins,
-		APIKeys:               runtimeConfig.APIKeys,
-		TemplateGlob:          resolveTemplateGlob(runtimeConfig.APIOnly),
-		StoragePath:           runtimeConfig.StoragePath,
-	})
+	app, err := web.NewApp(buildWebAppDependencies(runtimeConfig, serviceSet))
 	if err != nil {
 		return fmt.Errorf("failed to build web app: %w", err)
 	}
-
-	scheduler.Start(ctx)
-	log.Printf(
-		"repository sync scheduler initialized bootstrap_enabled=%t interval=%s timeout=%s batch_size=%d",
-		runtimeConfig.RepoSyncEnabled,
-		runtimeConfig.RepoSyncInterval,
-		runtimeConfig.RepoSyncTimeout,
-		runtimeConfig.RepoSyncBatchSize,
-	)
 
 	httpServer := &http.Server{
 		Addr:              ":" + runtimeConfig.ServerPort,
@@ -376,13 +169,20 @@ func RunAPIServer(ctx context.Context, cfg config.Config, options RunOptions) er
 	if err != nil {
 		return fmt.Errorf("failed to listen on %s: %w", httpServer.Addr, err)
 	}
+	log.Printf(
+		"repository sync scheduler initialized bootstrap_enabled=%t interval=%s timeout=%s batch_size=%d",
+		runtimeConfig.RepoSyncEnabled,
+		runtimeConfig.RepoSyncInterval,
+		runtimeConfig.RepoSyncTimeout,
+		runtimeConfig.RepoSyncBatchSize,
+	)
 
 	startupLabel := strings.TrimSpace(options.StartupLabel)
 	if startupLabel == "" {
 		startupLabel = "SkillsIndex is listening at"
 	}
 	fmt.Printf("%s %s\n", startupLabel, buildStartupURL(listener))
-	if err := runHTTPServer(ctx, httpServer, listener, defaultHTTPShutdownTimeout); err != nil {
+	if err := runHTTPServerWithScheduler(ctx, httpServer, listener, serviceSet.scheduler, defaultHTTPShutdownTimeout); err != nil {
 		return fmt.Errorf("server failed: %w", err)
 	}
 	return nil
@@ -399,45 +199,11 @@ func RunBootstrapState(ctx context.Context, cfg config.Config, options *StateIni
 		return err
 	}
 
-	database, err := db.Open(runtimeConfig.DatabaseURL)
+	core, err := prepareRuntimeBootstrapCore(ctx, runtimeConfig, resolveStateInitializationOptions(options))
 	if err != nil {
-		return fmt.Errorf("failed to connect database: %w", err)
-	}
-	if err := db.Migrate(database); err != nil {
-		return fmt.Errorf("failed to migrate database: %w", err)
-	}
-	sqlDB, err := database.DB()
-	if err != nil {
-		return fmt.Errorf("failed to access sql db handle: %w", err)
-	}
-	defer func() {
-		if closeErr := sqlDB.Close(); closeErr != nil {
-			log.Printf("failed to close database: %v", closeErr)
-		}
-	}()
-
-	authService := services.NewAuthService(database)
-	settingsService := services.NewSettingsService(database)
-	repoSyncPolicyService := services.NewRepositorySyncPolicyService(settingsService, services.RepositorySyncPolicy{
-		Enabled:   runtimeConfig.RepoSyncEnabled,
-		Interval:  runtimeConfig.RepoSyncInterval,
-		Timeout:   runtimeConfig.RepoSyncTimeout,
-		BatchSize: runtimeConfig.RepoSyncBatchSize,
-	})
-	syncPolicyRecordService := services.NewSyncPolicyService(database)
-	stateInitOptions := resolveStateInitializationOptions(options)
-	if err := initializeRuntimeState(
-		ctx,
-		runtimeConfig,
-		stateInitOptions,
-		database,
-		authService,
-		settingsService,
-		repoSyncPolicyService,
-		syncPolicyRecordService,
-	); err != nil {
 		return err
 	}
+	defer core.close()
 
 	log.Printf("bootstrap state initialization completed")
 	return nil
@@ -446,6 +212,10 @@ func RunBootstrapState(ctx context.Context, cfg config.Config, options *StateIni
 type managedHTTPServer interface {
 	Serve(net.Listener) error
 	Shutdown(context.Context) error
+}
+
+type managedScheduler interface {
+	Start(context.Context)
 }
 
 func buildStartupURL(listener net.Listener) string {
@@ -460,6 +230,29 @@ func buildStartupURL(listener net.Listener) string {
 		host = "localhost"
 	}
 	return fmt.Sprintf("http://%s:%s", host, port)
+}
+
+func runHTTPServerWithScheduler(
+	ctx context.Context,
+	server managedHTTPServer,
+	listener net.Listener,
+	scheduler managedScheduler,
+	shutdownTimeout time.Duration,
+) error {
+	if listener == nil {
+		return fmt.Errorf("listener is required")
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	runCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	if scheduler != nil {
+		scheduler.Start(runCtx)
+	}
+	return runHTTPServer(runCtx, server, listener, shutdownTimeout)
 }
 
 func runHTTPServer(ctx context.Context, server managedHTTPServer, listener net.Listener, shutdownTimeout time.Duration) error {
