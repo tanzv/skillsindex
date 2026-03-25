@@ -121,6 +121,17 @@ export interface AdminCatalogMessages {
   valueManualExecutionOnly: string;
   valueHighThroughput: string;
   valueControlledThroughput: string;
+  detailSourceAnalysisTitle: string;
+  detailEntryFileLabel: string;
+  detailMechanismLabel: string;
+  detailMetadataSourcesTitle: string;
+  detailReferencePathsTitle: string;
+  detailDependenciesTitle: string;
+  detailTopologyTitle: string;
+  detailTopologyRootTitle: string;
+  detailNoMetadataSources: string;
+  detailNoReferencePaths: string;
+  detailNoDependencies: string;
   valueUnnamedSkill: string;
   valueGeneralCategory: string;
   valueUnknown: string;
@@ -270,6 +281,17 @@ export const adminCatalogMessageKeyMap = {
   valueManualExecutionOnly: "admin_catalog_value_manual_execution_only",
   valueHighThroughput: "admin_catalog_value_high_throughput",
   valueControlledThroughput: "admin_catalog_value_controlled_throughput",
+  detailSourceAnalysisTitle: "admin_catalog_detail_source_analysis_title",
+  detailEntryFileLabel: "admin_catalog_detail_entry_file_label",
+  detailMechanismLabel: "admin_catalog_detail_mechanism_label",
+  detailMetadataSourcesTitle: "admin_catalog_detail_metadata_sources_title",
+  detailReferencePathsTitle: "admin_catalog_detail_reference_paths_title",
+  detailDependenciesTitle: "admin_catalog_detail_dependencies_title",
+  detailTopologyTitle: "admin_catalog_detail_topology_title",
+  detailTopologyRootTitle: "admin_catalog_detail_topology_root_title",
+  detailNoMetadataSources: "admin_catalog_detail_no_metadata_sources",
+  detailNoReferencePaths: "admin_catalog_detail_no_reference_paths",
+  detailNoDependencies: "admin_catalog_detail_no_dependencies",
   valueUnnamedSkill: "admin_catalog_value_unnamed_skill",
   valueGeneralCategory: "admin_catalog_value_general_category",
   valueUnknown: "admin_catalog_value_unknown",
