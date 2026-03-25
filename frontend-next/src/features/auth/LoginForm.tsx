@@ -14,8 +14,7 @@ import type { PublicAuthProviderItem } from "@/src/lib/api/publicAuthProviders";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import type { PublicAuthMessages } from "@/src/lib/i18n/publicAuthMessages";
 import {
-  publicLocaleCookieName,
-  publicLocaleStorageKey,
+  applyBrowserPublicLocale,
   type PublicLocale
 } from "@/src/lib/i18n/publicLocale";
 import { workspaceOverviewRoute } from "@/src/lib/routing/protectedSurfaceLinks";
@@ -26,7 +25,7 @@ import styles from "./LoginForm.module.scss";
 interface LoginFormProps {
   redirectTarget: string;
   initialLocale: PublicLocale;
-  providers: PublicAuthProviderItem[];
+  providers?: PublicAuthProviderItem[];
   infoPanelModel: LoginInfoPanelModel;
   messages: PublicAuthMessages;
 }
@@ -41,7 +40,7 @@ interface LoginResponse {
 
 type LoginTheme = "dark" | "light";
 
-export function LoginForm({ redirectTarget, initialLocale, providers, infoPanelModel, messages }: LoginFormProps) {
+export function LoginForm({ redirectTarget, initialLocale, providers = [], infoPanelModel, messages }: LoginFormProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -88,12 +87,11 @@ export function LoginForm({ redirectTarget, initialLocale, providers, infoPanelM
       return;
     }
 
-    window.localStorage.setItem(publicLocaleStorageKey, nextLocale);
-    document.cookie = `${publicLocaleCookieName}=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
-    document.documentElement.lang = nextLocale;
-
-    const nextLocation = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    window.location.assign(nextLocation);
+    applyBrowserPublicLocale(nextLocale, {
+      storage: window.localStorage,
+      documentRef: document,
+      locationRef: window.location
+    });
   }
 
   function handleForgotPassword() {
