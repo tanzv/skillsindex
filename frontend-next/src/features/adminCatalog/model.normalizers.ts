@@ -1,4 +1,6 @@
 import type {
+  AdminSourceAnalysis,
+  AdminSourceDependency,
   AdminSkillItem,
   AsyncJobItem,
   JobsPayload,
@@ -19,6 +21,35 @@ function asNumber(value: unknown): number {
 
 function asString(value: unknown): string {
   return String(value || "").trim();
+}
+
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.map(asString).filter(Boolean);
+}
+
+function normalizeSourceDependency(value: unknown): AdminSourceDependency {
+  const record = asRecord(value);
+
+  return {
+    kind: asString(record.kind),
+    target: asString(record.target)
+  };
+}
+
+function normalizeSourceAnalysis(value: unknown): AdminSourceAnalysis {
+  const record = asRecord(value);
+
+  return {
+    entryFile: asString(record.entry_file),
+    mechanism: asString(record.mechanism),
+    metadataSources: asStringArray(record.metadata_sources),
+    referencePaths: asStringArray(record.reference_paths),
+    dependencies: Array.isArray(record.dependencies) ? record.dependencies.map(normalizeSourceDependency) : []
+  };
 }
 
 function normalizeCollectionPayload<T>(payload: unknown, normalizeItem: (item: unknown) => T) {
@@ -43,7 +74,8 @@ function normalizeSkillItem(item: unknown): AdminSkillItem {
     ownerUsername: asString(entry.owner_username),
     starCount: asNumber(entry.star_count),
     qualityScore: asNumber(entry.quality_score),
-    updatedAt: asString(entry.updated_at)
+    updatedAt: asString(entry.updated_at),
+    sourceAnalysis: normalizeSourceAnalysis(entry.source_analysis)
   };
 }
 

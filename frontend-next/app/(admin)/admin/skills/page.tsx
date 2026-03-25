@@ -1,5 +1,25 @@
 import { renderAdminPageRoute } from "@/src/features/admin/adminRouteEntry";
 
-export default async function AdminSkillsPage() {
-  return renderAdminPageRoute("/admin/skills");
+interface AdminSkillsPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+function firstSearchParam(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) {
+    return String(value[0] || "").trim();
+  }
+
+  return String(value || "").trim();
+}
+
+export default async function AdminSkillsPage({ searchParams }: AdminSkillsPageProps) {
+  const resolvedSearchParams = await searchParams;
+
+  return renderAdminPageRoute("/admin/skills", {
+    initialQuery: {
+      q: firstSearchParam(resolvedSearchParams.q),
+      source: firstSearchParam(resolvedSearchParams.source),
+      visibility: firstSearchParam(resolvedSearchParams.visibility)
+    }
+  });
 }

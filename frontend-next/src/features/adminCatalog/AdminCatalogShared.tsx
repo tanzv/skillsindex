@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { type ReactNode, useMemo, useState } from "react";
 
 import { AdminEmptyBlock, AdminMetaChipList, AdminSelectableRecordCard } from "@/src/components/admin/AdminPrimitives";
@@ -10,7 +11,13 @@ import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 
-import type { AdminCatalogRoute, AdminCatalogRow, AdminCatalogViewModel } from "./model";
+import type {
+  AdminCatalogDetailSection,
+  AdminCatalogDetailTopology,
+  AdminCatalogRoute,
+  AdminCatalogRow,
+  AdminCatalogViewModel
+} from "./model";
 import styles from "./AdminCatalogSurface.module.scss";
 
 export function statusTone(status: string) {
@@ -186,6 +193,8 @@ export function CatalogDetailPane({
           <p className={styles.detailSummary}>{row.summary}</p>
           <AdminMetaChipList items={row.meta} tone="control" />
           {row.detail ? <div className={styles.rowDetail}>{row.detail}</div> : null}
+          <DetailTopology topology={row.detailTopology} />
+          <DetailSections sections={row.detailSections} />
         </div>
       </div>
     </InlineWorkPaneSurface>
@@ -221,6 +230,8 @@ export function DetailCard({ title, description, row, emptyText, actions, testId
               <p className={styles.detailSummary}>{row.summary}</p>
               <AdminMetaChipList items={row.meta} tone="control" />
               {row.detail ? <div className={styles.rowDetail}>{row.detail}</div> : null}
+              <DetailTopology topology={row.detailTopology} />
+              <DetailSections sections={row.detailSections} />
             </div>
             {actions ? <div className={styles.detailActions}>{actions}</div> : null}
           </>
@@ -229,6 +240,78 @@ export function DetailCard({ title, description, row, emptyText, actions, testId
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function DetailTopology({ topology }: { topology?: AdminCatalogDetailTopology }) {
+  if (!topology) {
+    return null;
+  }
+
+  return (
+    <section className={styles.topologyCard} data-testid="admin-skill-topology">
+      <div className={styles.topologyTitle}>{topology.title}</div>
+      <div className={styles.topologyRootWrap}>
+        <div className={styles.topologyRootNode}>
+          <span className={styles.topologyRootLabel}>{topology.rootLabel}</span>
+          <span className={styles.topologyRootValue}>{topology.rootValue}</span>
+          <span className={styles.topologyRootMeta}>
+            {topology.rootMetaLabel}: {topology.rootMetaValue}
+          </span>
+        </div>
+      </div>
+      <div className={styles.topologyLaneGrid}>
+        {topology.lanes.map((lane) => (
+          <section key={lane.title} className={styles.topologyLane}>
+            <div className={styles.topologyLaneTitle}>{lane.title}</div>
+            <div className={styles.topologyLaneNodes}>
+              {(lane.nodes.length ? lane.nodes : [{ value: lane.emptyValue }]).map((node, index) => (
+                <div key={`${lane.title}-${node.label || node.value}-${index}`} className={styles.topologyNode}>
+                  {node.label ? <span className={styles.topologyNodeLabel}>{node.label}</span> : null}
+                  {node.href ? (
+                    <Link href={node.href} className={styles.topologyNodeLink}>
+                      {node.value}
+                    </Link>
+                  ) : (
+                    <span className={styles.topologyNodeValue}>{node.value}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function DetailSections({ sections }: { sections?: AdminCatalogDetailSection[] }) {
+  if (!sections?.length) {
+    return null;
+  }
+
+  return (
+    <div className={styles.detailSectionStack}>
+      {sections.map((section) => (
+        <section key={section.title} className={styles.detailSection}>
+          <div className={styles.detailSectionTitle}>{section.title}</div>
+          <div className={styles.detailSectionList}>
+            {section.items.map((item, index) => (
+              <div key={`${section.title}-${item.label || item.value}-${index}`} className={styles.detailSectionItem}>
+                {item.label ? <span className={styles.detailSectionLabel}>{item.label}</span> : null}
+                {item.href ? (
+                  <Link href={item.href} className={styles.detailSectionLink}>
+                    {item.value}
+                  </Link>
+                ) : (
+                  <span className={styles.detailSectionValue}>{item.value}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
   );
 }
 

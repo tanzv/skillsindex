@@ -2,6 +2,19 @@ import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
 
 export type { AdminCatalogRoute } from "@/src/lib/routing/adminRouteRegistry";
 
+export interface AdminSourceDependency {
+  kind: string;
+  target: string;
+}
+
+export interface AdminSourceAnalysis {
+  entryFile: string;
+  mechanism: string;
+  metadataSources: string[];
+  referencePaths: string[];
+  dependencies: AdminSourceDependency[];
+}
+
 export interface AdminSkillItem {
   id: number;
   name: string;
@@ -12,6 +25,7 @@ export interface AdminSkillItem {
   starCount: number;
   qualityScore: number;
   updatedAt: string;
+  sourceAnalysis: AdminSourceAnalysis;
 }
 
 export interface AsyncJobItem {
@@ -58,6 +72,38 @@ export interface AdminCatalogSidePanel {
   items: Array<{ label: string; value: string }>;
 }
 
+export interface AdminCatalogDetailSectionItem {
+  label?: string;
+  value: string;
+  href?: string;
+}
+
+export interface AdminCatalogDetailSection {
+  title: string;
+  items: AdminCatalogDetailSectionItem[];
+}
+
+export interface AdminCatalogTopologyNode {
+  label?: string;
+  value: string;
+  href?: string;
+}
+
+export interface AdminCatalogTopologyLane {
+  title: string;
+  nodes: AdminCatalogTopologyNode[];
+  emptyValue: string;
+}
+
+export interface AdminCatalogDetailTopology {
+  title: string;
+  rootLabel: string;
+  rootValue: string;
+  rootMetaLabel: string;
+  rootMetaValue: string;
+  lanes: AdminCatalogTopologyLane[];
+}
+
 export interface AdminCatalogRow {
   id: number;
   name: string;
@@ -66,6 +112,8 @@ export interface AdminCatalogRow {
   status: string;
   statusLabel?: string;
   detail?: string;
+  detailTopology?: AdminCatalogDetailTopology;
+  detailSections?: AdminCatalogDetailSection[];
   syncable?: boolean;
 }
 
@@ -139,6 +187,17 @@ export interface AdminCatalogModelMessages {
   valueManualExecutionOnly: string;
   valueHighThroughput: string;
   valueControlledThroughput: string;
+  detailSourceAnalysisTitle: string;
+  detailEntryFileLabel: string;
+  detailMechanismLabel: string;
+  detailMetadataSourcesTitle: string;
+  detailReferencePathsTitle: string;
+  detailDependenciesTitle: string;
+  detailTopologyTitle: string;
+  detailTopologyRootTitle: string;
+  detailNoMetadataSources: string;
+  detailNoReferencePaths: string;
+  detailNoDependencies: string;
 }
 
 export interface AdminCatalogViewModelOptions {

@@ -32,7 +32,13 @@ function buildPath(endpoint: string, query: Record<string, string>) {
   return suffix ? `${endpoint}?${suffix}` : endpoint;
 }
 
-export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
+export function AdminCatalogPage({
+  route,
+  initialQuery
+}: {
+  route: AdminCatalogRoute;
+  initialQuery?: Record<string, string>;
+}) {
   const { locale, messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
   const meta = useMemo(() => resolveAdminCatalogPageRouteMeta(route, adminCatalogMessages), [adminCatalogMessages, route]);
@@ -45,7 +51,7 @@ export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [query, setQuery] = useState<Record<string, string>>({});
+  const [query, setQuery] = useState<Record<string, string>>(initialQuery || {});
   const [rawPayload, setRawPayload] = useState<unknown>(null);
   const [policyDraft, setPolicyDraft] = useState<RepositorySyncPolicy>({
     enabled: false,
@@ -100,6 +106,10 @@ export function AdminCatalogPage({ route }: { route: AdminCatalogRoute }) {
   useEffect(() => {
     void loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    setQuery(initialQuery || {});
+  }, [initialQuery, route]);
 
   const loadState = resolveAdminPageLoadState({ loading, error, hasData: rawPayload !== null });
 

@@ -24,14 +24,24 @@ describe("admin catalog model", () => {
           owner_username: "ops.lead",
           star_count: 184,
           quality_score: 9.3,
-          updated_at: "2026-03-10T08:00:00Z"
+          updated_at: "2026-03-10T08:00:00Z",
+          source_analysis: {
+            entry_file: "README.md",
+            mechanism: "skill_manifest",
+            metadata_sources: ["README.md", "package.json"],
+            reference_paths: ["skills/release"],
+            dependencies: [
+              { kind: "skill", target: "repository-sync-auditor" },
+              { kind: "skill", target: "using-superpowers" }
+            ]
+          }
         },
         {
           id: 2,
           name: "Repository Sync Auditor",
           category: "engineering",
           source_type: "repository",
-          visibility: "private",
+          visibility: "public",
           owner_username: "platform.owner",
           star_count: 163,
           quality_score: 9.1,
@@ -45,9 +55,85 @@ describe("admin catalog model", () => {
     expect(model.metrics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ label: "Total Skills", value: "2" }),
-        expect.objectContaining({ label: "Public Skills", value: "1" })
+        expect.objectContaining({ label: "Public Skills", value: "2" })
       ])
     );
+    expect(payload.items[0]?.sourceAnalysis).toEqual({
+      entryFile: "README.md",
+      mechanism: "skill_manifest",
+      metadataSources: ["README.md", "package.json"],
+      referencePaths: ["skills/release"],
+      dependencies: [
+        { kind: "skill", target: "repository-sync-auditor" },
+        { kind: "skill", target: "using-superpowers" }
+      ]
+    });
+    expect(payload.items[1]?.sourceAnalysis).toEqual({
+      entryFile: "",
+      mechanism: "",
+      metadataSources: [],
+      referencePaths: [],
+      dependencies: []
+    });
+    expect(model.table?.rows[0]?.detailTopology).toEqual({
+      title: "Topology",
+      rootLabel: "Skill Entry",
+      rootValue: "README.md",
+      rootMetaLabel: "Mechanism",
+      rootMetaValue: "skill_manifest",
+      lanes: [
+        {
+          title: "Metadata Sources",
+          nodes: [
+            { value: "README.md", href: "/admin/skills?q=README.md" },
+            { value: "package.json", href: "/admin/skills?q=package.json" }
+          ],
+          emptyValue: "No metadata sources detected"
+        },
+        {
+          title: "Reference Paths",
+          nodes: [{ value: "skills/release", href: "/admin/skills?q=skills%2Frelease" }],
+          emptyValue: "No reference paths detected"
+        },
+        {
+          title: "Dependencies",
+          nodes: [
+            { label: "skill", value: "repository-sync-auditor", href: "/skills/2" },
+            { label: "skill", value: "using-superpowers", href: "/admin/skills?q=using-superpowers" }
+          ],
+          emptyValue: "No dependencies detected"
+        }
+      ]
+    });
+    expect(model.table?.rows[0]?.detailSections).toEqual([
+      {
+        title: "Source Analysis",
+        items: [
+          { label: "Entry File", value: "README.md" },
+          { label: "Mechanism", value: "skill_manifest" }
+        ]
+      },
+      {
+        title: "Metadata Sources",
+        items: [
+          { value: "README.md", href: "/admin/skills?q=README.md" },
+          { value: "package.json", href: "/admin/skills?q=package.json" }
+        ]
+      },
+      {
+        title: "Reference Paths",
+        items: [{ value: "skills/release", href: "/admin/skills?q=skills%2Frelease" }]
+      },
+      {
+        title: "Dependencies",
+        items: [
+          { label: "skill", value: "repository-sync-auditor", href: "/skills/2" },
+          { label: "skill", value: "using-superpowers", href: "/admin/skills?q=using-superpowers" }
+        ]
+      }
+    ]);
+    expect(model.table?.rows[1]?.detailTopology).toBeUndefined();
+    expect(model.table?.rows[1]?.detailSections).toBeUndefined();
     expect(model.table?.rows[0]?.name).toBe("Release Readiness Checklist");
   });
 

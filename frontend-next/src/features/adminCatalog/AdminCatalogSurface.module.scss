@@ -184,6 +184,246 @@
   gap: 12px;
 }
 
+.topologyCard {
+  display: grid;
+  gap: 14px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--ui-accent) 18%, var(--ui-border) 82%);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ui-card-highlight-bg) 55%, var(--ui-card-bg) 45%) 0%, var(--ui-card-bg) 100%);
+  padding: 16px;
+}
+
+.topologyTitle {
+  color: var(--ui-text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.topologyRootWrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 12px;
+}
+
+.topologyRootWrap::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  height: 12px;
+  background: color-mix(in srgb, var(--ui-accent) 28%, var(--ui-border) 72%);
+  transform: translateX(-50%);
+}
+
+.topologyRootNode {
+  display: grid;
+  gap: 4px;
+  min-width: min(100%, 280px);
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--ui-accent) 34%, var(--ui-border) 66%);
+  background: color-mix(in srgb, var(--ui-card-bg) 62%, var(--ui-card-highlight-bg) 38%);
+  padding: 14px 16px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.topologyRootLabel,
+.topologyNodeLabel {
+  color: var(--ui-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.topologyRootValue,
+.topologyNodeValue {
+  color: var(--ui-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.topologyNodeLink {
+  color: var(--ui-accent);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.topologyNodeLink:hover {
+  color: color-mix(in srgb, var(--ui-accent) 78%, var(--ui-text-primary) 22%);
+}
+
+.topologyNodeLink:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ui-accent) 52%, transparent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.topologyRootMeta {
+  color: var(--ui-text-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.topologyLaneGrid {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.topologyLaneGrid::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 16.666%;
+  right: 16.666%;
+  height: 1px;
+  background: color-mix(in srgb, var(--ui-accent) 22%, var(--ui-border) 78%);
+}
+
+.topologyLane {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.topologyLane::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 12px;
+  background: color-mix(in srgb, var(--ui-accent) 22%, var(--ui-border) 78%);
+  transform: translateX(-50%);
+}
+
+.topologyLaneTitle {
+  color: var(--ui-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.45;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.topologyLaneNodes {
+  display: grid;
+  gap: 8px;
+}
+
+.topologyNode {
+  display: grid;
+  gap: 4px;
+  border-radius: 14px;
+  border: 1px solid var(--ui-border);
+  background: color-mix(in srgb, var(--ui-card-muted-bg) 86%, var(--ui-card-bg) 14%);
+  padding: 12px 13px;
+}
+
+.detailSectionStack {
+  display: grid;
+  gap: 12px;
+}
+
+.detailSection {
+  display: grid;
+  gap: 10px;
+  border-radius: 16px;
+  border: 1px solid var(--ui-border);
+  background: color-mix(in srgb, var(--ui-card-muted-bg) 84%, var(--ui-card-bg) 16%);
+  padding: 14px 16px;
+}
+
+.detailSectionTitle {
+  color: var(--ui-text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.detailSectionList {
+  display: grid;
+  gap: 8px;
+}
+
+.detailSectionItem {
+  display: grid;
+  gap: 4px;
+}
+
+.detailSectionLabel {
+  color: var(--ui-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.detailSectionValue {
+  color: var(--ui-text-secondary);
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.detailSectionLink {
+  color: var(--ui-accent);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.detailSectionLink:hover {
+  color: color-mix(in srgb, var(--ui-accent) 78%, var(--ui-text-primary) 22%);
+}
+
+.detailSectionLink:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ui-accent) 52%, transparent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (max-width: 960px) {
+  .topologyLaneGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .topologyLaneGrid::before {
+    display: none;
+  }
+
+  .topologyLane {
+    padding-top: 0;
+  }
+
+  .topologyLane::before {
+    display: none;
+  }
+}
+
 .panelStack {
   display: grid;
   gap: 20px;

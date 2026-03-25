@@ -47,7 +47,18 @@ const defaultAdminCatalogModelMessages: AdminCatalogModelMessages = {
   valueScheduledSyncEnabled: "Scheduled sync enabled",
   valueManualExecutionOnly: "Manual execution only",
   valueHighThroughput: "High throughput",
-  valueControlledThroughput: "Controlled throughput"
+  valueControlledThroughput: "Controlled throughput",
+  detailSourceAnalysisTitle: "Source Analysis",
+  detailEntryFileLabel: "Entry File",
+  detailMechanismLabel: "Mechanism",
+  detailMetadataSourcesTitle: "Metadata Sources",
+  detailReferencePathsTitle: "Reference Paths",
+  detailDependenciesTitle: "Dependencies",
+  detailTopologyTitle: "Topology",
+  detailTopologyRootTitle: "Skill Entry",
+  detailNoMetadataSources: "No metadata sources detected",
+  detailNoReferencePaths: "No reference paths detected",
+  detailNoDependencies: "No dependencies detected"
 };
 
 export function resolveModelMessages(options?: AdminCatalogViewModelOptions): AdminCatalogModelMessages {

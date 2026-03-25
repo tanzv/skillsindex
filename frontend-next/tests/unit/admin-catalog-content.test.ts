@@ -22,6 +22,57 @@ function createViewModel(route: AdminCatalogRoute): AdminCatalogViewModel {
             summary: "operations · repository · ops.lead",
             meta: ["184 stars", "9.3 quality"],
             status: "public",
+            detailTopology: {
+              title: "Topology",
+              rootLabel: "Skill Entry",
+              rootValue: "README.md",
+              rootMetaLabel: "Mechanism",
+              rootMetaValue: "skill_manifest",
+              lanes: [
+                {
+                  title: "Metadata Sources",
+                  nodes: [
+                    { value: "README.md", href: "/admin/skills?q=README.md" },
+                    { value: "package.json", href: "/admin/skills?q=package.json" }
+                  ],
+                  emptyValue: "No metadata sources detected"
+                },
+                {
+                  title: "Reference Paths",
+                  nodes: [{ value: "skills/release", href: "/admin/skills?q=skills%2Frelease" }],
+                  emptyValue: "No reference paths detected"
+                },
+                {
+                  title: "Dependencies",
+                  nodes: [{ label: "skill", value: "using-superpowers", href: "/admin/skills?q=using-superpowers" }],
+                  emptyValue: "No dependencies detected"
+                }
+              ]
+            },
+            detailSections: [
+              {
+                title: "Source Analysis",
+                items: [
+                  { label: "Entry File", value: "README.md" },
+                  { label: "Mechanism", value: "skill_manifest" }
+                ]
+              },
+              {
+                title: "Metadata Sources",
+                items: [
+                  { value: "README.md", href: "/admin/skills?q=README.md" },
+                  { value: "package.json", href: "/admin/skills?q=package.json" }
+                ]
+              },
+              {
+                title: "Reference Paths",
+                items: [{ value: "skills/release", href: "/admin/skills?q=skills%2Frelease" }]
+              },
+              {
+                title: "Dependencies",
+                items: [{ label: "skill", value: "using-superpowers", href: "/admin/skills?q=using-superpowers" }]
+              }
+            ],
             syncable: true
           }
         ]
@@ -130,6 +181,17 @@ function renderCatalogRoute(route: AdminCatalogRoute) {
             selectedSkillTitle: "Selected Skill",
             selectedSkillDescription: "Keep governance decisions anchored to one skill at a time instead of scanning anonymous rows.",
             selectedSkillEmpty: "Select a skill from the governed inventory to inspect ownership, quality, and exposure.",
+            detailSourceAnalysisTitle: "Source Analysis",
+            detailEntryFileLabel: "Entry File",
+            detailMechanismLabel: "Mechanism",
+            detailMetadataSourcesTitle: "Metadata Sources",
+            detailReferencePathsTitle: "Reference Paths",
+            detailDependenciesTitle: "Dependencies",
+            detailTopologyTitle: "Topology",
+            detailTopologyRootTitle: "Skill Entry",
+            detailNoMetadataSources: "No metadata sources detected",
+            detailNoReferencePaths: "No reference paths detected",
+            detailNoDependencies: "No dependencies detected",
             syncNowAction: "Sync now",
             syncingAction: "Syncing...",
             openSkillDetailAction: "Open Skill Detail",
@@ -222,6 +284,18 @@ describe("admin catalog content", () => {
       'data-testid="admin-catalog-row-11"',
       'data-testid="admin-skills-inline-detail"',
       "Selected Skill",
+      'data-testid="admin-skill-topology"',
+      "Topology",
+      "Skill Entry",
+      "skill_manifest",
+      "Source Analysis",
+      "Entry File",
+      "README.md",
+      'href="/admin/skills?q=README.md"',
+      'href="/admin/skills?q=skills%2Frelease"',
+      "Dependencies",
+      "using-superpowers",
+      'href="/admin/skills?q=using-superpowers"',
       "Selected",
       "Sync now",
       'href="/skills/11"',

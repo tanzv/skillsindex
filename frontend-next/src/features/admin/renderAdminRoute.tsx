@@ -19,6 +19,7 @@ import { renderAdminDataRoute } from "./renderAdminDataRoute";
 
 export interface RenderAdminRouteOptions {
   initialRepositorySnapshot?: AdminIngestionRepositorySnapshot | null;
+  initialQuery?: Record<string, string>;
 }
 
 async function renderOverviewRoute() {
@@ -36,9 +37,9 @@ async function renderIngestionRoute(pathname: AdminIngestionRoute, options: Rend
   );
 }
 
-async function renderCatalogRoute(pathname: AdminCatalogRoute) {
+async function renderCatalogRoute(pathname: AdminCatalogRoute, options: RenderAdminRouteOptions) {
   const { AdminCatalogPage } = await import("../adminCatalog/AdminCatalogPage");
-  return <AdminCatalogPage route={pathname} />;
+  return <AdminCatalogPage route={pathname} initialQuery={options.initialQuery} />;
 }
 
 async function renderIntegrationsRoute() {
@@ -105,7 +106,7 @@ export async function renderAdminRoute(pathname: string, options: RenderAdminRou
         break;
       case "catalog":
         if (isAdminCatalogRoute(pathname)) {
-          return renderCatalogRoute(pathname);
+          return renderCatalogRoute(pathname, options);
         }
         break;
       case "integrations":
