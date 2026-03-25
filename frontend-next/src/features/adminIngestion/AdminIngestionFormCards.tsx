@@ -4,6 +4,7 @@ import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Select } from "@/src/components/ui/select";
+import { Switch } from "@/src/components/ui/switch";
 import { Textarea } from "@/src/components/ui/textarea";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
@@ -160,11 +161,10 @@ export function SchedulerPolicyCard({ policy, busyAction, onPolicyChange, onSave
       <CardContent className="space-y-4">
         <FormField label={ingestionMessages.enabledLabel}>
           <label className="flex items-center gap-3 rounded-xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] px-3 py-2 text-sm text-[color:var(--ui-text-secondary)]">
-            <input
+            <Switch
               aria-label={ingestionMessages.enabledLabel}
-              type="checkbox"
               checked={policy.enabled}
-              onChange={(event) => onPolicyChange({ enabled: event.target.checked })}
+              onCheckedChange={(checked) => onPolicyChange({ enabled: checked })}
             />
             <span>{ingestionMessages.enabledHelp}</span>
           </label>

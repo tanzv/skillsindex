@@ -7,6 +7,9 @@ import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
+import { Select } from "@/src/components/ui/select";
+import { Switch } from "@/src/components/ui/switch";
+import { Textarea } from "@/src/components/ui/textarea";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 
@@ -42,8 +45,8 @@ function renderField(
 
   if (field.type === "textarea") {
     return (
-      <textarea
-        className="min-h-28 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+      <Textarea
+        className="border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-sky-500"
         value={String(value ?? "")}
         placeholder={field.placeholder}
         onChange={(event) => onChange(field.key, event.target.value)}
@@ -53,17 +56,16 @@ function renderField(
 
   if (field.type === "switch") {
     return (
-      <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-        <input type="checkbox" checked={Boolean(value)} onChange={(event) => onChange(field.key, event.target.checked)} />
-        <span>{field.label}</span>
-      </label>
+      <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+        <Switch checked={Boolean(value)} aria-label={field.label} onCheckedChange={(checked) => onChange(field.key, checked)} />
+      </div>
     );
   }
 
   if (field.type === "select") {
     return (
-      <select
-        className="flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+      <Select
+        className="border-slate-300 bg-white text-slate-900 focus-visible:ring-sky-500"
         value={String(value ?? "")}
         onChange={(event) => onChange(field.key, event.target.value)}
       >
@@ -72,7 +74,7 @@ function renderField(
             {option.label}
           </option>
         ))}
-      </select>
+      </Select>
     );
   }
 

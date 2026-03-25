@@ -9,6 +9,7 @@ import {
 } from "@/src/components/admin/AdminPrimitives";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { Checkbox } from "@/src/components/ui/checkbox";
 import { Input } from "@/src/components/ui/input";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import type {
@@ -228,11 +229,10 @@ export function AccessPolicyForm({
             key={provider}
             className="flex items-center gap-3 rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] px-4 py-3 text-sm text-[color:var(--ui-text-secondary)]"
           >
-            <input
+            <Checkbox
               aria-label={formatProtectedMessage(accessMessages.providerAriaLabel, { provider })}
-              type="checkbox"
               checked={settingsDraft.enabledProviders.includes(provider)}
-              onChange={() => onToggleProvider(provider)}
+              onCheckedChange={() => onToggleProvider(provider)}
             />
             <span>{provider}</span>
           </label>

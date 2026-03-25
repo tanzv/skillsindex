@@ -5,6 +5,7 @@ import {
   AdminSectionCard
 } from "@/src/components/admin/AdminPrimitives";
 import { Button } from "@/src/components/ui/button";
+import { Checkbox } from "@/src/components/ui/checkbox";
 import { Input } from "@/src/components/ui/input";
 import { Select } from "@/src/components/ui/select";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
@@ -126,12 +127,11 @@ export function OperationsRecordEntryForm({
           key={field.key}
           className="flex items-center gap-3 rounded-xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] px-3 py-2 text-sm text-[color:var(--ui-text-secondary)]"
         >
-          <input
-            type="checkbox"
+          <Checkbox
             aria-label={field.label}
             checked={draft[field.key] === "true"}
             data-testid={field.testId}
-            onChange={(event) => onDraftChange(field.key, event.target.checked ? "true" : "false")}
+            onCheckedChange={(checked) => onDraftChange(field.key, checked ? "true" : "false")}
           />
           <span>{field.label}</span>
         </label>

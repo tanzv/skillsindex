@@ -8,6 +8,7 @@ import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nPro
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input as TextInput } from "@/src/components/ui/input";
+import { Switch } from "@/src/components/ui/switch";
 
 import type { AdminCatalogRow, AdminCatalogViewModel, RepositorySyncPolicy } from "./model";
 import { CatalogDetailPane, DetailCard, RowSelectionButton, SidePanels, useSelectedRow } from "./AdminCatalogShared";
@@ -294,11 +295,10 @@ export function PolicyView({
           </CardHeader>
           <CardContent className={styles.detailContent}>
             <label className={styles.policyToggle}>
-              <input
+              <Switch
                 aria-label={adminCatalogMessages.schedulerEnabledLabel}
-                type="checkbox"
                 checked={policyDraft.enabled}
-                onChange={(event) => onPolicyDraftChange({ enabled: event.target.checked })}
+                onCheckedChange={(checked) => onPolicyDraftChange({ enabled: checked })}
               />
               <span>{adminCatalogMessages.schedulerEnabledHelp}</span>
             </label>

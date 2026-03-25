@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 
+import { Checkbox } from "@/src/components/ui/checkbox";
 import { resolveBrandWordmarkAlt, resolveBrandWordmarkSrc } from "@/src/components/shared/brandWordmark";
 import type { PublicAuthProviderItem } from "@/src/lib/api/publicAuthProviders";
 import type { PublicAuthMessages } from "@/src/lib/i18n/publicAuthMessages";
@@ -28,7 +29,7 @@ interface LoginCredentialsCardProps {
 
 export function LoginCredentialsCard({
   messages,
-  providers,
+  providers = [],
   theme,
   username,
   password,
@@ -131,11 +132,10 @@ export function LoginCredentialsCard({
 
         <div className={styles.row}>
           <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
+            <Checkbox
               className={styles.checkbox}
               checked={rememberMe}
-              onChange={(event) => onRememberChange(event.target.checked)}
+              onCheckedChange={onRememberChange}
             />
             <span>{messages.remember}</span>
           </label>

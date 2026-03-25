@@ -1,5 +1,6 @@
 "use client";
 
+import { Checkbox } from "@/src/components/ui/checkbox";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
@@ -105,11 +106,10 @@ export function AccountSecuritySection({
         </div>
 
         <label className="account-center-checkbox-row">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={passwordDraft.revokeOthers}
             disabled={loading || saving}
-            onChange={(event) => onPasswordDraftChange({ revokeOthers: event.target.checked })}
+            onCheckedChange={(checked) => onPasswordDraftChange({ revokeOthers: checked })}
           />
           {accountMessages.revokeOthersCheckboxLabel}
         </label>

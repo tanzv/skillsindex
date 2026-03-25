@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 
 import { ErrorState } from "@/src/components/shared/ErrorState";
 import { PageHeader } from "@/src/components/shared/PageHeader";
+import { Label } from "@/src/components/ui/label";
+import { Switch } from "@/src/components/ui/switch";
 import { cn } from "@/src/lib/utils";
 
 import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -180,15 +182,15 @@ export function AdminToggleField({
   className?: string;
 }) {
   return (
-    <label
+    <div
       className={cn(
         "flex items-center gap-3 rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] px-4 py-3 text-sm text-[color:var(--ui-text-secondary)]",
         className
       )}
     >
-      <input aria-label={ariaLabel || label} type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
-      <span>{label}</span>
-    </label>
+      <Switch checked={checked} aria-label={ariaLabel || label} onCheckedChange={onChange} />
+      <Label className="cursor-pointer text-sm font-medium text-[color:var(--ui-text-secondary)]">{label}</Label>
+    </div>
   );
 }
 

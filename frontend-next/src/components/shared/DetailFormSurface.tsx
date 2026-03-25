@@ -3,6 +3,8 @@
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from "react";
 import { X } from "lucide-react";
 
+import { Dialog, DialogContent } from "@/src/components/ui/dialog";
+import { Sheet, SheetContent } from "@/src/components/ui/sheet";
 import { MOTION_EXIT_DURATION_MS } from "@/src/lib/motion/contracts";
 import { usePresenceMotion } from "@/src/lib/motion/usePresenceMotion";
 import { useReducedMotion } from "@/src/lib/motion/useReducedMotion";
@@ -97,56 +99,83 @@ export function DetailFormSurface({
     return null;
   }
 
-  return (
+  const sharedPanelClassName = cn(
+    styles.surface,
+    variant === "modal" ? styles.variantModal : styles.variantDrawer,
+    size === "narrow" ? styles.sizeNarrow : size === "wide" ? styles.sizeWide : styles.sizeDefault,
+    panelClassName
+  );
+
+  const panelContent = (
     <div
-      className={cn(styles.backdrop, variant === "modal" ? styles.isModalBackdrop : styles.isDrawerBackdrop)}
+      ref={panelRef}
+      aria-labelledby={titleId}
+      aria-describedby={description ? descriptionId : undefined}
+      data-variant={variant}
+      data-size={size}
       data-motion-state={motionState}
-      onClick={(event) => {
-        if (closeOnBackdrop && event.target === event.currentTarget) {
-          onClose();
-        }
-      }}
+      tabIndex={-1}
+      className={sharedPanelClassName}
     >
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={description ? descriptionId : undefined}
-        data-variant={variant}
-        data-size={size}
-        data-motion-state={motionState}
-        tabIndex={-1}
-        className={cn(
-          styles.surface,
-          variant === "modal" ? styles.variantModal : styles.variantDrawer,
-          size === "narrow" ? styles.sizeNarrow : size === "wide" ? styles.sizeWide : styles.sizeDefault,
-          panelClassName
-        )}
-      >
-        <div className={styles.header}>
-          <div className={styles.headerCopy}>
-            <h2 id={titleId} className={styles.title}>
-              {title}
-            </h2>
-            {description ? (
-              <p id={descriptionId} className={styles.description}>
-                {description}
-              </p>
-            ) : null}
-          </div>
-          <div className={styles.headerActions}>
-            {actions}
-            <button type="button" className={styles.closeButton} onClick={onClose} aria-label={closeLabel}>
-              <X size={18} aria-hidden="true" />
-            </button>
-          </div>
+      <div className={styles.header}>
+        <div className={styles.headerCopy}>
+          <h2 id={titleId} className={styles.title}>
+            {title}
+          </h2>
+          {description ? (
+            <p id={descriptionId} className={styles.description}>
+              {description}
+            </p>
+          ) : null}
         </div>
-
-        <div className={cn(styles.body, bodyClassName)}>{children}</div>
-
-        {footer ? <div className={styles.footer}>{footer}</div> : null}
+        <div className={styles.headerActions}>
+          {actions}
+          <button type="button" className={styles.closeButton} onClick={onClose} aria-label={closeLabel}>
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
       </div>
+
+      <div className={cn(styles.body, bodyClassName)}>{children}</div>
+
+      {footer ? <div className={styles.footer}>{footer}</div> : null}
     </div>
+  );
+
+  const overlayClassName = cn(styles.backdrop, variant === "modal" ? styles.isModalBackdrop : styles.isDrawerBackdrop);
+
+  if (variant === "modal") {
+    return (
+      <Dialog open={isPresent} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+        <DialogContent
+          hideClose
+          overlayClassName={overlayClassName}
+          onPointerDownOutside={(event) => {
+            if (!closeOnBackdrop) {
+              event.preventDefault();
+            }
+          }}
+        >
+          {panelContent}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Sheet open={isPresent} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <SheetContent
+        side="right"
+        hideClose
+        overlayClassName={overlayClassName}
+        onPointerDownOutside={(event) => {
+          if (!closeOnBackdrop) {
+            event.preventDefault();
+          }
+        }}
+      >
+        {panelContent}
+      </SheetContent>
+    </Sheet>
   );
 }
