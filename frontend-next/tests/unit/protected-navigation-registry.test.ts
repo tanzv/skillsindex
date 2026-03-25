@@ -114,6 +114,49 @@ describe("protected navigation registry", () => {
     expect(registry.modules.find((module) => module.id === "account")?.sidebar.groups).toHaveLength(0);
   });
 
+  it("hides user management destinations from the admin shell when the session lacks super admin capability", () => {
+    const registry = buildAdminShellNavigationRegistry(
+      {
+        adminNavigation: adminNavigationMessageFallbacks,
+        workspacePage: workspaceMessageFallbacks
+      },
+      {
+        includeUserManagement: false
+      }
+    );
+
+    const allHrefs = registry.modules.flatMap((module) =>
+      module.sidebar.groups.flatMap((group) => group.items.map((item) => item.href))
+    );
+
+    expect(allHrefs).not.toContain("/admin/accounts");
+    expect(allHrefs).not.toContain("/admin/roles");
+    expect(allHrefs).not.toContain("/admin/access");
+    expect(allHrefs).toContain("/admin/organizations");
+  });
+
+  it("hides elevated governance destinations from the admin shell when the session lacks admin-wide visibility", () => {
+    const registry = buildAdminShellNavigationRegistry(
+      {
+        adminNavigation: adminNavigationMessageFallbacks,
+        workspacePage: workspaceMessageFallbacks
+      },
+      {
+        includeElevatedGovernance: false
+      }
+    );
+
+    const allHrefs = registry.modules.flatMap((module) =>
+      module.sidebar.groups.flatMap((group) => group.items.map((item) => item.href))
+    );
+
+    expect(allHrefs).not.toContain("/admin/integrations");
+    expect(allHrefs).not.toContain("/admin/moderation");
+    expect(allHrefs).not.toContain("/admin/ops/metrics");
+    expect(allHrefs).not.toContain("/admin/ops/release-gates");
+    expect(allHrefs).toContain("/admin/skills");
+  });
+
   it("keeps account shell registry scoped to account sidebar data", () => {
     const registry = buildAccountShellNavigationRegistry({
       adminNavigation: adminNavigationMessageFallbacks,

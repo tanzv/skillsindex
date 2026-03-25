@@ -131,10 +131,29 @@ describe("protected topbar account center configs", () => {
       "admin-runtime-services",
       "account-center"
     ]);
+    expect(config.sections[0]?.title).toBe("Security");
     expect(config.sections[0]?.entries.map((entry) => entry.label)).toEqual(["Access", "Roles", "Organizations"]);
     expect(config.sections[1]?.entries.map((entry) => entry.label)).toEqual(["Integrations", "Release Gates"]);
     expect(config.sections[0]?.entries.every((entry) => entry.kind === "admin")).toBe(true);
     expect(config.sections[1]?.entries.every((entry) => entry.description.length > 0)).toBe(true);
+  });
+
+  it("hides elevated admin account-center destinations when the session lacks admin-wide visibility", () => {
+    const config = buildAdminAccountCenterMenuConfig(protectedTopbarMessageFallbacks, adminNavigationMessages, {
+      includeElevatedGovernance: false
+    });
+
+    expect(config.sections.map((section) => section.id)).toEqual([
+      "admin-identity-services",
+      "account-center"
+    ]);
+    expect(config.sections[0]?.entries.map((entry) => entry.label)).toEqual(["Access", "Roles", "Organizations"]);
+    expect(config.sections[0]?.entries).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "Integrations" }),
+        expect.objectContaining({ label: "Release Gates" })
+      ])
+    );
   });
 
   it("keeps admin first-level navigation in the header so the sidebar can stay second-level only", () => {

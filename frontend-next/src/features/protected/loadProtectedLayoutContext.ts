@@ -6,10 +6,19 @@ import { loadProtectedPageMessages } from "@/src/lib/i18n/protectedPageMessages.
 import { loadProtectedMessages } from "@/src/lib/i18n/protectedMessages.server";
 import { resolveServerLocale } from "@/src/lib/i18n/serverLocale";
 
-export async function loadProtectedLayoutContext(requiredRoute: string) {
+interface LoadProtectedLayoutContextOptions {
+  requireSession?: boolean;
+}
+
+export async function loadProtectedLayoutContext(
+  requiredRoute: string,
+  options: LoadProtectedLayoutContextOptions = {}
+) {
   const [session, locale] = await Promise.all([getServerSessionContext(), resolveServerLocale()]);
 
-  requireRouteSession(session, requiredRoute);
+  if (options.requireSession !== false) {
+    requireRouteSession(session, requiredRoute);
+  }
 
   const [messages, pageMessages] = await Promise.all([loadProtectedMessages(locale), loadProtectedPageMessages(locale)]);
 

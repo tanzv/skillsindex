@@ -6,6 +6,7 @@ import type {
 } from "@/src/lib/i18n/protectedMessages";
 import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
 import type { ProtectedTopbarConfig } from "@/src/lib/navigation/protectedTopbarContracts";
+import { listAdminRoutePathsByCapability } from "@/src/lib/routing/adminRouteRegistry";
 import {
   accountProfileRoute,
   accountRoutePrefix,
@@ -79,6 +80,11 @@ export interface ProtectedNavigationRegistry {
   modules: ProtectedNavigationModuleRegistration[];
 }
 
+export interface AdminShellNavigationOptions {
+  includeElevatedGovernance?: boolean;
+  includeUserManagement?: boolean;
+}
+
 export interface ProtectedNavigationShellOptions {
   primaryGroupLabel: string;
   primaryGroupTag: string;
@@ -129,6 +135,26 @@ function collectModuleMatchPrefixes(module: ProtectedNavigationModuleRegistratio
 
 function resolveFallbackModule(modules: ProtectedNavigationModuleRegistration[]) {
   return modules[0];
+}
+
+function removeNavigationHrefsFromRegistry(
+  registry: ProtectedNavigationRegistry,
+  hiddenHrefs: ReadonlySet<string>
+): ProtectedNavigationRegistry {
+  return {
+    modules: registry.modules.map((module) => ({
+      ...module,
+      sidebar: {
+        ...module.sidebar,
+        groups: module.sidebar.groups
+          .map((group) => ({
+            ...group,
+            items: group.items.filter((item) => !hiddenHrefs.has(item.href))
+          }))
+          .filter((group) => group.items.length > 0)
+      }
+    }))
+  };
 }
 
 function createWorkspaceShellNavigationModule(
@@ -266,17 +292,34 @@ export function buildWorkspaceShellNavigationRegistry(
 }
 
 export function buildAdminShellNavigationRegistry(
-  messages: ProtectedNavigationRegistryMessages
+  messages: ProtectedNavigationRegistryMessages,
+  options: AdminShellNavigationOptions = {}
 ): ProtectedNavigationRegistry {
-  const modules = [
+  const registry: ProtectedNavigationRegistry = {
+    modules: [
     createWorkspaceTopLevelNavigationModule(messages),
     buildSkillManagementNavigationRegistration(messages),
     buildOrganizationNavigationRegistration(messages),
     buildAdministrationNavigationRegistration(messages),
     createAccountTopLevelNavigationModule(messages)
-  ].sort((left, right) => left.order - right.order);
+  ].sort((left, right) => left.order - right.order)
+  };
 
-  return { modules };
+  const hiddenHrefs = new Set<string>();
+
+  if (options.includeElevatedGovernance === false) {
+    listAdminRoutePathsByCapability("view_all_admin").forEach((href) => hiddenHrefs.add(href));
+  }
+
+  if (options.includeUserManagement === false) {
+    listAdminRoutePathsByCapability("manage_users").forEach((href) => hiddenHrefs.add(href));
+  }
+
+  if (hiddenHrefs.size > 0) {
+    return removeNavigationHrefsFromRegistry(registry, hiddenHrefs);
+  }
+
+  return registry;
 }
 
 export function buildAccountShellNavigationRegistry(

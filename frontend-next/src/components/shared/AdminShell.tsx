@@ -16,6 +16,7 @@ import {
   resolveProtectedBrandSubtitle,
   resolveProtectedNavigationSidebarState
 } from "@/src/lib/navigation/protectedNavigationRegistry";
+import { canManagePlatformUsers, canViewAllAdminData } from "@/src/lib/auth/roleAccess";
 import { marketplaceHomeRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 import { buildMarketplaceHrefForTheme } from "@/src/lib/theme/sharedThemePreference";
 
@@ -37,13 +38,21 @@ interface AdminShellProps {
 
 export function AdminShell({ children, session, messages }: AdminShellProps) {
   const pathname = usePathname();
+  const includeElevatedGovernance = canViewAllAdminData(session);
+  const includeUserManagement = canManagePlatformUsers(session);
   const registry = buildAdminShellNavigationRegistry({
     adminNavigation: messages.navigation,
     workspacePage: messages.workspace
+  }, {
+    includeElevatedGovernance,
+    includeUserManagement
   });
   const sidebarState = resolveProtectedNavigationSidebarState(pathname, registry);
   const accountCenterMenu = sidebarState.activeModule.accountCenterVariant === "admin"
-    ? buildAdminAccountCenterMenuConfig(messages.topbar, messages.navigation)
+    ? buildAdminAccountCenterMenuConfig(messages.topbar, messages.navigation, {
+      includeElevatedGovernance,
+      includeUserManagement
+    })
     : buildAccountCenterMenuConfig(messages.topbar);
 
   return (

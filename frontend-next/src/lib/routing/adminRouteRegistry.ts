@@ -2,6 +2,7 @@ import type { AdminNavigationMessages } from "@/src/lib/i18n/protectedMessages";
 import { adminOverviewRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 
 import type {
+  AdminRouteCapability,
   AdminRouteDefinition,
   AdminRouteDescriptor,
   AdminRouteDescriptorDefinition
@@ -36,11 +37,16 @@ export {
   isAdminRenderableWorkbenchRoute
 } from "./adminRouteRegistry.matchers";
 export type {
+  AdminRouteCapability,
   AdminRouteDefinition,
   AdminRouteDescriptor,
   AdminRouteGroupId,
   AdminRouteRenderTarget
 } from "./adminRouteRegistry.contracts";
+
+function normalizeAdminRouteCapability(value: AdminRouteDescriptorDefinition["requiredCapability"]): AdminRouteCapability {
+  return value || "admin_surface";
+}
 
 const adminRouteDefinitionLookup = new Map<string, AdminRouteDescriptorDefinition>(
   adminRouteDefinitions.map((definition) => [definition.path, definition])
@@ -58,6 +64,7 @@ function materializeAdminRouteDescriptor(
     label: definition.label(messages),
     description: definition.description(messages),
     renderTarget: definition.renderTarget,
+    requiredCapability: normalizeAdminRouteCapability(definition.requiredCapability),
     endpoint: definition.endpoint,
     quickLink: Boolean(definition.quickLink),
     hiddenFromNavigation: Boolean(definition.hiddenFromNavigation)
@@ -69,6 +76,7 @@ function materializeAdminRouteDefinition(definition: AdminRouteDescriptorDefinit
     path: definition.path,
     groupId: definition.groupId,
     renderTarget: definition.renderTarget,
+    requiredCapability: normalizeAdminRouteCapability(definition.requiredCapability),
     endpoint: definition.endpoint,
     quickLink: Boolean(definition.quickLink),
     hiddenFromNavigation: Boolean(definition.hiddenFromNavigation)
@@ -77,6 +85,15 @@ function materializeAdminRouteDefinition(definition: AdminRouteDescriptorDefinit
 
 export function buildAdminRouteDescriptors(messages: AdminNavigationMessages): AdminRouteDescriptor[] {
   return adminRouteDefinitions.map((definition) => materializeAdminRouteDescriptor(definition, messages));
+}
+
+export function listAdminRoutePathsByCapability(capability: AdminRouteCapability): string[] {
+  return adminRouteDefinitions
+    .filter((definition) => {
+      const requiredCapability = "requiredCapability" in definition ? definition.requiredCapability : undefined;
+      return normalizeAdminRouteCapability(requiredCapability) === capability;
+    })
+    .map((definition) => definition.path);
 }
 
 export function resolveAdminRouteDefinition(pathname: string): AdminRouteDefinition | null {

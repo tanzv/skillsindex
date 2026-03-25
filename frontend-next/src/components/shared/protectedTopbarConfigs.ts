@@ -40,6 +40,11 @@ interface CreateAccountEntryOptions {
   action?: AccountCenterMenuEntryAction;
 }
 
+interface BuildAdminAccountCenterMenuOptions {
+  includeElevatedGovernance?: boolean;
+  includeUserManagement?: boolean;
+}
+
 function createAccountEntry(
   id: string,
   href: string,
@@ -75,7 +80,7 @@ export function buildAccountCenterMenuConfig(
             accountProfileRoute,
             messages.accountMenuProfileLabel,
             "profile",
-            "Review personal identity, display name, avatar, and public profile details.",
+            messages.accountMenuProfileLabel,
             { action: "quick-profile" }
           ),
           createAccountEntry(
@@ -83,21 +88,21 @@ export function buildAccountCenterMenuConfig(
             accountSecurityRoute,
             messages.accountMenuSecurityLabel,
             "security",
-            "Update password posture, revoke risky access, and keep sign-in hygiene aligned."
+            messages.accountMenuSecurityLabel
           ),
           createAccountEntry(
             "account-sessions",
             accountSessionsRoute,
             messages.accountMenuSessionsLabel,
             "sessions",
-            "Inspect active devices, session age, and revoke stale session access when needed."
+            messages.accountMenuSessionsLabel
           ),
           createAccountEntry(
             "account-api-credentials",
             accountApiCredentialsRoute,
             messages.accountMenuApiCredentialsLabel,
             "credentials",
-            "Create, rotate, and retire scoped personal API credentials without leaving the protected shell."
+            messages.accountMenuApiCredentialsLabel
           )
         ]
       }
@@ -107,62 +112,75 @@ export function buildAccountCenterMenuConfig(
 
 export function buildAdminAccountCenterMenuConfig(
   topbarMessages: ProtectedTopbarMessages,
-  navigationMessages: AdminNavigationMessages
+  navigationMessages: AdminNavigationMessages,
+  options: BuildAdminAccountCenterMenuOptions = {}
 ): AccountCenterMenuConfig {
-  return buildAccountCenterMenuConfig(topbarMessages, [
+  const identityEntries: AccountCenterMenuEntry[] = [];
+  if (options.includeUserManagement !== false) {
+    identityEntries.push(
+      createAccountEntry(
+        "admin-access",
+        adminAccessRoute,
+        navigationMessages.itemAccessLabel,
+        "security",
+        navigationMessages.itemAccessDescription,
+        { kind: "admin" }
+      ),
+      createAccountEntry(
+        "admin-roles",
+        adminRolesRoute,
+        navigationMessages.itemRolesLabel,
+        "link",
+        navigationMessages.itemRolesDescription,
+        { kind: "admin" }
+      )
+    );
+  }
+  identityEntries.push(
+    createAccountEntry(
+      "admin-organizations",
+      adminOrganizationsRoute,
+      navigationMessages.itemOrganizationsLabel,
+      "link",
+      navigationMessages.itemOrganizationsDescription,
+      { kind: "admin" }
+    )
+  );
+
+  const extensions: AccountCenterMenuSection[] = [
     {
       id: "admin-identity-services",
-      title: navigationMessages.itemOrganizationsLabel,
-      entries: [
-        createAccountEntry(
-          "admin-access",
-            adminAccessRoute,
-            navigationMessages.itemAccessLabel,
-            "security",
-            navigationMessages.itemAccessDescription,
-            { kind: "admin" }
-          ),
-          createAccountEntry(
-            "admin-roles",
-            adminRolesRoute,
-            navigationMessages.itemRolesLabel,
-            "link",
-            navigationMessages.itemRolesDescription,
-            { kind: "admin" }
-          ),
-          createAccountEntry(
-            "admin-organizations",
-            adminOrganizationsRoute,
-            navigationMessages.itemOrganizationsLabel,
-            "link",
-            navigationMessages.itemOrganizationsDescription,
-            { kind: "admin" }
-          )
-        ]
-      },
-    {
+      title: navigationMessages.groupSecurityLabel,
+      entries: identityEntries
+    }
+  ];
+
+  if (options.includeElevatedGovernance !== false) {
+    extensions.push({
       id: "admin-runtime-services",
       title: navigationMessages.moduleAdministrationLabel,
       entries: [
         createAccountEntry(
           "admin-integrations",
-            adminIntegrationsRoute,
-            navigationMessages.itemIntegrationsLabel,
-            "link",
-            navigationMessages.itemIntegrationsDescription,
-            { kind: "admin" }
-          ),
-          createAccountEntry(
-            "admin-release-gates",
-            adminReleaseGatesRoute,
-            navigationMessages.itemReleaseGatesLabel,
-            "link",
-            navigationMessages.itemReleaseGatesDescription,
-            { kind: "admin" }
-          )
-        ]
-      }
-  ]);
+          adminIntegrationsRoute,
+          navigationMessages.itemIntegrationsLabel,
+          "link",
+          navigationMessages.itemIntegrationsDescription,
+          { kind: "admin" }
+        ),
+        createAccountEntry(
+          "admin-release-gates",
+          adminReleaseGatesRoute,
+          navigationMessages.itemReleaseGatesLabel,
+          "link",
+          navigationMessages.itemReleaseGatesDescription,
+          { kind: "admin" }
+        )
+      ]
+    });
+  }
+
+  return buildAccountCenterMenuConfig(topbarMessages, extensions);
 }
 
 interface TopbarRegistryOptions {

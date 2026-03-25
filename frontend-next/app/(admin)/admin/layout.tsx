@@ -11,7 +11,9 @@ interface AdminLayoutProps {
 }
 
 export default async function AdminLayout({ children }: AdminLayoutProps) {
-  const { session, locale, messages, pageMessages } = await loadProtectedLayoutContext("/admin/overview");
+  const { session, locale, messages, pageMessages } = await loadProtectedLayoutContext("/admin/overview", {
+    requireSession: false
+  });
 
   return (
     <ProtectedI18nProvider locale={locale} messages={pageMessages}>
