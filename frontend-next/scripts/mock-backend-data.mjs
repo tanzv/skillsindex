@@ -312,7 +312,7 @@ export function createInitialMockState() {
       items: [
         { id: 1, username: "admin", role: "super_admin", status: "active", created_at: "2026-03-10T08:00:00Z", updated_at: "2026-03-14T09:00:00Z" },
         { id: 2, username: "operator", role: "admin", status: "active", created_at: "2026-03-11T08:00:00Z", updated_at: "2026-03-14T09:30:00Z" },
-        { id: 3, username: "reviewer", role: "auditor", status: "disabled", created_at: "2026-03-12T08:00:00Z", updated_at: "2026-03-14T09:45:00Z", force_logout_at: "2026-03-14T09:50:00Z" }
+        { id: 3, username: "reviewer", role: "viewer", status: "disabled", created_at: "2026-03-12T08:00:00Z", updated_at: "2026-03-14T09:45:00Z", force_logout_at: "2026-03-14T09:50:00Z" }
       ]
     },
     syncPolicy: {
@@ -394,7 +394,18 @@ export function createInitialMockState() {
         owner_username: "admin",
         updated_at: "2026-03-14T08:00:00Z",
         star_count: 120,
-        quality_score: 9.3
+        quality_score: 9.3,
+        source_analysis: {
+          entry_file: "README.md",
+          mechanism: "skill_manifest",
+          metadata_sources: ["README.md", "package.json"],
+          reference_paths: ["skills/release-readiness", "docs/release-runbook.md"],
+          dependencies: [
+            { kind: "skill", target: "repository-sync-blueprint" },
+            { kind: "skill", target: "change-approval-guide" },
+            { kind: "file", target: "templates/release-checklist.md" }
+          ]
+        }
       },
       {
         id: 201,
@@ -407,11 +418,18 @@ export function createInitialMockState() {
         source_url: "https://github.com/skillsindex/repository-sync-blueprint",
         install_command: "uvx skillsindex sync-blueprint",
         content: "# Repository Sync Blueprint\n\nReview queue health, mapping drift, and repository sync policy.",
-        visibility: "private",
+        visibility: "public",
         owner_username: "admin",
         updated_at: "2026-03-14T09:00:00Z",
         star_count: 80,
-        quality_score: 9.0
+        quality_score: 9.0,
+        source_analysis: {
+          entry_file: "SKILL.md",
+          mechanism: "skill_markdown",
+          metadata_sources: ["SKILL.md"],
+          reference_paths: ["skills/repository-sync-blueprint"],
+          dependencies: [{ kind: "skill", target: "using-superpowers" }]
+        }
       },
       {
         id: 301,
@@ -583,7 +601,7 @@ export function createInitialMockState() {
           organization_id: 12,
           user_id: 3,
           username: "reviewer",
-          user_role: "auditor",
+          user_role: "viewer",
           user_status: "disabled",
           role: "viewer",
           created_at: "2026-01-12T08:00:00Z",

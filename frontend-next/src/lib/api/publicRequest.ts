@@ -5,9 +5,11 @@ export const anonymousMarketplaceRevalidateSeconds = 30;
 export interface MarketplaceRequestStrategy {
   includeViewerContext: boolean;
   revalidateSeconds?: number;
+  cache?: RequestCache;
 }
 
 export interface PublicRequestJSONOptions {
+  cache?: RequestCache;
   next?: {
     revalidate: number;
   };
@@ -48,7 +50,8 @@ export function resolveMarketplaceRequestStrategy(requestHeaders: Headers): Mark
 
   if (hasSessionCookie) {
     return {
-      includeViewerContext: true
+      includeViewerContext: true,
+      cache: "no-store"
     };
   }
 
@@ -62,10 +65,11 @@ export function buildPublicRequestJSONOptions(requestHeaders: Headers): PublicRe
   const requestStrategy = resolveMarketplaceRequestStrategy(requestHeaders);
 
   return {
+    cache: requestStrategy.cache,
     requestHeaders: requestStrategy.includeViewerContext ? requestHeaders : new Headers(),
     next: requestStrategy.revalidateSeconds
       ? {
-          revalidate: requestStrategy.revalidateSeconds
+        revalidate: requestStrategy.revalidateSeconds
         }
       : undefined
   };

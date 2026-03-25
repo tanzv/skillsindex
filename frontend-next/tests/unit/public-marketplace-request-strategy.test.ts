@@ -77,7 +77,8 @@ describe("public marketplace request strategy", () => {
         })
       )
     ).toEqual({
-      includeViewerContext: true
+      includeViewerContext: true,
+      cache: "no-store"
     });
   });
 
@@ -106,6 +107,7 @@ describe("public marketplace request strategy", () => {
 
     expect(mockServerFetchJSON).toHaveBeenCalledTimes(1);
     expect(mockServerFetchJSON).toHaveBeenCalledWith("/api/v1/public/marketplace?q=nextjs", {
+      cache: "no-store",
       requestHeaders,
       next: undefined
     });
@@ -161,18 +163,22 @@ describe("public marketplace request strategy", () => {
     await fetchSkillVersions(requestHeaders, 14);
 
     expect(mockServerFetchJSON).toHaveBeenNthCalledWith(1, "/api/v1/public/skills/14", {
+      cache: "no-store",
       requestHeaders,
       next: undefined
     });
     expect(mockServerFetchJSON).toHaveBeenNthCalledWith(2, "/api/v1/public/skills/14/resources", {
+      cache: "no-store",
       requestHeaders,
       next: undefined
     });
     expect(mockServerFetchJSON).toHaveBeenNthCalledWith(3, "/api/v1/public/skills/14/resource-file?path=SKILL.md", {
+      cache: "no-store",
       requestHeaders,
       next: undefined
     });
     expect(mockServerFetchJSON).toHaveBeenNthCalledWith(4, "/api/v1/public/skills/14/versions", {
+      cache: "no-store",
       requestHeaders,
       next: undefined
     });

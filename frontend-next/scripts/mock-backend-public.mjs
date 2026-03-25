@@ -204,6 +204,7 @@ function buildPresentationCategorySummary(skills, categoryGroup) {
 
 function filterSkills(skills, url) {
   const keyword = asString(url.searchParams.get("q")).toLowerCase();
+  const semanticKeyword = asString(url.searchParams.get("tags")).toLowerCase();
   const category = asString(url.searchParams.get("category")).toLowerCase();
   const subcategory = asString(url.searchParams.get("subcategory")).toLowerCase();
   const categoryGroup = normalizeGroupSlug(url.searchParams.get("category_group"));
@@ -230,13 +231,29 @@ function filterSkills(skills, url) {
     }
 
     if (!keyword) {
-      return true;
+      if (!semanticKeyword) {
+        return true;
+      }
+
+      return [skill.name, skill.description, skill.category, skill.subcategory, skill.tags.join(" ")]
+        .join(" ")
+        .toLowerCase()
+        .includes(semanticKeyword);
     }
 
-    return [skill.name, skill.description, skill.category, skill.subcategory, skill.tags.join(" ")]
+    const haystack = [skill.name, skill.description, skill.category, skill.subcategory, skill.tags.join(" ")]
       .join(" ")
-      .toLowerCase()
-      .includes(keyword);
+      .toLowerCase();
+
+    if (!haystack.includes(keyword)) {
+      return false;
+    }
+
+    if (semanticKeyword && !haystack.includes(semanticKeyword)) {
+      return false;
+    }
+
+    return true;
   });
 
   if (sort === "quality") {
@@ -413,6 +430,9 @@ function buildSkillDetailPayload(state, skillId, sessionUser) {
   }
 
   const feedback = getSkillFeedback(state, skillId);
+  const relatedSkills = getPublicSkills(state)
+    .filter((item) => item.id !== skillId)
+    .slice(0, 3);
 
   return {
     skill,
@@ -436,16 +456,18 @@ function buildSkillDetailPayload(state, skillId, sessionUser) {
       created_at: comment.created_at,
       can_delete: Boolean(sessionUser) && comment.user_id === sessionUser.id
     })),
-    comments_limit: 80
+    comments_limit: 80,
+    related_skills: relatedSkills
   };
 }
 
 function buildSkillResourcesPayload(state, skillId) {
-  const skill = getPublicSkills(state).find((item) => item.id === skillId);
-  if (!skill) {
+  const publicSkill = getPublicSkills(state).find((item) => item.id === skillId);
+  const sourceSkill = (state.skills || []).find((item) => item.id === skillId && item.visibility === "public");
+  if (!publicSkill || !sourceSkill) {
     return null;
   }
-  const files = buildSkillResourceFiles(skill).map((file) => ({
+  const files = buildSkillResourceFiles(publicSkill).map((file) => ({
     name: file.name,
     display_name: file.display_name,
     size_bytes: file.content.length,
@@ -454,14 +476,34 @@ function buildSkillResourcesPayload(state, skillId) {
   }));
 
   return {
-    skill_id: skill.id,
-    source_type: skill.source_type,
-    source_url: skill.source_url,
-    repo_url: skill.source_url,
+    skill_id: publicSkill.id,
+    source_type: publicSkill.source_type,
+    source_url: publicSkill.source_url,
+    repo_url: publicSkill.source_url,
     source_branch: "main",
     source_path: "SKILL.md",
-    install_command: skill.install_command,
-    updated_at: skill.updated_at,
+    entry_file: asString(sourceSkill.source_analysis?.entry_file),
+    mechanism: asString(sourceSkill.source_analysis?.mechanism),
+    metadata_sources: Array.isArray(sourceSkill.source_analysis?.metadata_sources)
+      ? sourceSkill.source_analysis.metadata_sources.map((value) => String(value))
+      : [],
+    reference_count: Array.isArray(sourceSkill.source_analysis?.reference_paths)
+      ? sourceSkill.source_analysis.reference_paths.length
+      : 0,
+    reference_paths: Array.isArray(sourceSkill.source_analysis?.reference_paths)
+      ? sourceSkill.source_analysis.reference_paths.map((value) => String(value))
+      : [],
+    dependency_count: Array.isArray(sourceSkill.source_analysis?.dependencies)
+      ? sourceSkill.source_analysis.dependencies.length
+      : 0,
+    dependencies: Array.isArray(sourceSkill.source_analysis?.dependencies)
+      ? sourceSkill.source_analysis.dependencies.map((dependency) => ({
+          kind: asString(dependency.kind),
+          target: asString(dependency.target)
+        }))
+      : [],
+    install_command: publicSkill.install_command,
+    updated_at: publicSkill.updated_at,
     file_count: files.length,
     files
   };

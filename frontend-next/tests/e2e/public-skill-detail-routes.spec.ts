@@ -41,12 +41,23 @@ test("renders the skill detail route without backend data", async ({ page }) => 
   await expect(page.getByTestId("skill-detail-sidebar")).toBeVisible();
   await expect(page.getByTestId("skill-detail-interaction-panel")).toHaveCount(0);
   await expect(page.getByTestId("skill-detail-comments-panel")).toHaveCount(0);
+
+  await page.getByRole("tab", { name: "Resources" }).click();
+  await expect(page.getByTestId("skill-detail-source-analysis")).toBeVisible();
+  await expect(page.getByTestId("skill-detail-source-analysis")).toContainText("Source Analysis");
+  await expect(page.getByTestId("skill-detail-source-analysis")).toContainText("README.md");
+  await expect(page.getByTestId("skill-detail-source-analysis").getByRole("link", { name: "repository-sync-blueprint" })).toBeVisible();
+
+  await page.getByTestId("skill-detail-source-analysis").getByRole("link", { name: "repository-sync-blueprint" }).click();
+  await expect(page).toHaveURL(/\/skills\/201$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Repository Sync Blueprint" })).toBeVisible();
 });
 
 test("keeps the skill detail context bar, preview stage, and install sidebar synchronized", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 960 });
   await page.goto("/light/skills/101");
 
+  await expect(page.getByTestId("skill-detail-page")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId("skill-detail-context-bar")).toBeVisible();
   await expect(page.locator(".skill-detail-context-status-value")).toHaveText("overview");
   await expect(page.locator(".skill-detail-installation-card-context-chip")).toHaveText("overview");
@@ -58,4 +69,22 @@ test("keeps the skill detail context bar, preview stage, and install sidebar syn
   await expect(page.getByTestId("skill-detail-page")).toHaveAttribute("data-active-tab", "skill");
   await expect(page.locator("#skill-detail-panel-skill .skill-detail-preview-stage-title")).toHaveText("SKILL.md");
   await expect(page.locator("#skill-detail-panel-skill .skill-detail-preview-content")).toContainText("# Release Readiness Checklist");
+});
+
+test("keeps source analysis deep links working on light skill detail routes", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.goto("/light/skills/101");
+
+  await expect(page.getByTestId("skill-detail-page")).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("tab", { name: "Resources" }).click();
+
+  const sourceAnalysis = page.getByTestId("skill-detail-source-analysis");
+  await expect(sourceAnalysis).toBeVisible();
+  await expect(sourceAnalysis).toContainText("Source Analysis");
+  await expect(sourceAnalysis).toContainText("README.md");
+  await expect(sourceAnalysis.getByRole("link", { name: "repository-sync-blueprint" })).toBeVisible();
+
+  await sourceAnalysis.getByRole("link", { name: "repository-sync-blueprint" }).click();
+  await expect(page).toHaveURL(/\/light\/skills\/201$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Repository Sync Blueprint" })).toBeVisible();
 });

@@ -53,6 +53,9 @@ export interface PublicMarketplaceMessages {
   searchOverlayTitle: string;
   searchOverlayDescription: string;
   sharedViewAllLabel: string;
+  paginationPageLabel: string;
+  paginationPrevious: string;
+  paginationNext: string;
   loadMore: string;
   loadMoreHint: string;
   landingCuratedTitle: string;
@@ -223,6 +226,15 @@ export interface PublicMarketplaceMessages {
   skillDetailResourceRepositoryLabel: string;
   skillDetailResourceBranchLabel: string;
   skillDetailResourceFilesLabel: string;
+  skillDetailSourceAnalysisTitle: string;
+  skillDetailSourceEntryFileLabel: string;
+  skillDetailSourceMechanismLabel: string;
+  skillDetailSourceMetadataSourcesLabel: string;
+  skillDetailSourceReferencePathsLabel: string;
+  skillDetailSourceDependenciesLabel: string;
+  skillDetailSourceNoMetadataSources: string;
+  skillDetailSourceNoReferencePaths: string;
+  skillDetailSourceNoDependencies: string;
   skillDetailResourceTreeTitle: string;
   skillDetailResourceDetailsToggle: string;
   skillDetailResourcePreviewLabel: string;

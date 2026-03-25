@@ -39,6 +39,16 @@ interface SkillDetailWorkbenchDeferredPanelsProps {
     | "skillDetailRelatedTitle"
     | "skillDetailResourcesDescription"
     | "skillDetailResourcesTitle"
+    | "skillDetailSourceAnalysisTitle"
+    | "skillDetailSourceDependenciesLabel"
+    | "skillDetailSourceEntryFileLabel"
+    | "skillDetailSourceMechanismLabel"
+    | "skillDetailSourceMetadataSourcesLabel"
+    | "skillDetailSourceNoDependencies"
+    | "skillDetailSourceNoMetadataSources"
+    | "skillDetailSourceNoReferencePaths"
+    | "skillDetailSourceReferencePathsLabel"
+    | "skillDetailNotAvailable"
     | "skillDetailSelectFile"
     | "skillDetailUnknownLanguage"
     | "skillDetailUpdatedBadgePrefix"
@@ -52,6 +62,165 @@ interface SkillDetailWorkbenchDeferredPanelsProps {
   resources: PublicSkillResourcesResponse | null;
   selectedFileName: string;
   versionsPending?: boolean;
+}
+
+type SourceAnalysisDependency = NonNullable<PublicSkillResourcesResponse["dependencies"]>[number];
+
+function normalizePublicSkillLookupKey(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function buildPublicSkillHrefResolver(detail: PublicSkillDetailResponse): (value: string) => string | undefined {
+  const hrefByKey = new Map<string, string>();
+  const visibleSkills = [detail.skill, ...(detail.related_skills || [])];
+
+  visibleSkills.forEach((skill) => {
+    const href = `/skills/${skill.id}`;
+
+    [String(skill.id), skill.name].forEach((candidate) => {
+      const normalized = normalizePublicSkillLookupKey(candidate);
+      if (normalized && !hrefByKey.has(normalized)) {
+        hrefByKey.set(normalized, href);
+      }
+    });
+  });
+
+  return (value: string) => {
+    const normalized = normalizePublicSkillLookupKey(value);
+    if (!normalized) {
+      return undefined;
+    }
+
+    return hrefByKey.get(normalized);
+  };
+}
+
+function hasSourceAnalysis(resources: PublicSkillResourcesResponse | null): boolean {
+  return Boolean(
+    resources?.entry_file ||
+      resources?.mechanism ||
+      resources?.metadata_sources?.length ||
+      resources?.reference_paths?.length ||
+      resources?.dependencies?.length
+  );
+}
+
+function renderSourceAnalysisValue(value: string, href?: string, key?: string): ReactNode {
+  if (href) {
+    return (
+      <PublicLink key={key || value} href={href} className="skill-detail-source-analysis-link">
+        {value}
+      </PublicLink>
+    );
+  }
+
+  return (
+    <span key={key || value} className="skill-detail-source-analysis-value">
+      {value}
+    </span>
+  );
+}
+
+function renderSourceAnalysisList(values: string[], emptyValue: string): ReactNode {
+  if (!values.length) {
+    return <span className="skill-detail-source-analysis-empty">{emptyValue}</span>;
+  }
+
+  return values.map((value) => renderSourceAnalysisValue(value, undefined, value));
+}
+
+function renderDependencyList(
+  dependencies: SourceAnalysisDependency[],
+  emptyValue: string,
+  resolvePublicSkillHref: (value: string) => string | undefined
+): ReactNode {
+  if (!dependencies.length) {
+    return <span className="skill-detail-source-analysis-empty">{emptyValue}</span>;
+  }
+
+  return dependencies.map((dependency, index) => {
+    const target = dependency.target || emptyValue;
+    const href = dependency.kind === "skill" ? resolvePublicSkillHref(target) : undefined;
+
+    return (
+      <div key={`${dependency.kind}-${target}-${index}`} className="skill-detail-source-analysis-pill">
+        <span className="skill-detail-source-analysis-pill-label">{dependency.kind}</span>
+        {renderSourceAnalysisValue(target, href, `${dependency.kind}-${target}-${index}`)}
+      </div>
+    );
+  });
+}
+
+function SkillDetailSourceAnalysisPanel({
+  detail,
+  messages,
+  resources
+}: {
+  detail: PublicSkillDetailResponse;
+  messages: Pick<
+    PublicMarketplaceMessages,
+    | "skillDetailNotAvailable"
+    | "skillDetailSourceAnalysisTitle"
+    | "skillDetailSourceDependenciesLabel"
+    | "skillDetailSourceEntryFileLabel"
+    | "skillDetailSourceMechanismLabel"
+    | "skillDetailSourceMetadataSourcesLabel"
+    | "skillDetailSourceNoDependencies"
+    | "skillDetailSourceNoMetadataSources"
+    | "skillDetailSourceNoReferencePaths"
+    | "skillDetailSourceReferencePathsLabel"
+  >;
+  resources: PublicSkillResourcesResponse;
+}) {
+  const resolvePublicSkillHref = buildPublicSkillHrefResolver(detail);
+
+  return (
+    <section className="skill-detail-source-analysis-card" data-testid="skill-detail-source-analysis">
+      <div className="skill-detail-source-analysis-title">{messages.skillDetailSourceAnalysisTitle}</div>
+      <div className="skill-detail-source-analysis-summary">
+        <div className="skill-detail-source-analysis-summary-item">
+          <span className="skill-detail-source-analysis-label">{messages.skillDetailSourceEntryFileLabel}</span>
+          <span className="skill-detail-source-analysis-value">
+            {resources.entry_file || messages.skillDetailNotAvailable}
+          </span>
+        </div>
+        <div className="skill-detail-source-analysis-summary-item">
+          <span className="skill-detail-source-analysis-label">{messages.skillDetailSourceMechanismLabel}</span>
+          <span className="skill-detail-source-analysis-value">
+            {resources.mechanism || messages.skillDetailNotAvailable}
+          </span>
+        </div>
+      </div>
+      <div className="skill-detail-source-analysis-grid">
+        <div className="skill-detail-source-analysis-section">
+          <span className="skill-detail-source-analysis-label">{messages.skillDetailSourceMetadataSourcesLabel}</span>
+          <div className="skill-detail-source-analysis-values">
+            {renderSourceAnalysisList(resources.metadata_sources || [], messages.skillDetailSourceNoMetadataSources)}
+          </div>
+        </div>
+        <div className="skill-detail-source-analysis-section">
+          <span className="skill-detail-source-analysis-label">{messages.skillDetailSourceReferencePathsLabel}</span>
+          <div className="skill-detail-source-analysis-values">
+            {renderSourceAnalysisList(resources.reference_paths || [], messages.skillDetailSourceNoReferencePaths)}
+          </div>
+        </div>
+        <div className="skill-detail-source-analysis-section">
+          <span className="skill-detail-source-analysis-label">{messages.skillDetailSourceDependenciesLabel}</span>
+          <div className="skill-detail-source-analysis-values">
+            {renderDependencyList(
+              resources.dependencies || [],
+              messages.skillDetailSourceNoDependencies,
+              resolvePublicSkillHref
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 interface SkillDetailDocumentPreviewProps {
@@ -216,22 +385,27 @@ export function SkillDetailWorkbenchDeferredPanels({
         {resourcesPending ? (
           <SkillDetailResourceLoadingSkeleton />
         ) : resources?.files.length ? (
-          <div className="skill-detail-resource-browser">
-            <SkillDetailResourceTree
-              resources={resources}
-              selectedFileName={selectedFileName}
-              onOpenFile={onOpenFile}
-              title={resourceTableTitle}
-            />
-            <SkillDetailDocumentPreview
-              className="skill-detail-resource-preview-stage"
-              content={resourceContent?.content || messages.skillDetailSelectFile}
-              language={resourceContent?.language || fallbackFile?.language || messages.skillDetailUnknownLanguage}
-              locale={locale}
-              title={selectedFileDisplayName || fallbackFile?.display_name || headerByTab.resources.title}
-              updatedAt={resourceContent?.updated_at}
-              updatedBadgePrefix={messages.skillDetailUpdatedBadgePrefix}
-            />
+          <div className="skill-detail-resource-stack">
+            {hasSourceAnalysis(resources) ? (
+              <SkillDetailSourceAnalysisPanel detail={detail} messages={messages} resources={resources} />
+            ) : null}
+            <div className="skill-detail-resource-browser">
+              <SkillDetailResourceTree
+                resources={resources}
+                selectedFileName={selectedFileName}
+                onOpenFile={onOpenFile}
+                title={resourceTableTitle}
+              />
+              <SkillDetailDocumentPreview
+                className="skill-detail-resource-preview-stage"
+                content={resourceContent?.content || messages.skillDetailSelectFile}
+                language={resourceContent?.language || fallbackFile?.language || messages.skillDetailUnknownLanguage}
+                locale={locale}
+                title={selectedFileDisplayName || fallbackFile?.display_name || headerByTab.resources.title}
+                updatedAt={resourceContent?.updated_at}
+                updatedBadgePrefix={messages.skillDetailUpdatedBadgePrefix}
+              />
+            </div>
           </div>
         ) : (
           <p className="skill-detail-empty-state">{messages.skillDetailNoResources}</p>

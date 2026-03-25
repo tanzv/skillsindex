@@ -14,6 +14,7 @@ import {
 import type { PublicMarketplaceResponse } from "@/src/lib/schemas/public";
 
 import { MarketplaceResultsListSection } from "./marketplace/MarketplaceResultsListSection";
+import { MarketplacePagination } from "./marketplace/MarketplacePagination";
 import { MarketplaceResultsStage } from "./marketplace/MarketplaceResultsStage";
 import { MarketplaceSkillCard } from "./marketplace/MarketplaceSkillCard";
 import { MarketplaceTopbarBreadcrumb } from "./marketplace/MarketplaceTopbarBreadcrumb";
@@ -125,6 +126,26 @@ export function PublicSearchPage({
             resultsContent={model.visibleItems.map((item) => (
               <MarketplaceSkillCard key={item.id} item={item} />
             ))}
+            footerMeta={
+              <MarketplacePagination
+                basePath={formAction}
+                currentPage={marketplace.pagination.page}
+                totalPages={marketplace.pagination.total_pages}
+                prevPage={marketplace.pagination.prev_page}
+                nextPage={marketplace.pagination.next_page}
+                summaryLabel={`${messages.paginationPageLabel} ${marketplace.pagination.page} / ${marketplace.pagination.total_pages}`}
+                previousLabel={messages.paginationPrevious}
+                nextLabel={messages.paginationNext}
+                query={{
+                  q: query || undefined,
+                  page_size: marketplace.pagination.page_size || undefined,
+                  tags: semanticQuery || undefined,
+                  subcategory: activeSubcategory || undefined,
+                  sort: sort !== "relevance" ? sort : undefined,
+                  mode: mode !== "hybrid" ? mode : undefined
+                }}
+              />
+            }
             emptyContent={
               <div className="marketplace-empty-state">
                 <h3>{messages.resultsEmptyTitle}</h3>

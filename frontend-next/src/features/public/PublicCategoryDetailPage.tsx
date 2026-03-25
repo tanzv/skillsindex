@@ -14,6 +14,7 @@ import type { PublicMarketplaceResponse } from "@/src/lib/schemas/public";
 import { MarketplaceCategoryRail } from "./marketplace/MarketplaceCategoryRail";
 import { MarketplaceChipControlGroup } from "./marketplace/MarketplaceChipControlGroup";
 import { MarketplaceRecentSearchesCard } from "./marketplace/MarketplaceRecentSearchesCard";
+import { MarketplacePagination } from "./marketplace/MarketplacePagination";
 import { MarketplaceResultsListSection } from "./marketplace/MarketplaceResultsListSection";
 import { MarketplaceSearchForm } from "./marketplace/MarketplaceSearchForm";
 import { MarketplaceResultsStage } from "./marketplace/MarketplaceResultsStage";
@@ -184,6 +185,26 @@ export function PublicCategoryDetailPage({
                 resultsContent={model.visibleItems.map((item) => (
                   <MarketplaceSkillCard key={item.id} item={item} />
                 ))}
+                footerMeta={
+                  <MarketplacePagination
+                    basePath={model.actionPath}
+                    currentPage={marketplace.pagination.page}
+                    totalPages={marketplace.pagination.total_pages}
+                    prevPage={marketplace.pagination.prev_page}
+                    nextPage={marketplace.pagination.next_page}
+                    summaryLabel={`${messages.paginationPageLabel} ${marketplace.pagination.page} / ${marketplace.pagination.total_pages}`}
+                    previousLabel={messages.paginationPrevious}
+                    nextLabel={messages.paginationNext}
+                    query={{
+                      q: query || undefined,
+                      page_size: marketplace.pagination.page_size || undefined,
+                      tags: semanticQuery || undefined,
+                      subcategory: activeSubcategory || undefined,
+                      sort: model.normalizedSort !== "relevance" ? model.normalizedSort : undefined,
+                      mode: model.normalizedMode !== "hybrid" ? model.normalizedMode : undefined
+                    }}
+                  />
+                }
                 emptyContent={
                   <div className="marketplace-empty-state">
                     <h3>{messages.resultsEmptyTitle}</h3>

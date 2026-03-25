@@ -1,3 +1,104 @@
+.skill-detail-resource-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.skill-detail-source-analysis-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--marketplace-card-border-soft);
+  border-radius: 18px;
+  background: var(--marketplace-section-emphasis-background);
+}
+
+.skill-detail-source-analysis-title {
+  color: var(--marketplace-home-text);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.skill-detail-source-analysis-summary,
+.skill-detail-source-analysis-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.skill-detail-source-analysis-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.skill-detail-source-analysis-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.skill-detail-source-analysis-summary-item,
+.skill-detail-source-analysis-section {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.skill-detail-source-analysis-label {
+  color: var(--si-color-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.skill-detail-source-analysis-values {
+  display: grid;
+  gap: 8px;
+}
+
+.skill-detail-source-analysis-value,
+.skill-detail-source-analysis-empty,
+.skill-detail-source-analysis-link {
+  min-width: 0;
+  color: var(--marketplace-home-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.skill-detail-source-analysis-empty {
+  color: var(--si-color-text-secondary);
+}
+
+.skill-detail-source-analysis-link {
+  color: var(--marketplace-resource-link, var(--marketplace-link-text));
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.skill-detail-source-analysis-link:hover {
+  color: color-mix(in srgb, var(--marketplace-resource-link, var(--marketplace-link-text)) 78%, var(--marketplace-home-text) 22%);
+}
+
+.skill-detail-source-analysis-pill {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 80%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--marketplace-surface-muted, var(--marketplace-card-background)) 76%, transparent);
+}
+
+.skill-detail-source-analysis-pill-label {
+  color: var(--si-color-text-secondary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
 .skill-detail-resource-browser {
   display: grid;
   grid-template-columns: minmax(300px, 0.42fr) minmax(0, 1fr);
@@ -72,9 +173,9 @@
   text-align: left;
   cursor: pointer;
   transition:
-    background-color 160ms ease,
-    color 160ms ease,
-    transform 160ms ease;
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    color var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .skill-detail-resource-table-row:last-child {
@@ -203,6 +304,11 @@
 }
 
 @media (max-width: 760px) {
+  .skill-detail-source-analysis-summary,
+  .skill-detail-source-analysis-grid {
+    grid-template-columns: 1fr;
+  }
+
   .skill-detail-resource-browser {
     grid-template-columns: 1fr;
   }
@@ -212,5 +318,11 @@
     grid-template-columns: minmax(0, 1fr) 88px;
     gap: 12px;
     padding-inline: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-detail-resource-table-row {
+    transition: none;
   }
 }

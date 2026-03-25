@@ -190,28 +190,6 @@ export function MarketplaceHomeVirtualFeed({
         )}
       </section>
 
-      {latestRows.length > 0 ? (
-        <section className="marketplace-pagination-shell">
-          <div
-            className="marketplace-pagination-load-more is-idle"
-            data-testid="marketplace-pagination-auto-load"
-            role="status"
-            aria-live="polite"
-            aria-busy="false"
-          >
-            <span className="marketplace-pagination-load-indicator" aria-hidden="true">
-              <span className="marketplace-pagination-loading-arrow">{"\u2193"}</span>
-              <span className="marketplace-pagination-loading-ring" />
-              <span className="marketplace-pagination-loading-dots">
-                <span />
-                <span />
-                <span />
-              </span>
-            </span>
-            <span className="marketplace-visually-hidden">{`${messages.loadMore} ${messages.loadMoreHint}`}</span>
-          </div>
-        </section>
-      ) : null}
     </div>
   );
 }

@@ -146,6 +146,16 @@ export interface PublicSkillResourcesResponse {
   repo_url: string;
   source_branch: string;
   source_path: string;
+  entry_file?: string;
+  mechanism?: string;
+  metadata_sources?: string[];
+  reference_count?: number;
+  reference_paths?: string[];
+  dependency_count?: number;
+  dependencies?: Array<{
+    kind: string;
+    target: string;
+  }>;
   install_command?: string;
   updated_at?: string;
   file_count?: number;

@@ -65,6 +65,15 @@ const workbenchMessages = {
   skillDetailRelatedTitle: "Related",
   skillDetailResourcesDescription: "Resources description",
   skillDetailResourcesTitle: "Resources",
+  skillDetailSourceAnalysisTitle: "Source Analysis",
+  skillDetailSourceEntryFileLabel: "Entry File",
+  skillDetailSourceMechanismLabel: "Mechanism",
+  skillDetailSourceMetadataSourcesLabel: "Metadata Sources",
+  skillDetailSourceReferencePathsLabel: "Reference Paths",
+  skillDetailSourceDependenciesLabel: "Dependencies",
+  skillDetailSourceNoMetadataSources: "No metadata sources detected",
+  skillDetailSourceNoReferencePaths: "No reference paths detected",
+  skillDetailSourceNoDependencies: "No dependencies detected",
   skillDetailSelectFile: "Select file",
   skillDetailUnknownLanguage: "Unknown language",
   skillDetailUpdatedBadgePrefix: "Updated",
@@ -223,5 +232,63 @@ describe("SkillDetailWorkbenchDeferredPanels", () => {
 
     expect(markup).toContain("Select file");
     expect(markup).not.toContain(fallback.detail.skill.content);
+  });
+
+  it("renders source analysis details and public skill dependency links in the resources panel", () => {
+    const fallback = buildPublicSkillDetailFallback(101);
+    const relatedSkill = {
+      ...fallback.detail.skill,
+      id: 201,
+      name: "Repository Sync Blueprint",
+      description: "Repository ingestion and synchronization controls."
+    };
+    const detail = {
+      ...fallback.detail,
+      related_skills: [relatedSkill]
+    };
+    const resources = {
+      ...fallback.resources,
+      entry_file: "README.md",
+      mechanism: "skill_manifest",
+      metadata_sources: ["README.md", "package.json"],
+      reference_paths: ["skills/release-readiness", "docs/release-runbook.md"],
+      dependencies: [
+        { kind: "skill", target: "repository-sync-blueprint" },
+        { kind: "file", target: "templates/release-checklist.md" }
+      ]
+    };
+    const model = buildPublicSkillDetailModel({
+      detail,
+      resources,
+      versions: fallback.versions,
+      resourceContent: fallback.resourceContent,
+      locale: "en",
+      messages: modelMessages
+    });
+
+    const markup = renderToStaticMarkup(
+      createElement(SkillDetailWorkbenchDeferredPanels, {
+        activeTab: "resources",
+        detail,
+        locale: "en",
+        messages: workbenchMessages,
+        model,
+        onOpenFile: vi.fn(),
+        resourceContent: fallback.resourceContent,
+        resources,
+        selectedFileName: fallback.resources.files[0]?.name || ""
+      })
+    );
+
+    expect(markup).toContain('data-testid="skill-detail-source-analysis"');
+    expect(markup).toContain("Source Analysis");
+    expect(markup).toContain("Entry File");
+    expect(markup).toContain("README.md");
+    expect(markup).toContain("Metadata Sources");
+    expect(markup).toContain("Reference Paths");
+    expect(markup).toContain("Dependencies");
+    expect(markup).toContain('href="/skills/201"');
+    expect(markup).toContain('data-as="/light/skills/201"');
+    expect(markup).toContain("templates/release-checklist.md");
   });
 });

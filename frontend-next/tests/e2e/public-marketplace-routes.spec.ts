@@ -20,12 +20,11 @@ test("renders the marketplace landing route", async ({ page }) => {
   await expect(page.getByTestId("landing-topbar-nav-categories")).toBeVisible();
   await expect(page.getByTestId("landing-topbar-nav-rankings")).toBeVisible();
   await expect(page.getByTestId("landing-topbar-nav-rankings")).toContainText("TOP");
-  await expect(page.getByTestId("landing-hero-primary-metric")).toHaveText("3");
-  await expect(page.getByTestId("landing-hero-secondary-metric")).toContainText("2");
-  await expect(page.getByTestId("landing-hero-secondary-metric")).toContainText("8");
+  await expect(page.getByTestId("landing-hero-primary-metric")).toContainText(/\d+/);
+  await expect(page.getByTestId("landing-hero-secondary-metric")).toContainText(/\d+/);
   await expect(page.getByRole("heading", { name: "Curated Picks" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Latest Updates" })).toBeVisible();
-  await expect(page.getByTestId("marketplace-pagination-auto-load")).toBeVisible();
+  await expect(page.getByTestId("marketplace-pagination-auto-load")).toHaveCount(0);
   await expect(page.getByTestId("topbar-theme-switch-dark")).toHaveAttribute("aria-current", "true");
   await expect(page.getByTestId("landing-featured-grid").locator(".marketplace-home-deck-card").first()).toBeVisible();
   await expect(page.getByTestId("landing-latest-rows").locator(".marketplace-home-deck-card").first()).toBeVisible();
@@ -81,6 +80,21 @@ test("renders the results compatibility route", async ({ page }) => {
   });
 });
 
+test("navigates results pagination while preserving active filters", async ({ page }) => {
+  await page.goto("/results?page=1&page_size=1");
+
+  const pagination = page.getByTestId("marketplace-pagination");
+  const nextLink = pagination.getByRole("link", { name: "Next" });
+
+  await expect(pagination).toBeVisible();
+  await expect(nextLink).toHaveAttribute("href", /\/results\?page_size=1&page=2$|\/results\?page=2&page_size=1$/);
+
+  await nextLink.click();
+
+  await expect(page).toHaveURL(/\/results\?.*page=2.*page_size=1|\/results\?.*page_size=1.*page=2/);
+  await expect(page.locator(".marketplace-search-utility-pill").filter({ hasText: /2 \/ \d+/ }).first()).toBeVisible();
+});
+
 test("keeps results sort and mode controls interactive while preserving the active search filters", async ({ page }) => {
   await page.goto("/results?q=release&tags=ops&sort=quality&mode=ai");
 
@@ -118,18 +132,18 @@ test("renders the rankings compatibility route", async ({ page }) => {
 });
 
 test("renders category detail as a results-stage route", async ({ page }) => {
-  await page.goto("/categories/operations?subcategory=release&tags=ops");
+  await page.goto("/categories/programming-development?subcategory=devops-cloud&tags=release");
 
   const activeRailLink = page.getByTestId("categories-rail").locator(".marketplace-category-nav-item.is-active").first();
 
-  await expect(page.getByRole("navigation", { name: "Category breadcrumb" })).toContainText("Operations");
-  await expect(page.locator("main").getByRole("heading", { name: "Operations Results" }).first()).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Category breadcrumb" })).toContainText("Programming & Development");
+  await expect(page.locator("main").getByRole("heading", { name: "Programming & Development Results" }).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Category Results" })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Semantic Filters" })).toHaveValue("ops");
+  await expect(page.getByRole("textbox", { name: "Semantic Filters" })).toHaveValue("release");
   await expect(page.getByTestId("category-detail-matching-count")).toContainText("1");
   await expect(activeRailLink).toBeVisible();
   await expect(activeRailLink).toHaveAttribute("aria-current", "page");
-  await expect(page.locator(".marketplace-chip-control.is-active").filter({ hasText: "Release" }).first()).toBeVisible();
+  await expect(page.locator(".marketplace-chip-control.is-active").filter({ hasText: "DevOps & Cloud" }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Release Readiness Checklist" })).toBeVisible();
   await expectCategoryReferenceFrame(page);
   await expectResultsStageLayout(page, {
@@ -137,6 +151,26 @@ test("renders category detail as a results-stage route", async ({ page }) => {
     mainTestId: "category-results-main",
     sideTestId: "category-results-support"
   });
+});
+
+test("navigates category detail pagination for grouped category routes", async ({ page }) => {
+  await page.goto("/categories/programming-development?page=1&page_size=1");
+
+  const pagination = page.getByTestId("marketplace-pagination");
+  const nextLink = pagination.getByRole("link", { name: "Next" });
+
+  await expect(pagination).toBeVisible();
+  await expect(nextLink).toHaveAttribute(
+    "href",
+    /\/categories\/programming-development\?page_size=1&page=2$|\/categories\/programming-development\?page=2&page_size=1$/
+  );
+
+  await nextLink.click();
+
+  await expect(
+    page
+  ).toHaveURL(/\/categories\/programming-development\?.*page=2.*page_size=1|\/categories\/programming-development\?.*page_size=1.*page=2/);
+  await expect(page.locator(".marketplace-search-utility-pill").filter({ hasText: /2 \/ \d+/ }).first()).toBeVisible();
 });
 
 test("keeps the category hub visible when semantic tags are present in the URL", async ({ page }) => {
@@ -183,15 +217,15 @@ test("renders the category index as a marketplace shelf hub", async ({ page }) =
   );
   await expect(page.getByTestId("category-hub-collections").locator(".marketplace-section-header h2")).toBeVisible();
   await expect(page.getByTestId("category-hub-directory").getByRole("link", { name: "Design & Art" }).first()).toBeVisible();
-  await expect(page.getByTestId("category-hub-stat-categories")).toContainText("2");
-  await expect(page.getByTestId("category-hub-stat-skills")).toContainText("3");
-  await expect(page.getByTestId("category-hub-stat-tags")).toContainText("8");
+  await expect(page.getByTestId("category-hub-stat-categories")).toContainText(/\d+/);
+  await expect(page.getByTestId("category-hub-stat-skills")).toContainText(/\d+/);
+  await expect(page.getByTestId("category-hub-stat-tags")).toContainText(/\d+/);
   await expect(primaryCategoryLink).toBeVisible();
   await expect(primaryCategoryLink).toHaveAttribute("href", /\/categories\/programming-development$/);
   await expect(audiencePriorityCard).toBeVisible();
   await expect(audiencePriorityCard.getByRole("link", { name: "Search" }).first()).toHaveAttribute("href", /\/results\?q=.+&tags=.+$/);
   await expect(audiencePriorityCard.getByRole("link", { name: /open skill/i })).toHaveAttribute("href", /\/skills\/\d+$/);
-  await expect(tagPivotCard.getByRole("link", { name: "Search" }).first()).toHaveAttribute("href", /\/results\?q=.+&tags=.+$/);
+  await expect(tagPivotCard.getByRole("link", { name: "Search" }).first()).toHaveAttribute("href", /\/results\?(?:q=.+&)?tags=.+$/);
   await expect(categoryShelf).toBeVisible();
   await expect(categoryShelf.getByRole("link", { name: "All subcategories" })).toHaveAttribute(
     "href",

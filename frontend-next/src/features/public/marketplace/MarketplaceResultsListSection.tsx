@@ -13,6 +13,7 @@ interface MarketplaceResultsListSectionProps {
   testId?: string;
   className?: string;
   headerMeta?: ReactNode;
+  footerMeta?: ReactNode;
   contentClassName?: string;
 }
 
@@ -25,6 +26,7 @@ export function MarketplaceResultsListSection({
   testId,
   className,
   headerMeta,
+  footerMeta,
   contentClassName
 }: MarketplaceResultsListSectionProps) {
   return (
@@ -36,6 +38,7 @@ export function MarketplaceResultsListSection({
       </div>
 
       <div className={cn("marketplace-list-stack", contentClassName)}>{hasResults ? resultsContent : emptyContent}</div>
+      {hasResults ? footerMeta : null}
     </section>
   );
 }
