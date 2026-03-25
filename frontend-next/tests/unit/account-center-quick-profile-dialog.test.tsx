@@ -1,6 +1,40 @@
-import { createElement } from "react";
+import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/src/components/shared/DetailFormSurface", () => ({
+  DetailFormSurface: ({
+    children,
+    footer,
+    title,
+    description,
+    closeLabel,
+    variant,
+    size
+  }: {
+    children: ReactNode;
+    footer?: ReactNode;
+    title: string;
+    description?: string;
+    closeLabel: string;
+    variant?: string;
+    size?: string;
+  }) =>
+    createElement(
+      "div",
+      {
+        role: "dialog",
+        "aria-label": title,
+        "data-variant": variant,
+        "data-size": size,
+        "data-close-label": closeLabel
+      },
+      createElement("h2", null, title),
+      description ? createElement("p", null, description) : null,
+      children,
+      footer || null
+    )
+}));
 
 import { AccountCenterQuickProfileDialog } from "@/src/components/shared/AccountCenterQuickProfileDialog";
 

@@ -143,12 +143,14 @@ $account-menu-transition: var(--motion-duration-fast) var(--motion-ease-standard
 .card {
   display: grid;
   gap: 6px;
+  max-height: inherit;
   padding: 8px;
   border: 1px solid var(--protected-topbar-account-card-border);
   border-radius: 14px;
   background: var(--protected-topbar-account-card-bg);
   box-shadow: none;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .summary,
 .actions,

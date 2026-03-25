@@ -12,8 +12,19 @@ describe("AccountCenterMenu contracts", () => {
 
     expect(source).toContain("DropdownMenu");
     expect(source).toContain("DropdownMenuContent");
+    expect(source).toContain("DropdownMenuPortal");
     expect(source).toContain("DropdownMenuTrigger");
     expect(source).not.toContain("document.addEventListener(\"pointerdown\"");
     expect(source).not.toContain("document.addEventListener(\"keydown\"");
+  });
+
+  it("keeps the dropdown card scrollable inside the shared viewport cap", () => {
+    const styles = readFileSync(
+      path.resolve(process.cwd(), "src/components/shared/AccountCenterMenu.module.scss"),
+      "utf8"
+    );
+
+    expect(styles).toContain("max-height: inherit;");
+    expect(styles).toContain("overflow-y: auto;");
   });
 });
