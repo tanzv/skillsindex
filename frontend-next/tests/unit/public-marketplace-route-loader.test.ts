@@ -94,7 +94,7 @@ describe("loadPublicMarketplaceRoute", () => {
     });
     expect(result).toEqual({
       ok: false,
-      errorMessage: "backend down"
+      errorMessage: "Failed to load marketplace data."
     });
   });
 });

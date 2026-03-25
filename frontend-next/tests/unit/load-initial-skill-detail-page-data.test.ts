@@ -138,6 +138,6 @@ describe("loadInitialSkillDetailPageData", () => {
     expect(payload.resources).toBeNull();
     expect(payload.versions).toBeNull();
     expect(payload.initialResourceContent).toBeNull();
-    expect(payload.errorMessage).toBe("backend down");
+    expect(payload.errorMessage).toBe("Failed to load skill detail.");
   });
 });

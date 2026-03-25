@@ -72,7 +72,7 @@ describe("loadPublicRankingRoute", () => {
     });
     expect(result).toEqual({
       ok: false,
-      errorMessage: "ranking backend down",
+      errorMessage: "Failed to load rankings.",
       sortKey: "quality",
       leftSkillId: 0,
       rightSkillId: 0

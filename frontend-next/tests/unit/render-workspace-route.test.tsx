@@ -53,6 +53,6 @@ describe("renderWorkspaceRoute", () => {
     const markup = renderToStaticMarkup(element);
 
     expect(markup).toContain("Request failed");
-    expect(markup).toContain("workspace marketplace down");
+    expect(markup).toContain("Failed to load workspace data.");
   });
 });

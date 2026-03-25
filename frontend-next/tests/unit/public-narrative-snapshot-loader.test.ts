@@ -100,7 +100,7 @@ describe("public narrative snapshot loader", () => {
     });
     expect(result).toEqual({
       ok: false,
-      errorMessage: "snapshot backend down"
+      errorMessage: "Failed to load marketplace snapshot."
     });
   });
 });
