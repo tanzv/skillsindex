@@ -1,0 +1,36 @@
+{
+  "profiles": {
+    "skillsindex-backend": {
+      "name": "skillsindex-backend",
+      "runtime": "go",
+      "entry": "./cmd/api",
+      "cwd": "backend",
+      "args": [],
+      "managed": true,
+      "mode": "run",
+      "log_retention": "temporary",
+      "env": {},
+      "prelaunch_task": null,
+      "poststop_task": null
+    },
+    "skillsindex-frontend": {
+      "name": "skillsindex-frontend",
+      "runtime": "node",
+      "entry": "node_modules/next/dist/bin/next",
+      "cwd": "frontend-next",
+      "args": [
+        "start",
+        "--hostname",
+        "127.0.0.1",
+        "--port",
+        "3000"
+      ],
+      "managed": true,
+      "mode": "run",
+      "log_retention": "temporary",
+      "env": {},
+      "prelaunch_task": "npm run build",
+      "poststop_task": null
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { startMockBackend } from "./mock-backend.mjs";
@@ -196,6 +196,8 @@ async function main() {
     );
 
     if (!skipFreshBuild) {
+      rmSync(join(process.cwd(), ".next"), { recursive: true, force: true });
+
       if (requestedBuildReuse && hasBuildOutput && buildMetadata === null) {
         process.stdout.write("[next-build] Existing build output found, but no e2e metadata is available. Rebuilding to bind runtime ports safely.\n");
       }

@@ -23,7 +23,9 @@ describe("frontend-next bootstrap", () => {
       start: "next start",
       lint: "eslint .",
       "test:unit": "vitest run",
-      "test:e2e": "node ./scripts/run-e2e.mjs"
+      "test:e2e": "node ./scripts/run-e2e.mjs",
+      "test:unit:account-menu":
+        "vitest run account-center-menu-contract.test.ts account-center-menu-signout.test.ts account-center-quick-profile-dialog.test.tsx account-center-content.test.ts protected-topbar-configs.test.ts protected-topbar-layout.test.tsx"
     });
   });
 

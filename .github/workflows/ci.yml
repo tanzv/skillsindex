@@ -82,6 +82,9 @@ jobs:
       - name: Run frontend unit tests
         run: npm run test:unit
 
+      - name: Run frontend account menu regression tests
+        run: npm run test:unit:account-menu
+
       - name: Run frontend build
         run: npm run build
 

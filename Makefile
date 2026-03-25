@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help env-init postgres-up bootstrap init-local verify-frontend-env dev-backend dev-frontend dev dev-status verify-backend verify-frontend verify-frontend-real-backend check-lines
+.PHONY: help env-init postgres-up bootstrap init-local sync-lcode-profiles verify-frontend-env dev-backend dev-frontend dev dev-status verify-backend verify-frontend verify-frontend-account-menu verify-frontend-real-backend check-lines
 
 help:
 	@printf '%s\n' \
@@ -10,6 +10,7 @@ help:
 		'  make postgres-up     Start local PostgreSQL with docker compose' \
 		'  make bootstrap       Run backend bootstrap once' \
 		'  make init-local      Prepare env, start PostgreSQL, and run bootstrap' \
+		'  make sync-lcode-profiles Synchronize repository lcode profile contracts locally' \
 		'  make verify-frontend-env Verify frontend backend env alignment before startup' \
 		'  make dev-backend     Start or reuse backend lcode session' \
 		'  make dev-frontend    Start or reuse frontend lcode session' \
@@ -17,6 +18,7 @@ help:
 		'  make dev-status      Show running lcode sessions in JSON' \
 		'  make verify-backend  Run backend tests and vet' \
 		'  make verify-frontend Run frontend lint, unit tests, and build' \
+		'  make verify-frontend-account-menu Run the focused frontend account-menu regression suite' \
 		'  make verify-frontend-real-backend Run frontend smoke tests against a real backend (requires a bootstrapped local database)' \
 		'  make check-lines     Run repository max-lines check'
 
@@ -32,6 +34,9 @@ bootstrap:
 	cd backend && go run ./cmd/bootstrap
 
 init-local: env-init postgres-up bootstrap
+
+sync-lcode-profiles:
+	python3 scripts/dev/ensure_lcode_profiles.py
 
 verify-frontend-env:
 	python3 scripts/dev/check_frontend_backend_env.py
@@ -52,6 +57,9 @@ verify-backend:
 
 verify-frontend:
 	cd frontend-next && npm run lint && npm run test:unit && npm run build
+
+verify-frontend-account-menu:
+	cd frontend-next && npm run test:unit:account-menu
 
 verify-frontend-real-backend:
 	./scripts/run_frontend_real_backend_smoke.sh
