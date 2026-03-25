@@ -63,6 +63,14 @@ export function normalizeRoleName(value: string): string {
   return normalizeAdminRoleName(value);
 }
 
+export function normalizeAssignableRoleName(value: string): string {
+  const role = normalizeRoleName(value);
+  if (role === "super_admin" || role === "admin" || role === "member" || role === "viewer") {
+    return role;
+  }
+  return "member";
+}
+
 export function resolveRoleTargetUserId(roleEditorUserId: string, selectedAccountId: number | null): number | null {
   const explicitUserId = asString(roleEditorUserId).trim();
   if (explicitUserId) {

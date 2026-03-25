@@ -150,7 +150,6 @@ function updateUserRoleAction(): ActionDefinition {
         options: [
           { label: "Super Admin", value: "super_admin" },
           { label: "Admin", value: "admin" },
-          { label: "Auditor", value: "auditor" },
           { label: "Member", value: "member" },
           { label: "Viewer", value: "viewer" }
         ]

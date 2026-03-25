@@ -248,6 +248,34 @@ describe("admin access model", () => {
     expect(overview.roleSummary).toEqual(expect.arrayContaining([expect.objectContaining({ role: "admin", count: 1 })]));
   });
 
+  it("normalizes unsupported legacy account roles to member so governance views match backend effective role checks", () => {
+    const data = buildAdminAccessGovernanceData({
+      accounts: {
+        total: 1,
+        items: [
+          {
+            id: 7,
+            username: "legacy.auditor",
+            role: "auditor",
+            status: "active",
+            created_at: "2026-03-01T00:00:00Z",
+            updated_at: "2026-03-02T00:00:00Z"
+          }
+        ]
+      },
+      registration: { allow_registration: true, marketplace_public_access: true },
+      marketplaceRanking: {},
+      categoryCatalog: { items: [] },
+      presentationTaxonomy: { items: [] },
+      authProviders: { auth_providers: [], available_auth_providers: [] }
+    });
+
+    expect(data.accounts[0]?.role).toBe("member");
+
+    const overview = buildAccessOverview(data);
+    expect(overview.roleSummary).toEqual([{ role: "member", count: 1 }]);
+  });
+
   it("resolves selected access account by id", () => {
     const selectedAccount = resolveSelectedAccessAccount(
       [

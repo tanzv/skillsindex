@@ -34,8 +34,8 @@ test("executes admin account lifecycle and role actions through inline work pane
 
   await page.getByLabel("Search accounts").fill("operator");
   await roleWorkPane.getByLabel("Role target user ID").fill("2");
-  await roleWorkPane.getByLabel("Target role").selectOption("auditor");
+  await roleWorkPane.getByLabel("Target role").selectOption("viewer");
   await roleWorkPane.getByRole("button", { name: "Apply Role" }).click();
   await expect(page.getByText("Role updated for user 2.")).toBeVisible();
-  await expect(page.getByTestId("admin-account-card-2")).toContainText(/auditor/i);
+  await expect(page.getByTestId("admin-account-card-2")).toContainText(/viewer/i);
 });

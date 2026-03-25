@@ -35,7 +35,7 @@ import {
   normalizeAccountsPayload,
   normalizeAuthProvidersPayload,
   normalizeAccountStatus,
-  normalizeRoleName,
+  normalizeAssignableRoleName,
   resolveSelectedAdminAccount,
   resolveRoleTargetUserId,
   normalizeRegistrationPayload,
@@ -288,7 +288,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       normalizeAccountStatus(selectedAccount.status) === "disabled"
         ? "disabled"
         : "active";
-    const nextRole = normalizeRoleName(selectedAccount.role);
+    const nextRole = normalizeAssignableRoleName(selectedAccount.role);
 
     if (accountEditorRef.current.userId !== nextUserId) {
       const nextAccountEditor = {

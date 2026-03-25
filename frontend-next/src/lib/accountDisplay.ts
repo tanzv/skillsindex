@@ -8,10 +8,10 @@ export interface AccountDisplayMessages {
   statusLabelUnknown: string;
   roleLabelSuperAdmin: string;
   roleLabelAdmin: string;
-  roleLabelAuditor: string;
   roleLabelMember: string;
   roleLabelViewer: string;
   roleLabelUnknown: string;
+  roleLabelAuditor?: string;
 }
 
 export type AccountsDisplayMessages = Pick<
@@ -22,7 +22,6 @@ export type AccountsDisplayMessages = Pick<
   | "statusLabelUnknown"
   | "roleLabelSuperAdmin"
   | "roleLabelAdmin"
-  | "roleLabelAuditor"
   | "roleLabelMember"
   | "roleLabelViewer"
   | "roleLabelUnknown"
@@ -36,7 +35,6 @@ export type AccessDisplayMessages = Pick<
   | "statusLabelUnknown"
   | "roleLabelSuperAdmin"
   | "roleLabelAdmin"
-  | "roleLabelAuditor"
   | "roleLabelMember"
   | "roleLabelViewer"
   | "roleLabelUnknown"
@@ -85,7 +83,7 @@ export function resolveAccountRoleLabel(role: string, messages: AccountDisplayMe
     return messages.roleLabelAdmin;
   }
   if (normalized === "auditor") {
-    return messages.roleLabelAuditor;
+    return messages.roleLabelAuditor || messages.roleLabelMember;
   }
   if (normalized === "member") {
     return messages.roleLabelMember;

@@ -9,12 +9,11 @@ import { resolveAccountRoleLabel, resolveAccountUsernameLabel } from "@/src/lib/
 
 import { type AdminAccountItem, type AuthProvidersPayload, type RegistrationPayload } from "./model";
 
-const roleOptions = ["super_admin", "admin", "auditor", "member", "viewer"];
+const roleOptions = ["super_admin", "admin", "member", "viewer"];
 
 const roleGuidance = [
   { role: "super_admin" },
   { role: "admin" },
-  { role: "auditor" },
   { role: "member" },
   { role: "viewer" }
 ] as const;
@@ -285,9 +284,7 @@ export function RolePlaybookPanel() {
                 ? accountMessages.roleGuidanceSuperAdmin
                 : item.role === "admin"
                   ? accountMessages.roleGuidanceAdmin
-                  : item.role === "auditor"
-                    ? accountMessages.roleGuidanceAuditor
-                    : item.role === "member"
+                  : item.role === "member"
                       ? accountMessages.roleGuidanceMember
                       : accountMessages.roleGuidanceViewer}
             </p>
