@@ -40,11 +40,11 @@ func parseOptionalAdminAccountStatusFilter(raw string) (*models.UserStatus, bool
 func requireAdminUserManagementAPI(w http.ResponseWriter, r *http.Request) (*models.User, bool) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return nil, false
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return nil, false
 	}
 	return user, true
@@ -53,13 +53,13 @@ func requireAdminUserManagementAPI(w http.ResponseWriter, r *http.Request) (*mod
 func (a *App) loadAdminManagedUserTarget(w http.ResponseWriter, r *http.Request) (uint, models.User, bool) {
 	targetUserID, err := parseUintURLParam(r, "userID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_user_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_user_id", "Invalid user id")
 		return 0, models.User{}, false
 	}
 
 	target, err := a.findManagedAccountByID(r.Context(), targetUserID)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "user_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "user_not_found", "User not found")
 		return 0, models.User{}, false
 	}
 	return targetUserID, target, true
@@ -70,18 +70,18 @@ func (a *App) handleAPIAdminAccounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Authentication service unavailable")
 		return
 	}
 
 	role, ok := parseOptionalAdminAccountRoleFilter(r.URL.Query().Get("role"))
 	if !ok {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_role"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_role", "Invalid role filter")
 		return
 	}
 	status, ok := parseOptionalAdminAccountStatusFilter(r.URL.Query().Get("status"))
 	if !ok {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_status"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_status", "Invalid status filter")
 		return
 	}
 
@@ -91,7 +91,7 @@ func (a *App) handleAPIAdminAccounts(w http.ResponseWriter, r *http.Request) {
 		Status: status,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "list_failed", err, "Failed to list accounts")
 		return
 	}
 	items := make([]apiAdminAccountItem, 0, len(accounts))
@@ -117,18 +117,18 @@ func (a *App) handleAPIAdminAccountStatus(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Authentication service unavailable")
 		return
 	}
 
 	statusRaw, decodeErr := readStringField(r, "status")
 	if decodeErr != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": decodeErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", decodeErr, "Invalid request payload")
 		return
 	}
 	status, ok := parseUserStatus(statusRaw)
 	if !ok {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_status"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_status", "Invalid status")
 		return
 	}
 	targetUserID, target, ok := a.loadAdminManagedUserTarget(w, r)
@@ -136,16 +136,16 @@ func (a *App) handleAPIAdminAccountStatus(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if targetUserID == user.ID && status == models.UserStatusDisabled {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "cannot_disable_current_account"})
+		writeAPIError(w, r, http.StatusBadRequest, "cannot_disable_current_account", "Current account cannot be disabled")
 		return
 	}
 
 	if err := a.updateManagedAccountStatus(r.Context(), targetUserID, status); err != nil {
 		switch {
 		case errors.Is(err, services.ErrLastSuperAdmin):
-			writeJSON(w, http.StatusConflict, map[string]any{"error": "last_super_admin_guard"})
+			writeAPIError(w, r, http.StatusConflict, "last_super_admin_guard", "Cannot remove the last super admin")
 		default:
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "update_failed", "message": err.Error()})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "update_failed", err, "Failed to update account status")
 		}
 		return
 	}
@@ -170,7 +170,7 @@ func (a *App) handleAPIAdminAccountForceSignout(w http.ResponseWriter, r *http.R
 		return
 	}
 	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Authentication service unavailable")
 		return
 	}
 
@@ -179,7 +179,7 @@ func (a *App) handleAPIAdminAccountForceSignout(w http.ResponseWriter, r *http.R
 		return
 	}
 	if err := a.forceSignOutManagedAccount(r.Context(), targetUserID); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "force_signout_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "force_signout_failed", err, "Failed to force sign out account")
 		return
 	}
 
@@ -202,16 +202,16 @@ func (a *App) handleAPIAdminAccountPasswordReset(w http.ResponseWriter, r *http.
 		return
 	}
 	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Authentication service unavailable")
 		return
 	}
 	password, decodeErr := readStringField(r, "new_password")
 	if decodeErr != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": decodeErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", decodeErr, "Invalid request payload")
 		return
 	}
 	if len(strings.TrimSpace(password)) < 8 {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_password"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_password", "Password must be at least 8 characters")
 		return
 	}
 
@@ -220,7 +220,7 @@ func (a *App) handleAPIAdminAccountPasswordReset(w http.ResponseWriter, r *http.
 		return
 	}
 	if err := a.resetManagedAccountPassword(r.Context(), targetUserID, password); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "reset_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "reset_failed", err, "Failed to reset password")
 		return
 	}
 

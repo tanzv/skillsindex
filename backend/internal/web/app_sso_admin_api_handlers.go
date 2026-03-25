@@ -113,40 +113,40 @@ func resultToAPIAdminSSOProviderItem(item models.IntegrationConnector) apiAdminS
 func (a *App) handleAPIAdminSSOProviderCreate(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.integrationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Integration service is unavailable")
 		return
 	}
 
 	input, err := readAPIAdminSSOProviderCreateInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 	provider := normalizeSSOProvider(input.Provider)
 	if provider == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "provider_required"})
+		writeAPIError(w, r, http.StatusBadRequest, "provider_required", "Provider is required")
 		return
 	}
 
 	if _, err := a.integrationSvc.GetConnectorByProvider(r.Context(), provider, true); err == nil {
-		writeJSON(w, http.StatusConflict, map[string]any{"error": "provider_exists"})
+		writeAPIError(w, r, http.StatusConflict, "provider_exists", "Provider already exists")
 		return
 	} else if !errors.Is(err, services.ErrIntegrationConnectorNotFound) {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "provider_query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "provider_query_failed", err, "Failed to load SSO provider")
 		return
 	}
 
 	rawConfig, err := marshalSSOConnectorConfig(input)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "config_serialize_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "config_serialize_failed", err, "Failed to serialize SSO provider configuration")
 		return
 	}
 
@@ -164,7 +164,7 @@ func (a *App) handleAPIAdminSSOProviderCreate(w http.ResponseWriter, r *http.Req
 		CreatedBy:   user.ID,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "create_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "create_failed", err, "Failed to create SSO provider")
 		return
 	}
 
@@ -187,30 +187,30 @@ func (a *App) handleAPIAdminSSOProviderCreate(w http.ResponseWriter, r *http.Req
 func (a *App) handleAPIAdminSSOProviderDisable(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.integrationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Integration service is unavailable")
 		return
 	}
 
 	providerID, err := parseUintURLParam(r, "providerID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_provider_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_provider_id", "Invalid provider id")
 		return
 	}
 	updated, err := a.integrationSvc.SetConnectorEnabled(r.Context(), providerID, false)
 	if err != nil {
 		if errors.Is(err, services.ErrIntegrationConnectorNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "provider_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "provider_not_found", "Provider not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "disable_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "disable_failed", err, "Failed to disable SSO provider")
 		return
 	}
 
@@ -232,38 +232,38 @@ func (a *App) handleAPIAdminSSOProviderDisable(w http.ResponseWriter, r *http.Re
 func (a *App) handleAPIAdminSSOUsersSync(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.authService == nil || a.oauthGrantService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "SSO sync services are unavailable")
 		return
 	}
 
 	input, err := readAPIAdminSSOUsersSyncInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 	if input.Provider == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "provider_required"})
+		writeAPIError(w, r, http.StatusBadRequest, "provider_required", "Provider is required")
 		return
 	}
 	if len(input.DisabledExternalIDs) == 0 {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "disabled_external_ids_required"})
+		writeAPIError(w, r, http.StatusBadRequest, "disabled_external_ids_required", "Disabled external ids are required")
 		return
 	}
 	forceSignOut, err := a.resolveSSOProviderDefaultForceSignOut(r.Context(), input.Provider)
 	if err != nil {
 		if errors.Is(err, services.ErrIntegrationConnectorNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "provider_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "provider_not_found", "Provider not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "policy_query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "policy_query_failed", err, "Failed to load SSO provider policy")
 		return
 	}
 	if input.ForceSignOut != nil {
@@ -277,11 +277,11 @@ func (a *App) handleAPIAdminSSOUsersSync(w http.ResponseWriter, r *http.Request)
 			continue
 		}
 		if findErr != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "mapping_query_failed", "message": findErr.Error()})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "mapping_query_failed", findErr, "Failed to resolve SSO user mapping")
 			return
 		}
 		if statusErr := a.authService.SetUserStatus(r.Context(), targetUser.ID, models.UserStatusDisabled); statusErr != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "disable_user_failed", "message": statusErr.Error()})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "disable_user_failed", statusErr, "Failed to disable SSO user")
 			return
 		}
 		if forceSignOut {

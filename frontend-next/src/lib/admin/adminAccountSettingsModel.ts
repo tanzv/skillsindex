@@ -129,7 +129,11 @@ export function normalizeAdminAccountStatus(value: string): string {
 }
 
 export function normalizeAdminRoleName(value: string): string {
-  return asString(value).toLowerCase() || "member";
+  const normalized = asString(value).toLowerCase();
+  if (normalized === "viewer" || normalized === "member" || normalized === "admin" || normalized === "super_admin") {
+    return normalized;
+  }
+  return "member";
 }
 
 export function normalizeAdminAccountsPayload(payload: unknown): AdminNormalizedAccountsPayload {
@@ -141,7 +145,7 @@ export function normalizeAdminAccountsPayload(payload: unknown): AdminNormalized
     items: items.map((item) => ({
       id: asNumber(item.id),
       username: asString(item.username) || "unknown",
-      role: asString(item.role) || "member",
+      role: normalizeAdminRoleName(asString(item.role)),
       status: asString(item.status) || "unknown",
       createdAt: asString(item.created_at),
       updatedAt: asString(item.updated_at),

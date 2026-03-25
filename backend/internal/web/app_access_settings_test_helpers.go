@@ -55,20 +55,22 @@ func setupAccessSettingsTestApp(t *testing.T) *App {
 		integrationSvc:  services.NewIntegrationService(db),
 		organizationSvc: services.NewOrganizationService(db),
 		settingsService: settingsSvc,
-		syncPolicyService: services.NewRepositorySyncPolicyService(settingsSvc, services.RepositorySyncPolicy{
-			Enabled:   false,
-			Interval:  30 * time.Minute,
-			Timeout:   10 * time.Minute,
-			BatchSize: 20,
-		}),
-		syncPolicyRecordSvc: services.NewSyncPolicyService(db),
-		syncJobSvc:          syncJobSvc,
-		asyncJobSvc:         asyncJobSvc,
-		skillVersionSvc:     services.NewSkillVersionService(db),
-		auditService:        auditSvc,
-		syncGovernanceSvc:   services.NewSyncGovernanceService(asyncJobSvc, syncJobSvc, nil, auditSvc),
-		opsService:          services.NewOpsService(db),
-		allowRegistration:   true,
+		syncRuntimeDependencies: syncRuntimeDependencies{
+			syncPolicyService: services.NewRepositorySyncPolicyService(settingsSvc, services.RepositorySyncPolicy{
+				Enabled:   false,
+				Interval:  30 * time.Minute,
+				Timeout:   10 * time.Minute,
+				BatchSize: 20,
+			}),
+			syncPolicyRecordSvc: services.NewSyncPolicyService(db),
+			syncJobSvc:          syncJobSvc,
+			asyncJobSvc:         asyncJobSvc,
+			syncGovernanceSvc:   services.NewSyncGovernanceService(asyncJobSvc, syncJobSvc, nil, auditSvc),
+		},
+		skillVersionSvc:   services.NewSkillVersionService(db),
+		auditService:      auditSvc,
+		opsService:        services.NewOpsService(db),
+		allowRegistration: true,
 	}
 }
 

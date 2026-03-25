@@ -14,6 +14,7 @@ import (
 func TestAPIAdminAuthProvidersSettingUnauthorized(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/settings/auth-providers", nil)
+	req.Header.Set("X-Request-ID", "req-auth-providers-setting-unauthorized")
 	recorder := httptest.NewRecorder()
 
 	app.handleAPIAdminAuthProvidersSetting(recorder, req)
@@ -21,11 +22,22 @@ func TestAPIAdminAuthProvidersSettingUnauthorized(t *testing.T) {
 	if recorder.Code != http.StatusUnauthorized {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
 	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-auth-providers-setting-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
 }
 
 func TestAPIAdminAuthProvidersSettingForbidden(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/settings/auth-providers", nil)
+	req.Header.Set("X-Request-ID", "req-auth-providers-setting-forbidden")
 	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleAdmin})
 	recorder := httptest.NewRecorder()
 
@@ -34,12 +46,23 @@ func TestAPIAdminAuthProvidersSettingForbidden(t *testing.T) {
 	if recorder.Code != http.StatusForbidden {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusForbidden)
 	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "permission_denied" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Permission denied" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-auth-providers-setting-forbidden" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
 }
 
 func TestAPIAdminAuthProvidersSettingServiceUnavailable(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	app.settingsService = nil
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/settings/auth-providers", nil)
+	req.Header.Set("X-Request-ID", "req-auth-providers-setting-service-unavailable")
 	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleSuperAdmin})
 	recorder := httptest.NewRecorder()
 
@@ -47,6 +70,16 @@ func TestAPIAdminAuthProvidersSettingServiceUnavailable(t *testing.T) {
 
 	if recorder.Code != http.StatusServiceUnavailable {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusServiceUnavailable)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "service_unavailable" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Settings service is unavailable" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-auth-providers-setting-service-unavailable" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -81,6 +114,7 @@ func TestAPIAdminAuthProvidersSettingUpdateUnauthorized(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/settings/auth-providers", strings.NewReader(`{"auth_providers":"github"}`))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-auth-providers-update-unauthorized")
 	recorder := httptest.NewRecorder()
 
 	app.handleAPIAdminAuthProvidersSettingUpdate(recorder, req)
@@ -88,12 +122,23 @@ func TestAPIAdminAuthProvidersSettingUpdateUnauthorized(t *testing.T) {
 	if recorder.Code != http.StatusUnauthorized {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
 	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-auth-providers-update-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
 }
 
 func TestAPIAdminAuthProvidersSettingUpdateForbidden(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/settings/auth-providers", strings.NewReader(`{"auth_providers":"github"}`))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-auth-providers-update-forbidden")
 	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleAdmin})
 	recorder := httptest.NewRecorder()
 
@@ -102,6 +147,16 @@ func TestAPIAdminAuthProvidersSettingUpdateForbidden(t *testing.T) {
 	if recorder.Code != http.StatusForbidden {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusForbidden)
 	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "permission_denied" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Permission denied" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-auth-providers-update-forbidden" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
 }
 
 func TestAPIAdminAuthProvidersSettingUpdateServiceUnavailable(t *testing.T) {
@@ -109,6 +164,7 @@ func TestAPIAdminAuthProvidersSettingUpdateServiceUnavailable(t *testing.T) {
 	app.settingsService = nil
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/settings/auth-providers", strings.NewReader(`{"auth_providers":"github"}`))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-auth-providers-update-service-unavailable")
 	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleSuperAdmin})
 	recorder := httptest.NewRecorder()
 
@@ -116,6 +172,16 @@ func TestAPIAdminAuthProvidersSettingUpdateServiceUnavailable(t *testing.T) {
 
 	if recorder.Code != http.StatusServiceUnavailable {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusServiceUnavailable)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "service_unavailable" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Settings service is unavailable" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-auth-providers-update-service-unavailable" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -187,6 +253,7 @@ func TestAPIAdminAuthProvidersSettingUpdateInvalidPayload(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/settings/auth-providers", strings.NewReader(`{"auth_providers":[1,"github"]}`))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-auth-providers-update-invalid-payload")
 	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleSuperAdmin})
 	recorder := httptest.NewRecorder()
 
@@ -194,6 +261,16 @@ func TestAPIAdminAuthProvidersSettingUpdateInvalidPayload(t *testing.T) {
 
 	if recorder.Code != http.StatusBadRequest {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_payload" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "auth_providers[0] must be string" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-auth-providers-update-invalid-payload" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 

@@ -66,7 +66,6 @@ function createMessages() {
       statusLabelUnknown: "Unknown",
       roleLabelSuperAdmin: "Super Admin",
       roleLabelAdmin: "Admin",
-      roleLabelAuditor: "Auditor",
       roleLabelMember: "Member",
       roleLabelViewer: "Viewer",
       roleLabelUnknown: "Unknown",
@@ -98,7 +97,7 @@ function renderAccessContent(options: { activePane?: "idle" | "policy" | "accoun
             {
               id: 3,
               username: "reviewer",
-              role: "auditor",
+              role: "member",
               status: "active",
               createdAt: "2026-03-16T10:00:00Z",
               updatedAt: "2026-03-16T11:00:00Z",
@@ -150,13 +149,13 @@ function renderAccessContent(options: { activePane?: "idle" | "policy" | "accoun
             { label: "Accounts", value: "1" },
             { label: "Enabled Providers", value: "1" }
           ],
-          roleSummary: [{ role: "auditor", count: 1 }]
+          roleSummary: [{ role: "member", count: 1 }]
         },
         filteredAccounts: [
           {
             id: 3,
             username: "reviewer",
-            role: "auditor",
+            role: "member",
             status: "active",
             createdAt: "2026-03-16T10:00:00Z",
             updatedAt: "2026-03-16T11:00:00Z",
@@ -166,7 +165,7 @@ function renderAccessContent(options: { activePane?: "idle" | "policy" | "accoun
         selectedAccount: {
           id: 3,
           username: "reviewer",
-          role: "auditor",
+          role: "member",
           status: "active",
           createdAt: "2026-03-16T10:00:00Z",
           updatedAt: "2026-03-16T11:00:00Z",

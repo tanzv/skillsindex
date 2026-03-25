@@ -54,12 +54,25 @@ type apiAdminAuthProviderConfigDetail struct {
 	DefaultUserRole        string `json:"default_user_role"`
 }
 
+func writeAPIAdminAuthProviderConfigServiceUnavailable(w http.ResponseWriter, r *http.Request, app *App) {
+	switch {
+	case app == nil:
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Auth provider services are unavailable")
+	case app.settingsService == nil:
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Settings service is unavailable")
+	case app.integrationSvc == nil:
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Integration service is unavailable")
+	default:
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Auth provider services are unavailable")
+	}
+}
+
 func (a *App) handleAPIAdminAuthProviderConfigs(w http.ResponseWriter, r *http.Request) {
 	if _, ok := requireAdminUserManagementAPI(w, r); !ok {
 		return
 	}
 	if a.settingsService == nil || a.integrationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIAdminAuthProviderConfigServiceUnavailable(w, r, a)
 		return
 	}
 
@@ -67,7 +80,7 @@ func (a *App) handleAPIAdminAuthProviderConfigs(w http.ResponseWriter, r *http.R
 	for _, key := range authProviderOrder {
 		detail, err := a.buildAPIAdminAuthProviderConfigDetail(r.Context(), key)
 		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "provider_query_failed", "message": err.Error()})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "provider_query_failed", err, "Failed to load auth provider configuration")
 			return
 		}
 		items = append(items, detail.apiAdminAuthProviderConfigItem)
@@ -84,19 +97,19 @@ func (a *App) handleAPIAdminAuthProviderConfigDetail(w http.ResponseWriter, r *h
 		return
 	}
 	if a.settingsService == nil || a.integrationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIAdminAuthProviderConfigServiceUnavailable(w, r, a)
 		return
 	}
 
 	provider := normalizeManagedAuthProviderKey(chi.URLParam(r, "provider"))
 	if provider == "" {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "provider_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "provider_not_found", "Provider not found")
 		return
 	}
 
 	item, err := a.buildAPIAdminAuthProviderConfigDetail(r.Context(), provider)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "provider_query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "provider_query_failed", err, "Failed to load auth provider configuration")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -111,18 +124,18 @@ func (a *App) handleAPIAdminAuthProviderConfigUpsert(w http.ResponseWriter, r *h
 		return
 	}
 	if a.settingsService == nil || a.integrationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIAdminAuthProviderConfigServiceUnavailable(w, r, a)
 		return
 	}
 
 	input, err := readAPIAdminSSOProviderCreateInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 	provider := normalizeManagedAuthProviderKey(input.Provider)
 	if provider == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "provider_required"})
+		writeAPIError(w, r, http.StatusBadRequest, "provider_required", "Provider is required")
 		return
 	}
 	definition, _ := authProviderDefinitionFor(provider)
@@ -137,7 +150,7 @@ func (a *App) handleAPIAdminAuthProviderConfigUpsert(w http.ResponseWriter, r *h
 
 	rawConfig, err := marshalSSOConnectorConfig(input)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "config_serialize_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "config_serialize_failed", err, "Failed to serialize auth provider configuration")
 		return
 	}
 	if _, err := parseSSOConnectorConfig(models.IntegrationConnector{
@@ -146,7 +159,7 @@ func (a *App) handleAPIAdminAuthProviderConfigUpsert(w http.ResponseWriter, r *h
 		ConfigJSON: rawConfig,
 		Enabled:    true,
 	}); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_provider_config", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_provider_config", err, "Invalid auth provider configuration")
 		return
 	}
 
@@ -162,7 +175,7 @@ func (a *App) handleAPIAdminAuthProviderConfigUpsert(w http.ResponseWriter, r *h
 			ConfigJSON:  rawConfig,
 			Enabled:     &enabled,
 		}); err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "update_failed", "message": err.Error()})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "update_failed", err, "Failed to update auth provider configuration")
 			return
 		}
 	case errors.Is(err, services.ErrIntegrationConnectorNotFound):
@@ -175,23 +188,23 @@ func (a *App) handleAPIAdminAuthProviderConfigUpsert(w http.ResponseWriter, r *h
 			Enabled:     true,
 			CreatedBy:   user.ID,
 		}); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "create_failed", "message": err.Error()})
+			writeAPIErrorFromError(w, r, http.StatusBadRequest, "create_failed", err, "Failed to create auth provider configuration")
 			return
 		}
 		statusCode = http.StatusCreated
 	default:
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "provider_query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "provider_query_failed", err, "Failed to load auth provider configuration")
 		return
 	}
 
 	if _, err := a.setEnabledAuthProvider(r.Context(), provider, true); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "visibility_update_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "visibility_update_failed", err, "Failed to update auth provider visibility")
 		return
 	}
 
 	item, err := a.buildAPIAdminAuthProviderConfigDetail(r.Context(), provider)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "provider_query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "provider_query_failed", err, "Failed to load auth provider configuration")
 		return
 	}
 
@@ -218,38 +231,38 @@ func (a *App) handleAPIAdminAuthProviderConfigDisable(w http.ResponseWriter, r *
 		return
 	}
 	if a.settingsService == nil || a.integrationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIAdminAuthProviderConfigServiceUnavailable(w, r, a)
 		return
 	}
 
 	provider := normalizeManagedAuthProviderKey(chi.URLParam(r, "provider"))
 	if provider == "" {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "provider_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "provider_not_found", "Provider not found")
 		return
 	}
 
 	connector, err := a.integrationSvc.GetConnectorByProvider(r.Context(), provider, true)
 	if err != nil {
 		if errors.Is(err, services.ErrIntegrationConnectorNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "provider_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "provider_not_found", "Provider not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "provider_query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "provider_query_failed", err, "Failed to load auth provider configuration")
 		return
 	}
 
 	if _, err := a.integrationSvc.SetConnectorEnabled(r.Context(), connector.ID, false); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "disable_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "disable_failed", err, "Failed to disable auth provider")
 		return
 	}
 	if _, err := a.setEnabledAuthProvider(r.Context(), provider, false); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "visibility_update_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "visibility_update_failed", err, "Failed to update auth provider visibility")
 		return
 	}
 
 	item, err := a.buildAPIAdminAuthProviderConfigDetail(r.Context(), provider)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "provider_query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "provider_query_failed", err, "Failed to load auth provider configuration")
 		return
 	}
 
@@ -285,18 +298,18 @@ func (a *App) buildAPIAdminAuthProviderConfigDetail(ctx context.Context, key str
 			Configurable:   true,
 			Enabled:        enabledSet[key],
 		},
-		Name:               definition.DefaultDisplayName,
-		Provider:           definition.Key,
-		Scope:              "openid profile email",
-		ClaimExternalID:    "sub",
-		ClaimUsername:      "preferred_username",
-		ClaimEmail:         "email",
-		ClaimEmailVerified: "email_verified",
-		ClaimGroups:        "groups",
-		OffboardingMode:    ssoOffboardingDisableOnly,
-		MappingMode:        ssoMappingExternalEmailUsername,
-		DefaultOrgRole:     string(models.OrganizationRoleMember),
-		DefaultUserRole:    string(models.RoleMember),
+		Name:                 definition.DefaultDisplayName,
+		Provider:             definition.Key,
+		Scope:                "openid profile email",
+		ClaimExternalID:      "sub",
+		ClaimUsername:        "preferred_username",
+		ClaimEmail:           "email",
+		ClaimEmailVerified:   "email_verified",
+		ClaimGroups:          "groups",
+		OffboardingMode:      ssoOffboardingDisableOnly,
+		MappingMode:          ssoMappingExternalEmailUsername,
+		DefaultOrgRole:       string(models.OrganizationRoleMember),
+		DefaultUserRole:      string(models.RoleMember),
 		DefaultOrgGroupRules: "[]",
 	}
 

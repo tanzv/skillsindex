@@ -15,14 +15,14 @@ func (a *App) handleAPIAdminAuthProvidersSetting(w http.ResponseWriter, r *http.
 		return
 	}
 	if a.settingsService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Settings service is unavailable")
 		return
 	}
 
 	defaultValue := strings.Join(authProviderOrder, ",")
 	rawProviders, err := a.settingsService.Get(r.Context(), services.SettingAuthEnabledProviders, defaultValue)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "query_failed", "Failed to load auth providers setting")
 		return
 	}
 
@@ -39,19 +39,19 @@ func (a *App) handleAPIAdminAuthProvidersSettingUpdate(w http.ResponseWriter, r 
 		return
 	}
 	if a.settingsService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Settings service is unavailable")
 		return
 	}
 
 	rawProviders, err := readAuthProvidersField(r, "auth_providers")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid auth providers payload")
 		return
 	}
 	providers := normalizeAuthProviderList(rawProviders)
 	serialized := strings.Join(providers, ",")
 	if err := a.settingsService.Set(r.Context(), services.SettingAuthEnabledProviders, serialized); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "update_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "update_failed", "Failed to update auth providers setting")
 		return
 	}
 

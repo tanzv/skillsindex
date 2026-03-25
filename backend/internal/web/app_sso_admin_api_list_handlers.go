@@ -10,15 +10,15 @@ import (
 func (a *App) handleAPIAdminSSOProviders(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.integrationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Integration service is unavailable")
 		return
 	}
 
@@ -27,7 +27,7 @@ func (a *App) handleAPIAdminSSOProviders(w http.ResponseWriter, r *http.Request)
 	if rawProvider != "" {
 		provider = normalizeSSOProvider(rawProvider)
 		if provider == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_provider"})
+			writeAPIError(w, r, http.StatusBadRequest, "invalid_provider", "Invalid provider")
 			return
 		}
 	}
@@ -46,7 +46,7 @@ func (a *App) handleAPIAdminSSOProviders(w http.ResponseWriter, r *http.Request)
 		Limit:           limit,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
+		writeAPIError(w, r, http.StatusInternalServerError, "list_failed", "Failed to list SSO providers")
 		return
 	}
 

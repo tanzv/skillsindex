@@ -11,6 +11,33 @@ import (
 	"skillsindex/internal/services"
 )
 
+func TestAPIAdminAuthProviderConfigsServiceUnavailable(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	app.settingsService = nil
+	admin := &models.User{ID: 1, Role: models.RoleSuperAdmin}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/auth-provider-configs", nil)
+	req.Header.Set("X-Request-ID", "req-admin-auth-provider-configs-service-unavailable")
+	req = withCurrentUser(req, admin)
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminAuthProviderConfigs(recorder, req)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusServiceUnavailable)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "service_unavailable" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Settings service is unavailable" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-auth-provider-configs-service-unavailable" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestAPIAdminAuthProviderConfigsListIncludesConfiguredProviders(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	admin := &models.User{ID: 1, Role: models.RoleSuperAdmin}
@@ -111,6 +138,57 @@ func TestAPIAdminAuthProviderConfigUpsertCreatesConnectorAndEnablesProvider(t *t
 	}
 }
 
+func TestAPIAdminAuthProviderConfigUpsertInvalidPayload(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	admin := &models.User{ID: 1, Role: models.RoleSuperAdmin}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/auth-provider-configs", strings.NewReader(`{"provider":`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-admin-auth-provider-config-upsert-invalid-payload")
+	req = withCurrentUser(req, admin)
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminAuthProviderConfigUpsert(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_payload" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-auth-provider-config-upsert-invalid-payload" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestAPIAdminAuthProviderConfigUpsertProviderRequired(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	admin := &models.User{ID: 1, Role: models.RoleSuperAdmin}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/auth-provider-configs", strings.NewReader(`{"provider":"  "}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-admin-auth-provider-config-upsert-provider-required")
+	req = withCurrentUser(req, admin)
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminAuthProviderConfigUpsert(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "provider_required" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Provider is required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-auth-provider-config-upsert-provider-required" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestAPIAdminAuthProviderConfigDisableTurnsOffConnectorAndVisibility(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	admin := &models.User{ID: 1, Role: models.RoleSuperAdmin}
@@ -155,5 +233,32 @@ func TestAPIAdminAuthProviderConfigDisableTurnsOffConnectorAndVisibility(t *test
 	}
 	if persisted != "github" {
 		t.Fatalf("unexpected persisted setting: got=%q want=%q", persisted, "github")
+	}
+}
+
+func TestAPIAdminAuthProviderConfigDisableProviderNotFound(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	admin := &models.User{ID: 1, Role: models.RoleSuperAdmin}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/auth-provider-configs/unknown/disable", nil)
+	req.Header.Set("X-Request-ID", "req-admin-auth-provider-config-disable-provider-not-found")
+	req = withURLParam(req, "provider", "unknown")
+	req = withCurrentUser(req, admin)
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminAuthProviderConfigDisable(recorder, req)
+
+	if recorder.Code != http.StatusNotFound {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusNotFound)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "provider_not_found" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Provider not found" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-auth-provider-config-disable-provider-not-found" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

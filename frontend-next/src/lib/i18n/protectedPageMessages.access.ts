@@ -49,7 +49,6 @@ export interface AdminAccessMessages {
   statusLabelUnknown: string;
   roleLabelSuperAdmin: string;
   roleLabelAdmin: string;
-  roleLabelAuditor: string;
   roleLabelMember: string;
   roleLabelViewer: string;
   roleLabelUnknown: string;
@@ -114,7 +113,6 @@ export const adminAccessMessageKeyMap = {
   statusLabelUnknown: "admin_access_status_label_unknown",
   roleLabelSuperAdmin: "admin_access_role_label_super_admin",
   roleLabelAdmin: "admin_access_role_label_admin",
-  roleLabelAuditor: "admin_access_role_label_auditor",
   roleLabelMember: "admin_access_role_label_member",
   roleLabelViewer: "admin_access_role_label_viewer",
   roleLabelUnknown: "admin_access_role_label_unknown",

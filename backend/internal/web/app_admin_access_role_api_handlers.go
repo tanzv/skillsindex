@@ -13,24 +13,24 @@ func (a *App) handleAPIAdminUserRoleUpdate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Authentication service unavailable")
 		return
 	}
 
 	targetUserID, err := parseUintURLParam(r, "userID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_user_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_user_id", "Invalid user id")
 		return
 	}
 
 	roleRaw, decodeErr := readStringField(r, "role")
 	if decodeErr != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": decodeErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", decodeErr, "Invalid request payload")
 		return
 	}
 	role, parsed := parseRoleValue(roleRaw)
 	if !parsed {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_role"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_role", "Invalid role")
 		return
 	}
 
@@ -38,11 +38,11 @@ func (a *App) handleAPIAdminUserRoleUpdate(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		switch {
 		case errors.Is(err, services.ErrUserNotFound):
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "user_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "user_not_found", "User not found")
 		case errors.Is(err, services.ErrLastSuperAdmin):
-			writeJSON(w, http.StatusConflict, map[string]any{"error": "last_super_admin_guard"})
+			writeAPIError(w, r, http.StatusConflict, "last_super_admin_guard", "Cannot remove the last super admin")
 		default:
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "update_failed", "message": err.Error()})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "update_failed", err, "Failed to update user role")
 		}
 		return
 	}
