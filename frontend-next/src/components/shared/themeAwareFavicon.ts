@@ -5,31 +5,36 @@ import { useEffect } from "react";
 export type ThemeAwareFaviconPreference = "light" | "dark";
 
 const THEME_AWARE_FAVICON_TYPE = "image/svg+xml";
+const THEME_AWARE_FAVICON_SELECTOR = 'link[data-theme-favicon="true"][rel="icon"], link[data-theme-favicon="true"][rel="shortcut icon"]';
 
 export function resolveThemeAwareFaviconHref(theme: ThemeAwareFaviconPreference) {
   return theme === "light" ? "/brand/skillsindex-tab-light.svg" : "/brand/skillsindex-tab-dark.svg";
 }
 
-function createThemeAwareFaviconLink(documentRef: Document, rel: string, href: string) {
+function createThemeAwareFaviconLink(documentRef: Document, rel: string) {
   const link = documentRef.createElement("link");
   link.setAttribute("rel", rel);
-  link.setAttribute("type", THEME_AWARE_FAVICON_TYPE);
-  link.setAttribute("href", href);
   link.setAttribute("data-theme-favicon", "true");
   documentRef.head.appendChild(link);
+  return link;
+}
+
+function ensureThemeAwareFaviconLinks(documentRef: Document) {
+  const existingLinks = Array.from(documentRef.head.querySelectorAll<HTMLLinkElement>(THEME_AWARE_FAVICON_SELECTOR));
+  const linksByRel = new Map(existingLinks.map((link) => [link.getAttribute("rel"), link]));
+
+  for (const rel of ["icon", "shortcut icon"]) {
+    if (!linksByRel.has(rel)) {
+      linksByRel.set(rel, createThemeAwareFaviconLink(documentRef, rel));
+    }
+  }
+
+  return Array.from(linksByRel.values());
 }
 
 export function syncThemeAwareFavicon(documentRef: Document, theme: ThemeAwareFaviconPreference) {
   const href = resolveThemeAwareFaviconHref(theme);
-  const existingLinks = Array.from(
-    documentRef.head.querySelectorAll<HTMLLinkElement>('link[rel="icon"], link[rel="shortcut icon"]')
-  );
-
-  if (existingLinks.length === 0) {
-    createThemeAwareFaviconLink(documentRef, "icon", href);
-    createThemeAwareFaviconLink(documentRef, "shortcut icon", href);
-    return;
-  }
+  const existingLinks = ensureThemeAwareFaviconLinks(documentRef);
 
   existingLinks.forEach((link) => {
     link.setAttribute("href", href);

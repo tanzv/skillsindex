@@ -29,10 +29,20 @@ class FakeHeadElement {
     this.links.push(link);
   }
 
-  querySelectorAll() {
+  querySelectorAll(selector?: string) {
+    const themeAwareOnly = String(selector || "").includes('data-theme-favicon="true"');
+
     return this.links.filter((link) => {
       const rel = link.getAttribute("rel");
-      return rel === "icon" || rel === "shortcut icon";
+      if (rel !== "icon" && rel !== "shortcut icon") {
+        return false;
+      }
+
+      if (!themeAwareOnly) {
+        return true;
+      }
+
+      return link.getAttribute("data-theme-favicon") === "true";
     });
   }
 }
@@ -64,14 +74,23 @@ describe("themeAwareFavicon", () => {
     expect(resolveThemeAwareFaviconHref("dark")).toBe("/brand/skillsindex-tab-dark.svg");
   });
 
-  it("updates existing icon links and removes media constraints", () => {
+  it("creates dedicated theme-aware icon links without overwriting the shared fallback icon", () => {
     const documentRef = createFakeDocument(["icon", "shortcut icon"]);
 
     syncThemeAwareFavicon(documentRef, "light");
 
     const links = Array.from(documentRef.head.querySelectorAll()) as FakeLinkElement[];
-    expect(links).toHaveLength(2);
-    links.forEach((link) => {
+    const themeAwareLinks = links.filter((link) => link.getAttribute("data-theme-favicon") === "true");
+    const fallbackLinks = links.filter((link) => link.getAttribute("data-theme-favicon") !== "true");
+
+    expect(links).toHaveLength(4);
+    expect(fallbackLinks).toHaveLength(2);
+    fallbackLinks.forEach((link) => {
+      expect(link.getAttribute("href")).toBe("/icon.svg");
+    });
+
+    expect(themeAwareLinks).toHaveLength(2);
+    themeAwareLinks.forEach((link) => {
       expect(link.getAttribute("href")).toBe("/brand/skillsindex-tab-light.svg");
       expect(link.getAttribute("type")).toBe("image/svg+xml");
       expect(link.hasAttribute("media")).toBe(false);
@@ -87,6 +106,24 @@ describe("themeAwareFavicon", () => {
     const links = Array.from(documentRef.head.querySelectorAll()) as FakeLinkElement[];
     expect(links).toHaveLength(2);
     expect(links.map((link) => link.getAttribute("href"))).toEqual([
+      "/brand/skillsindex-tab-dark.svg",
+      "/brand/skillsindex-tab-dark.svg"
+    ]);
+  });
+
+  it("updates only managed theme-aware links on subsequent syncs", () => {
+    const documentRef = createFakeDocument(["icon"]);
+
+    syncThemeAwareFavicon(documentRef, "light");
+    syncThemeAwareFavicon(documentRef, "dark");
+
+    const links = Array.from(documentRef.head.querySelectorAll()) as FakeLinkElement[];
+    const fallbackLink = links.find((link) => link.getAttribute("data-theme-favicon") !== "true");
+    const themeAwareLinks = links.filter((link) => link.getAttribute("data-theme-favicon") === "true");
+
+    expect(fallbackLink?.getAttribute("href")).toBe("/icon.svg");
+    expect(themeAwareLinks).toHaveLength(2);
+    expect(themeAwareLinks.map((link) => link.getAttribute("href"))).toEqual([
       "/brand/skillsindex-tab-dark.svg",
       "/brand/skillsindex-tab-dark.svg"
     ]);

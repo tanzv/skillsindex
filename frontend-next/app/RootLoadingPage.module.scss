@@ -1,15 +1,35 @@
 .page {
+  --root-loading-background: linear-gradient(180deg, #101010 0%, #171717 100%);
+  --root-loading-surface: rgba(17, 17, 17, 0.88);
+  --root-loading-panel-surface: rgba(23, 23, 23, 0.92);
+  --root-loading-border: #2b2b2b;
+  --root-loading-shadow: 0 28px 72px rgba(0, 0, 0, 0.32);
+  --root-loading-skeleton: rgba(255, 255, 255, 0.08);
+  --root-loading-skeleton-strong: rgba(229, 229, 229, 0.16);
+  --root-loading-shimmer: rgba(255, 255, 255, 0.16);
+  --root-loading-highlight: rgba(255, 255, 255, 0.08);
+  --root-loading-card-start: rgba(26, 26, 26, 0.94);
+  --root-loading-card-end: rgba(17, 17, 17, 0.96);
+
+  min-height: 100vh;
+  padding: clamp(24px, 4vw, 40px);
+  background: var(--root-loading-background);
+  color-scheme: dark;
+}
+
+.page[data-theme="light"] {
   --root-loading-background: linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%);
   --root-loading-surface: rgba(255, 255, 255, 0.86);
+  --root-loading-panel-surface: rgba(255, 255, 255, 0.72);
   --root-loading-border: rgba(148, 163, 184, 0.22);
   --root-loading-shadow: 0 28px 72px rgba(15, 23, 42, 0.08);
   --root-loading-skeleton: rgba(148, 163, 184, 0.18);
   --root-loading-skeleton-strong: rgba(100, 116, 139, 0.26);
   --root-loading-shimmer: rgba(255, 255, 255, 0.78);
-
-  min-height: 100vh;
-  padding: clamp(24px, 4vw, 40px);
-  background: var(--root-loading-background);
+  --root-loading-highlight: rgba(148, 210, 255, 0.18);
+  --root-loading-card-start: rgba(255, 255, 255, 0.72);
+  --root-loading-card-end: rgba(241, 245, 249, 0.88);
+  color-scheme: light;
 }
 
 .shell {
@@ -20,7 +40,7 @@
   border: 1px solid var(--root-loading-border);
   border-radius: 32px;
   background:
-    radial-gradient(circle at top right, rgba(148, 210, 255, 0.18), transparent 30%),
+    radial-gradient(circle at top right, var(--root-loading-highlight), transparent 30%),
     var(--root-loading-surface);
   box-shadow: var(--root-loading-shadow);
   backdrop-filter: blur(18px);
@@ -63,7 +83,7 @@
   padding: clamp(22px, 4vw, 36px);
   border: 1px solid var(--root-loading-border);
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.64);
+  background: var(--root-loading-panel-surface);
 }
 
 .metricGrid {
@@ -102,7 +122,8 @@
     inset: 0;
     transform: translateX(-100%);
     background: linear-gradient(90deg, transparent 0%, var(--root-loading-shimmer) 50%, transparent 100%);
-    animation: root-loading-shimmer 1.6s ease-in-out infinite;
+    animation: root-loading-shimmer var(--motion-duration-loading-loop) var(--motion-ease-standard) infinite;
+    animation-delay: var(--motion-delay, 0ms);
   }
 }
 
@@ -181,7 +202,7 @@
   border-radius: 24px;
   border: 1px solid var(--root-loading-border);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(241, 245, 249, 0.88) 100%);
+    linear-gradient(180deg, var(--root-loading-card-start) 0%, var(--root-loading-card-end) 100%);
 }
 
 .srOnly {

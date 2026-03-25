@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildMarketplaceHrefForTheme,
+  persistThemePreferenceCookie,
+  resolveThemePreferenceFromCookieHeader,
   resolveStoredThemePreference,
   sharedThemeStorageKey
 } from "@/src/lib/theme/sharedThemePreference";
@@ -42,5 +44,21 @@ describe("sharedThemePreference", () => {
     expect(buildMarketplaceHrefForTheme("dark", "/")).toBe("/");
     expect(buildMarketplaceHrefForTheme("light", "/")).toBe("/light");
     expect(buildMarketplaceHrefForTheme("light", "/rankings")).toBe("/light/rankings");
+  });
+
+  it("resolves the shared theme from a request cookie header for server entrypoints", () => {
+    expect(resolveThemePreferenceFromCookieHeader("session=abc; skillsindex.theme=light; locale=en-US")).toBe("light");
+    expect(resolveThemePreferenceFromCookieHeader("session=abc; skillsindex.theme=dark")).toBe("dark");
+    expect(resolveThemePreferenceFromCookieHeader("session=abc")).toBe("dark");
+  });
+
+  it("persists the shared theme into a cookie for server entrypoints", () => {
+    const documentRef = { cookie: "" };
+
+    persistThemePreferenceCookie(documentRef, "light");
+
+    expect(documentRef.cookie).toContain("skillsindex.theme=light");
+    expect(documentRef.cookie).toContain("Path=/");
+    expect(documentRef.cookie).toContain("SameSite=Lax");
   });
 });

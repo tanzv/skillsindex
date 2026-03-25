@@ -7,6 +7,7 @@ import {
   publicLocaleCookieName,
   resolvePreferredPublicLocale
 } from "@/src/lib/i18n/publicLocale";
+import { resolveThemePreferenceFromCookieValue, sharedThemeCookieName } from "@/src/lib/theme/sharedThemePreference";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,10 +33,11 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   const locale = normalizePublicLocale(
     cookieStore.get(publicLocaleCookieName)?.value || resolvePreferredPublicLocale(requestHeaders.get("accept-language"))
   );
+  const theme = resolveThemePreferenceFromCookieValue(cookieStore.get(sharedThemeCookieName)?.value);
 
   return (
-    <html lang={locale}>
-      <body>{children}</body>
+    <html lang={locale} data-shared-theme={theme}>
+      <body data-shared-theme={theme}>{children}</body>
     </html>
   );
 }
