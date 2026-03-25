@@ -1,14 +1,26 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/headers", () => ({
+  cookies: vi.fn()
+}));
+
+import { cookies } from "next/headers";
 
 import GlobalError from "@/app/global-error";
-import RootLoadingPage from "@/app/loading";
 import NotFoundPage from "@/app/not-found";
 
 describe("system status entrypoints", () => {
-  it("renders the root loading entrypoint as a lightweight shell skeleton", () => {
-    const markup = renderToStaticMarkup(createElement(RootLoadingPage));
+  it("renders the root loading entrypoint as a lightweight shell skeleton", async () => {
+    vi.mocked(cookies).mockResolvedValue({
+      get() {
+        return undefined;
+      }
+    } as Awaited<ReturnType<typeof cookies>>);
+
+    const { default: RootLoadingPage } = await import("@/app/loading");
+    const markup = renderToStaticMarkup(await RootLoadingPage());
 
     expect(markup).toContain('data-testid="root-loading-page"');
     expect(markup).toContain("Loading route content.");
