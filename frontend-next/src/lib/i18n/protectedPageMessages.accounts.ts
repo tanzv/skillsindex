@@ -74,7 +74,6 @@ export interface AdminAccountsMessages {
   roleSummaryDescription: string;
   roleGuidanceSuperAdmin: string;
   roleGuidanceAdmin: string;
-  roleGuidanceAuditor: string;
   roleGuidanceMember: string;
   roleGuidanceViewer: string;
   valueUnknownUser: string;
@@ -83,7 +82,6 @@ export interface AdminAccountsMessages {
   statusLabelUnknown: string;
   roleLabelSuperAdmin: string;
   roleLabelAdmin: string;
-  roleLabelAuditor: string;
   roleLabelMember: string;
   roleLabelViewer: string;
   roleLabelUnknown: string;
@@ -183,7 +181,6 @@ export const adminAccountsMessageKeyMap = {
   roleSummaryDescription: "admin_accounts_role_summary_description",
   roleGuidanceSuperAdmin: "admin_accounts_role_guidance_super_admin",
   roleGuidanceAdmin: "admin_accounts_role_guidance_admin",
-  roleGuidanceAuditor: "admin_accounts_role_guidance_auditor",
   roleGuidanceMember: "admin_accounts_role_guidance_member",
   roleGuidanceViewer: "admin_accounts_role_guidance_viewer",
   valueUnknownUser: "admin_accounts_value_unknown_user",
@@ -192,7 +189,6 @@ export const adminAccountsMessageKeyMap = {
   statusLabelUnknown: "admin_accounts_status_label_unknown",
   roleLabelSuperAdmin: "admin_accounts_role_label_super_admin",
   roleLabelAdmin: "admin_accounts_role_label_admin",
-  roleLabelAuditor: "admin_accounts_role_label_auditor",
   roleLabelMember: "admin_accounts_role_label_member",
   roleLabelViewer: "admin_accounts_role_label_viewer",
   roleLabelUnknown: "admin_accounts_role_label_unknown",
