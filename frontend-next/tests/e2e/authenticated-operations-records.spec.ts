@@ -40,6 +40,7 @@ test("executes recovery, release, and change approval record actions", async ({ 
   await page.getByRole("button", { name: /Record Entry/i }).click();
   const createPane = page.getByTestId("admin-ops-record-create-pane");
   await expect(createPane).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeVisible();
   await createPane.getByLabel("Recovery drill RPO hours").fill("4");
   await createPane.getByLabel("Recovery drill RTO hours").fill("6");
   await createPane.getByLabel("Recovery drill note").fill(`Recovery drill note ${suffix}`);
@@ -76,6 +77,7 @@ test("executes backup plan and backup run record actions", async ({ page }) => {
 
   await page.getByRole("button", { name: /Record Entry/i }).click();
   const createPane = page.getByTestId("admin-ops-record-create-pane");
+  await expect(page.getByRole("dialog")).toBeVisible();
   await createPane.getByLabel("Backup plan key").fill(`archive-${suffix}`);
   await createPane.getByLabel("Backup type").selectOption("snapshot");
   await createPane.getByLabel("Backup schedule").fill("0 3 * * 0");

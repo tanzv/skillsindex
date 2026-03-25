@@ -250,7 +250,7 @@ describe("admin access content", () => {
     expect(markup).toContain("Marketplace Top");
     expect(markup).toContain("Manage public ranking defaults.");
     expect(markup).toContain('data-testid="admin-access-policy-pane"');
-    expect(markup).not.toContain('role="dialog"');
+    expect(markup).toContain('role="dialog"');
     expect(markup).toContain("Default sort");
     expect(markup).toContain("Ranking limit");
     expect(markup).toContain("Highlight limit");
@@ -269,11 +269,11 @@ describe("admin access content", () => {
     expect(markup).toContain(">2<");
   });
 
-  it("renders the selected account in the inline detail pane", () => {
+  it("renders the selected account in the detail drawer", () => {
     const markup = renderAccessContent({ activePane: "account" });
 
     expect(markup).toContain('data-testid="admin-access-account-pane"');
-    expect(markup).not.toContain('role="dialog"');
+    expect(markup).toContain('role="dialog"');
     expect(markup).toContain("reviewer #3");
     expect(markup).toContain("Status");
     expect(markup).toContain("Role");

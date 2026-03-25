@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminPageScaffold } from "@/src/components/admin/AdminPrimitives";
-import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
+import { AdminDetailDrawer } from "@/src/components/admin/AdminOverlaySurface";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 
@@ -141,7 +141,8 @@ export function AdminOrganizationsContent({
             onOpen={onOpenMemberAssignmentPane}
           />
           {activePane !== "idle" ? (
-            <InlineWorkPaneSurface
+            <AdminDetailDrawer
+              open
               title={activePaneTitle}
               description={activePaneDescription}
               closeLabel={organizationMessages.closePanelAction}
@@ -182,7 +183,7 @@ export function AdminOrganizationsContent({
                   )}
                 </div>
               )}
-            </InlineWorkPaneSurface>
+            </AdminDetailDrawer>
           ) : null}
           <SelectedOrganizationPanel overview={overview} />
         </div>

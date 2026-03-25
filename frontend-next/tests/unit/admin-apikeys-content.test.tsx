@@ -165,7 +165,7 @@ describe("AdminAPIKeysContent", () => {
 
     expect(markup).toContain("Open Details");
     expect(markup).toContain('data-testid="admin-apikeys-detail-pane"');
-    expect(markup).not.toContain('role="dialog"');
+    expect(markup).toContain('role="dialog"');
     expect(markup).toContain("Primary Key");
     expect(markup).toContain("Apply Scopes");
     expect(markup).toContain("Rotate");

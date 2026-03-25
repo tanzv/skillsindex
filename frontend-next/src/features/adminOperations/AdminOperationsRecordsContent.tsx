@@ -1,8 +1,8 @@
 "use client";
 
 import { AdminMessageBanner, AdminMetricGrid } from "@/src/components/admin/AdminPrimitives";
+import { AdminDetailDrawer } from "@/src/components/admin/AdminOverlaySurface";
 import { ErrorState } from "@/src/components/shared/ErrorState";
-import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
 import { PageHeader } from "@/src/components/shared/PageHeader";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
@@ -115,7 +115,8 @@ export function AdminOperationsRecordsContent({
         />
         <div className="space-y-6">
           {activePane === "create" ? (
-            <InlineWorkPaneSurface
+            <AdminDetailDrawer
+              open
               title={operationsMessages.recordEntryTitle}
               description={operationsMessages.recordEntryDescription}
               closeLabel={operationsMessages.closePanelAction}
@@ -129,10 +130,11 @@ export function AdminOperationsRecordsContent({
                 onDraftChange={onDraftChange}
                 onSubmit={onSubmitCreate}
               />
-            </InlineWorkPaneSurface>
+            </AdminDetailDrawer>
           ) : null}
           {activePane === "detail" ? (
-            <InlineWorkPaneSurface
+            <AdminDetailDrawer
+              open
               title={operationsMessages.recordDetailTitle}
               description={operationsMessages.recordDetailDescription}
               closeLabel={operationsMessages.closePanelAction}
@@ -140,7 +142,7 @@ export function AdminOperationsRecordsContent({
               dataTestId="admin-ops-record-detail-pane"
             >
               <OperationsRecordDetailSummary detail={selectedRecord} />
-            </InlineWorkPaneSurface>
+            </AdminDetailDrawer>
           ) : null}
           <OperationsEndpointStatusPanel endpoint={endpoint} createEndpoint={createEndpoint} />
         </div>

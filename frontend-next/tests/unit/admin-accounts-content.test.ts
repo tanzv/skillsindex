@@ -207,7 +207,7 @@ describe("admin accounts content", () => {
     const markup = renderAdminAccountsRoute("/admin/accounts");
 
     expect(markup).toContain("Account Directory");
-    expect(markup).not.toContain('role="dialog"');
+    expect(markup).toContain('role="dialog"');
     expect(markup).toContain('data-testid="admin-accounts-work-pane"');
     expect(markup).toContain("Account Actions");
     expect(markup).not.toContain("Provisioning Policy");
@@ -225,7 +225,7 @@ describe("admin accounts content", () => {
   it("renders role configuration route with playbook and assignment flow", () => {
     const markup = renderAdminAccountsRoute("/admin/roles/new");
 
-    expect(markup).not.toContain('role="dialog"');
+    expect(markup).toContain('role="dialog"');
     expect(markup).toContain('data-testid="admin-accounts-work-pane"');
     expect(markup).toContain("Role Assignment");
     expect(markup).toContain("Role Playbook");

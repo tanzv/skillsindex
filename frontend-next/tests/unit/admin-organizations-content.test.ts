@@ -188,7 +188,7 @@ function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
 }
 
 describe("admin organizations content", () => {
-  it("renders the member assignment work pane with organization summary and form controls", () => {
+  it("renders the member assignment drawer with organization summary and form controls", () => {
     const markup = renderOrganizationsContent({ activePane: "memberAssign", selectedMember: null });
 
     expectMarkupToContainAll(markup, [
@@ -205,10 +205,10 @@ describe("admin organizations content", () => {
       'aria-label="Organization member role"',
       "Save Member"
     ]);
-    expectMarkupToExcludeAll(markup, ['role="dialog"']);
+    expect(markup).toContain('role="dialog"');
   });
 
-  it("renders the selected member detail pane with stable member actions", () => {
+  it("renders the selected member detail drawer with stable member actions", () => {
     const markup = renderOrganizationsContent({
       activePane: "memberDetail",
       selectedMember: {
@@ -235,6 +235,7 @@ describe("admin organizations content", () => {
       "Apply Role",
       "Remove"
     ]);
-    expectMarkupToExcludeAll(markup, ['role="dialog"', "No selection"]);
+    expectMarkupToExcludeAll(markup, ["No selection"]);
+    expect(markup).toContain('role="dialog"');
   });
 });

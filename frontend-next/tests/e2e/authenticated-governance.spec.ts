@@ -34,7 +34,7 @@ test("executes admin api key lifecycle actions", async ({ page }) => {
   await page.getByRole("button", { name: "Create Key" }).first().click();
   const createPane = page.getByTestId("admin-apikeys-create-pane");
   await expect(createPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await createPane.getByLabel("Create key name").fill("Ops Smoke Key");
   await createPane.getByLabel("Create key purpose").fill("Governance regression coverage");
   await createPane.getByLabel("Create key owner user ID").fill("2");
@@ -50,7 +50,7 @@ test("executes admin api key lifecycle actions", async ({ page }) => {
   await apiKeyCard.getByRole("button", { name: "Open Details" }).click();
   const apiKeyDetailPane = page.getByTestId("admin-apikeys-detail-pane");
   await expect(apiKeyDetailPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await apiKeyDetailPane.getByLabel("API key scopes").fill("skills.ai_search.read");
   await apiKeyDetailPane.getByRole("button", { name: "Apply Scopes" }).click();
   await expect(page.getByText(/Scopes updated for API key/)).toBeVisible();
@@ -79,7 +79,7 @@ test("executes organization membership actions", async ({ page }) => {
   await page.getByRole("button", { name: "Assign Member" }).click();
   const memberPane = page.getByTestId("admin-organizations-member-pane");
   await expect(memberPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await memberPane.getByLabel("Organization member user ID").fill("3");
   await memberPane.getByLabel("Organization member role").selectOption("admin");
   await memberPane.getByRole("button", { name: "Save Member" }).click();
@@ -105,6 +105,7 @@ test("executes moderation case creation and resolution", async ({ page }) => {
   await page.getByRole("button", { name: "Open Create Case" }).click();
   const createPane = page.getByTestId("admin-moderation-create-pane");
   await expect(createPane).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeVisible();
   await createPane.getByLabel("Case reporter user ID").fill("2");
   await createPane.getByLabel("Case skill ID").fill("301");
   await createPane.getByLabel("Case reason code").fill("policy_violation");

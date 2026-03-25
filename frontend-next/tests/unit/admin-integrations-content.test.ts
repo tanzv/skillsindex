@@ -256,7 +256,7 @@ describe("admin integrations content", () => {
     expect(messages.adminIntegrations.connectorProviderLabel).toBe("Provider");
   });
 
-  it("renders inline connector detail pane without dropping inventory actions", () => {
+  it("renders connector detail drawers without dropping inventory actions", () => {
     const markup = renderIntegrationsContent();
 
     expect(markup).toContain("Connector Inventory");
@@ -270,6 +270,6 @@ describe("admin integrations content", () => {
     expect(markup).toContain("Provider: github");
     expect(markup).toContain("Base URL: https://api.github.com");
     expect(markup).toContain("Description");
-    expect(markup).not.toContain('role="dialog"');
+    expect(markup).toContain('role="dialog"');
   });
 });

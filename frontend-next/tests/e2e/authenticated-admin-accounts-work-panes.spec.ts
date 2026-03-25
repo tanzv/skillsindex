@@ -4,13 +4,15 @@ import { gotoProtectedRoute, loginAsAdmin } from "./helpers/auth";
 
 test.describe.configure({ timeout: 120_000 });
 
-test("executes admin account lifecycle and role actions through inline work panes", async ({ page }) => {
+test("executes admin account lifecycle and role actions through detail drawers", async ({ page }) => {
   await loginAsAdmin(page, "/admin/accounts");
 
-  await expect(page.getByRole("heading", { name: "Accounts", level: 1 })).toBeVisible();
+  await expect(page.locator("h1").filter({ hasText: "Accounts" })).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByTestId("admin-account-card-2").getByRole("button", { name: "Select" }).click();
   const accountWorkPane = page.getByTestId("admin-accounts-work-pane");
   await expect(accountWorkPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
 
   await page.getByLabel("Search accounts").fill("operator");
   await accountWorkPane.getByLabel("Target user ID").fill("2");
@@ -27,10 +29,12 @@ test("executes admin account lifecycle and role actions through inline work pane
   await expect(page.getByText("Password rotated for user 2.")).toBeVisible();
 
   await gotoProtectedRoute(page, "/admin/roles");
-  await expect(page.getByRole("heading", { name: "Roles", level: 1 })).toBeVisible();
+  await expect(page.locator("h1").filter({ hasText: "Roles" })).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByTestId("admin-account-card-2").getByRole("button", { name: "Select" }).click();
   const roleWorkPane = page.getByTestId("admin-accounts-work-pane");
   await expect(roleWorkPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
 
   await page.getByLabel("Search accounts").fill("operator");
   await roleWorkPane.getByLabel("Role target user ID").fill("2");

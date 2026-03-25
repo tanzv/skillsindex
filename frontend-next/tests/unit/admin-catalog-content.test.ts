@@ -367,7 +367,7 @@ describe("admin catalog content", () => {
       "archive parse failed",
       "Close Panel"
     ]);
-    expectMarkupToExcludeAll(markup, ['role="dialog"']);
+    expect(markup).toContain('role="dialog"');
   });
 
   it("renders the policy route as a configuration form plus posture summary", () => {

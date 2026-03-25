@@ -66,6 +66,7 @@ describe("DetailFormSurface", () => {
           onClose: () => {},
           variant: "drawer",
           size: "wide",
+          dataTestId: "detail-form-surface-test",
           footer: createElement("button", { type: "button" }, "Save")
         },
         createElement("div", null, "Drawer body")
@@ -77,6 +78,7 @@ describe("DetailFormSurface", () => {
     expect(markup).toContain('data-variant="drawer"');
     expect(markup).toContain('data-size="wide"');
     expect(markup).toContain('data-motion-state="open"');
+    expect(markup).toContain('data-testid="detail-form-surface-test"');
     expect(markup).toContain("API Key");
     expect(markup).toContain("Manage lifecycle and scopes.");
     expect(markup).toContain("Drawer body");

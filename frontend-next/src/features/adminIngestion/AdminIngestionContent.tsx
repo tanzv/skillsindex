@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminPageScaffold } from "@/src/components/admin/AdminPrimitives";
-import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
+import { AdminDetailDrawer } from "@/src/components/admin/AdminOverlaySurface";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import type { AdminIngestionRoute } from "@/src/lib/routing/adminRouteRegistry";
@@ -75,7 +75,8 @@ export function AdminIngestionContent({
     switch (overlay.entity) {
       case "manualForm":
         return (
-          <InlineWorkPaneSurface
+          <AdminDetailDrawer
+            open
             title={ingestionMessages.manualAuthoringTitle}
             description={ingestionMessages.manualAuthoringDescription}
             closeLabel={ingestionMessages.closePanelAction}
@@ -83,11 +84,12 @@ export function AdminIngestionContent({
             dataTestId="admin-ingestion-manual-pane"
           >
             <ManualAuthoringCard {...manualView} />
-          </InlineWorkPaneSurface>
+          </AdminDetailDrawer>
         );
       case "repositoryForm":
         return (
-          <InlineWorkPaneSurface
+          <AdminDetailDrawer
+            open
             title={ingestionMessages.repositoryIntakeTitle}
             description={ingestionMessages.repositoryIntakeDescription}
             closeLabel={ingestionMessages.closePanelAction}
@@ -95,11 +97,12 @@ export function AdminIngestionContent({
             dataTestId="admin-ingestion-repository-pane"
           >
             <RepositoryIntakeCard {...repositoryView} />
-          </InlineWorkPaneSurface>
+          </AdminDetailDrawer>
         );
       case "repositoryPolicy":
         return (
-          <InlineWorkPaneSurface
+          <AdminDetailDrawer
+            open
             title={ingestionMessages.schedulerPolicyTitle}
             description={ingestionMessages.schedulerPolicyDescription}
             closeLabel={ingestionMessages.closePanelAction}
@@ -107,11 +110,12 @@ export function AdminIngestionContent({
             dataTestId="admin-ingestion-policy-pane"
           >
             <SchedulerPolicyCard {...repositoryView} />
-          </InlineWorkPaneSurface>
+          </AdminDetailDrawer>
         );
       case "archiveForm":
         return (
-          <InlineWorkPaneSurface
+          <AdminDetailDrawer
+            open
             title={ingestionMessages.archiveImportTitle}
             description={ingestionMessages.archiveImportDescription}
             closeLabel={ingestionMessages.closePanelAction}
@@ -119,11 +123,12 @@ export function AdminIngestionContent({
             dataTestId="admin-ingestion-archive-pane"
           >
             <ArchiveImportCard {...importsView} />
-          </InlineWorkPaneSurface>
+          </AdminDetailDrawer>
         );
       case "skillmpForm":
         return (
-          <InlineWorkPaneSurface
+          <AdminDetailDrawer
+            open
             title={ingestionMessages.skillmpImportTitle}
             description={ingestionMessages.skillmpImportDescription}
             closeLabel={ingestionMessages.closePanelAction}
@@ -131,7 +136,7 @@ export function AdminIngestionContent({
             dataTestId="admin-ingestion-skillmp-pane"
           >
             <SkillMPImportCard {...importsView} />
-          </InlineWorkPaneSurface>
+          </AdminDetailDrawer>
         );
       case "skillDetail": {
         const selectedSkill = manualView.selectedSkill || repositoryView.selectedSkill || importsView.selectedSkill;
@@ -139,7 +144,8 @@ export function AdminIngestionContent({
           return null;
         }
         return (
-          <InlineWorkPaneSurface
+          <AdminDetailDrawer
+            open
             title={selectedSkill.name || ingestionMessages.valueUnnamedSkill}
             description={selectedSkill.description || ingestionMessages.valueNoDescription}
             closeLabel={ingestionMessages.closePanelAction}
@@ -147,12 +153,13 @@ export function AdminIngestionContent({
             dataTestId="admin-ingestion-skill-pane"
           >
             <IngestionSkillDetail item={selectedSkill} />
-          </InlineWorkPaneSurface>
+          </AdminDetailDrawer>
         );
       }
       case "syncRunDetail":
         return repositoryView.selectedSyncRun ? (
-          <InlineWorkPaneSurface
+          <AdminDetailDrawer
+            open
             title={ingestionMessages.recentSyncRunsTitle}
             description={ingestionMessages.recentSyncRunsDescription}
             closeLabel={ingestionMessages.closePanelAction}
@@ -160,11 +167,12 @@ export function AdminIngestionContent({
             dataTestId="admin-ingestion-sync-run-pane"
           >
             <IngestionSyncRunDetail run={repositoryView.selectedSyncRun} />
-          </InlineWorkPaneSurface>
+          </AdminDetailDrawer>
         ) : null;
       case "importJobDetail":
         return importsView.selectedJob ? (
-          <InlineWorkPaneSurface
+          <AdminDetailDrawer
+            open
             title={ingestionMessages.importJobsTitle}
             description={ingestionMessages.importJobsDescription}
             closeLabel={ingestionMessages.closePanelAction}
@@ -176,7 +184,7 @@ export function AdminIngestionContent({
               busyAction={importsView.busyAction}
               onRunJobAction={importsView.onRunJobAction}
             />
-          </InlineWorkPaneSurface>
+          </AdminDetailDrawer>
         ) : null;
       default:
         return null;

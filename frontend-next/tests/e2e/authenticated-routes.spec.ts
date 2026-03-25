@@ -23,8 +23,10 @@ test("renders authenticated admin, workspace, and account routes", async ({ page
   await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Skills", exact: true })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("heading", { name: "Repository Intake", level: 1 })).toBeVisible();
   await page.getByRole("button", { name: "Save Policy" }).first().click();
-  await expect(page.getByRole("dialog", { name: "Scheduler Policy" })).toBeVisible();
-  await page.getByRole("button", { name: "Close Panel" }).click();
+  const policyPane = page.getByTestId("admin-ingestion-policy-pane");
+  await expect(policyPane).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await policyPane.getByRole("button", { name: "Close Panel" }).click();
 
   await gotoProtectedRoute(page, "/admin/ops/metrics");
   await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Administration", exact: true })).toHaveAttribute("aria-current", "page");
@@ -57,11 +59,13 @@ test("executes authenticated profile and manual ingestion actions", async ({ pag
   await gotoProtectedRoute(page, "/admin/ingestion/manual");
   await expect(page.getByRole("heading", { name: "Manual Intake", level: 1 })).toBeVisible();
   await page.getByRole("button", { name: "Create Manual Skill" }).first().click();
-  const manualDialog = page.getByRole("dialog", { name: "Manual Authoring" });
-  await manualDialog.getByLabel("Name").fill("Manual Smoke Skill");
-  await manualDialog.getByLabel("Description").fill("Created during authenticated UI smoke.");
-  await manualDialog.getByLabel("Content").fill("# Manual Smoke Skill");
-  await manualDialog.getByRole("button", { name: "Create Manual Skill" }).click();
+  const manualPane = page.getByTestId("admin-ingestion-manual-pane");
+  await expect(manualPane).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await manualPane.getByLabel("Name").fill("Manual Smoke Skill");
+  await manualPane.getByLabel("Description").fill("Created during authenticated UI smoke.");
+  await manualPane.getByLabel("Content").fill("# Manual Smoke Skill");
+  await manualPane.getByRole("button", { name: "Create Manual Skill" }).click();
   await expect(page.getByText("Manual skill created.")).toBeVisible();
   await expect(page.getByText("Manual Smoke Skill").first()).toBeVisible();
 });

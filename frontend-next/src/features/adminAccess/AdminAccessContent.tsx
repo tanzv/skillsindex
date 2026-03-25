@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminPageScaffold } from "@/src/components/admin/AdminPrimitives";
-import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
+import { AdminDetailDrawer } from "@/src/components/admin/AdminOverlaySurface";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import type {
@@ -159,7 +159,8 @@ export function AdminAccessContent({
         <div className="space-y-6">
           <AccessPolicyTriggerPanel loading={loading} busyAction={busyAction} onOpen={onOpenPolicyPane} />
           {activePane === "policy" ? (
-            <InlineWorkPaneSurface
+            <AdminDetailDrawer
+              open
               title={accessMessages.policyTitle}
               description={accessMessages.policyDescription}
               closeLabel={accessMessages.closePanelAction}
@@ -190,10 +191,11 @@ export function AdminAccessContent({
                 onMovePresentationSubcategory={onMovePresentationSubcategory}
                 onSave={onSavePolicy}
               />
-            </InlineWorkPaneSurface>
+            </AdminDetailDrawer>
           ) : null}
           {activePane === "account" && selectedAccount ? (
-            <InlineWorkPaneSurface
+            <AdminDetailDrawer
+              open
               title={`${selectedAccount.username || accessMessages.valueUnknownUser} #${selectedAccount.id}`}
               description={accessMessages.selectedAccountDescription}
               closeLabel={accessMessages.closePanelAction}
@@ -201,7 +203,7 @@ export function AdminAccessContent({
               dataTestId="admin-access-account-pane"
             >
               <SelectedAccessAccountSummary account={selectedAccount} />
-            </InlineWorkPaneSurface>
+            </AdminDetailDrawer>
           ) : null}
           <AccessSnapshotPanel data={data} />
           <AccessRoleSummaryPanel overview={overview} />

@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminPageScaffold } from "@/src/components/admin/AdminPrimitives";
-import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
+import { AdminDetailDrawer } from "@/src/components/admin/AdminOverlaySurface";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 
@@ -135,7 +135,8 @@ export function AdminIntegrationsContent({
             onDisable={onAuthProviderDisable}
           />
           {detailPaneOpen && detailConnector ? (
-            <InlineWorkPaneSurface
+            <AdminDetailDrawer
+              open
               title={detailConnector.name}
               description={detailConnector.description || integrationMessages.connectorDetailDescription}
               closeLabel={integrationMessages.closePanelAction}
@@ -143,10 +144,11 @@ export function AdminIntegrationsContent({
               dataTestId="admin-integrations-detail-pane"
             >
               <SelectedConnectorSummary connector={detailConnector} />
-            </InlineWorkPaneSurface>
+            </AdminDetailDrawer>
           ) : null}
           {authProviderPaneOpen && authProviderDraft ? (
-            <InlineWorkPaneSurface
+            <AdminDetailDrawer
+              open
               title={authProviderDisplayName}
               description={integrationMessages.authProviderFormDescription}
               closeLabel={integrationMessages.closePanelAction}
@@ -160,7 +162,7 @@ export function AdminIntegrationsContent({
                 onChange={onAuthProviderDraftChange}
                 onSubmit={onAuthProviderSubmit}
               />
-            </InlineWorkPaneSurface>
+            </AdminDetailDrawer>
           ) : null}
           <ProviderSpreadPanel overview={overview} />
           <OperationsSnapshotPanel selectedConnectorName={selectedConnectorName} overview={overview} />

@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminPageScaffold } from "@/src/components/admin/AdminPrimitives";
-import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
+import { AdminDetailDrawer } from "@/src/components/admin/AdminOverlaySurface";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 
@@ -110,7 +110,8 @@ export function AdminModerationContent({
             <CreateModerationTriggerCard busyAction={busyAction} loading={loading} onOpen={onOpenCreatePane} />
           ) : null}
           {activePane === "create" ? (
-            <InlineWorkPaneSurface
+            <AdminDetailDrawer
+              open
               title={moderationMessages.createTitle}
               description={moderationMessages.createDescription}
               closeLabel={moderationMessages.closePanelAction}
@@ -123,10 +124,11 @@ export function AdminModerationContent({
                 onCreateDraftChange={onCreateDraftChange}
                 onCreateCase={onCreateCase}
               />
-            </InlineWorkPaneSurface>
+            </AdminDetailDrawer>
           ) : null}
           {activePane === "detail" && selectedCase ? (
-            <InlineWorkPaneSurface
+            <AdminDetailDrawer
+              open
               title={detailTitle}
               description={moderationMessages.selectedCaseDescription}
               closeLabel={moderationMessages.closePanelAction}
@@ -144,7 +146,7 @@ export function AdminModerationContent({
                   onRejectCase={onRejectCase}
                 />
               </div>
-            </InlineWorkPaneSurface>
+            </AdminDetailDrawer>
           ) : null}
           <SelectedModerationCaseCard
             selectedCase={selectedCase}

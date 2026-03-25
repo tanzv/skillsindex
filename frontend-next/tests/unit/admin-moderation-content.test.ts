@@ -201,7 +201,7 @@ function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
 }
 
 describe("admin moderation content", () => {
-  it("renders the inline create case pane with form controls", () => {
+  it("renders the create case drawer with form controls", () => {
     const markup = renderModerationContent({ activePane: "create" });
 
     expectMarkupToContainAll(markup, [
@@ -217,10 +217,11 @@ describe("admin moderation content", () => {
       'aria-label="Case reason code"',
       'aria-label="Case reason detail"'
     ]);
-    expectMarkupToExcludeAll(markup, ['role="dialog"', "Open Create Case"]);
+    expectMarkupToExcludeAll(markup, ["Open Create Case"]);
+    expect(markup).toContain('role="dialog"');
   });
 
-  it("renders the inline detail pane with disposition controls", () => {
+  it("renders the detail drawer with disposition controls", () => {
     const markup = renderModerationContent({ activePane: "detail" });
 
     expectMarkupToContainAll(markup, [
@@ -235,6 +236,7 @@ describe("admin moderation content", () => {
       "Resolve Case",
       "Reject Case"
     ]);
-    expectMarkupToExcludeAll(markup, ['role="dialog"', "Open Create Case"]);
+    expectMarkupToExcludeAll(markup, ["Open Create Case"]);
+    expect(markup).toContain('role="dialog"');
   });
 });

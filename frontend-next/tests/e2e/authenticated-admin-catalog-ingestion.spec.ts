@@ -69,7 +69,7 @@ test("executes admin catalog job and sync policy actions", async ({ page }) => {
   await failedJob.getByRole("button", { name: "Open Details" }).click();
   const detailPane = page.getByTestId("admin-jobs-detail-pane");
   await expect(detailPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await expect(detailPane).toContainText("archive parse failed");
   await detailPane.getByRole("button", { name: "Close Panel" }).click();
   await expect(detailPane).toHaveCount(0);
@@ -99,7 +99,7 @@ test("executes repository intake and import source actions", async ({ page }) =>
   await page.getByRole("button", { name: "Start Repository Intake" }).click();
   const repositoryPane = page.getByTestId("admin-ingestion-repository-pane");
   await expect(repositoryPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await repositoryPane.getByLabel("Repository URL").fill(`https://github.com/example/repository-intake-${suffix}`);
   await repositoryPane.getByLabel("Repository Branch").fill("release");
   await repositoryPane.getByLabel("Repository Path").fill("skills/catalog");
@@ -112,7 +112,7 @@ test("executes repository intake and import source actions", async ({ page }) =>
   await page.getByRole("button", { name: "Save Policy" }).first().click();
   const policyPane = page.getByTestId("admin-ingestion-policy-pane");
   await expect(policyPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await policyPane.getByLabel("Enabled").uncheck();
   await policyPane.getByLabel("Interval").fill("30m");
   await policyPane.getByLabel("Timeout").fill("6m");
@@ -124,7 +124,7 @@ test("executes repository intake and import source actions", async ({ page }) =>
   await page.getByRole("button", { name: "Import Archive" }).first().click();
   const archivePane = page.getByTestId("admin-ingestion-archive-pane");
   await expect(archivePane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await archivePane.getByLabel("Archive File").setInputFiles({
     name: `archive-${suffix}.zip`,
     mimeType: "application/zip",
@@ -139,7 +139,7 @@ test("executes repository intake and import source actions", async ({ page }) =>
   await page.getByRole("button", { name: "Import SkillMP" }).first().click();
   const skillmpPane = page.getByTestId("admin-ingestion-skillmp-pane");
   await expect(skillmpPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await skillmpPane.getByLabel("SkillMP URL").fill(`https://skillmp.example.com/${suffix}`);
   await skillmpPane.getByLabel("SkillMP ID").fill(`skillmp-${suffix}`);
   await skillmpPane.getByLabel("SkillMP Token").fill("skillmp-token");

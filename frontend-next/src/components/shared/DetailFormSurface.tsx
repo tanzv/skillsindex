@@ -27,6 +27,7 @@ export interface DetailFormSurfaceProps {
   initialFocusRef?: RefObject<HTMLElement | null>;
   panelClassName?: string;
   bodyClassName?: string;
+  dataTestId?: string;
 }
 
 export function DetailFormSurface({
@@ -43,7 +44,8 @@ export function DetailFormSurface({
   closeOnBackdrop = true,
   initialFocusRef,
   panelClassName,
-  bodyClassName
+  bodyClassName,
+  dataTestId
 }: DetailFormSurfaceProps) {
   const titleId = useId();
   const descriptionId = useId();
@@ -114,6 +116,7 @@ export function DetailFormSurface({
       data-variant={variant}
       data-size={size}
       data-motion-state={motionState}
+      data-testid={dataTestId}
       tabIndex={-1}
       className={sharedPanelClassName}
     >

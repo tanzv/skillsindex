@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminEmptyBlock, AdminInsetBlock, AdminMetaChipList, AdminPageScaffold, AdminSectionCard } from "@/src/components/admin/AdminPrimitives";
-import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
+import { AdminDetailDrawer } from "@/src/components/admin/AdminOverlaySurface";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
@@ -186,7 +186,8 @@ export function AdminAPIKeysContent({
       </AdminPageScaffold>
 
       {activePane === "create" ? (
-        <InlineWorkPaneSurface
+        <AdminDetailDrawer
+          open
           title={apiKeyMessages.createTitle}
           description={apiKeyMessages.createDescription}
           closeLabel={apiKeyMessages.closePanelAction}
@@ -236,11 +237,12 @@ export function AdminAPIKeysContent({
               </Button>
             </div>
           </form>
-        </InlineWorkPaneSurface>
+        </AdminDetailDrawer>
       ) : null}
 
       {activePane === "detail" && selectedItem ? (
-        <InlineWorkPaneSurface
+        <AdminDetailDrawer
+          open
           title={selectedItem.name || apiKeyMessages.unnamedKey}
           description={`${resolveApiKeyStatusLabel(selectedItem.status, apiKeyMessages)} · ${selectedItem.ownerUsername || apiKeyMessages.ownerUnknown}`}
           closeLabel={apiKeyMessages.closePanelAction}
@@ -337,7 +339,7 @@ export function AdminAPIKeysContent({
               </Button>
             </div>
           </div>
-        </InlineWorkPaneSurface>
+        </AdminDetailDrawer>
       ) : null}
     </>
   );

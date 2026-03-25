@@ -164,7 +164,7 @@ function expectMarkupToContainAll(markup: string, fragments: string[]) {
 }
 
 describe("admin operations records content", () => {
-  it("renders the record entry work pane contract with form fields and ledger context", () => {
+  it("renders the record entry drawer contract with form fields and ledger context", () => {
     const markup = renderContent("create");
 
     expectMarkupToContainAll(markup, [
@@ -179,10 +179,10 @@ describe("admin operations records content", () => {
       'aria-label="Release version"',
       "Save Record"
     ]);
-    expect(markup).not.toContain('role="dialog"');
+    expect(markup).toContain('role="dialog"');
   });
 
-  it("renders the record detail work pane contract with resolved chips", () => {
+  it("renders the record detail drawer contract with resolved chips", () => {
     const markup = renderContent("detail");
 
     expectMarkupToContainAll(markup, [
@@ -196,6 +196,6 @@ describe("admin operations records content", () => {
       "Release status",
       "success"
     ]);
-    expect(markup).not.toContain('role="dialog"');
+    expect(markup).toContain('role="dialog"');
   });
 });

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { type ReactNode, useMemo, useState } from "react";
 
+import { AdminDetailDrawer } from "@/src/components/admin/AdminOverlaySurface";
 import { AdminEmptyBlock, AdminMetaChipList, AdminSelectableRecordCard } from "@/src/components/admin/AdminPrimitives";
-import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -176,7 +176,8 @@ export function CatalogDetailPane({
   const statusLabel = row?.statusLabel || row?.status || "";
 
   return (
-    <InlineWorkPaneSurface
+    <AdminDetailDrawer
+      open
       title={row.name}
       description={description}
       closeLabel={closeLabel}
@@ -197,7 +198,7 @@ export function CatalogDetailPane({
           <DetailSections sections={row.detailSections} />
         </div>
       </div>
-    </InlineWorkPaneSurface>
+    </AdminDetailDrawer>
   );
 }
 

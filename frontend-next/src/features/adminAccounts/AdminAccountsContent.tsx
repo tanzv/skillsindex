@@ -1,5 +1,5 @@
 import { AdminEmptyBlock, AdminFilterBar, AdminPageScaffold, AdminSectionCard } from "@/src/components/admin/AdminPrimitives";
-import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
+import { AdminDetailDrawer } from "@/src/components/admin/AdminOverlaySurface";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Select } from "@/src/components/ui/select";
@@ -213,7 +213,8 @@ export function AdminAccountsContent({
             />
           ) : null}
           {showDetailPane && detailPaneOpen && selectedAccount ? (
-            <InlineWorkPaneSurface
+            <AdminDetailDrawer
+              open
               title={detailPaneTitle}
               description={detailPaneDescription}
               closeLabel={accountMessages.closePanelAction}
@@ -243,7 +244,7 @@ export function AdminAccountsContent({
                   />
                 ) : null}
               </div>
-            </InlineWorkPaneSurface>
+            </AdminDetailDrawer>
           ) : null}
           {showRolePanel ? (
             route === "/admin/roles/new" ? <RolePlaybookPanel /> : null

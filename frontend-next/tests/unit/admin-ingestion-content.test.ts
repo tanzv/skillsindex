@@ -52,7 +52,7 @@ describe("admin ingestion content", () => {
     expect(markup).toContain("Import Jobs");
   });
 
-  it("renders the manual create work pane inline when a create overlay is active", () => {
+  it("renders the manual create drawer when a create overlay is active", () => {
     const markup = renderAdminIngestionRoute("/admin/ingestion/manual", {
       open: true,
       kind: "create",
@@ -64,10 +64,10 @@ describe("admin ingestion content", () => {
     expect(markup).toContain("Close Panel");
     expect(markup).toContain("Name");
     expect(markup).toContain("Content");
-    expect(markup).not.toContain('role="dialog"');
+    expect(markup).toContain('role="dialog"');
   });
 
-  it("renders the import job detail work pane inline when a job overlay is active", () => {
+  it("renders the import job detail drawer when a job overlay is active", () => {
     const markup = renderAdminIngestionRoute("/admin/records/imports", {
       open: true,
       kind: "detail",
@@ -79,6 +79,6 @@ describe("admin ingestion content", () => {
     expect(markup).toContain("Job #81");
     expect(markup).toContain("archive parse failed");
     expect(markup).toContain("Retry");
-    expect(markup).not.toContain('role="dialog"');
+    expect(markup).toContain('role="dialog"');
   });
 });

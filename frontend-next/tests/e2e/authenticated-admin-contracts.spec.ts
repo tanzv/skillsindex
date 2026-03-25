@@ -40,7 +40,7 @@ test("covers admin access filtering and catalog read contracts", async ({ page }
   await page.getByRole("button", { name: "Open Policy Panel" }).click();
   const policyPane = page.getByTestId("admin-access-policy-pane");
   await expect(policyPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await policyPane.getByLabel("Allow registration").uncheck();
   await policyPane.getByLabel("Marketplace public access").uncheck();
   await policyPane.getByLabel("Provider google").check();
@@ -71,7 +71,7 @@ test("covers admin access filtering and catalog read contracts", async ({ page }
   await expect(page.getByTestId("admin-catalog-row-72")).toContainText(/failed/i);
 });
 
-test("opens admin job and sync run details in inline work panes", async ({ page }) => {
+test("opens admin job and sync run details in detail drawers", async ({ page }) => {
   await loginAsAdmin(page, "/admin/jobs");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
@@ -81,7 +81,7 @@ test("opens admin job and sync run details in inline work panes", async ({ page 
 
   const jobPane = page.getByTestId("admin-jobs-detail-pane");
   await expect(jobPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await expect(jobPane.getByRole("button", { name: "Close Panel" })).toBeVisible();
   await jobPane.getByRole("button", { name: "Close Panel" }).click();
   await expect(jobPane).toHaveCount(0);
@@ -95,7 +95,7 @@ test("opens admin job and sync run details in inline work panes", async ({ page 
 
   const syncRunPane = page.getByTestId("admin-sync-runs-detail-pane");
   await expect(syncRunPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await expect(syncRunPane.getByRole("link", { name: "Open Sync Policy" })).toBeVisible();
 });
 
@@ -106,6 +106,7 @@ test("persists marketplace ranking settings from the admin access policy pane", 
   await page.getByRole("button", { name: "Open Policy Panel" }).click();
   const policyPane = page.getByTestId("admin-access-policy-pane");
   await expect(policyPane).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeVisible();
 
   await policyPane.getByLabel("Default ranking sort").selectOption("quality");
   await policyPane.getByLabel("Ranking limit").fill("7");
@@ -157,7 +158,7 @@ test("filters integrations by selection and search", async ({ page }) => {
   await expect(page.getByTestId("integration-connector-21")).toHaveCount(0);
 });
 
-test("opens integration details in an inline work pane without breaking ledger filtering", async ({ page }) => {
+test("opens integration details in a detail drawer without breaking ledger filtering", async ({ page }) => {
   await loginAsAdmin(page, "/admin/integrations");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
@@ -171,6 +172,7 @@ test("opens integration details in an inline work pane without breaking ledger f
 
   const detailPane = page.getByTestId("admin-integrations-detail-pane");
   await expect(detailPane).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeVisible();
   await expect(detailPane.getByRole("button", { name: "Close Panel" })).toBeVisible();
   await expect(detailPane).toContainText("Provider: github");
   await expect(webhookLedger).toContainText("repository.sync.completed");
@@ -203,6 +205,7 @@ test("rejects a moderation case from the moderation workspace", async ({ page })
   const moderationCase = page.getByTestId("moderation-case-card-61");
   await moderationCase.getByRole("button", { name: "Open Details" }).click();
   const detailPane = page.getByTestId("admin-moderation-detail-pane");
+  await expect(page.getByRole("dialog")).toBeVisible();
   await detailPane.getByLabel("Rejection note").fill("Rejected during moderation regression coverage.");
   await detailPane.getByRole("button", { name: "Reject Case" }).click();
 
