@@ -2,6 +2,24 @@
 
 :root {
   color-scheme: dark;
+  --motion-duration-fast: 160ms;
+  --motion-duration-medium: 220ms;
+  --motion-duration-slow: 420ms;
+  --motion-duration-enter: 720ms;
+  --motion-duration-ambient: 10000ms;
+  --motion-duration-ambient-slow: 16000ms;
+  --motion-duration-loading-loop: 1200ms;
+  --motion-duration-loading-spin: 2200ms;
+  --motion-delay-none: 0ms;
+  --motion-delay-xs: 120ms;
+  --motion-delay-sm: 140ms;
+  --motion-delay-md: 160ms;
+  --motion-delay-lg: 180ms;
+  --motion-delay-xl: 260ms;
+  --motion-delay-stagger-step: 80ms;
+  --motion-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-linear: linear;
 }
 
 * {

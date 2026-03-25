@@ -111,9 +111,9 @@
   background: var(--protected-topbar-brand-link-bg);
   box-shadow: none;
   transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    transform 160ms ease;
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .brandLink:hover {
@@ -201,4 +201,10 @@
     width: 150px;
   }
 
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brandLink {
+    transition: none;
+  }
 }

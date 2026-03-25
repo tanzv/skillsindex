@@ -150,6 +150,11 @@ export function DetailFormSurface({
         <DialogContent
           hideClose
           overlayClassName={overlayClassName}
+          aria-labelledby={titleId}
+          aria-describedby={description ? descriptionId : undefined}
+          data-variant={variant}
+          data-size={size}
+          data-motion-state={motionState}
           onPointerDownOutside={(event) => {
             if (!closeOnBackdrop) {
               event.preventDefault();
@@ -168,6 +173,11 @@ export function DetailFormSurface({
         side="right"
         hideClose
         overlayClassName={overlayClassName}
+        aria-labelledby={titleId}
+        aria-describedby={description ? descriptionId : undefined}
+        data-variant={variant}
+        data-size={size}
+        data-motion-state={motionState}
         onPointerDownOutside={(event) => {
           if (!closeOnBackdrop) {
             event.preventDefault();

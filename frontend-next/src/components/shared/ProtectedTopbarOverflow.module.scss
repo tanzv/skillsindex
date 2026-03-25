@@ -1,22 +1,7 @@
-.overflowWrapper {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
+.overflowMenu {
   width: min(1120px, calc(100vw - 48px));
-  max-width: 100%;
+  max-width: calc(100vw - 48px);
   z-index: 50;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-8px);
-  transition: opacity 170ms ease, transform 170ms ease, visibility 170ms ease;
-}
-
-.overflowExpanded {
-  pointer-events: auto;
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
 }
 
 .overflowPanel,
@@ -163,8 +148,9 @@
 }
 
 @media (max-width: 1180px) {
-  .overflowWrapper {
+  .overflowMenu {
     width: 100%;
+    max-width: calc(100vw - 48px);
   }
 }
 
@@ -179,5 +165,11 @@
 
   .overflowGroups {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overflowMenu {
+    transition: none;
   }
 }

@@ -3,7 +3,9 @@
 import { PanelLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
+
+import { DropdownMenu } from "@/src/components/ui/dropdown-menu";
 
 import type { SessionContext } from "@/src/lib/schemas/session";
 import { cn } from "@/src/lib/utils";
@@ -94,36 +96,6 @@ export function ProtectedTopbar({
   const brandWordmarkSrc = resolveProtectedBrandWordmarkSrc(theme);
   const brandWordmarkAlt = `${brandTitle} wordmark`;
 
-  useEffect(() => {
-    if (!overflowExpanded) {
-      return;
-    }
-
-    const handleDocumentPointerDown = (event: PointerEvent) => {
-      const overflowScopeElement = overflowScopeRef.current;
-      if (!overflowScopeElement || !(event.target instanceof Node)) {
-        return;
-      }
-
-      if (!overflowScopeElement.contains(event.target)) {
-        setIsOverflowExpanded(false);
-      }
-    };
-
-    const handleDocumentKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsOverflowExpanded(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handleDocumentPointerDown);
-    document.addEventListener("keydown", handleDocumentKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", handleDocumentPointerDown);
-      document.removeEventListener("keydown", handleDocumentKeyDown);
-    };
-  }, [overflowExpanded, overflowScopeRef, setIsOverflowExpanded]);
-
   return (
     <div ref={overflowScopeRef} className={styles.interactionScope} data-testid={dataTestId}>
       <div className={styles.shell}>
@@ -161,17 +133,26 @@ export function ProtectedTopbar({
               </Link>
 
               <div className={styles.navigationRow} data-testid={`${dataTestId}-nav-row`}>
-                <ProtectedTopbarPrimaryNav
-                  navigationRef={primaryNavigationRef}
-                  navigationAriaLabel={navigationAriaLabel}
-                  hasMeasuredPrimaryNavigation={hasMeasuredPrimaryNavigation}
-                  model={model}
-                  dataTestId={dataTestId}
-                  overflowExpanded={overflowExpanded}
-                  overflowPanelId={overflowPanelId}
-                  messages={messages}
-                  onToggleOverflow={() => setIsOverflowExpanded((previousValue) => !previousValue)}
-                />
+                <DropdownMenu modal={false} open={overflowExpanded} onOpenChange={setIsOverflowExpanded}>
+                  <ProtectedTopbarPrimaryNav
+                    navigationRef={primaryNavigationRef}
+                    navigationAriaLabel={navigationAriaLabel}
+                    hasMeasuredPrimaryNavigation={hasMeasuredPrimaryNavigation}
+                    model={model}
+                    dataTestId={dataTestId}
+                    overflowExpanded={overflowExpanded}
+                    overflowPanelId={overflowPanelId}
+                    messages={messages}
+                  />
+                  {hasOverflow ? (
+                    <ProtectedTopbarOverflowPanel
+                      overflow={model.overflow}
+                      dataTestId={dataTestId}
+                      overflowPanelId={overflowPanelId}
+                      messages={messages}
+                    />
+                  ) : null}
+                </DropdownMenu>
               </div>
             </div>
 
@@ -202,16 +183,6 @@ export function ProtectedTopbar({
           </div>
         </div>
       </div>
-
-      {hasOverflow ? (
-        <ProtectedTopbarOverflowPanel
-          overflow={model.overflow}
-          dataTestId={dataTestId}
-          overflowPanelId={overflowPanelId}
-          overflowExpanded={overflowExpanded}
-          messages={messages}
-        />
-      ) : null}
     </div>
   );
 }

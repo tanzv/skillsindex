@@ -44,7 +44,7 @@
   transform: translate3d(0, -50%, 0);
   transform-origin: center;
   pointer-events: none;
-  animation: loginOrbitalPulse 10s ease-in-out infinite;
+  animation: loginOrbitalPulse var(--login-motion-duration-ambient) var(--login-motion-ease-standard) infinite;
 }
 
 .infoPanel {
@@ -53,7 +53,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  animation: loginPanelReveal 900ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+  animation: loginPanelReveal var(--login-motion-duration-enter) var(--login-motion-ease-standard) var(--login-motion-delay-panel) both;
   position: relative;
   z-index: 1;
 }
@@ -69,7 +69,7 @@
   justify-content: center;
   padding: 0;
   background: transparent;
-  animation: loginFormReveal 900ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
+  animation: loginFormReveal var(--login-motion-duration-enter) var(--login-motion-ease-emphasized) var(--login-motion-delay-form) both;
   position: relative;
   z-index: 1;
 }

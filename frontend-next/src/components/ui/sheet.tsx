@@ -48,7 +48,7 @@ const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   SheetContentProps
 >(({ children, className, hideClose = false, overlayClassName, side = "right", ...props }, ref) => {
-  return (
+  const content = (
     <>
       <DialogOverlay className={overlayClassName} />
       <DialogPrimitive.Content
@@ -68,6 +68,12 @@ const SheetContent = React.forwardRef<
       </DialogPrimitive.Content>
     </>
   );
+
+  if (typeof document === "undefined") {
+    return content;
+  }
+
+  return <SheetPortal>{content}</SheetPortal>;
 });
 SheetContent.displayName = DialogPrimitive.Content.displayName;
 

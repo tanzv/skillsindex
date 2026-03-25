@@ -71,10 +71,10 @@
   font-weight: 700;
   white-space: nowrap;
   transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    color 160ms ease;
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
+    color var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .navButton::after,
@@ -88,7 +88,9 @@
   border-radius: 999px;
   background: transparent;
   opacity: 0;
-  transition: opacity 160ms ease, background-color 160ms ease;
+  transition:
+    opacity var(--motion-duration-fast) var(--motion-ease-standard),
+    background-color var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .navButtonLabel {
@@ -165,7 +167,7 @@
 .overflowToggleIcon {
   width: 13px;
   height: 13px;
-  transition: transform 160ms ease;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .overflowToggleExpanded .overflowToggleIcon {
@@ -215,5 +217,15 @@
 
   .primaryGroups::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navButton,
+  .utilityLink,
+  .navButton::after,
+  .utilityLink::after,
+  .overflowToggleIcon {
+    transition: none;
   }
 }

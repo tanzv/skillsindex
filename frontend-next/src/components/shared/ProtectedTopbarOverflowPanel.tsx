@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { DropdownMenuContent } from "@/src/components/ui/dropdown-menu";
 import { formatProtectedMessage, type ProtectedTopbarMessages } from "@/src/lib/i18n/protectedMessages";
 import { cn } from "@/src/lib/utils";
 
@@ -13,7 +14,6 @@ interface ProtectedTopbarOverflowPanelProps {
   overflow: ProtectedTopbarModel["overflow"];
   dataTestId: string;
   overflowPanelId: string;
-  overflowExpanded: boolean;
   messages: ProtectedTopbarMessages;
 }
 
@@ -21,20 +21,22 @@ export function ProtectedTopbarOverflowPanel({
   overflow,
   dataTestId,
   overflowPanelId,
-  overflowExpanded,
   messages
 }: ProtectedTopbarOverflowPanelProps) {
   return (
-    <div
+    <DropdownMenuContent
       id={overflowPanelId}
-      className={cn(overflowStyles.overflowWrapper, overflowExpanded && overflowStyles.overflowExpanded)}
-      aria-hidden={!overflowExpanded}
+      align="end"
+      side="bottom"
+      sideOffset={12}
+      collisionPadding={24}
+      className={cn(overflowStyles.overflowMenu, "border-0 bg-transparent p-0 shadow-none")}
+      data-testid={`${dataTestId}-overflow-panel`}
     >
       <div
         className={overflowStyles.overflowPanel}
         role="region"
         aria-label={messages.overflowPanelAriaLabel}
-        data-testid={`${dataTestId}-overflow-panel`}
       >
         <div className={overflowStyles.overflowHeader}>
           <div className={overflowStyles.overflowTitleBlock}>
@@ -91,6 +93,6 @@ export function ProtectedTopbarOverflowPanel({
           ))}
         </div>
       </div>
-    </div>
+    </DropdownMenuContent>
   );
 }

@@ -1,9 +1,21 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { createElement } from "react";
+import { createElement, type HTMLAttributes, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/src/components/ui/dialog", () => ({
+  Dialog: ({ children }: { children: ReactNode }) => createElement("div", null, children),
+  DialogContent: ({ children, ...props }: HTMLAttributes<HTMLDivElement>) =>
+    createElement("div", { role: "dialog", "aria-modal": "true", ...props }, children)
+}));
+
+vi.mock("@/src/components/ui/sheet", () => ({
+  Sheet: ({ children }: { children: ReactNode }) => createElement("div", null, children),
+  SheetContent: ({ children, ...props }: HTMLAttributes<HTMLDivElement>) =>
+    createElement("div", { role: "dialog", "aria-modal": "true", ...props }, children)
+}));
 
 import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
 
@@ -15,6 +27,14 @@ describe("DetailFormSurface", () => {
     );
 
     expect(source).not.toContain("if (!isMounted)");
+  });
+
+  it("uses portaled dialog and sheet primitives so overlays escape local layout contexts", () => {
+    const dialogSource = readFileSync(path.resolve(process.cwd(), "src/components/ui/dialog.tsx"), "utf8");
+    const sheetSource = readFileSync(path.resolve(process.cwd(), "src/components/ui/sheet.tsx"), "utf8");
+
+    expect(dialogSource).toContain("<DialogPortal>");
+    expect(sheetSource).toContain("<SheetPortal>");
   });
 
   it("renders nothing when closed", () => {

@@ -84,5 +84,8 @@ describe("LoginForm", () => {
     expect(markup).toContain('data-testid="login-locale-zh"');
     expect(markup).toContain("Welcome Back");
     expect(markup).toContain("/admin/overview");
+    expect(markup).toContain("--motion-delay:160ms");
+    expect(markup).toContain("--motion-delay:240ms");
+    expect(markup).toContain("--motion-delay:320ms");
   });
 });

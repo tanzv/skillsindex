@@ -22,6 +22,22 @@
   --login-text-secondary: #a3a3a3;
   --login-text-muted: #8f8f8f;
   --login-point-index: rgba(255, 255, 255, 0.34);
+  --login-motion-duration-fast: var(--motion-duration-fast);
+  --login-motion-duration-medium: var(--motion-duration-medium);
+  --login-motion-duration-enter: var(--motion-duration-enter);
+  --login-motion-duration-ambient: var(--motion-duration-ambient);
+  --login-motion-duration-ambient-slow: var(--motion-duration-ambient-slow);
+  --login-motion-duration-loop: var(--motion-duration-loading-loop);
+  --login-motion-ease-standard: var(--motion-ease-standard);
+  --login-motion-ease-emphasized: var(--motion-ease-emphasized);
+  --login-motion-ease-linear: var(--motion-ease-linear);
+  --login-motion-delay-panel: var(--motion-delay-xs);
+  --login-motion-delay-form: var(--motion-delay-lg);
+  --login-motion-delay-step-1: var(--motion-delay-md);
+  --login-motion-delay-step-2: calc(var(--motion-delay-md) + var(--motion-delay-stagger-step));
+  --login-motion-delay-step-3: calc(var(--motion-delay-md) + (var(--motion-delay-stagger-step) * 2));
+  --login-motion-delay-step-4: calc(var(--motion-delay-md) + (var(--motion-delay-stagger-step) * 3));
+  --login-motion-delay-ambient-phase: -6000ms;
   --login-input-bg: #171717;
   --login-input-border: #2b2b2b;
   --login-input-placeholder: #8f8f8f;
@@ -64,7 +80,7 @@
   z-index: 0;
   filter: blur(18px);
   opacity: 0.4;
-  animation: loginAmbientFloat 16s ease-in-out infinite;
+  animation: loginAmbientFloat var(--login-motion-duration-ambient-slow) var(--login-motion-ease-standard) infinite;
 }
 
 .stage::before {
@@ -89,7 +105,7 @@
     rgba(255, 255, 255, 0.08) 0%,
     transparent 72%
   );
-  animation-delay: -6s;
+  animation-delay: var(--login-motion-delay-ambient-phase);
 }
 
 .stage[data-theme="light"] {

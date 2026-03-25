@@ -4,6 +4,7 @@ import { ChevronDown, LayoutGrid } from "lucide-react";
 import Link from "next/link";
 import type { RefObject } from "react";
 
+import { DropdownMenuTrigger } from "@/src/components/ui/dropdown-menu";
 import { cn } from "@/src/lib/utils";
 import type { ProtectedTopbarMessages } from "@/src/lib/i18n/protectedMessages";
 
@@ -19,7 +20,6 @@ interface ProtectedTopbarPrimaryNavProps {
   overflowExpanded: boolean;
   overflowPanelId: string;
   messages: ProtectedTopbarMessages;
-  onToggleOverflow: () => void;
 }
 
 export function ProtectedTopbarPrimaryNav({
@@ -30,8 +30,7 @@ export function ProtectedTopbarPrimaryNav({
   dataTestId,
   overflowExpanded,
   overflowPanelId,
-  messages,
-  onToggleOverflow
+  messages
 }: ProtectedTopbarPrimaryNavProps) {
   const hasOverflow = model.hiddenEntries.length > 0;
 
@@ -62,29 +61,30 @@ export function ProtectedTopbarPrimaryNav({
 
         {hasOverflow ? (
           <div className={styles.overflowToggleGroup} role="group" aria-label={messages.overflowControlsAriaLabel}>
-            <button
-              type="button"
-              data-testid={`${dataTestId}-more`}
-              className={cn(styles.overflowToggle, overflowExpanded && styles.overflowToggleExpanded)}
-              aria-label={overflowExpanded ? messages.collapseNavigationPanel : messages.expandNavigationPanel}
-              aria-expanded={overflowExpanded}
-              aria-controls={overflowPanelId}
-              aria-haspopup="menu"
-              title={overflowExpanded ? messages.hideLabel : messages.moreLabel}
-              onClick={onToggleOverflow}
-            >
-              <span className={styles.overflowToggleContent} aria-hidden="true">
-                <span className={styles.overflowToggleGlyphShell}>
-                  <LayoutGrid className={styles.overflowTogglePanelIcon} />
-                </span>
-                {!overflowExpanded ? (
-                  <span className={styles.overflowToggleBadge}>
-                    <span className={styles.overflowToggleBadgeCount}>{model.hiddenEntries.length}</span>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                data-testid={`${dataTestId}-more`}
+                className={cn(styles.overflowToggle, overflowExpanded && styles.overflowToggleExpanded)}
+                aria-label={overflowExpanded ? messages.collapseNavigationPanel : messages.expandNavigationPanel}
+                aria-expanded={overflowExpanded}
+                aria-controls={overflowPanelId}
+                aria-haspopup="menu"
+                title={overflowExpanded ? messages.hideLabel : messages.moreLabel}
+              >
+                <span className={styles.overflowToggleContent} aria-hidden="true">
+                  <span className={styles.overflowToggleGlyphShell}>
+                    <LayoutGrid className={styles.overflowTogglePanelIcon} />
                   </span>
-                ) : null}
-                <ChevronDown className={styles.overflowToggleIcon} />
-              </span>
-            </button>
+                  {!overflowExpanded ? (
+                    <span className={styles.overflowToggleBadge}>
+                      <span className={styles.overflowToggleBadgeCount}>{model.hiddenEntries.length}</span>
+                    </span>
+                  ) : null}
+                  <ChevronDown className={styles.overflowToggleIcon} />
+                </span>
+              </button>
+            </DropdownMenuTrigger>
           </div>
         ) : null}
       </div>

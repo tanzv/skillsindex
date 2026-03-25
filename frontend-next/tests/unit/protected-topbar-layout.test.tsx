@@ -148,6 +148,6 @@ describe("ProtectedTopbar layout", () => {
     expect(markup).toContain("admin-topbar-overflow-panel");
     expect(markup).toContain("admin-topbar-overflow-group-access");
     expect(markup).toContain("Open the workspace route.");
-    expect(markup).toContain('aria-hidden="false"');
+    expect(markup).toContain('role="menu"');
   });
 });
