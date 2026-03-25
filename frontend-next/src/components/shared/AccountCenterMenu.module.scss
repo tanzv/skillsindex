@@ -1,4 +1,4 @@
-$account-menu-transition: 160ms ease;
+$account-menu-transition: var(--motion-duration-fast) var(--motion-ease-standard);
 %control-surface {
   min-height: 38px;
   border: 1px solid var(--protected-shell-border);
@@ -136,23 +136,9 @@ $account-menu-transition: 160ms ease;
   font-size: 11px;
 }
 .menu {
-  position: absolute;
-  top: calc(100% + 12px);
-  right: 0;
   width: min(360px, calc(100vw - 24px));
   max-height: min(560px, calc(100vh - 96px));
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-8px);
-  transition: opacity 160ms ease, transform 160ms ease, visibility 160ms ease;
   z-index: 52;
-}
-.menuExpanded {
-  pointer-events: auto;
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
 }
 .card {
   display: grid;
@@ -171,7 +157,6 @@ $account-menu-transition: 160ms ease;
   display: grid;
   gap: 10px;
 }
-
 .summary {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
@@ -349,6 +334,14 @@ $account-menu-transition: 160ms ease;
   flex: 0 0 auto;
 }
 
+.actionError {
+  margin: 0;
+  padding: 0 12px 4px;
+  color: var(--status-danger-fg, #b42318);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
 .preferenceRow {
   gap: 8px;
 }
@@ -373,7 +366,6 @@ $account-menu-transition: 160ms ease;
 
 @media (max-width: 780px) {
   .menu {
-    right: 0;
     width: min(320px, calc(100vw - 20px));
     max-height: min(520px, calc(100vh - 80px));
   }
@@ -389,5 +381,14 @@ $account-menu-transition: 160ms ease;
 
   .triggerCopy {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .userTrigger,
+  .accountLink,
+  .accountLogout,
+  .segmentedButton {
+    transition: none;
   }
 }

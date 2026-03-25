@@ -10,7 +10,13 @@ import {
   Languages
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger
+} from "@/src/components/ui/dropdown-menu";
 
 import {
   formatProtectedSessionRole,
@@ -72,7 +78,6 @@ export function AccountCenterMenu({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState("");
-  const rootRef = useRef<HTMLDivElement | null>(null);
   const menuId = `${dataTestId}-account-menu-region`;
   const {
     closeProfileEditor,
@@ -104,38 +109,6 @@ export function AccountCenterMenu({
     onExpandedChange?.(nextExpanded);
   }
 
-  useEffect(() => {
-    if (!isExpanded) {
-      return;
-    }
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const rootElement = rootRef.current;
-      if (!rootElement || !(event.target instanceof Node)) {
-        return;
-      }
-
-      if (!rootElement.contains(event.target)) {
-        setIsExpanded(false);
-        onExpandedChange?.(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsExpanded(false);
-        onExpandedChange?.(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isExpanded, onExpandedChange]);
-
   async function handleSignOut() {
     if (isSigningOut) {
       return;
@@ -163,202 +136,210 @@ export function AccountCenterMenu({
   }
 
   return (
-    <div ref={rootRef} className={styles.accountAnchor}>
-      <button
-        type="button"
-        className={cn(
-          styles.userTrigger,
-          triggerVariant === "avatar" && styles.userTriggerAvatarOnly,
-          isExpanded && styles.userTriggerExpanded
-        )}
-        aria-label={isExpanded ? messages.closeAccountCenterAriaLabel : messages.openAccountCenterAriaLabel}
-        aria-controls={menuId}
-        aria-expanded={isExpanded}
-        data-testid={`${dataTestId}-account-trigger`}
-        data-trigger-variant={triggerVariant}
-        title={userName}
-        onClick={() => {
-          setExpandedState(!isExpanded);
-        }}
-      >
-        {triggerVariant === "pill" ? (
-          <>
-            <span className={styles.triggerCopy} aria-hidden="true">
-              <strong className={styles.triggerTitle}>{userName}</strong>
-              <span className={styles.triggerMeta}>{userSubtitle}</span>
-            </span>
-            <ChevronDown className={styles.userIcon} />
-          </>
-        ) : <span className={styles.visuallyHidden}>{userName}</span>}
-        <span className={styles.avatar}>{userInitials}</span>
-      </button>
+    <DropdownMenu modal={false} open={isExpanded} onOpenChange={setExpandedState}>
+      <div className={styles.accountAnchor}>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className={cn(
+              styles.userTrigger,
+              triggerVariant === "avatar" && styles.userTriggerAvatarOnly,
+              isExpanded && styles.userTriggerExpanded
+            )}
+            aria-label={isExpanded ? messages.closeAccountCenterAriaLabel : messages.openAccountCenterAriaLabel}
+            aria-controls={menuId}
+            aria-expanded={isExpanded}
+            data-testid={`${dataTestId}-account-trigger`}
+            data-trigger-variant={triggerVariant}
+            title={userName}
+          >
+            {triggerVariant === "pill" ? (
+              <>
+                <span className={styles.triggerCopy} aria-hidden="true">
+                  <strong className={styles.triggerTitle}>{userName}</strong>
+                  <span className={styles.triggerMeta}>{userSubtitle}</span>
+                </span>
+                <ChevronDown className={styles.userIcon} />
+              </>
+            ) : <span className={styles.visuallyHidden}>{userName}</span>}
+            <span className={styles.avatar}>{userInitials}</span>
+          </button>
+        </DropdownMenuTrigger>
 
-      <div
-        id={menuId}
-        className={cn(styles.menu, isExpanded && styles.menuExpanded)}
-        data-testid={`${dataTestId}-account-menu`}
-        aria-hidden={!isExpanded}
-      >
-        <div className={styles.card}>
-          <div className={styles.summary}>
-            <span className={cn(styles.avatar, styles.accountAvatar)}>{userInitials}</span>
-            <div className={styles.copy}>
-              <span className={styles.summaryKicker}>{messages.accountMenuNavigationTitle}</span>
-              <strong>{userName}</strong>
-              <small>{userSubtitle}</small>
-              <div className={styles.summaryMeta} aria-hidden="true">
-                <span className={styles.summaryPill}>{formatProtectedSessionRole(session.user?.role, messages)}</span>
-                <span className={styles.summaryPill}>{formatProtectedSessionStatus(session.user?.status, messages)}</span>
+        <DropdownMenuContent
+          id={menuId}
+          align="end"
+          sideOffset={12}
+          aria-hidden={!isExpanded}
+          className={cn(styles.menu, "border-0 bg-transparent p-0 shadow-none")}
+          data-testid={`${dataTestId}-account-menu`}
+          onCloseAutoFocus={(event) => {
+            if (profileEditorOpen) {
+              event.preventDefault();
+            }
+          }}
+        >
+          <div className={styles.card}>
+            <div className={styles.summary}>
+              <span className={cn(styles.avatar, styles.accountAvatar)}>{userInitials}</span>
+              <div className={styles.copy}>
+                <span className={styles.summaryKicker}>{messages.accountMenuNavigationTitle}</span>
+                <strong>{userName}</strong>
+                <small>{userSubtitle}</small>
+                <div className={styles.summaryMeta} aria-hidden="true">
+                  <span className={styles.summaryPill}>{formatProtectedSessionRole(session.user?.role, messages)}</span>
+                  <span className={styles.summaryPill}>{formatProtectedSessionStatus(session.user?.status, messages)}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {menuConfig.sections.map((section) => (
-            <section key={section.id} className={styles.section}>
-              <div className={styles.sectionHeading}>
-                <p className={styles.sectionTitle}>{section.title}</p>
-                <span className={styles.sectionCount} aria-hidden="true">
-                  {section.entries.length}
-                </span>
-              </div>
-              <div className={styles.actions} role="list">
-                {section.entries.map((entry) => {
-                  const Icon = resolveAccountCenterMenuIcon(entry.icon);
-                  const entryDescription = resolveAccountCenterMenuEntryDescription(entry, accountMessages);
-                  const entryContent = (
-                    <>
-                      <span className={styles.iconShell} aria-hidden="true">
-                        <Icon className={styles.linkIcon} />
-                      </span>
-                      <span className={styles.linkCopy}>
-                        <span className={styles.linkTitle}>{entry.label}</span>
-                        <span className={styles.linkDescription}>{entryDescription}</span>
-                      </span>
-                      <ChevronRight className={styles.linkArrow} aria-hidden="true" />
-                    </>
-                  );
+            {menuConfig.sections.map((section) => (
+              <section key={section.id} className={styles.section}>
+                <div className={styles.sectionHeading}>
+                  <p className={styles.sectionTitle}>{section.title}</p>
+                  <span className={styles.sectionCount} aria-hidden="true">
+                    {section.entries.length}
+                  </span>
+                </div>
+                <div className={styles.actions} role="list">
+                  {section.entries.map((entry) => {
+                    const Icon = resolveAccountCenterMenuIcon(entry.icon);
+                    const entryDescription = resolveAccountCenterMenuEntryDescription(entry, accountMessages);
+                    const entryContent = (
+                      <>
+                        <span className={styles.iconShell} aria-hidden="true">
+                          <Icon className={styles.linkIcon} />
+                        </span>
+                        <span className={styles.linkCopy}>
+                          <span className={styles.linkTitle}>{entry.label}</span>
+                          <span className={styles.linkDescription}>{entryDescription}</span>
+                        </span>
+                        <ChevronRight className={styles.linkArrow} aria-hidden="true" />
+                      </>
+                    );
 
-                  if (entry.action === "quick-profile") {
+                    if (entry.action === "quick-profile") {
+                      return (
+                        <button
+                          key={entry.id}
+                          type="button"
+                          className={styles.accountLink}
+                          onClick={() => {
+                            setExpandedState(false);
+                            void openProfileEditor();
+                          }}
+                        >
+                          {entryContent}
+                        </button>
+                      );
+                    }
+
                     return (
-                      <button
+                      <Link
                         key={entry.id}
-                        type="button"
+                        href={entry.href}
                         className={styles.accountLink}
                         onClick={() => {
                           setExpandedState(false);
-                          void openProfileEditor();
                         }}
                       >
                         {entryContent}
-                      </button>
+                      </Link>
                     );
-                  }
+                  })}
+                </div>
+              </section>
+            ))}
 
-                  return (
-                    <Link
-                      key={entry.id}
-                      href={entry.href}
-                      className={styles.accountLink}
-                      onClick={() => {
-                        setExpandedState(false);
-                      }}
-                    >
-                      {entryContent}
-                    </Link>
-                  );
-                })}
+            <section className={styles.section}>
+              <p className={styles.sectionTitle}>{messages.accountMenuPreferencesTitle}</p>
+
+              <div className={styles.preferenceRow}>
+                <span className={styles.preferenceLabel}>{messages.accountMenuLocaleLabel}</span>
+                <div className={styles.segmentedControl} role="group" aria-label={messages.accountMenuLocaleLabel}>
+                  <button
+                    type="button"
+                    className={cn(styles.segmentedButton, locale === "zh" && styles.segmentedButtonActive)}
+                    data-testid={`${dataTestId}-locale-zh`}
+                    aria-pressed={locale === "zh"}
+                    onClick={() => {
+                      setSignOutError("");
+                      setLocale("zh");
+                    }}
+                  >
+                    <Languages className={styles.segmentedIcon} />
+                    <span>{messages.accountMenuLocaleZhLabel}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(styles.segmentedButton, locale === "en" && styles.segmentedButtonActive)}
+                    data-testid={`${dataTestId}-locale-en`}
+                    aria-pressed={locale === "en"}
+                    onClick={() => {
+                      setSignOutError("");
+                      setLocale("en");
+                    }}
+                  >
+                    <Globe2 className={styles.segmentedIcon} />
+                    <span>{messages.accountMenuLocaleEnLabel}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className={styles.preferenceRow}>
+                <span className={styles.preferenceLabel}>{messages.accountMenuThemeLabel}</span>
+                <div className={styles.segmentedControl} role="group" aria-label={messages.accountMenuThemeLabel}>
+                  <button
+                    type="button"
+                    className={cn(styles.segmentedButton, theme === "light" && styles.segmentedButtonActive)}
+                    data-testid={`${dataTestId}-theme-light`}
+                    aria-pressed={theme === "light"}
+                    onClick={() => {
+                      setSignOutError("");
+                      onThemeChange("light");
+                    }}
+                  >
+                    <SunMedium className={styles.segmentedIcon} />
+                    <span>{messages.accountMenuThemeLightLabel}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(styles.segmentedButton, theme === "dark" && styles.segmentedButtonActive)}
+                    data-testid={`${dataTestId}-theme-dark`}
+                    aria-pressed={theme === "dark"}
+                    onClick={() => {
+                      setSignOutError("");
+                      onThemeChange("dark");
+                    }}
+                  >
+                    <MoonStar className={styles.segmentedIcon} />
+                    <span>{messages.accountMenuThemeDarkLabel}</span>
+                  </button>
+                </div>
               </div>
             </section>
-          ))}
 
-          <section className={styles.section}>
-            <p className={styles.sectionTitle}>{messages.accountMenuPreferencesTitle}</p>
-
-            <div className={styles.preferenceRow}>
-              <span className={styles.preferenceLabel}>{messages.accountMenuLocaleLabel}</span>
-              <div className={styles.segmentedControl} role="group" aria-label={messages.accountMenuLocaleLabel}>
-                <button
-                  type="button"
-                  className={cn(styles.segmentedButton, locale === "zh" && styles.segmentedButtonActive)}
-                  data-testid={`${dataTestId}-locale-zh`}
-                  aria-pressed={locale === "zh"}
-                  onClick={() => {
-                    setSignOutError("");
-                    setLocale("zh");
-                  }}
-                >
-                  <Languages className={styles.segmentedIcon} />
-                  <span>{messages.accountMenuLocaleZhLabel}</span>
-                </button>
-                <button
-                  type="button"
-                  className={cn(styles.segmentedButton, locale === "en" && styles.segmentedButtonActive)}
-                  data-testid={`${dataTestId}-locale-en`}
-                  aria-pressed={locale === "en"}
-                  onClick={() => {
-                    setSignOutError("");
-                    setLocale("en");
-                  }}
-                >
-                  <Globe2 className={styles.segmentedIcon} />
-                  <span>{messages.accountMenuLocaleEnLabel}</span>
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.preferenceRow}>
-              <span className={styles.preferenceLabel}>{messages.accountMenuThemeLabel}</span>
-              <div className={styles.segmentedControl} role="group" aria-label={messages.accountMenuThemeLabel}>
-                <button
-                  type="button"
-                  className={cn(styles.segmentedButton, theme === "light" && styles.segmentedButtonActive)}
-                  data-testid={`${dataTestId}-theme-light`}
-                  aria-pressed={theme === "light"}
-                  onClick={() => {
-                    setSignOutError("");
-                    onThemeChange("light");
-                  }}
-                >
-                  <SunMedium className={styles.segmentedIcon} />
-                  <span>{messages.accountMenuThemeLightLabel}</span>
-                </button>
-                <button
-                  type="button"
-                  className={cn(styles.segmentedButton, theme === "dark" && styles.segmentedButtonActive)}
-                  data-testid={`${dataTestId}-theme-dark`}
-                  aria-pressed={theme === "dark"}
-                  onClick={() => {
-                    setSignOutError("");
-                    onThemeChange("dark");
-                  }}
-                >
-                  <MoonStar className={styles.segmentedIcon} />
-                  <span>{messages.accountMenuThemeDarkLabel}</span>
-                </button>
-              </div>
-            </div>
-          </section>
-
-          <button
-            type="button"
-            className={styles.accountLogout}
-            data-testid={`${dataTestId}-logout`}
-            disabled={isSigningOut}
-            onClick={() => {
-              void handleSignOut();
-            }}
-          >
-            <LogOut className={styles.linkIcon} />
-            <span>{isSigningOut ? `${messages.accountMenuLogoutLabel}...` : messages.accountMenuLogoutLabel}</span>
-          </button>
-          {signOutError ? (
-            <p className={styles.actionError} role="alert">
-              {signOutError}
-            </p>
-          ) : null}
-        </div>
+            <button
+              type="button"
+              className={styles.accountLogout}
+              data-testid={`${dataTestId}-logout`}
+              disabled={isSigningOut}
+              onClick={() => {
+                void handleSignOut();
+              }}
+            >
+              <LogOut className={styles.linkIcon} />
+              <span>{isSigningOut ? `${messages.accountMenuLogoutLabel}...` : messages.accountMenuLogoutLabel}</span>
+            </button>
+            {signOutError ? (
+              <p className={styles.actionError} role="alert">
+                {signOutError}
+              </p>
+            ) : null}
+          </div>
+        </DropdownMenuContent>
       </div>
-
+      
       <AccountCenterQuickProfileDialog
         open={profileEditorOpen}
         closeLabel={messages.closeAccountCenterAriaLabel}
@@ -385,6 +366,6 @@ export function AccountCenterMenu({
           void saveProfile();
         }}
       />
-    </div>
+    </DropdownMenu>
   );
 }
