@@ -32,6 +32,69 @@
   --marketplace-shadow-soft:
     0 20px 36px rgba(2, 6, 23, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  --marketplace-landing-hero-background:
+    linear-gradient(180deg, rgba(13, 14, 19, 0.98) 0%, rgba(11, 12, 16, 0.98) 100%);
+  --marketplace-landing-hero-grid-line: rgba(148, 163, 184, 0.08);
+  --marketplace-landing-hero-grid-opacity: 0.22;
+  --marketplace-landing-code-meta-text: #cbd5e1;
+  --marketplace-landing-code-dot-1: #e2e8f0;
+  --marketplace-landing-code-dot-2: #94a3b8;
+  --marketplace-landing-code-dot-3: #64748b;
+  --marketplace-landing-overline-text: #d4d4d8;
+  --marketplace-landing-display-text: #f8fafc;
+  --marketplace-landing-promo-text: #cbd5e1;
+  --marketplace-landing-metric-border: rgba(148, 163, 184, 0.16);
+  --marketplace-landing-metric-background: rgba(255, 255, 255, 0.03);
+  --marketplace-landing-metric-label-text: #e5e7eb;
+  --marketplace-landing-metric-value-text: #f8fafc;
+  --marketplace-landing-metric-note-text: #94a3b8;
+  --marketplace-landing-plot-border: rgba(148, 163, 184, 0.42);
+  --marketplace-landing-plot-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(15, 23, 42, 0) 100%);
+  --marketplace-landing-trend-line: #f8fafc;
+  --marketplace-landing-deck-background:
+    linear-gradient(180deg, rgba(16, 17, 19, 0.34) 0%, rgba(12, 13, 16, 0.2) 100%);
+  --marketplace-landing-card-cover-background: #2a2a2a;
+  --marketplace-landing-card-cover-text: #f3f4f6;
+  --marketplace-landing-card-cover-chip-background: #111111;
+  --marketplace-landing-card-cover-chip-text: #f3f4f6;
+  --marketplace-landing-card-title-text: #f8fafc;
+  --marketplace-landing-card-description-text: #d1d5db;
+  --marketplace-landing-card-chip-background: rgba(255, 255, 255, 0.06);
+  --marketplace-landing-card-chip-text: #d2d6de;
+  --marketplace-landing-card-foot-text: #cfd4dd;
+  --marketplace-landing-card-foot-primary-text: #f3f4f6;
+  --marketplace-landing-hero-shell-border: rgba(255, 255, 255, 0.06);
+  --marketplace-landing-hero-shell-background: #0b0d12;
+  --marketplace-landing-hero-overline-soft-text: #a9abb2;
+  --marketplace-landing-hero-main-soft-text: #f2f2f3;
+  --marketplace-landing-hero-promo-soft-text: #9aa0ab;
+  --marketplace-landing-hero-metric-soft-background: rgba(255, 255, 255, 0.04);
+  --marketplace-landing-hero-metric-soft-label-text: #9ea5b1;
+  --marketplace-landing-hero-metric-soft-value-text: #f2f4f8;
+  --marketplace-landing-hero-trend-soft-background: rgba(255, 255, 255, 0.035);
+  --marketplace-landing-hero-plot-axis: #8a8f98;
+  --marketplace-landing-hero-plot-overlay:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 100%);
+  --marketplace-landing-hero-trend-soft-line: #f0f2f5;
+  --marketplace-landing-hero-axis-label-text: #a0a4ad;
+  --marketplace-landing-hero-chart-note-text: #959ca8;
+  --marketplace-landing-auto-load-arrow-text: #9ca3af;
+  --marketplace-landing-auto-load-ring-border: #8a8a8a;
+  --marketplace-landing-auto-load-ring-accent: #f0f0f0;
+  --marketplace-landing-auto-load-dot-1: #7a7a7a;
+  --marketplace-landing-auto-load-dot-2: #8a8a8a;
+  --marketplace-landing-auto-load-dot-3: #9a9a9a;
+  --marketplace-landing-search-strip-background:
+    linear-gradient(180deg, rgba(22, 23, 28, 0.98) 0%, rgba(18, 20, 26, 0.98) 100%);
+  --marketplace-landing-cover-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+  --marketplace-landing-cover-thumb-background: rgba(255, 255, 255, 0.08);
+  --marketplace-landing-cover-thumb-text: var(--marketplace-home-text);
+  --marketplace-landing-nav-badge-background: rgba(255, 255, 255, 0.16);
+  --marketplace-landing-nav-badge-text: #fafafa;
+  --marketplace-landing-nav-badge-active-background: rgba(17, 17, 17, 0.08);
+  --marketplace-landing-nav-badge-active-text: #111111;
 }
 
 .marketplace-shell.is-landing-route.is-light-theme {
@@ -68,4 +131,42 @@
   --marketplace-shadow-soft:
     0 18px 34px rgba(15, 23, 42, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.48);
+  --marketplace-landing-hero-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 1) 100%);
+  --marketplace-landing-hero-grid-opacity: 0.14;
+  --marketplace-landing-code-meta-text: #475569;
+  --marketplace-landing-overline-text: #64748b;
+  --marketplace-landing-display-text: #111827;
+  --marketplace-landing-promo-text: #64748b;
+  --marketplace-landing-metric-background: rgba(255, 255, 255, 0.84);
+  --marketplace-landing-metric-label-text: #334155;
+  --marketplace-landing-metric-value-text: #111827;
+  --marketplace-landing-trend-line: #0f172a;
+  --marketplace-landing-deck-background: #ffffff;
+  --marketplace-landing-card-cover-background: #111111;
+  --marketplace-landing-card-cover-text: #ffffff;
+  --marketplace-landing-card-title-text: #111827;
+  --marketplace-landing-card-description-text: #4b5563;
+  --marketplace-landing-card-chip-background: #f3f4f6;
+  --marketplace-landing-card-chip-text: #374151;
+  --marketplace-landing-card-foot-text: #4b5563;
+  --marketplace-landing-card-foot-primary-text: #111827;
+  --marketplace-landing-hero-shell-border: #d9dde7;
+  --marketplace-landing-hero-shell-background: #ffffff;
+  --marketplace-landing-hero-main-soft-text: #101828;
+  --marketplace-landing-hero-metric-soft-background: #f5f7fb;
+  --marketplace-landing-hero-metric-soft-value-text: #111827;
+  --marketplace-landing-hero-trend-soft-background: #f5f7fb;
+  --marketplace-landing-hero-trend-soft-line: #111827;
+  --marketplace-landing-auto-load-arrow-text: #4b5563;
+  --marketplace-landing-auto-load-ring-border: #718096;
+  --marketplace-landing-auto-load-ring-accent: #111827;
+  --marketplace-landing-auto-load-dot-1: #6b7280;
+  --marketplace-landing-auto-load-dot-2: #4b5563;
+  --marketplace-landing-auto-load-dot-3: #374151;
+  --marketplace-landing-search-strip-background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 1) 100%);
+  --marketplace-landing-cover-background: linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%);
+  --marketplace-landing-cover-thumb-background: #111111;
+  --marketplace-landing-cover-thumb-text: #ffffff;
 }

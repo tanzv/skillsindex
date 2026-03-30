@@ -50,6 +50,8 @@
   --marketplace-topbar-button-hover-background: rgba(255, 255, 255, 0.1);
   --marketplace-topbar-button-primary-background: var(--si-color-accent);
   --marketplace-topbar-button-primary-text: var(--si-color-accent-contrast);
+  --marketplace-topbar-button-primary-soft-background:
+    color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 88%, transparent);
   --marketplace-toggle-background: rgba(255, 255, 255, 0.04);
   --marketplace-toggle-border: rgba(255, 255, 255, 0.08);
   --marketplace-toggle-text: var(--si-color-text-secondary);
@@ -70,15 +72,100 @@
   --marketplace-search-button-text: var(--si-color-accent-contrast);
   --marketplace-link-text: var(--si-color-text-primary);
   --marketplace-overlay-background: var(--si-color-overlay-mask);
+  --marketplace-section-topbar-shell-border: color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
+  --marketplace-section-topbar-shell-background: color-mix(in srgb, var(--marketplace-section-background) 94%, transparent);
+  --marketplace-section-topbar-button-border: color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
+  --marketplace-section-topbar-button-background:
+    color-mix(in srgb, var(--marketplace-topbar-button-background) 88%, var(--marketplace-section-background) 12%);
+  --marketplace-section-topbar-button-subtle-background:
+    color-mix(in srgb, var(--marketplace-section-emphasis-background) 72%, transparent);
+  --marketplace-section-topbar-button-hover-border: color-mix(in srgb, var(--marketplace-card-border) 80%, transparent);
+  --marketplace-section-topbar-button-hover-background: var(--marketplace-section-emphasis-background);
+  --marketplace-section-topbar-nav-active-border:
+    color-mix(in srgb, var(--marketplace-nav-button-active-background) 30%, var(--marketplace-card-border-soft) 70%);
+  --marketplace-section-topbar-primary-border:
+    color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 32%, var(--marketplace-card-border-soft) 68%);
+  --marketplace-category-metric-border: color-mix(in srgb, var(--marketplace-card-border-soft) 82%, transparent);
+  --marketplace-category-metric-background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--marketplace-section-background) 97%, var(--marketplace-section-emphasis-background) 3%) 0%,
+      color-mix(in srgb, var(--marketplace-section-background) 90%, var(--marketplace-section-emphasis-background) 10%) 100%
+    );
+  --marketplace-category-card-border: color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
+  --marketplace-category-card-background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--marketplace-section-background) 98%, var(--marketplace-section-emphasis-background) 2%) 0%,
+      color-mix(in srgb, var(--marketplace-section-background) 93%, var(--marketplace-section-emphasis-background) 7%) 100%
+    );
+  --marketplace-category-card-accent-background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--marketplace-section-background) 98%, var(--marketplace-section-emphasis-background) 2%) 0%,
+      color-mix(in srgb, var(--marketplace-section-background) 92%, var(--marketplace-section-emphasis-background) 8%) 100%
+    );
+  --marketplace-category-card-hover-background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--marketplace-section-background) 94%, var(--marketplace-section-emphasis-background) 6%) 0%,
+      color-mix(in srgb, var(--marketplace-section-background) 84%, var(--marketplace-section-emphasis-background) 16%) 100%
+    );
+  --marketplace-category-browse-card-border: color-mix(in srgb, var(--marketplace-card-border-soft) 86%, transparent);
+  --marketplace-category-browse-card-background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--marketplace-section-background) 98%, var(--marketplace-section-emphasis-background) 2%) 0%,
+      color-mix(in srgb, var(--marketplace-section-background) 94%, var(--marketplace-section-emphasis-background) 6%) 100%
+    );
+  --marketplace-category-featured-card-border: color-mix(in srgb, var(--marketplace-card-border-soft) 86%, transparent);
+  --marketplace-category-featured-card-background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--marketplace-section-emphasis-background) 92%, transparent) 0%,
+      color-mix(in srgb, var(--marketplace-section-background) 92%, var(--marketplace-section-emphasis-background) 8%) 100%
+    );
+  --marketplace-category-collection-card-border: color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
+  --marketplace-category-collection-card-background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--marketplace-section-background) 95%, var(--marketplace-section-emphasis-background) 5%) 0%,
+      color-mix(in srgb, var(--marketplace-section-background) 88%, var(--marketplace-section-emphasis-background) 12%) 100%
+    );
+  --marketplace-category-collection-link-background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--marketplace-section-background) 92%, transparent) 0%,
+      color-mix(in srgb, var(--marketplace-section-emphasis-background) 72%, transparent) 100%
+    );
+  --marketplace-category-skill-card-avatar-border: color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
+  --marketplace-category-skill-card-avatar-background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--marketplace-section-emphasis-background) 88%, transparent) 0%,
+      color-mix(in srgb, var(--marketplace-section-background) 92%, var(--marketplace-section-emphasis-background) 8%) 100%
+    );
+  --marketplace-category-nav-item-background: color-mix(in srgb, var(--marketplace-chip-background) 72%, transparent);
+  --marketplace-category-nav-count-active-border: color-mix(in srgb, currentcolor 18%, transparent);
+  --marketplace-category-nav-count-active-background: color-mix(in srgb, currentcolor 8%, transparent);
+  --marketplace-section-topbar-shell-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 18px rgba(0, 0, 0, 0.1);
+  --marketplace-section-topbar-button-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  --marketplace-section-topbar-active-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 8px 18px rgba(0, 0, 0, 0.12);
   --marketplace-shadow-soft:
     0 18px 34px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  color-scheme: dark;
   min-height: 100vh;
   background: var(--marketplace-home-background);
   color: var(--marketplace-home-text);
 }
 
 .marketplace-shell.is-light-theme {
+  color-scheme: light;
   --marketplace-home-background: #eef1f5;
   --marketplace-home-text: #111111;
   --marketplace-topbar-background: #ffffff;
@@ -105,6 +192,8 @@
   --marketplace-topbar-button-hover-background: #f5f5f5;
   --marketplace-topbar-button-primary-background: #111111;
   --marketplace-topbar-button-primary-text: #ffffff;
+  --marketplace-topbar-button-primary-soft-background:
+    color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 88%, transparent);
   --marketplace-toggle-background: #ffffff;
   --marketplace-toggle-border: #d4d4d4;
   --marketplace-toggle-text: #555555;
@@ -125,6 +214,16 @@
   --marketplace-search-button-text: #ffffff;
   --marketplace-link-text: #111111;
   --marketplace-overlay-background: rgba(15, 23, 42, 0.34);
+  --marketplace-category-collection-card-background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--marketplace-section-background) 97%, var(--marketplace-section-emphasis-background) 3%) 0%,
+      color-mix(in srgb, var(--marketplace-section-background) 90%, var(--marketplace-section-emphasis-background) 10%) 100%
+    );
+  --marketplace-section-topbar-shell-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 8px 18px rgba(15, 23, 42, 0.06);
+  --marketplace-section-topbar-button-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
   --marketplace-shadow-soft:
     0 18px 34px rgba(15, 23, 42, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);

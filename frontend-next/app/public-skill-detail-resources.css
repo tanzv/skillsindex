@@ -20,72 +20,6 @@
   gap: 14px;
 }
 
-.marketplace-shell.is-light-theme:has(.skill-detail-page[data-active-tab="resources"]) {
-  --marketplace-shell-inline-gutter: 24px;
-  --marketplace-home-background: #f6f3ee;
-  --marketplace-home-text: #1f1a14;
-  --marketplace-topbar-background: #fffdf9;
-  --marketplace-topbar-background-alt: #f8f5ef;
-  --marketplace-topbar-border: #e7e1d6;
-  --marketplace-status-background: rgba(31, 26, 20, 0.04);
-  --marketplace-status-border: #ece6dc;
-  --marketplace-status-text: #746d63;
-  --marketplace-brand-dot-background: #18120d;
-  --marketplace-brand-dot-text: #fffdf9;
-  --marketplace-brand-title: #1f1a14;
-  --marketplace-brand-subtitle: #746d63;
-  --marketplace-nav-shell-background: rgba(255, 253, 249, 0.94);
-  --marketplace-nav-shell-border: #e7e1d6;
-  --marketplace-nav-button-border: #e7e1d6;
-  --marketplace-nav-button-text: #3b342b;
-  --marketplace-nav-button-hover-background: #f2ece2;
-  --marketplace-nav-button-hover-border: #ddd4c8;
-  --marketplace-nav-button-active-background: #18120d;
-  --marketplace-nav-button-active-text: #fffdf9;
-  --marketplace-topbar-button-background: #fffdf9;
-  --marketplace-topbar-button-border: #e7e1d6;
-  --marketplace-topbar-button-text: #3b342b;
-  --marketplace-topbar-button-hover-background: #f2ece2;
-  --marketplace-topbar-button-primary-background: #18120d;
-  --marketplace-topbar-button-primary-text: #fffdf9;
-  --marketplace-toggle-background: #fffdf9;
-  --marketplace-toggle-border: #e7e1d6;
-  --marketplace-toggle-text: #746d63;
-  --marketplace-toggle-active-background: #18120d;
-  --marketplace-toggle-active-text: #fffdf9;
-  --marketplace-section-background: #fffdf9;
-  --marketplace-section-alt-background: #fffdf9;
-  --marketplace-section-emphasis-background: #f5f1ea;
-  --marketplace-card-border: #ddd4c8;
-  --marketplace-card-border-soft: #ece6dc;
-  --marketplace-chip-background: #f5f1ea;
-  --marketplace-chip-border: #e7e1d6;
-  --marketplace-chip-text: #746d63;
-  --marketplace-link-text: #1f1a14;
-  --marketplace-resource-link: #0072f5;
-  --marketplace-resource-link-soft: rgba(31, 26, 20, 0.055);
-  --marketplace-shadow-soft: none;
-}
-
-.marketplace-shell.is-light-theme:has(.skill-detail-page[data-active-tab="resources"]) .marketplace-topbar {
-  min-height: 56px;
-  padding: 8px 0;
-  gap: 12px;
-}
-
-.marketplace-shell.is-light-theme:has(.skill-detail-page[data-active-tab="resources"]) .marketplace-topbar-shell {
-  backdrop-filter: blur(14px);
-}
-
-.marketplace-shell.is-light-theme:has(.skill-detail-page[data-active-tab="resources"]) .marketplace-shell-content {
-  padding-top: 8px;
-}
-
-.marketplace-shell.is-light-theme:has(.skill-detail-page[data-active-tab="resources"]) .marketplace-section-card,
-.marketplace-shell.is-light-theme:has(.skill-detail-page[data-active-tab="resources"]) .marketplace-panel-glow {
-  box-shadow: none;
-}
-
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] {
   gap: 12px;
 }
@@ -99,15 +33,15 @@
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-shell-breadcrumb-current {
   min-height: 24px;
   padding-inline: 10px;
-  border-color: #ece6dc;
-  background: rgba(255, 253, 249, 0.84);
+  border-color: var(--skill-detail-breadcrumb-border);
+  background: var(--skill-detail-breadcrumb-background);
   font-size: 10px;
   font-weight: 600;
 }
 
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-shell-breadcrumb-current {
-  background: #f3eee6;
-  color: #4d463d;
+  background: var(--skill-detail-breadcrumb-current-background);
+  color: var(--skill-detail-breadcrumb-current-text);
 }
 
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-brand {
@@ -155,15 +89,6 @@
   padding: 0;
 }
 
-.marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-header-layout {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
-}
-
-.marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-header-copy {
-  gap: 6px;
-}
-
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-header-identity {
   gap: 10px;
 }
@@ -192,7 +117,7 @@
 }
 
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-header-title {
-  color: #1f1a14;
+  color: var(--skill-detail-header-title-text);
   font-size: clamp(22px, 2.2vw, 30px);
   letter-spacing: -0.025em;
 }
@@ -200,9 +125,9 @@
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-header-quality-badge {
   min-height: 22px;
   padding-inline: 8px;
-  border-color: #e7e1d6;
-  background: #fbf8f2;
-  color: #1f1a14;
+  border-color: var(--skill-detail-header-pill-border);
+  background: var(--skill-detail-header-quality-background);
+  color: var(--skill-detail-header-quality-text);
   font-size: 10px;
 }
 
@@ -214,18 +139,18 @@
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-header-support-meta {
   min-height: 22px;
   padding-inline: 8px;
-  border-color: #e7e1d6;
+  border-color: var(--skill-detail-header-pill-border);
   font-size: 10px;
 }
 
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-header-support-pill {
-  background: #1f1a14;
-  color: #fffdf9;
+  background: var(--skill-detail-header-support-pill-background);
+  color: var(--skill-detail-header-support-pill-text);
 }
 
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-header-support-meta {
-  background: #fbf8f2;
-  color: #625a50;
+  background: var(--skill-detail-header-support-meta-background);
+  color: var(--skill-detail-header-support-meta-text);
 }
 
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-header-description {
@@ -244,9 +169,9 @@
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-meta-chip {
   min-height: 22px;
   padding-inline: 8px;
-  border-color: #e7e1d6;
-  background: #fbf8f2;
-  color: #625a50;
+  border-color: var(--skill-detail-meta-chip-border);
+  background: var(--skill-detail-meta-chip-background);
+  color: var(--skill-detail-meta-chip-text);
   font-size: 10px;
   font-weight: 600;
 }
@@ -260,16 +185,16 @@
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-top-summary-card {
   min-height: auto;
   padding: 4px 9px;
-  border-color: #e7e1d6;
+  border-color: var(--skill-detail-summary-border);
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #fffdf9;
+  background: var(--skill-detail-summary-background);
 }
 
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-top-summary-label {
-  color: #8f8578;
+  color: var(--skill-detail-summary-label-text);
   font-size: 9px;
   letter-spacing: 0;
 }
@@ -287,7 +212,7 @@
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-tab-list {
   width: 100%;
   gap: 16px;
-  border-bottom: 1px solid #efeae2;
+  border-bottom: 1px solid var(--skill-detail-tab-divider);
 }
 
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-tab-button {
@@ -296,7 +221,7 @@
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: #8f8578;
+  color: var(--skill-detail-tab-text);
   font-size: 11px;
   font-weight: 500;
   box-shadow: none;
@@ -304,11 +229,11 @@
 
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-tab-button:hover {
   background: transparent;
-  color: #3b342b;
+  color: var(--skill-detail-tab-hover-text);
 }
 
 .marketplace-shell.is-light-theme .skill-detail-page[data-active-tab="resources"] .skill-detail-tab-button[data-state="active"] {
   background: transparent;
-  color: #1f1a14;
-  box-shadow: inset 0 -2px 0 #1f1a14;
+  color: var(--skill-detail-tab-active-text);
+  box-shadow: inset 0 -2px 0 var(--skill-detail-tab-active-indicator);
 }

@@ -14,13 +14,7 @@
 
 .marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-search-strip {
   padding: 14px;
-  background:
-    linear-gradient(180deg, rgba(22, 23, 28, 0.98) 0%, rgba(18, 20, 26, 0.98) 100%);
-}
-
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-home-search-shell .marketplace-search-strip {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 1) 100%);
+  background: var(--marketplace-landing-search-strip-background);
 }
 
 .marketplace-shell.is-landing-route .marketplace-home-search-shell .marketplace-search-strip-body {

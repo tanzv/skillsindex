@@ -23,7 +23,7 @@ Apply it before editing style-related code.
 
 1. Global CSS composition root: `frontend-next/app/globals.css`
 2. Public token and shell layers: `frontend-next/app/public-marketplace-theme.css`, `frontend-next/app/public-marketplace-layout.css`
-3. Protected token and shell layers: `frontend-next/app/protected-theme.css`, `frontend-next/app/protected-content-theme.css`
+3. Protected token and shell layers: `frontend-next/app/protected-theme.scss`, `frontend-next/app/protected-content-theme.scss`
 4. Shared UI composition: `frontend-next/src/components/**`
 5. Route-level feature composition: `frontend-next/src/features/**`
 6. App Router entry wrappers: `frontend-next/app/**`

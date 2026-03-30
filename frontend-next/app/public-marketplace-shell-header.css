@@ -161,14 +161,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.16);
-  color: #fafafa;
+  background: var(--marketplace-landing-nav-badge-background);
+  color: var(--marketplace-landing-nav-badge-text);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
 
 .marketplace-home-topbar-nav .marketplace-nav-button.is-active .marketplace-home-nav-badge {
-  background: rgba(17, 17, 17, 0.08);
-  color: #111111;
+  background: var(--marketplace-landing-nav-badge-active-background);
+  color: var(--marketplace-landing-nav-badge-active-text);
 }

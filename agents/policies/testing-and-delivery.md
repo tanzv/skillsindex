@@ -28,6 +28,8 @@
 3. Extract shared helpers when duplicated logic appears.
 4. Report command-based verification evidence for behavior changes.
 5. If verification cannot run, document what was skipped, why, and residual risk.
+6. For local runtime verification in this repository, start and supervise frontend/backend long-running services through `lcode` profiles or repository wrappers that delegate to `lcode`.
+7. Do not rely on unmanaged terminal processes as the steady-state system runtime when a repository `lcode` profile exists for that service.
 
 ## Completion Rule
 

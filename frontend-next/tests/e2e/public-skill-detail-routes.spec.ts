@@ -88,3 +88,26 @@ test("keeps source analysis deep links working on light skill detail routes", as
   await expect(page).toHaveURL(/\/light\/skills\/201$/);
   await expect(page.getByRole("heading", { level: 1, name: "Repository Sync Blueprint" })).toBeVisible();
 });
+
+test("renders source analysis labels in chinese and keeps deep links working", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.goto("/light/skills/101");
+
+  await expect(page.getByTestId("skill-detail-page")).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("button", { name: "ZH" }).click();
+
+  const sourceAnalysis = page.getByTestId("skill-detail-source-analysis");
+  await page.getByRole("tab", { name: "资源" }).click();
+  await expect(sourceAnalysis).toBeVisible();
+  await expect(sourceAnalysis).toContainText("来源解析");
+  await expect(sourceAnalysis).toContainText("入口文件");
+  await expect(sourceAnalysis).toContainText("解析机制");
+  await expect(sourceAnalysis).toContainText("元数据来源");
+  await expect(sourceAnalysis).toContainText("引用路径");
+  await expect(sourceAnalysis).toContainText("依赖关系");
+  await expect(sourceAnalysis.getByRole("link", { name: "repository-sync-blueprint" })).toBeVisible();
+
+  await sourceAnalysis.getByRole("link", { name: "repository-sync-blueprint" }).click();
+  await expect(page).toHaveURL(/\/light\/skills\/201$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Repository Sync Blueprint" })).toBeVisible();
+});

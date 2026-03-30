@@ -7,7 +7,7 @@
 .skill-detail-directory-shell {
   border: 1px solid var(--marketplace-card-border-soft);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--marketplace-section-background) 82%, transparent);
+  background: var(--skill-detail-directory-shell-background);
   overflow: hidden;
 }
 
@@ -82,13 +82,13 @@
 
 .skill-detail-directory-row:hover {
   border-color: var(--marketplace-card-border-soft);
-  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 76%, transparent);
+  background: var(--skill-detail-directory-row-hover-background);
   transform: translateY(-1px);
 }
 
 .skill-detail-directory-row.is-selected {
   border-color: var(--marketplace-card-border);
-  background: color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 12%, transparent);
+  background: var(--skill-detail-directory-row-selected-background);
 }
 
 .skill-detail-directory-row-caret,
@@ -111,12 +111,12 @@
 }
 
 .skill-detail-directory-row-icon.is-directory {
-  background: color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 28%, transparent);
+  background: var(--skill-detail-directory-icon-directory-background);
 }
 
 .skill-detail-directory-row-icon.is-file {
-  border: 1px solid color-mix(in srgb, var(--marketplace-card-border) 74%, transparent);
-  background: color-mix(in srgb, var(--marketplace-section-emphasis-background) 82%, transparent);
+  border: 1px solid var(--skill-detail-directory-icon-file-border);
+  background: var(--skill-detail-directory-icon-file-background);
 }
 
 .skill-detail-directory-row-label {

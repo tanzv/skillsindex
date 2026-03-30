@@ -14,14 +14,9 @@
 .marketplace-category-skill-card {
   height: 100%;
   padding: 15px;
-  border: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
+  border: 1px solid var(--marketplace-category-card-border);
   border-radius: 18px;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--marketplace-section-background) 98%, var(--marketplace-section-emphasis-background) 2%) 0%,
-      color-mix(in srgb, var(--marketplace-section-background) 93%, var(--marketplace-section-emphasis-background) 7%) 100%
-    );
+  background: var(--marketplace-category-card-background);
   gap: 10px;
   transition:
     border-color var(--motion-duration-fast) var(--motion-ease-standard),
@@ -31,12 +26,7 @@
 
 .marketplace-category-skill-card:hover {
   border-color: var(--marketplace-card-border);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--marketplace-section-background) 94%, var(--marketplace-section-emphasis-background) 6%) 0%,
-      color-mix(in srgb, var(--marketplace-section-background) 84%, var(--marketplace-section-emphasis-background) 16%) 100%
-    );
+  background: var(--marketplace-category-card-hover-background);
   transform: translateY(-1px);
 }
 
@@ -49,17 +39,12 @@
 .marketplace-category-skill-card-avatar {
   width: 40px;
   height: 40px;
-  border: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
+  border: 1px solid var(--marketplace-category-skill-card-avatar-border);
   border-radius: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--marketplace-section-emphasis-background) 88%, transparent) 0%,
-      color-mix(in srgb, var(--marketplace-section-background) 92%, var(--marketplace-section-emphasis-background) 8%) 100%
-    );
+  background: var(--marketplace-category-skill-card-avatar-background);
   color: var(--marketplace-home-text);
   font-size: 11px;
   font-weight: 800;

@@ -45,17 +45,12 @@
   height: 40px;
   border-radius: 999px;
   border: 0;
-  background: #2a2a2a;
-  color: #f3f4f6;
+  background: var(--marketplace-landing-card-cover-background);
+  color: var(--marketplace-landing-card-cover-text);
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
-}
-
-.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-card-cover-thumb {
-  background: #111111;
-  color: #ffffff;
 }
 
 .marketplace-home-deck-card .marketplace-card-cover-chip {
@@ -67,17 +62,12 @@
   padding: 0 7px;
   border: 0;
   border-radius: 999px;
-  background: #111111;
-  color: #f3f4f6;
+  background: var(--marketplace-landing-card-cover-chip-background);
+  color: var(--marketplace-landing-card-cover-chip-text);
   font-family: "JetBrains Mono", monospace;
   font-size: 10px;
   font-weight: 700;
   line-height: 1;
-}
-
-.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-card-cover-chip {
-  background: #111111;
-  color: #f3f4f6;
 }
 
 .marketplace-home-deck-card .marketplace-home-deck-body,
@@ -107,7 +97,7 @@
 
 .marketplace-home-deck-card .marketplace-home-deck-name {
   min-width: 0;
-  color: #f8fafc;
+  color: var(--marketplace-landing-card-title-text);
   font-family: "Noto Sans SC", "Noto Sans", sans-serif;
   font-size: 15px;
   font-weight: 700;
@@ -115,21 +105,13 @@
   -webkit-line-clamp: 2;
 }
 
-.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-home-deck-name {
-  color: #111827;
-}
-
 .marketplace-home-deck-card .marketplace-home-deck-description {
-  color: #d1d5db;
+  color: var(--marketplace-landing-card-description-text);
   font-family: "Noto Sans SC", "Noto Sans", sans-serif;
   font-size: 12px;
   font-weight: 500;
   line-height: 1.45;
   -webkit-line-clamp: 2;
-}
-
-.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-home-deck-description {
-  color: #4b5563;
 }
 
 .marketplace-home-deck-card .marketplace-home-deck-chip-row {
@@ -141,16 +123,11 @@
   min-height: 20px;
   padding: 0 9px;
   border: 0;
-  background: rgba(255, 255, 255, 0.06);
-  color: #d2d6de;
+  background: var(--marketplace-landing-card-chip-background);
+  color: var(--marketplace-landing-card-chip-text);
   font-family: "JetBrains Mono", monospace;
   font-size: 10px;
   font-weight: 700;
-}
-
-.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-home-deck-chip-row .marketplace-skill-chip {
-  background: #f3f4f6;
-  color: #374151;
 }
 
 .marketplace-home-deck-card .marketplace-home-deck-foot {
@@ -164,24 +141,16 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #cfd4dd;
+  color: var(--marketplace-landing-card-foot-text);
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   font-weight: 600;
   line-height: 1.2;
 }
 
-.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-home-deck-foot span {
-  color: #4b5563;
-}
-
 .marketplace-home-deck-card .marketplace-home-deck-foot span.is-primary {
-  color: #f3f4f6;
+  color: var(--marketplace-landing-card-foot-primary-text);
   font-weight: 700;
-}
-
-.marketplace-shell.is-light-theme .marketplace-home-deck-card .marketplace-home-deck-foot span.is-primary {
-  color: #111827;
 }
 
 .marketplace-home-deck-card .marketplace-home-deck-foot span:last-child {

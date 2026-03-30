@@ -24,23 +24,9 @@
   gap: 14px;
   min-height: 218px;
   padding: 16px;
-  background:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--marketplace-section-background) 97%, var(--marketplace-section-emphasis-background) 3%) 0%,
-      color-mix(in srgb, var(--marketplace-section-background) 90%, var(--marketplace-section-emphasis-background) 10%) 100%
-    );
-  border-color: color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
+  background: var(--marketplace-category-collection-card-background);
+  border-color: var(--marketplace-category-collection-card-border);
   box-shadow: none;
-}
-
-.marketplace-shell:not(.is-light-theme) .marketplace-category-collection-card {
-  background:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--marketplace-section-background) 95%, var(--marketplace-section-emphasis-background) 5%) 0%,
-      color-mix(in srgb, var(--marketplace-section-background) 88%, var(--marketplace-section-emphasis-background) 12%) 100%
-    );
 }
 
 .marketplace-category-collection-topline {
@@ -121,13 +107,8 @@
 .marketplace-category-collection-link {
   min-height: 48px;
   padding: 10px 12px;
-  border-color: color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--marketplace-section-background) 92%, transparent) 0%,
-      color-mix(in srgb, var(--marketplace-section-emphasis-background) 72%, transparent) 100%
-    );
+  border-color: var(--marketplace-category-collection-card-border);
+  background: var(--marketplace-category-collection-link-background);
 }
 
 .marketplace-category-collection-link .marketplace-sidebar-link,

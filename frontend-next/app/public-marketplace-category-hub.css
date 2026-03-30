@@ -58,14 +58,9 @@
 }
 .marketplace-category-reference-metric {
   padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 82%, transparent);
+  border: 1px solid var(--marketplace-category-metric-border);
   border-radius: 16px;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--marketplace-section-background) 97%, var(--marketplace-section-emphasis-background) 3%) 0%,
-      color-mix(in srgb, var(--marketplace-section-background) 90%, var(--marketplace-section-emphasis-background) 10%) 100%
-    );
+  background: var(--marketplace-category-metric-background);
   gap: 4px;
 }
 .marketplace-category-reference-metric dt {
@@ -96,14 +91,9 @@
   gap: 16px;
 }
 .marketplace-category-action-card {
-  border: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
+  border: 1px solid var(--marketplace-category-card-border);
   border-radius: 16px;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--marketplace-section-background) 98%, var(--marketplace-section-emphasis-background) 2%) 0%,
-      color-mix(in srgb, var(--marketplace-section-background) 92%, var(--marketplace-section-emphasis-background) 8%) 100%
-    );
+  background: var(--marketplace-category-card-accent-background);
 }
 .marketplace-category-action-group {
   gap: 12px;
@@ -178,7 +168,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: color-mix(in srgb, var(--marketplace-chip-background) 72%, transparent);
+  background: var(--marketplace-category-nav-item-background);
   color: var(--marketplace-link-text);
   transition:
     border-color var(--motion-duration-fast) var(--motion-ease-standard),
@@ -201,8 +191,8 @@
 }
 
 .marketplace-category-nav-item.is-active .marketplace-category-nav-count {
-  border-color: color-mix(in srgb, currentcolor 18%, transparent);
-  background: color-mix(in srgb, currentcolor 8%, transparent);
+  border-color: var(--marketplace-category-nav-count-active-border);
+  background: var(--marketplace-category-nav-count-active-background);
   color: inherit;
 }
 
@@ -246,14 +236,9 @@
 }
 
 .marketplace-category-browse-card {
-  border: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 86%, transparent);
+  border: 1px solid var(--marketplace-category-browse-card-border);
   border-radius: 18px;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--marketplace-section-background) 98%, var(--marketplace-section-emphasis-background) 2%) 0%,
-      color-mix(in srgb, var(--marketplace-section-background) 94%, var(--marketplace-section-emphasis-background) 6%) 100%
-    );
+  background: var(--marketplace-category-browse-card-background);
   scroll-margin-top: 132px;
 }
 
@@ -282,14 +267,9 @@
 
 .marketplace-category-browse-featured {
   padding: 14px;
-  border: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 86%, transparent);
+  border: 1px solid var(--marketplace-category-featured-card-border);
   border-radius: 16px;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--marketplace-section-emphasis-background) 92%, transparent) 0%,
-      color-mix(in srgb, var(--marketplace-section-background) 92%, var(--marketplace-section-emphasis-background) 8%) 100%
-    );
+  background: var(--marketplace-category-featured-card-background);
   gap: 8px;
 }
 

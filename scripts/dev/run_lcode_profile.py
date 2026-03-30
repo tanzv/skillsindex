@@ -104,7 +104,6 @@ def _session_matches_contract(session_spec: dict[str, Any], expected_spec: Lcode
         ("args", list(expected_spec.args)),
         ("managed", expected_spec.managed),
         ("mode", expected_spec.mode),
-        ("log_retention", expected_spec.log_retention),
         ("env", expected_spec.env),
         ("prelaunch_task", expected_spec.prelaunch_task),
         ("poststop_task", expected_spec.poststop_task),
@@ -112,6 +111,11 @@ def _session_matches_contract(session_spec: dict[str, Any], expected_spec: Lcode
     for field_name, expected_value in comparable_fields:
         if session_spec.get(field_name) != expected_value:
             return False
+
+    # Older lcode builds may omit log retention from inspect payloads.
+    if "log_retention" in session_spec and session_spec.get("log_retention") != expected_spec.log_retention:
+        return False
+
     return True
 
 

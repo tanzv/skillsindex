@@ -32,8 +32,8 @@ Current style architecture is split into **global CSS variable layers**, **share
   - `frontend-next/app/globals.css`
 - Shared theme layers:
   - `frontend-next/app/public-marketplace-theme.css`
-  - `frontend-next/app/protected-theme.css`
-  - `frontend-next/app/protected-content-theme.css`
+  - `frontend-next/app/protected-theme.scss`
+  - `frontend-next/app/protected-content-theme.scss`
 - Shared UI composition:
   - shared components under `frontend-next/src/components`
 - Route-level ownership:

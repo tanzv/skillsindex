@@ -13,13 +13,8 @@
 .marketplace-category-showcase-card {
   gap: 14px;
   padding: 16px;
-  border-color: color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--marketplace-section-background) 98%, var(--marketplace-section-emphasis-background) 2%) 0%,
-      color-mix(in srgb, var(--marketplace-section-background) 93%, var(--marketplace-section-emphasis-background) 7%) 100%
-    );
+  border-color: var(--marketplace-category-card-border);
+  background: var(--marketplace-category-card-background);
   box-shadow: none;
 }
 

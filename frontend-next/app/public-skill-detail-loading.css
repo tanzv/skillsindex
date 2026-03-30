@@ -11,8 +11,7 @@
   padding: 14px;
   border: 1px solid var(--marketplace-card-border-soft);
   border-radius: 20px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--marketplace-section-background) 88%, transparent), color-mix(in srgb, var(--marketplace-section-emphasis-background) 80%, transparent));
+  background: var(--skill-detail-loading-shell-background);
 }
 
 .skill-detail-loading-resource-shell {
@@ -26,14 +25,14 @@
   padding: 14px;
   border: 1px solid var(--marketplace-card-border-soft);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--marketplace-section-background) 84%, transparent);
+  background: var(--skill-detail-loading-panel-background);
 }
 
 .skill-detail-loading-line,
 .skill-detail-loading-dot {
   position: relative;
   overflow: hidden;
-  background: color-mix(in srgb, var(--marketplace-chip-border) 72%, transparent);
+  background: var(--skill-detail-loading-placeholder-background);
 }
 
 .skill-detail-loading-line::after,
@@ -42,7 +41,7 @@
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  background: var(--skill-detail-loading-shimmer-background);
   animation: skill-detail-skeleton-shimmer var(--motion-duration-loading-loop) var(--motion-ease-standard) infinite;
 }
 

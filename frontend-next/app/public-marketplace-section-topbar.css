@@ -29,18 +29,9 @@
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-nav,
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-icon-shell {
   padding: 6px;
-  border-color: color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
-  background: color-mix(in srgb, var(--marketplace-section-background) 94%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 8px 18px rgba(0, 0, 0, 0.1);
-}
-
-.marketplace-shell.is-light-theme[data-marketplace-route-kind="section"] .marketplace-home-topbar-nav,
-.marketplace-shell.is-light-theme[data-marketplace-route-kind="section"] .marketplace-home-topbar-icon-shell {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 8px 18px rgba(15, 23, 42, 0.06);
+  border-color: var(--marketplace-section-topbar-shell-border);
+  background: var(--marketplace-section-topbar-shell-background);
+  box-shadow: var(--marketplace-section-topbar-shell-shadow);
 }
 
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions {
@@ -51,34 +42,30 @@
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions .marketplace-topbar-button {
   min-height: 40px;
   padding: 0 18px;
-  border-color: color-mix(in srgb, var(--marketplace-card-border-soft) 84%, transparent);
-  background: color-mix(in srgb, var(--marketplace-topbar-button-background) 88%, var(--marketplace-section-background) 12%);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  border-color: var(--marketplace-section-topbar-button-border);
+  background: var(--marketplace-section-topbar-button-background);
+  box-shadow: var(--marketplace-section-topbar-button-shadow);
 }
 
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions .marketplace-topbar-button.is-subtle {
-  background: color-mix(in srgb, var(--marketplace-section-emphasis-background) 72%, transparent);
+  background: var(--marketplace-section-topbar-button-subtle-background);
 }
 
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-nav .marketplace-nav-button:not(.is-active):hover,
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions .marketplace-topbar-button:not(.is-primary):hover,
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-icon-button:not(.is-active):hover {
-  border-color: color-mix(in srgb, var(--marketplace-card-border) 80%, transparent);
-  background: var(--marketplace-section-emphasis-background);
+  border-color: var(--marketplace-section-topbar-button-hover-border);
+  background: var(--marketplace-section-topbar-button-hover-background);
 }
 
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-nav .marketplace-nav-button.is-active {
-  border-color: color-mix(in srgb, var(--marketplace-nav-button-active-background) 30%, var(--marketplace-card-border-soft) 70%);
+  border-color: var(--marketplace-section-topbar-nav-active-border);
   background: var(--marketplace-nav-button-active-background);
   color: var(--marketplace-nav-button-active-text);
 }
 
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions .marketplace-topbar-button.is-primary {
-  border-color: color-mix(
-    in srgb,
-    var(--marketplace-topbar-button-primary-background) 32%,
-    var(--marketplace-card-border-soft) 68%
-  );
+  border-color: var(--marketplace-section-topbar-primary-border);
   background: var(--marketplace-topbar-button-primary-background);
   color: var(--marketplace-topbar-button-primary-text);
 }
@@ -86,9 +73,7 @@
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-nav .marketplace-nav-button.is-active,
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-actions .marketplace-topbar-button.is-primary,
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-icon-button.is-active {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 8px 18px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--marketplace-section-topbar-active-shadow);
 }
 
 .marketplace-shell[data-marketplace-route-kind="section"] .marketplace-home-topbar-icon-segment + .marketplace-home-topbar-icon-segment {

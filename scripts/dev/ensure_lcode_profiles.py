@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+from functools import lru_cache
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -73,6 +74,59 @@ def load_profile_specs(repo_root: Path) -> dict[str, LcodeProfileSpec]:
     return specs
 
 
+def _profile_matches_contract(saved_profile: dict[str, Any], expected_spec: LcodeProfileSpec) -> bool:
+    comparable_fields = (
+        ("runtime", expected_spec.runtime),
+        ("entry", expected_spec.entry),
+        ("cwd", expected_spec.cwd),
+        ("args", list(expected_spec.args)),
+        ("managed", expected_spec.managed),
+        ("mode", expected_spec.mode),
+        ("env", expected_spec.env),
+        ("prelaunch_task", expected_spec.prelaunch_task),
+        ("poststop_task", expected_spec.poststop_task),
+    )
+    for field_name, expected_value in comparable_fields:
+        if saved_profile.get(field_name) != expected_value:
+            return False
+
+    # Older lcode builds do not persist or report log retention. Treat absence as compatible.
+    if "log_retention" in saved_profile and saved_profile.get("log_retention") != expected_spec.log_retention:
+        return False
+
+    return True
+
+
+def _load_saved_profile(repo_root: Path, profile_name: str) -> dict[str, Any] | None:
+    result = subprocess.run(
+        ["lcode", "config", "show", "--name", profile_name, "--json"],
+        cwd=repo_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return None
+
+    payload = json.loads(result.stdout)
+    profile = payload.get("profile")
+    if not isinstance(profile, dict):
+        return None
+    return profile
+
+
+@lru_cache(maxsize=1)
+def _supports_log_retention(repo_root: Path) -> bool:
+    result = subprocess.run(
+        ["lcode", "config", "save", "--help"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return "--log-retention" in result.stdout
+
+
 def _save_profile(repo_root: Path, spec: LcodeProfileSpec) -> None:
     command = [
         "lcode",
@@ -88,9 +142,10 @@ def _save_profile(repo_root: Path, spec: LcodeProfileSpec) -> None:
         spec.cwd,
         "--mode",
         spec.mode,
-        "--log-retention",
-        spec.log_retention,
     ]
+
+    if _supports_log_retention(repo_root):
+        command.extend(["--log-retention", spec.log_retention])
 
     if spec.managed:
         command.append("--managed")
@@ -116,6 +171,9 @@ def ensure_profiles(repo_root: Path, selected_names: list[str] | None = None) ->
     for name in names:
         if name not in specs:
             raise SystemExit(f"Unknown lcode profile contract: {name}")
+        saved_profile = _load_saved_profile(repo_root, name)
+        if saved_profile is not None and _profile_matches_contract(saved_profile, specs[name]):
+            continue
         _save_profile(repo_root, specs[name])
 
 

@@ -140,6 +140,39 @@ Restrictions:
 2. Use semantic colors only for status meaning.
 3. Never mix warning color and success semantics.
 
+### 8.5 Marketplace Category Browsing Surfaces
+
+1. Category KPI cards must consume the shared `--marketplace-category-metric-*` tokens.
+2. Repeated category action, showcase, and skill cards must share the `--marketplace-category-card-*` token family instead of re-declaring local gradients.
+3. Browse detail cards and embedded featured callouts must consume their dedicated semantic surface aliases to preserve hierarchy between parent and nested cards.
+4. Collection deck cards and embedded collection links must resolve through the shared collection surface tokens so dark and light themes keep equivalent depth.
+5. Category navigation idle and active count states must resolve through the shared category navigation aliases instead of route-local `color-mix` declarations.
+
+### 8.6 Marketplace Section Topbar Surfaces
+
+1. Shared topbars used by results, rankings, category, and other section routes must consume the `--marketplace-section-topbar-*` token family.
+2. Shell chrome, default button states, subtle button states, hover states, active nav states, and primary CTA borders must be owned by the shared theme layer instead of route-local `color-mix` declarations.
+3. Topbar icon buttons that need softened primary emphasis must reuse `--marketplace-topbar-button-primary-soft-background` to keep parity with the surrounding shell.
+
+### 8.7 Skill Detail Shell Surfaces
+
+1. Skill detail topbar nav shells, breadcrumb states, sidebar feedback banners, prompt shells, and directory trees must consume the `--skill-detail-*` shell aliases before introducing route-local surface mixes.
+2. Breadcrumb idle, hover, current, and soft-current states must stay tokenized so light and dark themes preserve equivalent hierarchy.
+3. Directory row hover and selected states must reuse shared semantic aliases instead of embedding per-file `color-mix` formulas.
+
+### 8.8 Skill Detail Resource Browser Surfaces
+
+1. Source analysis pills, resource table row states, and file icon chrome must resolve through shared `--skill-detail-*` resource aliases.
+2. Resource-mode install sidebar prompt shells and secondary action states must stay theme-owned so light and dark variants preserve equivalent emphasis without selector-level formulas.
+3. Header summary chips and top summary cards in skill detail must use shared shell aliases when they reuse the same marketplace surface semantics.
+4. Theme differences for resource-mode prompt shells and secondary actions should prefer token overrides in the light or dark theme layer instead of page-level theme selectors.
+
+### 8.9 Skill Detail Content And Loading Surfaces
+
+1. Generic content panels, overview sections, installation rows, and overview fact or score summary cards must consume shared `--skill-detail-*` aliases before route-local surface blends are introduced.
+2. Loading shells, loading child panels, placeholder fills, and shimmer overlays must remain theme-owned so skeleton states keep parity with the active marketplace theme.
+3. When a content or loading surface shares the same semantic role across overview, resources, and preview areas, prefer a single shared alias instead of tab-specific formulas.
+
 ## 9. Density and Readability Rules
 
 1. Max 5 major cards in a single vertical scan path per column.
@@ -154,6 +187,17 @@ Restrictions:
 3. Danger action: isolated visually and requires confirmation intent.
 4. Filters first, list second, details third.
 5. Keep route and navigation feedback visible on every admin page.
+
+## 10.1 Motion Baseline
+
+1. Shared interaction feedback should use the registered motion tokens instead of raw timing values.
+2. Fast control feedback should stay around `--motion-duration-fast`; large surface transitions should default to `--motion-duration-medium`.
+3. Auth or hero entrance choreography may use `--motion-duration-enter` when the surface is intentionally staged.
+4. Ambient decorative motion should use `--motion-duration-ambient` or `--motion-duration-ambient-slow` and remain visually subordinate.
+5. Continuous loading loops must use linear or standard easing only when they communicate system work.
+6. Delay values must resolve through the shared motion delay scale or a documented semantic alias before introducing raw offsets.
+7. Repeated staggered reveals should prefer `--motion-delay-stagger-step` and shared motion helpers over selector-specific hardcoding.
+8. Every new animation or transition must provide a `prefers-reduced-motion` fallback.
 
 ## 11. Accessibility Baseline
 

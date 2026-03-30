@@ -5,7 +5,7 @@
 .skill-detail-side-fact {
   border: 1px solid var(--marketplace-card-border-soft);
   border-radius: 16px;
-  background: var(--marketplace-section-emphasis-background);
+  background: var(--skill-detail-panel-background);
 }
 
 .skill-detail-workspace {
@@ -148,7 +148,7 @@
   padding: 14px;
   border: 1px solid var(--marketplace-card-border-soft);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--marketplace-section-emphasis-background) 88%, transparent);
+  background: var(--skill-detail-overview-section-background);
 }
 
 .skill-detail-overview-section-title {
@@ -177,7 +177,7 @@
 .skill-detail-install-row {
   border: 1px solid var(--marketplace-card-border-soft);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--marketplace-section-emphasis-background) 82%, transparent);
+  background: var(--skill-detail-install-row-background);
 }
 
 .skill-detail-install-row-copy {

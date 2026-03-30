@@ -28,7 +28,7 @@
 
 .marketplace-shell.is-landing-route .marketplace-pagination-loading-arrow {
   width: 12px;
-  color: #9ca3af;
+  color: var(--marketplace-landing-auto-load-arrow-text);
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   font-weight: 700;
@@ -40,8 +40,8 @@
   width: 14px;
   height: 14px;
   border-radius: 999px;
-  border: 2px solid #8a8a8a;
-  border-top-color: #f0f0f0;
+  border: 2px solid var(--marketplace-landing-auto-load-ring-border);
+  border-top-color: var(--marketplace-landing-auto-load-ring-accent);
   opacity: 0.92;
   animation: marketplaceHomeAutoLoadRingSpin var(--motion-duration-loading-spin) var(--motion-ease-linear) infinite;
 }
@@ -57,40 +57,19 @@
   width: 4px;
   height: 4px;
   border-radius: 999px;
-  background: #7a7a7a;
+  background: var(--marketplace-landing-auto-load-dot-1);
   opacity: 0.88;
   animation: marketplaceHomeAutoLoadDotPulse var(--motion-duration-loading-loop) var(--motion-ease-standard) infinite;
 }
 
 .marketplace-shell.is-landing-route .marketplace-pagination-loading-dots span:nth-of-type(2) {
-  background: #8a8a8a;
+  background: var(--marketplace-landing-auto-load-dot-2);
   animation-delay: var(--motion-delay-sm);
 }
 
 .marketplace-shell.is-landing-route .marketplace-pagination-loading-dots span:nth-of-type(3) {
-  background: #9a9a9a;
+  background: var(--marketplace-landing-auto-load-dot-3);
   animation-delay: var(--motion-delay-xl);
-}
-
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-pagination-loading-ring {
-  border-color: #718096;
-  border-top-color: #111827;
-}
-
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-pagination-loading-arrow {
-  color: #4b5563;
-}
-
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-pagination-loading-dots span {
-  background: #6b7280;
-}
-
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-pagination-loading-dots span:nth-of-type(2) {
-  background: #4b5563;
-}
-
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-pagination-loading-dots span:nth-of-type(3) {
-  background: #374151;
 }
 
 .marketplace-shell.is-landing-route .marketplace-visually-hidden {

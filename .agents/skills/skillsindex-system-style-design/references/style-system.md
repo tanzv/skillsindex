@@ -20,6 +20,8 @@ Primary sources:
 - `frontend-next/app/public-marketplace-theme.css`
 - `frontend-next/app/public-marketplace-layout.css`
 - `frontend-next/app/public-marketplace-home.css`
+- `frontend-next/app/public-marketplace-home-landing-theme.css`
+- `frontend-next/app/public-skill-detail-light-theme.css`
 
 Pattern:
 
@@ -31,8 +33,8 @@ Pattern:
 
 Primary sources:
 
-- `frontend-next/app/protected-theme.css`
-- `frontend-next/app/protected-content-theme.css`
+- `frontend-next/app/protected-theme.scss`
+- `frontend-next/app/protected-content-theme.scss`
 - `frontend-next/app/admin-shell.css`
 - `frontend-next/app/workspace-shell.css`
 - `frontend-next/app/account-shell.css`

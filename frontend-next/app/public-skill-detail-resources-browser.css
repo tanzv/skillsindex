@@ -78,16 +78,16 @@
 }
 
 .skill-detail-source-analysis-link:hover {
-  color: color-mix(in srgb, var(--marketplace-resource-link, var(--marketplace-link-text)) 78%, var(--marketplace-home-text) 22%);
+  color: var(--skill-detail-source-analysis-link-hover);
 }
 
 .skill-detail-source-analysis-pill {
   display: grid;
   gap: 4px;
   padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 80%, transparent);
+  border: 1px solid var(--skill-detail-source-analysis-pill-border);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--marketplace-surface-muted, var(--marketplace-card-background)) 76%, transparent);
+  background: var(--skill-detail-source-analysis-pill-background);
 }
 
 .skill-detail-source-analysis-pill-label {
@@ -142,7 +142,7 @@
 .skill-detail-resource-table-head {
   min-height: 40px;
   padding: 0 18px;
-  border-bottom: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 86%, transparent);
+  border-bottom: 1px solid var(--skill-detail-resource-table-head-border);
   background: transparent;
 }
 
@@ -167,7 +167,7 @@
   min-height: 50px;
   padding: 0 18px;
   border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 72%, transparent);
+  border-bottom: 1px solid var(--skill-detail-resource-table-row-border);
   background: transparent;
   color: inherit;
   text-align: left;
@@ -183,11 +183,7 @@
 }
 
 .skill-detail-resource-table-row:hover {
-  background: color-mix(
-    in srgb,
-    var(--marketplace-resource-link-soft, var(--marketplace-topbar-button-hover-background)) 64%,
-    transparent
-  );
+  background: var(--skill-detail-resource-table-row-hover-background);
 }
 
 .skill-detail-resource-table-row:focus-visible {
@@ -196,31 +192,11 @@
 }
 
 .skill-detail-resource-table-row.is-selected {
-  background: color-mix(
-    in srgb,
-    var(--marketplace-resource-link-soft, var(--marketplace-topbar-button-hover-background)) 100%,
-    transparent
-  );
+  background: var(--skill-detail-resource-table-row-selected-background);
 }
 
-.marketplace-shell.is-light-theme .skill-detail-resource-table-row:hover {
-  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 76%, transparent);
-}
-
-.marketplace-shell.is-light-theme .skill-detail-resource-table-row.is-selected {
-  background: color-mix(in srgb, var(--marketplace-resource-link-soft) 100%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--marketplace-card-border-soft) 96%, transparent);
-}
-
-.marketplace-shell:not(.is-light-theme) .skill-detail-resource-table-row:hover {
-  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 92%, transparent);
-}
-
-.marketplace-shell:not(.is-light-theme) .skill-detail-resource-table-row.is-selected {
-  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 100%, #1b1b1b 0%);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--marketplace-card-border-soft) 86%, transparent),
-    inset 3px 0 0 color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 82%, transparent);
+.skill-detail-resource-table-row.is-selected {
+  box-shadow: var(--skill-detail-resource-table-row-selected-shadow);
 }
 
 .marketplace-shell:not(.is-light-theme) .skill-detail-resource-table-row.is-selected .skill-detail-resource-table-file-name,
@@ -247,7 +223,7 @@
 .skill-detail-resource-table-file-icon {
   width: 13px;
   height: 15px;
-  border: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 90%, transparent);
+  border: 1px solid var(--skill-detail-resource-table-file-icon-border);
   border-radius: 3px;
   position: relative;
   flex: 0 0 auto;
@@ -261,8 +237,8 @@
   right: 2px;
   width: 4px;
   height: 4px;
-  border-top: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 90%, transparent);
-  border-right: 1px solid color-mix(in srgb, var(--marketplace-card-border-soft) 90%, transparent);
+  border-top: 1px solid var(--skill-detail-resource-table-file-icon-border);
+  border-right: 1px solid var(--skill-detail-resource-table-file-icon-border);
 }
 
 .skill-detail-resource-table-file-copy {

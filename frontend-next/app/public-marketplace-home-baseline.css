@@ -19,14 +19,8 @@
   align-items: stretch;
   gap: 20px;
   padding: 14px 16px 16px;
-  background:
-    linear-gradient(180deg, rgba(13, 14, 19, 0.98) 0%, rgba(11, 12, 16, 0.98) 100%);
+  background: var(--marketplace-landing-hero-background);
   overflow: hidden;
-}
-
-.marketplace-shell.is-landing-route.is-light-theme .marketplace-home-hero {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 1) 100%);
 }
 
 .marketplace-shell.is-landing-route .marketplace-home-hero::before {
@@ -34,15 +28,11 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+    linear-gradient(var(--marketplace-landing-hero-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--marketplace-landing-hero-grid-line) 1px, transparent 1px);
   background-size: 24px 24px;
-  opacity: 0.22;
+  opacity: var(--marketplace-landing-hero-grid-opacity);
   pointer-events: none;
-}
-
-.marketplace-shell.is-landing-route.is-light-theme .marketplace-home-hero::before {
-  opacity: 0.14;
 }
 
 .marketplace-home-hero-intro,
@@ -61,14 +51,10 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: #cbd5e1;
+  color: var(--marketplace-landing-code-meta-text);
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   font-weight: 700;
-}
-
-.marketplace-shell.is-light-theme .marketplace-home-code-meta {
-  color: #475569;
 }
 
 .marketplace-home-code-dots {
@@ -82,38 +68,30 @@
   height: 10px;
   border-radius: 999px;
   display: block;
-  background: #e2e8f0;
+  background: var(--marketplace-landing-code-dot-1);
 }
 
 .marketplace-home-code-dots i:nth-child(2) {
-  background: #94a3b8;
+  background: var(--marketplace-landing-code-dot-2);
 }
 
 .marketplace-home-code-dots i:nth-child(3) {
-  background: #64748b;
+  background: var(--marketplace-landing-code-dot-3);
 }
 
 .marketplace-shell.is-landing-route .marketplace-top-stats-overline {
-  color: #d4d4d8;
+  color: var(--marketplace-landing-overline-text);
   font-family: "JetBrains Mono", monospace;
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
 }
 
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-top-stats-overline {
-  color: #64748b;
-}
-
 .marketplace-shell.is-landing-route .marketplace-top-stats-main {
   gap: 4px;
-  color: #f8fafc;
+  color: var(--marketplace-landing-display-text);
   font-size: clamp(34px, 3vw, 56px);
   line-height: 0.96;
-}
-
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-top-stats-main {
-  color: #111827;
 }
 
 .marketplace-shell.is-landing-route .marketplace-top-stats-main-line {
@@ -121,37 +99,24 @@
 }
 
 .marketplace-home-title-command {
-  color: #f8fafc;
+  color: var(--marketplace-landing-display-text);
   font-family: "JetBrains Mono", monospace;
   font-size: 32px;
   line-height: 0.92;
 }
 
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-home-title-command {
-  color: #111827;
-}
-
 .marketplace-shell.is-landing-route .marketplace-top-stats-promo {
-  color: #cbd5e1;
+  color: var(--marketplace-landing-promo-text);
   font-size: 14px;
   font-weight: 500;
   line-height: 1.35;
 }
 
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-top-stats-promo {
-  color: #64748b;
-}
-
 .marketplace-home-hero-metric-card,
 .marketplace-home-hero-analytics .marketplace-top-stats-trend-chart {
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--marketplace-landing-metric-border);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-home-hero-metric-card,
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-home-hero-analytics .marketplace-top-stats-trend-chart {
-  background: rgba(255, 255, 255, 0.84);
+  background: var(--marketplace-landing-metric-background);
 }
 
 .marketplace-home-hero-metric-card {
@@ -174,30 +139,22 @@
 }
 
 .marketplace-home-hero-metric-label {
-  color: #e5e7eb;
+  color: var(--marketplace-landing-metric-label-text);
   font-size: 18px;
   font-weight: 700;
 }
 
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-home-hero-metric-label {
-  color: #334155;
-}
-
 .marketplace-home-hero-metric-value {
-  color: #f8fafc;
+  color: var(--marketplace-landing-metric-value-text);
   font-family: "JetBrains Mono", monospace;
   font-size: clamp(42px, 4.6vw, 58px);
   font-weight: 700;
   line-height: 0.9;
 }
 
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-home-hero-metric-value {
-  color: #111827;
-}
-
 .marketplace-home-hero-metric-note {
   margin: 0;
-  color: #94a3b8;
+  color: var(--marketplace-landing-metric-note-text);
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
@@ -219,16 +176,12 @@
 }
 
 .marketplace-shell.is-landing-route .marketplace-home-hero-analytics .marketplace-top-stats-plot {
-  border-color: rgba(148, 163, 184, 0.42);
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(15, 23, 42, 0) 100%);
+  border-color: var(--marketplace-landing-plot-border);
+  background-image: var(--marketplace-landing-plot-background);
 }
 
 .marketplace-shell.is-landing-route .marketplace-home-hero-analytics .marketplace-top-stats-trend-line {
-  stroke: #f8fafc;
-}
-
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-home-hero-analytics .marketplace-top-stats-trend-line {
-  stroke: #0f172a;
+  stroke: var(--marketplace-landing-trend-line);
 }
 
 .marketplace-shell.is-landing-route .marketplace-home-results-toolbar {
@@ -237,11 +190,7 @@
 
 .marketplace-shell.is-landing-route .marketplace-home-deck-card {
   min-height: 196px;
-  background: linear-gradient(180deg, rgba(16, 17, 19, 0.34) 0%, rgba(12, 13, 16, 0.2) 100%);
-}
-
-.marketplace-shell.is-light-theme.is-landing-route .marketplace-home-deck-card {
-  background: #ffffff;
+  background: var(--marketplace-landing-deck-background);
 }
 
 .marketplace-shell.is-landing-route .marketplace-results-row {

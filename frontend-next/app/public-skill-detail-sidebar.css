@@ -2,7 +2,7 @@
   padding: 12px 14px;
   border: 1px solid var(--marketplace-card-border-soft);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 72%, transparent);
+  background: var(--skill-detail-feedback-background);
   color: var(--marketplace-home-text);
   font-size: 13px;
   line-height: 1.5;
@@ -86,7 +86,7 @@
   border: 1px solid var(--marketplace-card-border-soft);
   border-radius: 16px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--marketplace-section-background) 82%, transparent);
+  background: var(--skill-detail-prompt-shell-background);
 }
 
 .skill-detail-agent-prompt-head {
@@ -207,7 +207,7 @@
 
 .skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-shell {
   border-radius: 12px;
-  background: linear-gradient(180deg, #fcfcf8 0%, #f4f6ed 100%);
+  background: var(--skill-detail-resource-prompt-shell-background);
 }
 
 .skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-head {
@@ -221,7 +221,7 @@
 
 .skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-body {
   padding: 10px 11px;
-  color: #2f5d34;
+  color: var(--skill-detail-resource-prompt-body-text);
   font-size: 10px;
   line-height: 1.55;
 }
@@ -239,60 +239,40 @@
 }
 
 .skill-detail-install-action-grid[data-active-tab="resources"] .skill-detail-secondary-action:not(.is-primary-tone) {
-  background: transparent;
+  border-color: var(--skill-detail-resource-secondary-action-border);
+  background: var(--skill-detail-resource-secondary-action-background);
+  color: var(--skill-detail-resource-secondary-action-text);
 }
 
-.marketplace-shell.is-light-theme .skill-detail-installation-card[data-active-tab="resources"] {
-  border-color: #e7e1d6;
-  background: #fffdf9;
+.skill-detail-installation-card[data-active-tab="resources"] {
+  border-color: var(--skill-detail-resource-install-card-border);
+  background: var(--skill-detail-resource-install-card-background);
 }
 
-.marketplace-shell.is-light-theme .skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-shell {
-  border-color: #e7e1d6;
+.skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-shell {
+  border-color: var(--skill-detail-resource-prompt-shell-border);
+  background: var(--skill-detail-resource-prompt-shell-background);
 }
 
-.marketplace-shell:not(.is-light-theme) .skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-shell {
-  border-color: color-mix(in srgb, var(--marketplace-card-border-soft) 88%, transparent);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--marketplace-section-background) 94%, #0f1c12 6%) 0%,
-    color-mix(in srgb, var(--marketplace-section-emphasis-background) 82%, #122018 18%) 100%
-  );
+.skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-head {
+  border-bottom-color: var(--skill-detail-resource-prompt-head-border);
 }
 
-.marketplace-shell:not(.is-light-theme) .skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-head {
-  border-bottom-color: color-mix(in srgb, var(--marketplace-card-border-soft) 72%, transparent);
+.skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-head h4 {
+  color: var(--skill-detail-resource-prompt-head-text);
 }
 
-.marketplace-shell:not(.is-light-theme) .skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-head h4 {
-  color: var(--marketplace-home-text);
+.skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-body {
+  color: var(--skill-detail-resource-prompt-body-text);
 }
 
-.marketplace-shell:not(.is-light-theme) .skill-detail-installation-card[data-active-tab="resources"] .skill-detail-agent-prompt-body {
-  color: #b8dfb9;
+.skill-detail-install-action-grid[data-active-tab="resources"] .skill-detail-secondary-action.is-primary-tone {
+  box-shadow: var(--skill-detail-resource-secondary-action-primary-shadow);
 }
 
-.marketplace-shell:not(.is-light-theme)
-  .skill-detail-install-action-grid[data-active-tab="resources"]
-  .skill-detail-secondary-action.is-primary-tone {
-  box-shadow:
-    0 10px 24px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
-}
-
-.marketplace-shell:not(.is-light-theme)
-  .skill-detail-install-action-grid[data-active-tab="resources"]
-  .skill-detail-secondary-action:not(.is-primary-tone) {
-  border-color: color-mix(in srgb, var(--marketplace-card-border-soft) 88%, transparent);
-  background: color-mix(in srgb, var(--marketplace-section-background) 88%, transparent);
-  color: var(--marketplace-home-text);
-}
-
-.marketplace-shell:not(.is-light-theme)
-  .skill-detail-install-action-grid[data-active-tab="resources"]
-  .skill-detail-secondary-action:not(.is-primary-tone):hover {
-  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 88%, transparent);
-  border-color: color-mix(in srgb, var(--marketplace-card-border) 92%, transparent);
+.skill-detail-install-action-grid[data-active-tab="resources"] .skill-detail-secondary-action:not(.is-primary-tone):hover {
+  background: var(--skill-detail-resource-secondary-action-hover-background);
+  border-color: var(--skill-detail-resource-secondary-action-hover-border);
 }
 
 .skill-detail-installation-card[data-active-tab="resources"][data-install-audience="human"] .skill-detail-content-head h3 {

@@ -58,6 +58,8 @@ Read the following documents after the global read order based on the task categ
 12. For frontend routing work, keep path families, route metadata, and render dispatch in shared routing contracts under `frontend-next/src/lib/routing/**`; do not recreate route truth inside feature folders.
 13. Feature-level route branching is allowed only for rendering, local interaction, or feature-local view-model selection within one page family.
 14. Temporary compatibility wrappers may exist during migration, but new imports must target the shared contract directly and stale wrappers should be removed in the next safe refactor.
+15. Repository local frontend and backend long-running services must be started, restarted, inspected, and stopped through `lcode` profiles or `make dev*` wrappers that delegate to `lcode`.
+16. Do not keep repository runtime services alive through ad hoc terminal processes such as bare `npm run dev`, `next start`, `go run`, or long-lived `exec_command` sessions unless the user explicitly approves a temporary diagnostic exception.
 
 ## Project Context
 

@@ -56,12 +56,8 @@
   border-radius: 16px;
   display: grid;
   place-items: center;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+  background: var(--marketplace-landing-cover-background);
   border: 1px solid var(--marketplace-card-border-soft);
-}
-
-.marketplace-shell.is-light-theme .marketplace-card-cover {
-  background: linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%);
 }
 
 .marketplace-card-cover-thumb {
@@ -71,17 +67,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--marketplace-home-text);
+  background: var(--marketplace-landing-cover-thumb-background);
+  color: var(--marketplace-landing-cover-thumb-text);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.marketplace-shell.is-light-theme .marketplace-card-cover-thumb {
-  background: #111111;
-  color: #ffffff;
 }
 
 .marketplace-skill-body {

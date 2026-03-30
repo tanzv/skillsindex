@@ -134,7 +134,7 @@
 }
 
 .marketplace-home-icon-button.is-primary {
-  background: color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 88%, transparent);
+  background: var(--marketplace-topbar-button-primary-soft-background);
   color: var(--marketplace-topbar-button-primary-text);
 }
 

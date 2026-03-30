@@ -1,3 +1,136 @@
+.marketplace-shell:has(.skill-detail-page) {
+  --skill-detail-header-avatar-border: rgba(255, 255, 255, 0.12);
+  --skill-detail-header-avatar-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --skill-detail-header-avatar-cobalt-background:
+    linear-gradient(135deg, #1d4ed8 0%, #60a5fa 100%);
+  --skill-detail-header-avatar-ember-background:
+    linear-gradient(135deg, #b91c1c 0%, #fb7185 100%);
+  --skill-detail-header-avatar-emerald-background:
+    linear-gradient(135deg, #047857 0%, #34d399 100%);
+  --skill-detail-header-avatar-plum-background:
+    linear-gradient(135deg, #7c3aed 0%, #c084fc 100%);
+  --skill-detail-header-avatar-monogram-text: #f8fafc;
+  --skill-detail-header-pill-border: rgba(255, 255, 255, 0.08);
+  --skill-detail-header-quality-background: rgba(255, 255, 255, 0.12);
+  --skill-detail-header-quality-text: #f8fafc;
+  --skill-detail-header-support-pill-text: #dbe4f0;
+  --skill-detail-header-support-meta-text: #dbe4f0;
+  --skill-detail-header-support-pill-background: rgba(255, 255, 255, 0.12);
+  --skill-detail-header-support-meta-background: rgba(255, 255, 255, 0.04);
+  --skill-detail-header-title-text: #f6f7fb;
+  --skill-detail-header-description-text: rgba(226, 232, 240, 0.76);
+  --skill-detail-meta-chip-border: rgba(255, 255, 255, 0.08);
+  --skill-detail-meta-chip-background: rgba(255, 255, 255, 0.04);
+  --skill-detail-meta-chip-text: #dbe4f0;
+  --skill-detail-tag-chip-background: rgba(255, 255, 255, 0.1);
+  --skill-detail-tag-chip-text: #f8fafc;
+  --skill-detail-context-title-text: var(--marketplace-home-text);
+  --skill-detail-topbar-shell-background:
+    color-mix(in srgb, var(--marketplace-nav-shell-background) 88%, transparent);
+  --skill-detail-breadcrumb-border: var(--marketplace-card-border-soft);
+  --skill-detail-breadcrumb-background:
+    color-mix(in srgb, var(--marketplace-section-emphasis-background) 76%, transparent);
+  --skill-detail-breadcrumb-hover-background:
+    color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 78%, transparent);
+  --skill-detail-breadcrumb-current-background:
+    color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 18%, transparent);
+  --skill-detail-breadcrumb-current-text: var(--marketplace-home-text);
+  --skill-detail-breadcrumb-current-soft-border:
+    color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 22%, var(--marketplace-card-border-soft) 78%);
+  --skill-detail-summary-pill-background:
+    color-mix(in srgb, var(--marketplace-section-emphasis-background) 78%, transparent);
+  --skill-detail-top-summary-card-background:
+    color-mix(in srgb, var(--marketplace-section-emphasis-background) 88%, transparent);
+  --skill-detail-context-summary-chip-background:
+    color-mix(in srgb, var(--marketplace-section-emphasis-background) 76%, transparent);
+  --skill-detail-panel-background: var(--marketplace-section-emphasis-background);
+  --skill-detail-overview-section-background:
+    color-mix(in srgb, var(--marketplace-section-emphasis-background) 88%, transparent);
+  --skill-detail-install-row-background:
+    color-mix(in srgb, var(--marketplace-section-emphasis-background) 82%, transparent);
+  --skill-detail-overview-inline-fact-background:
+    color-mix(in srgb, var(--marketplace-section-background) 72%, transparent);
+  --skill-detail-overview-score-main-background:
+    color-mix(in srgb, var(--marketplace-section-background) 78%, transparent);
+  --skill-detail-feedback-background:
+    color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 72%, transparent);
+  --skill-detail-prompt-shell-background:
+    color-mix(in srgb, var(--marketplace-section-background) 82%, transparent);
+  --skill-detail-directory-shell-background:
+    color-mix(in srgb, var(--marketplace-section-background) 82%, transparent);
+  --skill-detail-directory-row-hover-background:
+    color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 76%, transparent);
+  --skill-detail-directory-row-selected-background:
+    color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 12%, transparent);
+  --skill-detail-directory-icon-directory-background:
+    color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 28%, transparent);
+  --skill-detail-directory-icon-file-border:
+    color-mix(in srgb, var(--marketplace-card-border) 74%, transparent);
+  --skill-detail-directory-icon-file-background:
+    color-mix(in srgb, var(--marketplace-section-emphasis-background) 82%, transparent);
+  --skill-detail-resource-prompt-shell-border:
+    color-mix(in srgb, var(--marketplace-card-border-soft) 88%, transparent);
+  --skill-detail-resource-prompt-shell-background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--marketplace-section-background) 94%, #0f1c12 6%) 0%,
+      color-mix(in srgb, var(--marketplace-section-emphasis-background) 82%, #122018 18%) 100%
+    );
+  --skill-detail-resource-prompt-head-border:
+    color-mix(in srgb, var(--marketplace-card-border-soft) 72%, transparent);
+  --skill-detail-resource-prompt-head-text: var(--marketplace-home-text);
+  --skill-detail-resource-prompt-body-text: #b8dfb9;
+  --skill-detail-resource-secondary-action-primary-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  --skill-detail-resource-secondary-action-border:
+    color-mix(in srgb, var(--marketplace-card-border-soft) 88%, transparent);
+  --skill-detail-resource-secondary-action-background:
+    color-mix(in srgb, var(--marketplace-section-background) 88%, transparent);
+  --skill-detail-resource-secondary-action-text: var(--marketplace-home-text);
+  --skill-detail-resource-secondary-action-hover-background:
+    color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 88%, transparent);
+  --skill-detail-resource-secondary-action-hover-border:
+    color-mix(in srgb, var(--marketplace-card-border) 92%, transparent);
+  --skill-detail-source-analysis-link-hover:
+    color-mix(in srgb, var(--marketplace-resource-link, var(--marketplace-link-text)) 78%, var(--marketplace-home-text) 22%);
+  --skill-detail-source-analysis-pill-border:
+    color-mix(in srgb, var(--marketplace-card-border-soft) 80%, transparent);
+  --skill-detail-source-analysis-pill-background:
+    color-mix(in srgb, var(--marketplace-surface-muted, var(--marketplace-card-background)) 76%, transparent);
+  --skill-detail-resource-table-head-border:
+    color-mix(in srgb, var(--marketplace-card-border-soft) 86%, transparent);
+  --skill-detail-resource-table-row-border:
+    color-mix(in srgb, var(--marketplace-card-border-soft) 72%, transparent);
+  --skill-detail-resource-table-row-hover-background:
+    color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 92%, transparent);
+  --skill-detail-resource-table-row-selected-background:
+    color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 100%, #1b1b1b 0%);
+  --skill-detail-resource-table-row-selected-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--marketplace-card-border-soft) 86%, transparent),
+    inset 3px 0 0 color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 82%, transparent);
+  --skill-detail-resource-table-file-icon-border:
+    color-mix(in srgb, var(--marketplace-card-border-soft) 90%, transparent);
+  --skill-detail-loading-shell-background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--marketplace-section-background) 88%, transparent),
+      color-mix(in srgb, var(--marketplace-section-emphasis-background) 80%, transparent)
+    );
+  --skill-detail-loading-panel-background:
+    color-mix(in srgb, var(--marketplace-section-background) 84%, transparent);
+  --skill-detail-loading-placeholder-background:
+    color-mix(in srgb, var(--marketplace-chip-border) 72%, transparent);
+  --skill-detail-loading-shimmer-background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  --skill-detail-overview-star-empty: rgba(255, 255, 255, 0.24);
+  --skill-detail-overview-star-filled: #f0b95a;
+  --skill-detail-overview-comment-avatar-border: var(--marketplace-card-border-soft);
+  --skill-detail-overview-comment-avatar-background:
+    color-mix(in srgb, var(--marketplace-section-background) 86%, transparent);
+  --skill-detail-overview-comment-avatar-text: var(--marketplace-home-text);
+}
+
 .skill-detail-page,
 .skill-detail-main-column,
 .skill-detail-sidebar,
@@ -44,7 +177,7 @@
 .skill-detail-topbar-nav,
 .skill-detail-topbar-actions .marketplace-topbar-switch {
   padding: 4px;
-  background: color-mix(in srgb, var(--marketplace-nav-shell-background) 88%, transparent);
+  background: var(--skill-detail-topbar-shell-background);
 }
 
 .skill-detail-topbar-nav .marketplace-nav-button,
@@ -96,33 +229,33 @@
 .skill-detail-header-avatar {
   width: 58px;
   height: 58px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--skill-detail-header-avatar-border);
   border-radius: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: var(--skill-detail-header-avatar-shadow);
 }
 
 .skill-detail-header-avatar.is-cobalt {
-  background: linear-gradient(135deg, #1d4ed8 0%, #60a5fa 100%);
+  background: var(--skill-detail-header-avatar-cobalt-background);
 }
 
 .skill-detail-header-avatar.is-ember {
-  background: linear-gradient(135deg, #b91c1c 0%, #fb7185 100%);
+  background: var(--skill-detail-header-avatar-ember-background);
 }
 
 .skill-detail-header-avatar.is-emerald {
-  background: linear-gradient(135deg, #047857 0%, #34d399 100%);
+  background: var(--skill-detail-header-avatar-emerald-background);
 }
 
 .skill-detail-header-avatar.is-plum {
-  background: linear-gradient(135deg, #7c3aed 0%, #c084fc 100%);
+  background: var(--skill-detail-header-avatar-plum-background);
 }
 
 .skill-detail-header-avatar-monogram {
-  color: #f8fafc;
+  color: var(--skill-detail-header-avatar-monogram-text);
   font-size: 20px;
   font-weight: 800;
   line-height: 1;
@@ -149,7 +282,7 @@
 .skill-detail-header-support-meta {
   min-height: 26px;
   padding: 0 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--skill-detail-header-pill-border);
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
@@ -158,8 +291,8 @@
 }
 
 .skill-detail-header-quality-badge {
-  background: rgba(255, 255, 255, 0.12);
-  color: #f8fafc;
+  background: var(--skill-detail-header-quality-background);
+  color: var(--skill-detail-header-quality-text);
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   font-weight: 700;
@@ -168,17 +301,18 @@
 
 .skill-detail-header-support-pill,
 .skill-detail-header-support-meta {
-  color: #dbe4f0;
   font-size: 11px;
   font-weight: 600;
 }
 
 .skill-detail-header-support-pill {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--skill-detail-header-support-pill-background);
+  color: var(--skill-detail-header-support-pill-text);
 }
 
 .skill-detail-header-support-meta {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--skill-detail-header-support-meta-background);
+  color: var(--skill-detail-header-support-meta-text);
 }
 
 .skill-detail-header-aside {
@@ -199,7 +333,7 @@
   display: grid;
   gap: 6px;
   align-content: start;
-  background: color-mix(in srgb, var(--marketplace-section-emphasis-background) 88%, transparent);
+  background: var(--skill-detail-top-summary-card-background);
 }
 
 .skill-detail-top-summary-label {
@@ -226,52 +360,18 @@
 }
 
 .skill-detail-header-title {
-  color: #f6f7fb;
+  color: var(--skill-detail-header-title-text);
   font-size: clamp(28px, 3vw, 42px);
   line-height: 1.04;
   letter-spacing: -0.03em;
 }
 
-.marketplace-shell.is-light-theme .skill-detail-header-title {
-  color: #0f172a;
-}
-
-.marketplace-shell.is-light-theme .skill-detail-header-avatar {
-  border-color: rgba(148, 163, 184, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-.marketplace-shell.is-light-theme .skill-detail-header-quality-badge {
-  border-color: #d8deea;
-  background: #f6f8fc;
-  color: #0f172a;
-}
-
 .skill-detail-header-description {
   margin: 0;
   max-width: 860px;
-  color: rgba(226, 232, 240, 0.76);
+  color: var(--skill-detail-header-description-text);
   font-size: 13px;
   line-height: 1.65;
-}
-
-.marketplace-shell.is-light-theme .skill-detail-header-description {
-  color: #475569;
-}
-
-.marketplace-shell.is-light-theme .skill-detail-header-support-pill,
-.marketplace-shell.is-light-theme .skill-detail-header-support-meta {
-  border-color: #d9dde7;
-  color: #475569;
-}
-
-.marketplace-shell.is-light-theme .skill-detail-header-support-pill {
-  background: #f6f8fc;
-  color: #0f172a;
-}
-
-.marketplace-shell.is-light-theme .skill-detail-header-support-meta {
-  background: rgba(255, 255, 255, 0.72);
 }
 
 .skill-detail-meta-strip,
@@ -286,34 +386,27 @@
 .skill-detail-tag-chip {
   min-height: 28px;
   padding: 0 11px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--skill-detail-meta-chip-border);
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.04);
-  color: #dbe4f0;
+  background: var(--skill-detail-meta-chip-background);
+  color: var(--skill-detail-meta-chip-text);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.03em;
 }
 
 .skill-detail-tag-chip {
-  background: rgba(255, 255, 255, 0.1);
-  color: #f8fafc;
-}
-
-.marketplace-shell.is-light-theme .skill-detail-meta-chip,
-.marketplace-shell.is-light-theme .skill-detail-tag-chip {
-  border-color: #d9dde7;
-  background: rgba(255, 255, 255, 0.72);
-  color: #0f172a;
+  background: var(--skill-detail-tag-chip-background);
+  color: var(--skill-detail-tag-chip-text);
 }
 
 .skill-detail-context-title,
 .skill-detail-preview-stage-title {
   margin: 0;
-  color: var(--marketplace-home-text);
+  color: var(--skill-detail-context-title-text);
   font-size: 14px;
   font-weight: 700;
   line-height: 1.3;
@@ -328,7 +421,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--marketplace-section-emphasis-background) 76%, transparent);
+  background: var(--skill-detail-context-summary-chip-background);
   color: var(--si-color-text-secondary);
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;

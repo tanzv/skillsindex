@@ -62,7 +62,7 @@
   border-radius: 16px;
   display: grid;
   gap: 5px;
-  background: color-mix(in srgb, var(--marketplace-section-background) 72%, transparent);
+  background: var(--skill-detail-overview-inline-fact-background);
 }
 
 .skill-detail-overview-inline-fact-label {
@@ -119,7 +119,7 @@
 .skill-detail-overview-score-main {
   border: 1px solid var(--marketplace-card-border-soft);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--marketplace-section-background) 78%, transparent);
+  background: var(--skill-detail-overview-score-main-background);
 }
 
 .skill-detail-overview-score-main {
@@ -146,7 +146,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: rgba(255, 255, 255, 0.24);
+  color: var(--skill-detail-overview-star-empty);
 }
 
 .skill-detail-overview-star {
@@ -156,7 +156,7 @@
 }
 
 .skill-detail-overview-star.is-filled {
-  color: #f0b95a;
+  color: var(--skill-detail-overview-star-filled);
 }
 
 .skill-detail-overview-score-meta {
@@ -221,14 +221,14 @@
 .skill-detail-overview-comment-avatar {
   width: 34px;
   height: 34px;
-  border: 1px solid var(--marketplace-card-border-soft);
+  border: 1px solid var(--skill-detail-overview-comment-avatar-border);
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  background: color-mix(in srgb, var(--marketplace-section-background) 86%, transparent);
-  color: var(--marketplace-home-text);
+  background: var(--skill-detail-overview-comment-avatar-background);
+  color: var(--skill-detail-overview-comment-avatar-text);
   font-family: "JetBrains Mono", monospace;
   font-size: 12px;
   font-weight: 700;

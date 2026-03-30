@@ -129,7 +129,7 @@
 .skill-detail-topbar-nav,
 .skill-detail-topbar-actions .marketplace-topbar-switch {
   padding: 4px;
-  background: color-mix(in srgb, var(--marketplace-nav-shell-background) 88%, transparent);
+  background: var(--skill-detail-topbar-shell-background);
 }
 
 .marketplace-topbar:has(.skill-detail-topbar-nav) .skill-detail-topbar-nav,
@@ -164,7 +164,7 @@
   min-height: 28px;
   max-width: min(100%, 280px);
   padding: 0 12px;
-  border: 1px solid var(--marketplace-card-border-soft);
+  border: 1px solid var(--skill-detail-breadcrumb-border);
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
@@ -179,23 +179,23 @@
 }
 
 .skill-detail-shell-breadcrumb-link {
-  background: color-mix(in srgb, var(--marketplace-section-emphasis-background) 76%, transparent);
+  background: var(--skill-detail-breadcrumb-background);
   color: var(--si-color-text-secondary);
 }
 
 .skill-detail-shell-breadcrumb-link:hover {
-  background: color-mix(in srgb, var(--marketplace-topbar-button-hover-background) 78%, transparent);
+  background: var(--skill-detail-breadcrumb-hover-background);
   color: var(--marketplace-home-text);
   text-decoration: none;
 }
 
 .skill-detail-shell-breadcrumb-current {
-  background: color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 18%, transparent);
-  color: var(--marketplace-home-text);
+  background: var(--skill-detail-breadcrumb-current-background);
+  color: var(--skill-detail-breadcrumb-current-text);
 }
 
 .skill-detail-shell-breadcrumb-current.is-soft {
-  border-color: color-mix(in srgb, var(--marketplace-topbar-button-primary-background) 22%, var(--marketplace-card-border-soft) 78%);
+  border-color: var(--skill-detail-breadcrumb-current-soft-border);
 }
 
 .skill-detail-shell-breadcrumb-separator {
@@ -240,7 +240,7 @@
 
 .skill-detail-meta-chip,
 .skill-detail-summary-pill {
-  background: color-mix(in srgb, var(--marketplace-section-emphasis-background) 78%, transparent);
+  background: var(--skill-detail-summary-pill-background);
 }
 
 @media (max-width: 760px) {
