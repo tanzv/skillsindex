@@ -105,6 +105,7 @@ export function PublicMarketWebclient({ children }: PublicMarketWebclientProps) 
         isLightTheme && "is-light-theme",
         isMobileLayout && "is-mobile-layout"
       )}
+      data-marketplace-theme={isLightTheme ? "light" : "dark"}
       data-marketplace-route-kind={routeKind}
       data-marketplace-content-width={contentWidth}
     >

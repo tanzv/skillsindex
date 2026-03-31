@@ -6,7 +6,9 @@ const config = [
     ignores: [
       ".next/**",
       ".next.bak-*/**",
+      "frontend-next/**",
       "test-results/**",
+      "tmp/**",
       "tmp-screens/**"
     ]
   },

@@ -243,7 +243,59 @@
   background: var(--skill-detail-summary-pill-background);
 }
 
+@media (max-width: 1100px) {
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .marketplace-topbar-main,
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .marketplace-topbar-right,
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .skill-detail-topbar-actions {
+    width: 100%;
+  }
+
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .marketplace-topbar-main {
+    row-gap: 10px;
+  }
+
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .marketplace-topbar-right,
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .skill-detail-topbar-actions {
+    justify-content: flex-end;
+  }
+}
+
 @media (max-width: 760px) {
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .marketplace-topbar-main,
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .marketplace-topbar-right,
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .skill-detail-topbar-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .marketplace-topbar-main {
+    gap: 10px;
+  }
+
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .skill-detail-topbar-nav {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+    gap: 8px;
+  }
+
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .skill-detail-topbar-nav .marketplace-nav-button,
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .skill-detail-topbar-actions .marketplace-topbar-button {
+    width: 100%;
+  }
+
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .marketplace-home-topbar-icon-shell {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .marketplace-shell[data-marketplace-route-kind="skill-detail"] .marketplace-home-topbar-icon-segment {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+
   .skill-detail-context-bar,
   .skill-detail-context-bar-top,
   .skill-detail-context-bar-leading {

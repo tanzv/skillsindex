@@ -8,11 +8,14 @@ function readSourceFile(relativePath: string): string {
 }
 
 describe("eslint config", () => {
-  it("ignores generated Next.js output and backup directories", () => {
+  it("ignores generated output, nested snapshots, and temporary directories", () => {
     const source = readSourceFile("eslint.config.mjs");
 
     expect(source).toContain(".next/**");
     expect(source).toContain(".next.bak-*/**");
+    expect(source).toContain("frontend-next/**");
     expect(source).toContain("test-results/**");
+    expect(source).toContain("tmp/**");
+    expect(source).toContain("tmp-screens/**");
   });
 });

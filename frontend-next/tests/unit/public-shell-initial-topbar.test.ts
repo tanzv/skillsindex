@@ -94,6 +94,7 @@ describe("PublicMarketWebclient initial topbar rendering", () => {
     const markup = renderWebclientAtPath("/", "home");
 
     expectMarkupToContainAll(markup, [
+      'data-marketplace-theme="dark"',
       'data-marketplace-route-kind="landing"',
       'data-marketplace-content-width="default"',
       'data-testid="landing-topbar-nav-categories"',
@@ -110,6 +111,7 @@ describe("PublicMarketWebclient initial topbar rendering", () => {
     const markup = renderWebclientAtPath("/results", "results");
 
     expectMarkupToContainAll(markup, [
+      'data-marketplace-theme="dark"',
       'data-marketplace-route-kind="section"',
       'data-marketplace-content-width="default"',
       "Results",
@@ -125,6 +127,7 @@ describe("PublicMarketWebclient initial topbar rendering", () => {
     const markup = renderWebclientAtPath("/docs", "docs");
 
     expectMarkupToContainAll(markup, [
+      'data-marketplace-theme="dark"',
       'data-marketplace-route-kind="narrative"',
       'data-marketplace-content-width="expanded"',
       ">Docs<",
@@ -134,9 +137,11 @@ describe("PublicMarketWebclient initial topbar rendering", () => {
   });
 
   it("marks skill detail routes as expanded marketplace detail surfaces", () => {
-    const markup = renderWebclientAtPath("/skills/14", "skill detail");
+    const markup = renderWebclientAtPath("/light/skills/14", "skill detail");
 
     expectMarkupToContainAll(markup, [
+      'data-marketplace-theme="light"',
+      "is-light-theme",
       'data-marketplace-route-kind="skill-detail"',
       'data-marketplace-content-width="expanded"',
       'data-testid="skill-detail-topbar-breadcrumb"',
