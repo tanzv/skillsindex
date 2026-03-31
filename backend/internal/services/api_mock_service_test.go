@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 	"testing"
+
+	"skillsindex/internal/models"
 )
 
 func setupPublishedAPIManagementServices(t *testing.T) (*APISpecRegistryService, *APIPublishService, *APIPolicyService, *APIContractRuntimeService, *APIMockService, *APIExportService) {
@@ -36,8 +38,8 @@ func TestAPIMockServiceResolveCurrentMockUsesProfileOverride(t *testing.T) {
 
 	if _, err := policyService.UpsertCurrentOperationPolicy(context.Background(), UpsertCurrentAPIOperationPolicyInput{
 		OperationID:    "getCurrentPublishedSpec",
-		AuthMode:       "session",
-		RequiredRoles:  []string{"super_admin"},
+		AuthMode:       models.APIAuthModeSession,
+		RequiredRoles:  []string{string(models.RoleSuperAdmin)},
 		RequiredScopes: []string{},
 		Enabled:        true,
 		MockEnabled:    true,

@@ -62,7 +62,7 @@
 
 ```bash
 curl -H "Authorization: Bearer sk_live_demo" \
-  "http://localhost:8080/api/v1/skills/search?q=go&category=development&sort=stars"
+  "http://127.0.0.1:38180/api/v1/skills/search?q=go&category=development&sort=stars"
 ```
 
 ### 3.2 AI 搜索
@@ -73,7 +73,7 @@ curl -H "Authorization: Bearer sk_live_demo" \
 
 ```bash
 curl -H "Authorization: Bearer sk_live_demo" \
-  "http://localhost:8080/api/v1/skills/ai-search?q=incident%20response%20runbook"
+  "http://127.0.0.1:38180/api/v1/skills/ai-search?q=incident%20response%20runbook"
 ```
 
 ## 4. 推荐调用流程

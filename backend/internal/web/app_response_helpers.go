@@ -210,17 +210,11 @@ func (a *App) render(w http.ResponseWriter, r *http.Request, data ViewData) {
 
 func (a *App) renderWithStatus(w http.ResponseWriter, r *http.Request, status int, data ViewData) {
 	if a.apiOnly {
-		writeJSON(w, status, map[string]any{
-			"error":   "api_only_mode",
-			"message": "HTML rendering is disabled in API-only mode",
-		})
+		writeAPIError(w, r, status, "api_only_mode", "HTML rendering is disabled in API-only mode")
 		return
 	}
 	if a.templates == nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{
-			"error":   "template_renderer_not_configured",
-			"message": "HTML template renderer is not configured",
-		})
+		writeAPIError(w, r, http.StatusInternalServerError, "template_renderer_not_configured", "HTML template renderer is not configured")
 		return
 	}
 	if data.CurrentUser == nil {

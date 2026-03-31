@@ -177,31 +177,31 @@ func (a *App) handleDingTalkRevoke(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleDingTalkMe(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized", "message": "Login required"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.oauthGrantService == nil || a.dingTalkService == nil || !a.dingTalkService.Enabled() {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable", "message": "DingTalk integration is not configured"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "DingTalk integration is not configured")
 		return
 	}
 
 	grant, err := a.oauthGrantService.GetGrantByUserProvider(r.Context(), user.ID, models.OAuthProviderDingTalk)
 	if err != nil {
 		if errors.Is(err, services.ErrOAuthGrantNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "grant_not_found", "message": "DingTalk personal authorization not found"})
+			writeAPIError(w, r, http.StatusNotFound, "grant_not_found", "DingTalk personal authorization not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "grant_query_failed", "message": "Failed to query authorization grant"})
+		writeAPIError(w, r, http.StatusInternalServerError, "grant_query_failed", "Failed to query authorization grant")
 		return
 	}
 	if !a.oauthGrantService.IsGrantActive(grant, time.Now().UTC()) {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "grant_expired", "message": "DingTalk personal authorization has expired; please re-authorize"})
+		writeAPIError(w, r, http.StatusUnauthorized, "grant_expired", "DingTalk personal authorization has expired; please re-authorize")
 		return
 	}
 
 	profile, err := a.dingTalkService.GetCurrentUser(r.Context(), grant.AccessToken)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, map[string]any{"error": "dingtalk_api_failed", "message": "Failed to query DingTalk personal profile"})
+		writeAPIError(w, r, http.StatusBadGateway, "dingtalk_api_failed", "Failed to query DingTalk personal profile")
 		return
 	}
 

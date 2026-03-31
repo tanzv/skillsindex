@@ -177,11 +177,11 @@ func (a *App) handleSkillOrganizationUnbind(w http.ResponseWriter, r *http.Reque
 func (a *App) handleAPISkillOrganizationBind(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.skillService == nil || a.organizationSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill organization services are unavailable")
 		return
 	}
 
@@ -191,54 +191,54 @@ func (a *App) handleAPISkillOrganizationBind(w http.ResponseWriter, r *http.Requ
 	}
 	skill, err := a.skillService.GetSkillByID(r.Context(), skillID)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 		return
 	}
 	if !user.CanManageSkill(skill.OwnerID) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
 	var input apiSkillOrganizationBindRequest
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid payload")
 		return
 	}
 	if input.OrganizationID == 0 {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "organization_id is required"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "organization_id is required")
 		return
 	}
 
 	if _, err := a.organizationSvc.GetByID(r.Context(), input.OrganizationID); err != nil {
 		if errors.Is(err, services.ErrOrganizationNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "organization_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "organization_not_found", "Organization not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "organization_query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "organization_query_failed", err, "Failed to load organization")
 		return
 	}
 
 	canManageInOrg, err := a.organizationSvc.CanManageSkillInOrganization(r.Context(), *user, input.OrganizationID, skill.OwnerID)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "organization_permission_check_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "organization_permission_check_failed", err, "Failed to validate organization permission")
 		return
 	}
 	if !canManageInOrg {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
 	updatedSkill, err := a.skillService.SetOrganization(r.Context(), skillID, &input.OrganizationID)
 	if err != nil {
 		if errors.Is(err, services.ErrSkillNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 			return
 		}
 		if errors.Is(err, services.ErrOrganizationNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "organization_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "organization_not_found", "Organization not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "organization_bind_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "organization_bind_failed", err, "Failed to bind organization")
 		return
 	}
 
@@ -263,11 +263,11 @@ func (a *App) handleAPISkillOrganizationBind(w http.ResponseWriter, r *http.Requ
 func (a *App) handleAPISkillOrganizationUnbind(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.skillService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill organization services are unavailable")
 		return
 	}
 
@@ -277,18 +277,18 @@ func (a *App) handleAPISkillOrganizationUnbind(w http.ResponseWriter, r *http.Re
 	}
 	skill, err := a.skillService.GetSkillByID(r.Context(), skillID)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 		return
 	}
 	if !user.CanManageSkill(skill.OwnerID) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
 	organizationID := skill.OrganizationID
 	if organizationID != nil {
 		if a.organizationSvc == nil {
-			writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+			writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill organization services are unavailable")
 			return
 		}
 
@@ -299,25 +299,19 @@ func (a *App) handleAPISkillOrganizationUnbind(w http.ResponseWriter, r *http.Re
 			skill.OwnerID,
 		)
 		if permissionErr != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{
-				"error":   "organization_permission_check_failed",
-				"message": permissionErr.Error(),
-			})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "organization_permission_check_failed", permissionErr, "Failed to validate organization permission")
 			return
 		}
 		if !canManageInOrg {
-			writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+			writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 			return
 		}
 		if _, err := a.skillService.SetOrganization(r.Context(), skillID, nil); err != nil {
 			if errors.Is(err, services.ErrSkillNotFound) {
-				writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+				writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 				return
 			}
-			writeJSON(w, http.StatusInternalServerError, map[string]any{
-				"error":   "organization_unbind_failed",
-				"message": err.Error(),
-			})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "organization_unbind_failed", err, "Failed to unbind organization")
 			return
 		}
 	}

@@ -18,7 +18,7 @@ func openAPIPathsPublicAuth() map[string]any {
 					queryParam("sort", "string", false, "Sort field: recent|stars|quality"),
 					queryParam("mode", "string", false, "Search mode: keyword|ai"),
 					queryParam("page", "integer", false, "Page number"),
-					queryParam("page_size", "integer", false, "Page size, max 24 unless one unpaginated category scope is requested"),
+					queryParam("page_size", "integer", false, "Page size, max 24 unless the category hub scope is requested"),
 				},
 				"responses": map[string]any{
 					"200": jsonResponse("Public marketplace payload", "PublicMarketplaceResponse"),

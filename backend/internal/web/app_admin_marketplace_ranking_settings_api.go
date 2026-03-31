@@ -95,17 +95,17 @@ func (a *App) loadMarketplaceRankingSettings(ctx context.Context) (marketplaceRa
 func (a *App) handleAPIAdminMarketplaceRankingSetting(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
 	settings, err := a.loadMarketplaceRankingSettings(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "query_failed", err, "Failed to load marketplace ranking settings")
 		return
 	}
 
@@ -121,21 +121,21 @@ func (a *App) handleAPIAdminMarketplaceRankingSetting(w http.ResponseWriter, r *
 func (a *App) handleAPIAdminMarketplaceRankingSettingUpdate(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if a.settingsService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Settings service is unavailable")
 		return
 	}
 
 	settings, err := a.loadMarketplaceRankingSettings(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "query_failed", err, "Failed to load marketplace ranking settings")
 		return
 	}
 
@@ -146,19 +146,19 @@ func (a *App) handleAPIAdminMarketplaceRankingSettingUpdate(w http.ResponseWrite
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&payload); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+			writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 			return
 		}
 
 		if rawDefaultSort, exists := payload["default_sort"]; exists {
 			sortText, ok := rawDefaultSort.(string)
 			if !ok {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "invalid default_sort"})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "invalid default_sort")
 				return
 			}
 			sortValue := strings.TrimSpace(strings.ToLower(sortText))
 			if sortValue != "stars" && sortValue != "quality" {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "invalid default_sort"})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "invalid default_sort")
 				return
 			}
 			next.DefaultSort = sortValue
@@ -166,7 +166,7 @@ func (a *App) handleAPIAdminMarketplaceRankingSettingUpdate(w http.ResponseWrite
 		if rawRankingLimit, exists := payload["ranking_limit"]; exists {
 			value, matched := parseIntSettingValue(rawRankingLimit)
 			if !matched || value <= 0 {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "invalid ranking_limit"})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "invalid ranking_limit")
 				return
 			}
 			next.RankingLimit = value
@@ -174,7 +174,7 @@ func (a *App) handleAPIAdminMarketplaceRankingSettingUpdate(w http.ResponseWrite
 		if rawHighlightLimit, exists := payload["highlight_limit"]; exists {
 			value, matched := parseIntSettingValue(rawHighlightLimit)
 			if !matched || value <= 0 {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "invalid highlight_limit"})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "invalid highlight_limit")
 				return
 			}
 			next.HighlightLimit = value
@@ -182,21 +182,21 @@ func (a *App) handleAPIAdminMarketplaceRankingSettingUpdate(w http.ResponseWrite
 		if rawCategoryLeaderLimit, exists := payload["category_leader_limit"]; exists {
 			value, matched := parseIntSettingValue(rawCategoryLeaderLimit)
 			if !matched || value <= 0 {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "invalid category_leader_limit"})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "invalid category_leader_limit")
 				return
 			}
 			next.CategoryLeaderLimit = value
 		}
 	} else {
 		if err := r.ParseForm(); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+			writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 			return
 		}
 
 		if rawDefaultSort := strings.TrimSpace(r.FormValue("default_sort")); rawDefaultSort != "" {
 			sortValue := normalizeMarketplaceRankingSort(rawDefaultSort)
 			if sortValue != strings.TrimSpace(strings.ToLower(rawDefaultSort)) {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "invalid default_sort"})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "invalid default_sort")
 				return
 			}
 			next.DefaultSort = sortValue
@@ -204,7 +204,7 @@ func (a *App) handleAPIAdminMarketplaceRankingSettingUpdate(w http.ResponseWrite
 		if rawRankingLimit := strings.TrimSpace(r.FormValue("ranking_limit")); rawRankingLimit != "" {
 			value, err := strconv.Atoi(rawRankingLimit)
 			if err != nil || value <= 0 {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "invalid ranking_limit"})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "invalid ranking_limit")
 				return
 			}
 			next.RankingLimit = value
@@ -212,7 +212,7 @@ func (a *App) handleAPIAdminMarketplaceRankingSettingUpdate(w http.ResponseWrite
 		if rawHighlightLimit := strings.TrimSpace(r.FormValue("highlight_limit")); rawHighlightLimit != "" {
 			value, err := strconv.Atoi(rawHighlightLimit)
 			if err != nil || value <= 0 {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "invalid highlight_limit"})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "invalid highlight_limit")
 				return
 			}
 			next.HighlightLimit = value
@@ -220,7 +220,7 @@ func (a *App) handleAPIAdminMarketplaceRankingSettingUpdate(w http.ResponseWrite
 		if rawCategoryLeaderLimit := strings.TrimSpace(r.FormValue("category_leader_limit")); rawCategoryLeaderLimit != "" {
 			value, err := strconv.Atoi(rawCategoryLeaderLimit)
 			if err != nil || value <= 0 {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": "invalid category_leader_limit"})
+				writeAPIError(w, r, http.StatusBadRequest, "invalid_payload", "invalid category_leader_limit")
 				return
 			}
 			next.CategoryLeaderLimit = value
@@ -229,19 +229,19 @@ func (a *App) handleAPIAdminMarketplaceRankingSettingUpdate(w http.ResponseWrite
 
 	next = normalizeMarketplaceRankingConfig(next)
 	if err := a.settingsService.Set(r.Context(), services.SettingMarketplaceRankingDefaultSort, next.DefaultSort); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "update_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "update_failed", err, "Failed to update marketplace ranking settings")
 		return
 	}
 	if err := a.settingsService.SetInt(r.Context(), services.SettingMarketplaceRankingLimit, next.RankingLimit); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "update_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "update_failed", err, "Failed to update marketplace ranking settings")
 		return
 	}
 	if err := a.settingsService.SetInt(r.Context(), services.SettingMarketplaceRankingHighlightLimit, next.HighlightLimit); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "update_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "update_failed", err, "Failed to update marketplace ranking settings")
 		return
 	}
 	if err := a.settingsService.SetInt(r.Context(), services.SettingMarketplaceRankingCategoryLeaderLimit, next.CategoryLeaderLimit); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "update_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "update_failed", err, "Failed to update marketplace ranking settings")
 		return
 	}
 

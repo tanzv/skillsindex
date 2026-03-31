@@ -50,11 +50,22 @@ func setupAdminAPIKeyAPITestApp(t *testing.T) (*App, *services.APIKeyService, mo
 func TestAPIAdminAPIKeysListUnauthorized(t *testing.T) {
 	app, _, _, _, _ := setupAdminAPIKeyAPITestApp(t)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/apikeys", nil)
+	req.Header.Set("X-Request-ID", "req-admin-apikey-list-unauthorized")
 	recorder := httptest.NewRecorder()
 
 	app.handleAPIAdminAPIKeys(recorder, req)
 	if recorder.Code != http.StatusUnauthorized {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-apikey-list-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -198,6 +209,31 @@ func TestAPIAdminAPIKeysCreateInvalidScope(t *testing.T) {
 	}
 }
 
+func TestAPIAdminAPIKeysCreateInvalidPayload(t *testing.T) {
+	app, _, _, member, _ := setupAdminAPIKeyAPITestApp(t)
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/admin/apikeys",
+		strings.NewReader(`{"name":`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-admin-apikey-create-invalid-payload")
+	req = withCurrentUser(req, &member)
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminAPIKeysCreate(recorder, req)
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_payload" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-apikey-create-invalid-payload" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestAPIAdminAPIKeysRevokePermissionDenied(t *testing.T) {
 	app, svc, _, member, other := setupAdminAPIKeyAPITestApp(t)
 	key, _, err := svc.Create(context.Background(), services.CreateAPIKeyInput{UserID: other.ID, Name: "other-key"})
@@ -213,6 +249,27 @@ func TestAPIAdminAPIKeysRevokePermissionDenied(t *testing.T) {
 	app.handleAPIAdminAPIKeyRevoke(recorder, req)
 	if recorder.Code != http.StatusForbidden {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusForbidden)
+	}
+}
+
+func TestAPIAdminAPIKeysRevokeInvalidKeyID(t *testing.T) {
+	app, _, _, member, _ := setupAdminAPIKeyAPITestApp(t)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/apikeys/invalid/revoke", nil)
+	req.Header.Set("X-Request-ID", "req-admin-apikey-revoke-invalid-key")
+	req = withCurrentUser(req, &member)
+	req = withRouteParam(req, "keyID", "invalid")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminAPIKeyRevoke(recorder, req)
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_key_id" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-apikey-revoke-invalid-key" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -255,5 +312,36 @@ func TestAPIAdminAPIKeysRotateSuccess(t *testing.T) {
 	}
 	if !newValid || rotated.UserID != member.ID {
 		t.Fatalf("new token validation mismatch: valid=%v owner=%d", newValid, rotated.UserID)
+	}
+}
+
+func TestAPIAdminAPIKeysRotateUnauthorized(t *testing.T) {
+	app, svc, _, member, _ := setupAdminAPIKeyAPITestApp(t)
+	created, _, err := svc.Create(context.Background(), services.CreateAPIKeyInput{
+		UserID: member.ID,
+		Name:   "rotate-unauthorized",
+	})
+	if err != nil {
+		t.Fatalf("failed to create key: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/admin/apikeys/%d/rotate", created.ID), nil)
+	req.Header.Set("X-Request-ID", "req-admin-apikey-rotate-unauthorized")
+	req = withRouteParam(req, "keyID", fmt.Sprintf("%d", created.ID))
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminAPIKeyRotate(recorder, req)
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-apikey-rotate-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

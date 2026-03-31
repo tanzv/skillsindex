@@ -31,7 +31,7 @@ func TestAPIAdminPresentationTaxonomySettingUnauthorized(t *testing.T) {
 }
 
 func TestAPIAdminPresentationTaxonomySettingUpdatePersistsAndFeedsPublicMarketplace(t *testing.T) {
-	app, admin := setupPublicMarketplaceAPITestApp(t)
+	app, _, admin := setupPublicMarketplaceAPITestApp(t)
 	superAdmin := admin
 	superAdmin.Role = models.RoleSuperAdmin
 

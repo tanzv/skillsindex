@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -317,5 +318,8 @@ func TestAPIKeyServiceCreateRejectsInvalidScope(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatalf("expected create to fail for invalid scope")
+	}
+	if !errors.Is(err, ErrAPIKeyScopeInvalid) {
+		t.Fatalf("expected ErrAPIKeyScopeInvalid, got=%v", err)
 	}
 }

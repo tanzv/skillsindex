@@ -83,6 +83,7 @@ func (a *App) createRepositorySkillFromIngestion(
 		Branch: input.RepoBranch,
 		Path:   input.RepoPath,
 	}
+	source = services.NormalizeRepoSource(source)
 	meta, err := a.repositoryService.CloneAndExtract(ctx, source)
 	if err != nil {
 		return adminIngestionMutationResult{}, newAdminIngestionOperationError(http.StatusBadRequest, "Repository sync failed: "+err.Error())
@@ -105,6 +106,7 @@ func (a *App) createRepositorySkillFromIngestion(
 		SourceBranch:    source.Branch,
 		SourcePath:      source.Path,
 		RepoURL:         source.URL,
+		Analysis:        meta.Analysis,
 		InstallCommand:  defaultString(input.InstallCommand, "codex skill install github:"+trimGitURL(source.URL)),
 		QualityScore:    input.QualityScore,
 		LastSyncedAt:    &now,
@@ -199,6 +201,7 @@ func (a *App) createUploadSkillFromIngestion(
 		Visibility:      parseVisibility(input.Visibility),
 		SourceType:      models.SourceTypeUpload,
 		SourcePath:      archivePath,
+		Analysis:        meta.Analysis,
 		InstallCommand:  input.InstallCommand,
 		QualityScore:    input.QualityScore,
 	})
@@ -260,6 +263,7 @@ func (a *App) createSkillMPSkillFromIngestion(
 		Visibility:      parseVisibility(input.Visibility),
 		SourceType:      models.SourceTypeSkillMP,
 		SourceURL:       sourceURL,
+		Analysis:        meta.Analysis,
 		InstallCommand:  defaultString(input.InstallCommand, "codex skill install skillmp:"+extractSkillMPIdentifier(sourceURL)),
 		QualityScore:    input.QualityScore,
 		LastSyncedAt:    &now,

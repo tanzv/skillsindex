@@ -36,7 +36,7 @@ func (a *App) handleAPISkillFavorite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, err := a.skillService.GetMarketplaceVisibleSkillByID(r.Context(), skillID, user.ID); err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 		return
 	}
 
@@ -91,7 +91,7 @@ func (a *App) handleAPISkillRating(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, err := a.skillService.GetMarketplaceVisibleSkillByID(r.Context(), skillID, user.ID); err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 		return
 	}
 
@@ -141,7 +141,7 @@ func (a *App) handleAPISkillCommentCreate(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if _, err := a.skillService.GetMarketplaceVisibleSkillByID(r.Context(), skillID, user.ID); err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 		return
 	}
 
@@ -191,7 +191,7 @@ func (a *App) handleAPISkillCommentDelete(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if _, err := a.skillService.GetMarketplaceVisibleSkillByID(r.Context(), skillID, user.ID); err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 		return
 	}
 	commentID, ok := parseCommentID(w, r)

@@ -26,6 +26,8 @@ func setupInteractionAPITestApp(t *testing.T) (*App, models.User, models.Skill, 
 	}
 	if err := db.AutoMigrate(
 		&models.User{},
+		&models.Organization{},
+		&models.OrganizationMember{},
 		&models.Skill{},
 		&models.Tag{},
 		&models.SkillTag{},
@@ -162,6 +164,81 @@ func TestHandleAPISkillFavoriteUnauthorized(t *testing.T) {
 	}
 	if payload["request_id"] != "req-favorite-unauthorized" {
 		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestHandleAPISkillInteractionReturnsSkillNotFoundEnvelope(t *testing.T) {
+	cases := []struct {
+		name      string
+		path      string
+		body      string
+		handler   func(*App, http.ResponseWriter, *http.Request)
+		commentID string
+		requestID string
+	}{
+		{
+			name:      "favorite",
+			path:      "/api/v1/skills/99999/favorite",
+			body:      `{"favorite": true}`,
+			handler:   func(app *App, w http.ResponseWriter, r *http.Request) { app.handleAPISkillFavorite(w, r) },
+			requestID: "req-favorite-skill-not-found",
+		},
+		{
+			name:      "rating",
+			path:      "/api/v1/skills/99999/rating",
+			body:      `{"score": 5}`,
+			handler:   func(app *App, w http.ResponseWriter, r *http.Request) { app.handleAPISkillRating(w, r) },
+			requestID: "req-rating-skill-not-found",
+		},
+		{
+			name:      "comment create",
+			path:      "/api/v1/skills/99999/comments",
+			body:      `{"content":"Missing skill"}`,
+			handler:   func(app *App, w http.ResponseWriter, r *http.Request) { app.handleAPISkillCommentCreate(w, r) },
+			requestID: "req-comment-create-skill-not-found",
+		},
+		{
+			name:      "comment delete",
+			path:      "/api/v1/skills/99999/comments/1/delete",
+			handler:   func(app *App, w http.ResponseWriter, r *http.Request) { app.handleAPISkillCommentDelete(w, r) },
+			commentID: "1",
+			requestID: "req-comment-delete-skill-not-found",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			app, user, _, _ := setupInteractionAPITestApp(t)
+
+			req := httptest.NewRequest(http.MethodPost, tc.path, strings.NewReader(tc.body))
+			if tc.body != "" {
+				req.Header.Set("Content-Type", "application/json")
+			}
+			req.Header.Set("X-Request-ID", tc.requestID)
+			req = withCurrentUser(req, &user)
+			params := map[string]string{"skillID": "99999"}
+			if tc.commentID != "" {
+				params["commentID"] = tc.commentID
+			}
+			req = withURLParams(req, params)
+			recorder := httptest.NewRecorder()
+
+			tc.handler(app, recorder, req)
+
+			if recorder.Code != http.StatusNotFound {
+				t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusNotFound)
+			}
+			payload := decodeBodyMap(t, recorder)
+			if payload["error"] != "skill_not_found" {
+				t.Fatalf("unexpected error payload: %#v", payload)
+			}
+			if payload["message"] != "Skill not found" {
+				t.Fatalf("unexpected error message: %#v", payload)
+			}
+			if payload["request_id"] != tc.requestID {
+				t.Fatalf("unexpected request id: %#v", payload)
+			}
+		})
 	}
 }
 

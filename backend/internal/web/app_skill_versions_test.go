@@ -91,8 +91,10 @@ func setupSkillVersionHandlersTestApp(t *testing.T) (*App, *gorm.DB, models.User
 			`{{end}}`,
 	))
 	app := &App{
-		skillService:      skillSvc,
-		syncJobSvc:        services.NewSyncJobService(db),
+		skillService: skillSvc,
+		syncRuntimeDependencies: syncRuntimeDependencies{
+			syncJobSvc: services.NewSyncJobService(db),
+		},
 		skillVersionSvc:   versionSvc,
 		auditService:      services.NewAuditService(db),
 		templates:         tmpl,

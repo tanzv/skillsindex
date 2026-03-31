@@ -47,6 +47,29 @@ func TestHandleAPIAccountProfileSuccess(t *testing.T) {
 	}
 }
 
+func TestHandleAPIAccountProfileUnauthorized(t *testing.T) {
+	app, _, _, _ := setupAccountHandlersTestApp(t)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/account/profile", nil)
+	req.Header.Set("X-Request-ID", "req-account-profile-unauthorized")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAccountProfile(recorder, req)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-account-profile-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestHandleAPIAccountProfileUpdateSuccess(t *testing.T) {
 	app, authSvc, _, user := setupAccountHandlersTestApp(t)
 	req := httptest.NewRequest(
@@ -90,6 +113,32 @@ func TestHandleAPIAccountPasswordUpdateInvalidCurrentPassword(t *testing.T) {
 	}
 	if !strings.Contains(recorder.Body.String(), `"error":"invalid_current_password"`) {
 		t.Fatalf("unexpected payload: %s", recorder.Body.String())
+	}
+}
+
+func TestHandleAPIAccountPasswordUpdateInvalidPayload(t *testing.T) {
+	app, _, _, user := setupAccountHandlersTestApp(t)
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/account/security/password",
+		strings.NewReader(`{"current_password":`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-account-password-invalid-payload")
+	req = withCurrentUser(req, &user)
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAccountPasswordUpdate(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_payload" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["request_id"] != "req-account-password-invalid-payload" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 

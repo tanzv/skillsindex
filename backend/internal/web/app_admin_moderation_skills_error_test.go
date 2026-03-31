@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -9,6 +10,9 @@ import (
 
 	"skillsindex/internal/models"
 	"skillsindex/internal/services"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func TestAPIAdminModerationListUnauthorized(t *testing.T) {
@@ -127,6 +131,11 @@ func TestAPIAdminSkillsSuccess(t *testing.T) {
 		Visibility:   models.VisibilityPublic,
 		SourceType:   models.SourceTypeManual,
 		CategorySlug: "development",
+		Analysis: services.SourceTopologySnapshot{
+			EntryFile:       "SKILL.md",
+			Mechanism:       "skill_markdown",
+			MetadataSources: []string{"SKILL.md"},
+		},
 	}); err != nil {
 		t.Fatalf("failed to create skill: %v", err)
 	}
@@ -142,5 +151,57 @@ func TestAPIAdminSkillsSuccess(t *testing.T) {
 	payload := decodeBodyMap(t, recorder)
 	if total, ok := payload["total"].(float64); !ok || int(total) < 1 {
 		t.Fatalf("unexpected total payload: %#v", payload)
+	}
+	items, ok := payload["items"].([]any)
+	if !ok || len(items) == 0 {
+		t.Fatalf("missing items payload: %#v", payload)
+	}
+	firstItem, ok := items[0].(map[string]any)
+	if !ok {
+		t.Fatalf("unexpected first item payload: %#v", items[0])
+	}
+	sourceAnalysis, ok := firstItem["source_analysis"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing source_analysis payload: %#v", firstItem)
+	}
+	if got, _ := sourceAnalysis["entry_file"].(string); got != "SKILL.md" {
+		t.Fatalf("unexpected source_analysis.entry_file: got=%q payload=%#v", got, sourceAnalysis)
+	}
+	if got, _ := sourceAnalysis["mechanism"].(string); got != "skill_markdown" {
+		t.Fatalf("unexpected source_analysis.mechanism: got=%q payload=%#v", got, sourceAnalysis)
+	}
+}
+
+func TestAPIAdminSkillsListFailureHidesInternalError(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	owner := createAdminAccessAPIUser(t, app, "skills-list-failed-owner", models.RoleMember)
+
+	sharedDB, err := gorm.Open(sqlite.Open(fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("failed to open shared sqlite db: %v", err)
+	}
+	if err := sharedDB.Migrator().DropTable(&models.Skill{}); err != nil {
+		t.Fatalf("failed to drop skills table: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/skills", nil)
+	req.Header.Set("X-Request-ID", "req-admin-skills-list-failed")
+	req = withCurrentUser(req, &owner)
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminSkills(recorder, req)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusInternalServerError)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "list_failed" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Failed to list skills" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-skills-list-failed" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

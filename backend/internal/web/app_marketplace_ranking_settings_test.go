@@ -11,6 +11,29 @@ import (
 	"skillsindex/internal/services"
 )
 
+func TestAPIAdminMarketplaceRankingSettingUnauthorized(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/settings/marketplace-ranking", nil)
+	req.Header.Set("X-Request-ID", "req-marketplace-ranking-setting-unauthorized")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminMarketplaceRankingSetting(recorder, req)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-marketplace-ranking-setting-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestAPIAdminMarketplaceRankingSettingSuccess(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	if err := app.settingsService.Set(context.Background(), services.SettingMarketplaceRankingDefaultSort, "quality"); err != nil {
@@ -93,5 +116,61 @@ func TestAPIAdminMarketplaceRankingSettingUpdateSuccess(t *testing.T) {
 	}
 	if persistedLimit != 18 {
 		t.Fatalf("unexpected persisted ranking limit: got=%d want=18", persistedLimit)
+	}
+}
+
+func TestAPIAdminMarketplaceRankingSettingUpdateServiceUnavailable(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	app.settingsService = nil
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/admin/settings/marketplace-ranking",
+		strings.NewReader(`{"default_sort":"quality"}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-marketplace-ranking-setting-update-service-unavailable")
+	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleSuperAdmin})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminMarketplaceRankingSettingUpdate(recorder, req)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusServiceUnavailable)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "service_unavailable" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Settings service is unavailable" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-marketplace-ranking-setting-update-service-unavailable" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestAPIAdminMarketplaceRankingSettingUpdateInvalidPayload(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/admin/settings/marketplace-ranking",
+		strings.NewReader(`{"default_sort":`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-marketplace-ranking-setting-update-invalid-payload")
+	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleSuperAdmin})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminMarketplaceRankingSettingUpdate(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_payload" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["request_id"] != "req-marketplace-ranking-setting-update-invalid-payload" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

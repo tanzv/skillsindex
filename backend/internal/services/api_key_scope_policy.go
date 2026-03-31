@@ -86,7 +86,7 @@ func NormalizeAPIKeyScopes(scopes []string) ([]string, error) {
 			continue
 		}
 		if _, ok := supportedAPIKeyScopes[scope]; !ok {
-			return nil, fmt.Errorf("invalid scope: %s", scope)
+			return nil, fmt.Errorf("%w: %s", ErrAPIKeyScopeInvalid, scope)
 		}
 		if _, exists := seen[scope]; exists {
 			continue

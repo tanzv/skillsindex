@@ -27,17 +27,17 @@ type apiAccountPasswordUpdateRequest struct {
 func (a *App) handleAPIAccountProfile(w http.ResponseWriter, r *http.Request) {
 	currentUser := currentUserFromContext(r.Context())
 	if currentUser == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Authentication service unavailable")
 		return
 	}
 
 	account, err := a.authService.GetUserByID(r.Context(), currentUser.ID)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "user_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "user_not_found", "User not found")
 		return
 	}
 
@@ -54,17 +54,17 @@ func (a *App) handleAPIAccountProfile(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPIAccountProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	currentUser := currentUserFromContext(r.Context())
 	if currentUser == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Authentication service unavailable")
 		return
 	}
 
 	var input apiAccountProfileUpdateRequest
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
@@ -74,7 +74,7 @@ func (a *App) handleAPIAccountProfileUpdate(w http.ResponseWriter, r *http.Reque
 		Bio:         input.Bio,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "profile_update_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "profile_update_failed", err, "Failed to update profile")
 		return
 	}
 
@@ -102,17 +102,17 @@ func (a *App) handleAPIAccountProfileUpdate(w http.ResponseWriter, r *http.Reque
 func (a *App) handleAPIAccountPasswordUpdate(w http.ResponseWriter, r *http.Request) {
 	currentUser := currentUserFromContext(r.Context())
 	if currentUser == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Authentication service unavailable")
 		return
 	}
 
 	var input apiAccountPasswordUpdateRequest
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
@@ -120,7 +120,7 @@ func (a *App) handleAPIAccountPasswordUpdate(w http.ResponseWriter, r *http.Requ
 	if input.RevokeOtherSessions != nil {
 		parsed, matched := parseBoolSettingValue(input.RevokeOtherSessions)
 		if !matched {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_revoke_other_sessions"})
+			writeAPIError(w, r, http.StatusBadRequest, "invalid_revoke_other_sessions", "Invalid revoke_other_sessions value")
 			return
 		}
 		revokeOtherSessions = parsed
@@ -130,10 +130,10 @@ func (a *App) handleAPIAccountPasswordUpdate(w http.ResponseWriter, r *http.Requ
 	newPassword := strings.TrimSpace(input.NewPassword)
 	if err := a.authService.ChangePassword(r.Context(), currentUser.ID, currentPassword, newPassword); err != nil {
 		if errors.Is(err, services.ErrInvalidCurrentPassword) {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_current_password"})
+			writeAPIError(w, r, http.StatusBadRequest, "invalid_current_password", "Current password is invalid")
 			return
 		}
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "password_update_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "password_update_failed", err, "Failed to update password")
 		return
 	}
 
@@ -147,16 +147,16 @@ func (a *App) handleAPIAccountPasswordUpdate(w http.ResponseWriter, r *http.Requ
 			revokedCount, _ = a.userSessionSvc.RevokeOtherSessions(r.Context(), currentUser.ID, currentSessionID)
 		}
 		if err := a.authService.ForceSignOutUser(r.Context(), currentUser.ID); err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "session_revoke_failed", "message": err.Error()})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "session_revoke_failed", err, "Failed to revoke sessions")
 			return
 		}
 	}
 	if a.sessionService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable", "message": "Session service unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Session service unavailable")
 		return
 	}
 	if err := a.startUserSession(w, r, currentUser.ID); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "session_refresh_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "session_refresh_failed", err, "Failed to refresh session")
 		return
 	}
 
@@ -181,11 +181,11 @@ func (a *App) handleAPIAccountPasswordUpdate(w http.ResponseWriter, r *http.Requ
 func (a *App) handleAPIAccountSessions(w http.ResponseWriter, r *http.Request) {
 	currentUser := currentUserFromContext(r.Context())
 	if currentUser == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.sessionService == nil || a.userSessionSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Session service unavailable")
 		return
 	}
 
@@ -201,7 +201,7 @@ func (a *App) handleAPIAccountSessions(w http.ResponseWriter, r *http.Request) {
 
 	sessions, err := a.userSessionSvc.ListActiveSessions(r.Context(), currentUser.ID, time.Now().UTC(), 120)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "session_list_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "session_list_failed", err, "Failed to list sessions")
 		return
 	}
 
@@ -229,31 +229,31 @@ func (a *App) handleAPIAccountSessions(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPIAccountSessionRevoke(w http.ResponseWriter, r *http.Request) {
 	currentUser := currentUserFromContext(r.Context())
 	if currentUser == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.sessionService == nil || a.userSessionSvc == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Session service unavailable")
 		return
 	}
 
 	targetSessionID := strings.TrimSpace(chi.URLParam(r, "sessionID"))
 	if targetSessionID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_session_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_session_id", "Session id is required")
 		return
 	}
 	_, _, currentSessionID, _ := a.sessionService.GetSessionWithID(r)
 	if currentSessionID != "" && targetSessionID == currentSessionID {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "cannot_revoke_current_session"})
+		writeAPIError(w, r, http.StatusBadRequest, "cannot_revoke_current_session", "Current session cannot be revoked")
 		return
 	}
 
 	if err := a.userSessionSvc.RevokeSession(r.Context(), currentUser.ID, targetSessionID); err != nil {
 		if errors.Is(err, services.ErrUserSessionNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "session_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "session_not_found", "Session not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "session_revoke_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "session_revoke_failed", err, "Failed to revoke session")
 		return
 	}
 
@@ -273,11 +273,11 @@ func (a *App) handleAPIAccountSessionRevoke(w http.ResponseWriter, r *http.Reque
 func (a *App) handleAPIAccountSessionsRevokeOthers(w http.ResponseWriter, r *http.Request) {
 	currentUser := currentUserFromContext(r.Context())
 	if currentUser == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.sessionService == nil || a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Session service unavailable")
 		return
 	}
 
@@ -288,11 +288,11 @@ func (a *App) handleAPIAccountSessionsRevokeOthers(w http.ResponseWriter, r *htt
 		revokedCount, _ = a.userSessionSvc.RevokeOtherSessions(r.Context(), currentUser.ID, currentSessionID)
 	}
 	if err := a.authService.ForceSignOutUser(r.Context(), currentUser.ID); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "session_revoke_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "session_revoke_failed", err, "Failed to revoke sessions")
 		return
 	}
 	if err := a.startUserSession(w, r, currentUser.ID); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "session_refresh_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "session_refresh_failed", err, "Failed to refresh session")
 		return
 	}
 

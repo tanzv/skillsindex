@@ -79,10 +79,7 @@ func (a *App) requireAPIMode(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		writeJSON(w, http.StatusNotFound, map[string]any{
-			"error":   "api_only_mode",
-			"message": "This server only exposes API endpoints",
-		})
+		writeAPIError(w, r, http.StatusNotFound, "api_only_mode", "This server only exposes API endpoints")
 	})
 }
 
@@ -104,10 +101,7 @@ func (a *App) allowCORS(next http.Handler) http.Handler {
 
 		if _, ok := a.corsOrigins[origin]; !ok {
 			if r.Method == http.MethodOptions {
-				writeJSON(w, http.StatusForbidden, map[string]any{
-					"error":   "cors_origin_denied",
-					"message": "Request origin is not allowed",
-				})
+				writeAPIError(w, r, http.StatusForbidden, "cors_origin_denied", "Request origin is not allowed")
 				return
 			}
 			next.ServeHTTP(w, r)
@@ -161,10 +155,7 @@ func (a *App) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if currentUserFromContext(r.Context()) == nil {
 			if requestWantsJSON(r) {
-				writeJSON(w, http.StatusUnauthorized, map[string]any{
-					"error":   "unauthorized",
-					"message": "Authentication required",
-				})
+				writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 				return
 			}
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -179,10 +170,7 @@ func (a *App) requireDashboardAccess(next http.Handler) http.Handler {
 		user := currentUserFromContext(r.Context())
 		if user == nil {
 			if requestWantsJSON(r) {
-				writeJSON(w, http.StatusUnauthorized, map[string]any{
-					"error":   "unauthorized",
-					"message": "Authentication required",
-				})
+				writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 				return
 			}
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -190,10 +178,7 @@ func (a *App) requireDashboardAccess(next http.Handler) http.Handler {
 		}
 		if !user.CanAccessDashboard() {
 			if requestWantsJSON(r) {
-				writeJSON(w, http.StatusForbidden, map[string]any{
-					"error":   "permission_denied",
-					"message": "Current account role does not have dashboard access",
-				})
+				writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Current account role does not have dashboard access")
 				return
 			}
 			a.renderWithStatus(w, r, http.StatusForbidden, ViewData{
@@ -262,10 +247,7 @@ func (a *App) requireAPIKey(next http.Handler) http.Handler {
 		requiredScope := requiredAPIKeyScope(r.URL.Path)
 		if _, ok := a.apiKeys[apiKey]; ok {
 			if requiredScope != "" {
-				writeJSON(w, http.StatusForbidden, map[string]any{
-					"error":   "api_key_scope_denied",
-					"message": "API key does not grant required scope",
-				})
+				writeAPIError(w, r, http.StatusForbidden, "api_key_scope_denied", "API key does not grant required scope")
 				return
 			}
 			next.ServeHTTP(w, r)
@@ -274,20 +256,14 @@ func (a *App) requireAPIKey(next http.Handler) http.Handler {
 		if a.apiKeyService != nil {
 			if key, valid, err := a.apiKeyService.Validate(r.Context(), apiKey); err == nil && valid {
 				if requiredScope != "" && !services.APIKeyHasScope(key, requiredScope) {
-					writeJSON(w, http.StatusForbidden, map[string]any{
-						"error":   "api_key_scope_denied",
-						"message": "API key does not grant required scope",
-					})
+					writeAPIError(w, r, http.StatusForbidden, "api_key_scope_denied", "API key does not grant required scope")
 					return
 				}
 				next.ServeHTTP(w, r)
 				return
 			}
 		}
-		writeJSON(w, http.StatusUnauthorized, map[string]any{
-			"error":   "api_key_invalid",
-			"message": "Missing or invalid API key",
-		})
+		writeAPIError(w, r, http.StatusUnauthorized, "api_key_invalid", "Missing or invalid API key")
 	})
 }
 

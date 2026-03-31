@@ -207,7 +207,7 @@ func (a *App) handleAPIPublicSkillResourceContent(w http.ResponseWriter, r *http
 
 	skill, err := a.skillService.GetMarketplaceVisibleSkillByID(r.Context(), skillID, viewerID)
 	if err != nil {
-		writeMarketplaceSkillLookupError(w, err, "resource")
+		writeMarketplaceSkillLookupError(w, r, err, "resource")
 		return
 	}
 

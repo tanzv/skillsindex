@@ -11,6 +11,10 @@ type apiErrorResponse struct {
 	RequestID string `json:"request_id,omitempty"`
 }
 
+type apiErrorMessageOptions struct {
+	AllowRawErrorMessage bool
+}
+
 func writeAPIError(w http.ResponseWriter, r *http.Request, status int, code string, message string) {
 	payload := apiErrorResponse{
 		Error:   strings.TrimSpace(code),
@@ -23,8 +27,22 @@ func writeAPIError(w http.ResponseWriter, r *http.Request, status int, code stri
 }
 
 func writeAPIErrorFromError(w http.ResponseWriter, r *http.Request, status int, code string, err error, fallbackMessage string) {
+	writeAPIErrorFromErrorWithOptions(w, r, status, code, err, fallbackMessage, apiErrorMessageOptions{
+		AllowRawErrorMessage: status >= http.StatusBadRequest && status < http.StatusInternalServerError,
+	})
+}
+
+func writeAPIErrorFromErrorWithOptions(
+	w http.ResponseWriter,
+	r *http.Request,
+	status int,
+	code string,
+	err error,
+	fallbackMessage string,
+	options apiErrorMessageOptions,
+) {
 	message := strings.TrimSpace(fallbackMessage)
-	if err != nil {
+	if options.AllowRawErrorMessage && err != nil {
 		if errMessage := strings.TrimSpace(err.Error()); errMessage != "" {
 			message = errMessage
 		}

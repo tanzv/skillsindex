@@ -54,7 +54,7 @@ func (a *App) handleAPIAdminAPIKeyScopesUpdate(w http.ResponseWriter, r *http.Re
 			writeAPIError(w, r, http.StatusNotFound, "api_key_not_found", "API key not found")
 		case errors.Is(err, services.ErrAPIKeyScopesRequired):
 			writeAPIError(w, r, http.StatusBadRequest, "scopes_required", "At least one scope is required")
-		case strings.Contains(strings.ToLower(err.Error()), "invalid scope"):
+		case errors.Is(err, services.ErrAPIKeyScopeInvalid):
 			writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_scope", err, "Invalid API key scope")
 		default:
 			writeAPIError(w, r, http.StatusInternalServerError, "scope_update_failed", "Failed to update API key scopes")

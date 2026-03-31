@@ -62,7 +62,7 @@ func TestAPIPolicyServiceUpsertCurrentOperationPolicyPersistsAndReloadsRuntime(t
 
 	result, err := policyService.UpsertCurrentOperationPolicy(context.Background(), UpsertCurrentAPIOperationPolicyInput{
 		OperationID:    "getCurrentPublishedSpec",
-		AuthMode:       string(models.APIAuthModeSession),
+		AuthMode:       models.APIAuthModeSession,
 		RequiredRoles:  []string{string(models.RoleSuperAdmin)},
 		RequiredScopes: []string{},
 		Enabled:        false,

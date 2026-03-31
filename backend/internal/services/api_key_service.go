@@ -20,6 +20,8 @@ var (
 	ErrAPIKeyNotFound = errors.New("api key not found")
 	// ErrAPIKeyScopesRequired indicates update request does not contain scopes.
 	ErrAPIKeyScopesRequired = errors.New("api key scopes are required")
+	// ErrAPIKeyScopeInvalid indicates one or more requested scopes are invalid.
+	ErrAPIKeyScopeInvalid = errors.New("invalid scope")
 )
 
 const ()

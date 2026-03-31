@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -11,6 +12,9 @@ import (
 
 	"skillsindex/internal/models"
 	"skillsindex/internal/services"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func TestHandleAPIPublicSkillDetailIncludesInteractionAggregation(t *testing.T) {
@@ -321,5 +325,94 @@ func TestHandleAPIPublicSkillDetailHidesSeedRecords(t *testing.T) {
 
 	if recorder.Code != http.StatusNotFound {
 		t.Fatalf("seed skill should be hidden from public detail routes: got=%d want=%d", recorder.Code, http.StatusNotFound)
+	}
+}
+
+func TestHandleAPIPublicSkillDetailServiceUnavailable(t *testing.T) {
+	app, _, skill, _ := setupInteractionAPITestApp(t)
+	app.skillService = nil
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/skills/"+strconv.FormatUint(uint64(skill.ID), 10), nil)
+	req.Header.Set("X-Request-ID", "req-public-skill-detail-service-unavailable")
+	req = withURLParams(req, map[string]string{
+		"skillID": strconv.FormatUint(uint64(skill.ID), 10),
+	})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicSkillDetail(recorder, req)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusServiceUnavailable)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "service_unavailable" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Skill service unavailable" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-public-skill-detail-service-unavailable" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestHandleAPIPublicSkillDetailInvalidSkillIDIncludesRequestID(t *testing.T) {
+	app, _, _, _ := setupInteractionAPITestApp(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/skills/invalid", nil)
+	req.Header.Set("X-Request-ID", "req-public-skill-detail-invalid-skill")
+	req = withURLParams(req, map[string]string{
+		"skillID": "invalid",
+	})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicSkillDetail(recorder, req)
+
+	if recorder.Code != http.StatusNotFound {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusNotFound)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "skill_not_found" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Skill not found" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-public-skill-detail-invalid-skill" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestHandleAPIPublicSkillDetailQueryFailureHidesInternalError(t *testing.T) {
+	app, _, skill, _ := setupInteractionAPITestApp(t)
+	database, err := gorm.Open(sqlite.Open(fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("failed to resolve backing database: %v", err)
+	}
+	if err := database.Migrator().DropTable(&models.Skill{}); err != nil {
+		t.Fatalf("failed to drop skills table: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/skills/"+strconv.FormatUint(uint64(skill.ID), 10), nil)
+	req.Header.Set("X-Request-ID", "req-public-skill-detail-query-failed")
+	req = withURLParams(req, map[string]string{
+		"skillID": strconv.FormatUint(uint64(skill.ID), 10),
+	})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicSkillDetail(recorder, req)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusInternalServerError)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "detail_query_failed" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Failed to load skill detail" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-public-skill-detail-query-failed" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

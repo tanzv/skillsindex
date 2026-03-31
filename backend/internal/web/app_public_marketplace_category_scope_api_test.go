@@ -52,7 +52,7 @@ func seedPublicMarketplaceScopeSkills(
 }
 
 func TestHandleAPIPublicMarketplaceCategoryHubScopeReturnsAllVisibleSkills(t *testing.T) {
-	app, admin := setupPublicMarketplaceAPITestApp(t)
+	app, _, admin := setupPublicMarketplaceAPITestApp(t)
 	seedPublicMarketplaceScopeSkills(t, app, admin, 28, "development", "backend")
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/marketplace?scope=category_hub", nil)
@@ -99,13 +99,13 @@ func TestHandleAPIPublicMarketplaceCategoryHubScopeReturnsAllVisibleSkills(t *te
 	}
 }
 
-func TestHandleAPIPublicMarketplaceCategoryDetailScopeReturnsAllGroupedMatches(t *testing.T) {
-	app, admin := setupPublicMarketplaceAPITestApp(t)
+func TestHandleAPIPublicMarketplaceCategoryDetailScopePaginatesGroupedMatches(t *testing.T) {
+	app, _, admin := setupPublicMarketplaceAPITestApp(t)
 	seedPublicMarketplaceScopeSkills(t, app, admin, 28, "devops", "monitoring")
 
 	req := httptest.NewRequest(
 		http.MethodGet,
-		"/api/v1/public/marketplace?scope=category_detail&category_group=programming-development&subcategory_group=devops-cloud",
+		"/api/v1/public/marketplace?scope=category_detail&category_group=programming-development&subcategory_group=devops-cloud&page=2&page_size=10",
 		nil,
 	)
 	req.Header.Set("Accept", "application/json")
@@ -127,9 +127,12 @@ func TestHandleAPIPublicMarketplaceCategoryDetailScopeReturnsAllGroupedMatches(t
 			MatchingSkills int `json:"matching_skills"`
 		} `json:"stats"`
 		Pagination struct {
+			Page       int `json:"page"`
 			PageSize   int `json:"page_size"`
 			TotalItems int `json:"total_items"`
 			TotalPages int `json:"total_pages"`
+			PrevPage   int `json:"prev_page"`
+			NextPage   int `json:"next_page"`
 		} `json:"pagination"`
 		Summary struct {
 			CategoryDetail struct {
@@ -154,11 +157,11 @@ func TestHandleAPIPublicMarketplaceCategoryDetailScopeReturnsAllGroupedMatches(t
 	if payload.Stats.MatchingSkills != 29 {
 		t.Fatalf("expected grouped detail scope to count all 29 matching skills, got=%d", payload.Stats.MatchingSkills)
 	}
-	if len(payload.Items) != 29 {
-		t.Fatalf("expected grouped detail scope to return all 29 matching skills, got=%d", len(payload.Items))
+	if len(payload.Items) != 10 {
+		t.Fatalf("expected grouped detail scope to return one paginated slice, got=%d", len(payload.Items))
 	}
-	if payload.Pagination.PageSize != 29 || payload.Pagination.TotalItems != 29 || payload.Pagination.TotalPages != 1 {
-		t.Fatalf("expected grouped detail scope pagination to collapse to one full page, got=%+v", payload.Pagination)
+	if payload.Pagination.Page != 2 || payload.Pagination.PageSize != 10 || payload.Pagination.TotalItems != 29 || payload.Pagination.TotalPages != 3 || payload.Pagination.PrevPage != 1 || payload.Pagination.NextPage != 3 {
+		t.Fatalf("expected grouped detail scope pagination metadata, got=%+v", payload.Pagination)
 	}
 	if payload.Summary.CategoryDetail.CategorySlug != "programming-development" || payload.Summary.CategoryDetail.MatchingSkills != 29 {
 		t.Fatalf("expected grouped detail summary to match full scope payload, got=%+v", payload.Summary.CategoryDetail)

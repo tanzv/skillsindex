@@ -74,6 +74,7 @@ func TestAPISkillOrganizationBindUnauthorized(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/skills/1/organization-bind", strings.NewReader(`{"organization_id":1}`))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-skill-organization-bind-unauthorized")
 	req = withURLParam(req, "skillID", strconv.FormatUint(uint64(skill.ID), 10))
 	recorder := httptest.NewRecorder()
 
@@ -86,6 +87,40 @@ func TestAPISkillOrganizationBindUnauthorized(t *testing.T) {
 	if payload["error"] != "unauthorized" {
 		t.Fatalf("unexpected payload: %#v", payload)
 	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-organization-bind-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestAPISkillOrganizationBindServiceUnavailable(t *testing.T) {
+	app, _, owner, _, skill, _ := setupSkillOrganizationAPITestApp(t)
+	app.organizationSvc = nil
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/skills/1/organization-bind", strings.NewReader(`{"organization_id":1}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-skill-organization-bind-service-unavailable")
+	req = withCurrentUser(req, &owner)
+	req = withURLParam(req, "skillID", strconv.FormatUint(uint64(skill.ID), 10))
+	recorder := httptest.NewRecorder()
+
+	app.handleAPISkillOrganizationBind(recorder, req)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusServiceUnavailable)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "service_unavailable" {
+		t.Fatalf("unexpected payload: %#v", payload)
+	}
+	if payload["message"] != "Skill organization services are unavailable" {
+		t.Fatalf("unexpected message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-organization-bind-service-unavailable" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
 }
 
 func TestAPISkillOrganizationBindInvalidPayload(t *testing.T) {
@@ -93,6 +128,7 @@ func TestAPISkillOrganizationBindInvalidPayload(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/skills/1/organization-bind", strings.NewReader(`{}`))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-skill-organization-bind-invalid-payload")
 	req = withCurrentUser(req, &owner)
 	req = withURLParam(req, "skillID", strconv.FormatUint(uint64(skill.ID), 10))
 	recorder := httptest.NewRecorder()
@@ -106,6 +142,12 @@ func TestAPISkillOrganizationBindInvalidPayload(t *testing.T) {
 	if payload["error"] != "invalid_payload" {
 		t.Fatalf("unexpected payload: %#v", payload)
 	}
+	if payload["message"] != "organization_id is required" {
+		t.Fatalf("unexpected message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-organization-bind-invalid-payload" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
 }
 
 func TestAPISkillOrganizationBindOrganizationNotFound(t *testing.T) {
@@ -113,6 +155,7 @@ func TestAPISkillOrganizationBindOrganizationNotFound(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/skills/1/organization-bind", strings.NewReader(`{"organization_id":99999}`))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-skill-organization-bind-organization-not-found")
 	req = withCurrentUser(req, &owner)
 	req = withURLParam(req, "skillID", strconv.FormatUint(uint64(skill.ID), 10))
 	recorder := httptest.NewRecorder()
@@ -126,6 +169,12 @@ func TestAPISkillOrganizationBindOrganizationNotFound(t *testing.T) {
 	if payload["error"] != "organization_not_found" {
 		t.Fatalf("unexpected payload: %#v", payload)
 	}
+	if payload["message"] != "Organization not found" {
+		t.Fatalf("unexpected message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-organization-bind-organization-not-found" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
 }
 
 func TestAPISkillOrganizationBindForbiddenForOrganizationPermissionDenied(t *testing.T) {
@@ -137,6 +186,7 @@ func TestAPISkillOrganizationBindForbiddenForOrganizationPermissionDenied(t *tes
 		strings.NewReader(`{"organization_id":`+strconv.FormatUint(uint64(organization.ID), 10)+`} `),
 	)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-skill-organization-bind-permission-denied")
 	req = withCurrentUser(req, &owner)
 	req = withURLParam(req, "skillID", strconv.FormatUint(uint64(skill.ID), 10))
 	recorder := httptest.NewRecorder()
@@ -149,6 +199,46 @@ func TestAPISkillOrganizationBindForbiddenForOrganizationPermissionDenied(t *tes
 	payload := decodeBodyMap(t, recorder)
 	if payload["error"] != "permission_denied" {
 		t.Fatalf("unexpected payload: %#v", payload)
+	}
+	if payload["message"] != "Permission denied" {
+		t.Fatalf("unexpected message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-organization-bind-permission-denied" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestAPISkillOrganizationBindOrganizationQueryFailureHidesInternalError(t *testing.T) {
+	app, db, owner, _, skill, organization := setupSkillOrganizationAPITestApp(t)
+	if err := db.Migrator().DropTable(&models.Organization{}); err != nil {
+		t.Fatalf("failed to drop organizations table: %v", err)
+	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/skills/1/organization-bind",
+		strings.NewReader(`{"organization_id":`+strconv.FormatUint(uint64(organization.ID), 10)+`}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-skill-organization-bind-organization-query-failed")
+	req = withCurrentUser(req, &owner)
+	req = withURLParam(req, "skillID", strconv.FormatUint(uint64(skill.ID), 10))
+	recorder := httptest.NewRecorder()
+
+	app.handleAPISkillOrganizationBind(recorder, req)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusInternalServerError)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "organization_query_failed" {
+		t.Fatalf("unexpected payload: %#v", payload)
+	}
+	if payload["message"] != "Failed to load organization" {
+		t.Fatalf("unexpected message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-organization-bind-organization-query-failed" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -227,6 +317,31 @@ func TestAPISkillOrganizationUnbindSuccessIdempotent(t *testing.T) {
 	}
 }
 
+func TestAPISkillOrganizationUnbindUnauthorized(t *testing.T) {
+	app, _, _, _, skill, _ := setupSkillOrganizationAPITestApp(t)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/skills/1/organization-unbind", nil)
+	req.Header.Set("X-Request-ID", "req-skill-organization-unbind-unauthorized")
+	req = withURLParam(req, "skillID", strconv.FormatUint(uint64(skill.ID), 10))
+	recorder := httptest.NewRecorder()
+
+	app.handleAPISkillOrganizationUnbind(recorder, req)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-organization-unbind-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestAPISkillOrganizationUnbindForbiddenForOrganizationPermissionDenied(t *testing.T) {
 	app, db, owner, _, skill, organization := setupSkillOrganizationAPITestApp(t)
 
@@ -237,6 +352,7 @@ func TestAPISkillOrganizationUnbindForbiddenForOrganizationPermissionDenied(t *t
 	}
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/skills/1/organization-unbind", nil)
+	req.Header.Set("X-Request-ID", "req-skill-organization-unbind-permission-denied")
 	req = withCurrentUser(req, &owner)
 	req = withURLParam(req, "skillID", strconv.FormatUint(uint64(skill.ID), 10))
 	recorder := httptest.NewRecorder()
@@ -249,5 +365,53 @@ func TestAPISkillOrganizationUnbindForbiddenForOrganizationPermissionDenied(t *t
 	payload := decodeBodyMap(t, recorder)
 	if payload["error"] != "permission_denied" {
 		t.Fatalf("unexpected payload: %#v", payload)
+	}
+	if payload["message"] != "Permission denied" {
+		t.Fatalf("unexpected message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-organization-unbind-permission-denied" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestAPISkillOrganizationUnbindPermissionCheckFailureHidesInternalError(t *testing.T) {
+	app, db, owner, _, skill, organization := setupSkillOrganizationAPITestApp(t)
+
+	if err := db.Create(&models.OrganizationMember{
+		OrganizationID: organization.ID,
+		UserID:         owner.ID,
+		Role:           models.OrganizationRoleOwner,
+	}).Error; err != nil {
+		t.Fatalf("failed to create owner membership: %v", err)
+	}
+	if err := db.Model(&models.Skill{}).
+		Where("id = ?", skill.ID).
+		Update("organization_id", organization.ID).Error; err != nil {
+		t.Fatalf("failed to bind skill organization: %v", err)
+	}
+	if err := db.Migrator().DropTable(&models.OrganizationMember{}); err != nil {
+		t.Fatalf("failed to drop organization_members table: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/skills/1/organization-unbind", nil)
+	req.Header.Set("X-Request-ID", "req-skill-organization-unbind-permission-check-failed")
+	req = withCurrentUser(req, &owner)
+	req = withURLParam(req, "skillID", strconv.FormatUint(uint64(skill.ID), 10))
+	recorder := httptest.NewRecorder()
+
+	app.handleAPISkillOrganizationUnbind(recorder, req)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusInternalServerError)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "organization_permission_check_failed" {
+		t.Fatalf("unexpected payload: %#v", payload)
+	}
+	if payload["message"] != "Failed to validate organization permission" {
+		t.Fatalf("unexpected message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-organization-unbind-permission-check-failed" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

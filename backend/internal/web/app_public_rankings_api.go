@@ -48,19 +48,13 @@ func (a *App) handleAPIPublicRankings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if a.skillService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-			"error":   "service_unavailable",
-			"message": "Skill service unavailable",
-		})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill service unavailable")
 		return
 	}
 
 	settings, err := a.loadMarketplaceRankingSettings(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{
-			"error":   "settings_query_failed",
-			"message": "Failed to load marketplace ranking settings",
-		})
+		writeAPIError(w, r, http.StatusInternalServerError, "settings_query_failed", "Failed to load marketplace ranking settings")
 		return
 	}
 
@@ -72,10 +66,7 @@ func (a *App) handleAPIPublicRankings(w http.ResponseWriter, r *http.Request) {
 		CategoryLeaderLimit: settings.CategoryLeaderLimit,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{
-			"error":   "ranking_query_failed",
-			"message": "Failed to build public rankings",
-		})
+		writeAPIError(w, r, http.StatusInternalServerError, "ranking_query_failed", "Failed to build public rankings")
 		return
 	}
 

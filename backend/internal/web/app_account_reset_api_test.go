@@ -32,6 +32,65 @@ func TestHandleAPIAccountPasswordResetRequestReturnsGenericMessage(t *testing.T)
 	}
 }
 
+func TestHandleAPIAccountPasswordResetRequestServiceUnavailableIncludesRequestID(t *testing.T) {
+	app, _, _, _ := setupAccountHandlersTestApp(t)
+	app.authService = nil
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/account/password-reset/request",
+		strings.NewReader(`{"username":"account-user"}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-password-reset-request-service-unavailable")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAccountPasswordResetRequest(recorder, req)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusServiceUnavailable)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "service_unavailable" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication service unavailable" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-password-reset-request-service-unavailable" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestHandleAPIAccountPasswordResetRequestInvalidPayloadIncludesRequestID(t *testing.T) {
+	app, _, _, _ := setupAccountHandlersTestApp(t)
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/account/password-reset/request",
+		strings.NewReader(`{"username":`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-password-reset-request-invalid-payload")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAccountPasswordResetRequest(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_payload" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Invalid request payload" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-password-reset-request-invalid-payload" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestHandleAPIAccountPasswordResetConfirmSuccess(t *testing.T) {
 	app, authSvc, _, user := setupAccountHandlersTestApp(t)
 	token, err := authSvc.RequestPasswordReset(context.Background(), user.Username, "127.0.0.1")
@@ -72,6 +131,7 @@ func TestHandleAPIAccountPasswordResetConfirmInvalidToken(t *testing.T) {
 		strings.NewReader(`{"token":"invalid-token","new_password":"Account234!"}`),
 	)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-password-reset-confirm-invalid-token")
 	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9")
 	recorder := httptest.NewRecorder()
 
@@ -90,5 +150,8 @@ func TestHandleAPIAccountPasswordResetConfirmInvalidToken(t *testing.T) {
 	}
 	if message != "localized-reset-invalid-token" {
 		t.Fatalf("unexpected localized message: got=%q", message)
+	}
+	if payload["request_id"] != "req-password-reset-confirm-invalid-token" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

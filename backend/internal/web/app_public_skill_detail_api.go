@@ -88,18 +88,13 @@ func (a *App) handleAPIPublicSkillDetail(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if a.skillService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-			"error":   "service_unavailable",
-			"message": "Skill service unavailable",
-		})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill service unavailable")
 		return
 	}
 
 	skillID, ok := parseSkillIDParam(r)
 	if !ok {
-		writeJSON(w, http.StatusNotFound, map[string]any{
-			"error": "skill_not_found",
-		})
+		writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 		return
 	}
 
@@ -121,10 +116,7 @@ func (a *App) handleAPIPublicSkillDetail(w http.ResponseWriter, r *http.Request)
 			errorMessage = "Skill detail not found"
 		}
 
-		writeJSON(w, statusCode, map[string]any{
-			"error":   errorCode,
-			"message": errorMessage,
-		})
+		writeAPIError(w, r, statusCode, errorCode, errorMessage)
 		return
 	}
 

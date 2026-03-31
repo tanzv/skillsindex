@@ -22,7 +22,7 @@ type APIOperationPolicySnapshot struct {
 // UpsertCurrentAPIOperationPolicyInput defines one runtime policy update for the current published spec.
 type UpsertCurrentAPIOperationPolicyInput struct {
 	OperationID    string
-	AuthMode       string
+	AuthMode       models.APIOperationAuthMode
 	RequiredRoles  []string
 	RequiredScopes []string
 	Enabled        bool
@@ -117,7 +117,7 @@ func (s *APIPolicyService) UpsertCurrentOperationPolicy(ctx context.Context, inp
 		return APIOperationPolicySnapshot{}, fmt.Errorf("actor user id is required")
 	}
 
-	authMode, err := normalizeAPIOperationAuthMode(input.AuthMode)
+	authMode, err := normalizeAPIOperationAuthMode(string(input.AuthMode))
 	if err != nil {
 		return APIOperationPolicySnapshot{}, err
 	}

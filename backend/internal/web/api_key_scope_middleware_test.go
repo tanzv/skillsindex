@@ -82,6 +82,7 @@ func TestRequireAPIKeyRejectsMissingScope(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/ai-search?api_key="+token, nil)
+	req.Header.Set("X-Request-ID", "req-api-key-scope-denied-stored")
 	recorder := httptest.NewRecorder()
 	handler := app.requireAPIKey(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
@@ -97,6 +98,9 @@ func TestRequireAPIKeyRejectsMissingScope(t *testing.T) {
 	}
 	if got, _ := payload["error"].(string); got != "api_key_scope_denied" {
 		t.Fatalf("unexpected error code: %#v", payload["error"])
+	}
+	if payload["request_id"] != "req-api-key-scope-denied-stored" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -115,6 +119,7 @@ func TestRequireAPIKeyRejectsEmptyStoredScopesForProtectedRoute(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/search?api_key="+token, nil)
+	req.Header.Set("X-Request-ID", "req-api-key-scope-denied-empty")
 	recorder := httptest.NewRecorder()
 	handler := app.requireAPIKey(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
@@ -130,6 +135,9 @@ func TestRequireAPIKeyRejectsEmptyStoredScopesForProtectedRoute(t *testing.T) {
 	}
 	if got, _ := payload["error"].(string); got != "api_key_scope_denied" {
 		t.Fatalf("unexpected error code: %#v", payload["error"])
+	}
+	if payload["request_id"] != "req-api-key-scope-denied-empty" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -138,6 +146,7 @@ func TestRequireAPIKeyRejectsStaticKeyOnProtectedRoute(t *testing.T) {
 	app.apiKeys["static-token"] = struct{}{}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/search?api_key=static-token", nil)
+	req.Header.Set("X-Request-ID", "req-api-key-scope-denied-static")
 	recorder := httptest.NewRecorder()
 	handler := app.requireAPIKey(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
@@ -154,11 +163,15 @@ func TestRequireAPIKeyRejectsStaticKeyOnProtectedRoute(t *testing.T) {
 	if got, _ := payload["error"].(string); got != "api_key_scope_denied" {
 		t.Fatalf("unexpected error code: %#v", payload["error"])
 	}
+	if payload["request_id"] != "req-api-key-scope-denied-static" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
 }
 
 func TestRequireAPIKeyRejectsInvalidToken(t *testing.T) {
 	app, _, _, _ := setupAPIKeyMiddlewareTestApp(t)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/search?api_key=invalid", nil)
+	req.Header.Set("X-Request-ID", "req-api-key-invalid")
 	recorder := httptest.NewRecorder()
 	handler := app.requireAPIKey(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
@@ -174,5 +187,8 @@ func TestRequireAPIKeyRejectsInvalidToken(t *testing.T) {
 	}
 	if got, _ := payload["error"].(string); got != "api_key_invalid" {
 		t.Fatalf("unexpected error code: %#v", payload["error"])
+	}
+	if payload["request_id"] != "req-api-key-invalid" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

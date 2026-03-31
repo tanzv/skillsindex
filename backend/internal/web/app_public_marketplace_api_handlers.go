@@ -14,10 +14,7 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if a.skillService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-			"error":   "service_unavailable",
-			"message": "Skill service unavailable",
-		})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill service unavailable")
 		return
 	}
 
@@ -39,19 +36,13 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 
 	totalSkills, err := a.skillService.CountPublicSkills(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{
-			"error":   "summary_query_failed",
-			"message": "Failed to count public skills",
-		})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "summary_query_failed", err, "Failed to count public skills")
 		return
 	}
 
 	rawCategoryCards, err := a.loadCategoryCards(r.Context(), "")
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{
-			"error":   "category_query_failed",
-			"message": "Failed to load category cards",
-		})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "category_query_failed", err, "Failed to load category cards")
 		return
 	}
 	presentationTaxonomy := a.marketplacePresentationTaxonomy(r.Context())
@@ -76,10 +67,7 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 	if isUnpaginatedMarketplaceScope(scope) {
 		allSkills, err := a.skillService.ListPublicSkills(r.Context())
 		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{
-				"error":   "search_failed",
-				"message": "Failed to query marketplace skills",
-			})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "search_failed", err, "Failed to query marketplace skills")
 			return
 		}
 
@@ -102,10 +90,7 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 	} else if mode == "ai" && query != "" {
 		semanticItems, err := a.skillService.AISemanticSearchPublicSkills(r.Context(), query, 48)
 		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{
-				"error":   "ai_search_failed",
-				"message": "Failed to run AI search",
-			})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "ai_search_failed", err, "Failed to run AI search")
 			return
 		}
 		semanticItems = filterSkillsByMarketplaceSelectionWithTaxonomy(
@@ -123,10 +108,7 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 	} else if categoryGroup != "" || subcategoryGroup != "" {
 		allSkills, err := a.skillService.ListPublicSkills(r.Context())
 		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{
-				"error":   "search_failed",
-				"message": "Failed to query marketplace skills",
-			})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "search_failed", err, "Failed to query marketplace skills")
 			return
 		}
 
@@ -142,6 +124,11 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 		sortMarketplaceSkillsInPlace(filteredSkills, sortBy)
 
 		totalItems = int64(len(filteredSkills))
+		totalPages := maxInt(int(math.Ceil(float64(totalItems)/float64(maxInt(pageSize, 1)))), 1)
+		if page > totalPages {
+			page = totalPages
+		}
+		currentPage = page
 		items = sliceMarketplaceSkills(filteredSkills, page, pageSize)
 	} else {
 		result, err := a.skillService.SearchPublicSkills(r.Context(), services.PublicSearchInput{
@@ -154,10 +141,7 @@ func (a *App) handleAPIPublicMarketplace(w http.ResponseWriter, r *http.Request)
 			Limit:           pageSize,
 		})
 		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{
-				"error":   "search_failed",
-				"message": "Failed to query marketplace skills",
-			})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "search_failed", err, "Failed to query marketplace skills")
 			return
 		}
 		items = result.Items
@@ -253,7 +237,7 @@ func (a *App) handleAPISearch(w http.ResponseWriter, r *http.Request) {
 		Limit:           parsePositiveInt(r.URL.Query().Get("limit"), 20),
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "search_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "search_failed", err, "Failed to search marketplace skills")
 		return
 	}
 
@@ -281,7 +265,7 @@ func (a *App) handleAPIAISearch(w http.ResponseWriter, r *http.Request) {
 
 	items, err := a.skillService.AISemanticSearchPublicSkills(r.Context(), strings.TrimSpace(r.URL.Query().Get("q")), 100)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "ai_search_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "ai_search_failed", err, "Failed to run AI search")
 		return
 	}
 

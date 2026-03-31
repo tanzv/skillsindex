@@ -14,6 +14,7 @@ func TestRouterBlocksNonAPIPathsInAPIOnlyMode(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/login", nil)
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Request-ID", "req-api-only-mode-login")
 	recorder := httptest.NewRecorder()
 
 	router.ServeHTTP(recorder, req)
@@ -22,6 +23,10 @@ func TestRouterBlocksNonAPIPathsInAPIOnlyMode(t *testing.T) {
 	}
 	if !strings.Contains(recorder.Body.String(), `"error":"api_only_mode"`) {
 		t.Fatalf("expected api_only_mode response body")
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["request_id"] != "req-api-only-mode-login" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -65,6 +70,38 @@ func TestRouterHandlesCORSPreflightForAPIPath(t *testing.T) {
 	}
 }
 
+func TestRouterRejectsCORSPreflightForDisallowedOriginIncludesRequestID(t *testing.T) {
+	app := &App{
+		apiOnly: true,
+		corsOrigins: map[string]struct{}{
+			"http://localhost:5173": {},
+		},
+	}
+	router := app.Router()
+
+	req := httptest.NewRequest(http.MethodOptions, "/api/v1/auth/login", nil)
+	req.Header.Set("Origin", "https://evil.example")
+	req.Header.Set("Access-Control-Request-Method", "POST")
+	req.Header.Set("X-Request-ID", "req-cors-origin-denied")
+	recorder := httptest.NewRecorder()
+
+	router.ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusForbidden {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusForbidden)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "cors_origin_denied" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Request origin is not allowed" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-cors-origin-denied" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestNewAppSkipsTemplateParsingInAPIOnlyMode(t *testing.T) {
 	app, err := NewApp(AppDependencies{
 		AllowRegistration: true,
@@ -87,6 +124,7 @@ func TestNewAppSkipsTemplateParsingInAPIOnlyMode(t *testing.T) {
 func TestRenderWithStatusReturnsJSONInAPIOnlyMode(t *testing.T) {
 	app := &App{apiOnly: true}
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("X-Request-ID", "req-api-only-render")
 	recorder := httptest.NewRecorder()
 
 	app.renderWithStatus(recorder, req, http.StatusForbidden, ViewData{Page: "home"})
@@ -104,5 +142,8 @@ func TestRenderWithStatusReturnsJSONInAPIOnlyMode(t *testing.T) {
 	}
 	if payload["error"] != "api_only_mode" {
 		t.Fatalf("unexpected error code: %#v", payload["error"])
+	}
+	if payload["request_id"] != "req-api-only-render" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

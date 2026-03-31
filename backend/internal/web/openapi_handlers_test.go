@@ -80,6 +80,37 @@ func TestHandleOpenAPIReadsCurrentPublishedSnapshot(t *testing.T) {
 	}
 }
 
+func TestHandleOpenAPILoadFailureIncludesRequestID(t *testing.T) {
+	app := setupOpenAPIRuntimeApp(t, "openapi: 3.0.3\ninfo:\n  title: Runtime Snapshot\n  version: 1.2.3\n")
+	current, err := app.apiSpecRegistrySvc.CurrentPublished(t.Context())
+	if err != nil {
+		t.Fatalf("failed to load current published spec: %v", err)
+	}
+	if err := os.Remove(current.BundlePath); err != nil {
+		t.Fatalf("failed to remove snapshot file: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/openapi.json", nil)
+	req.Header.Set("X-Request-ID", "req-openapi-load-failed")
+	recorder := httptest.NewRecorder()
+
+	app.handleOpenAPI(recorder, req)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusInternalServerError)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "openapi_load_failed" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Failed to load OpenAPI document" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-openapi-load-failed" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestHandleOpenAPIYAMLReadsCurrentPublishedSnapshotWithResolvedServerURL(t *testing.T) {
 	app := setupOpenAPIRuntimeApp(t, "openapi: 3.0.3\ninfo:\n  title: Runtime Snapshot\n  version: 1.2.3\nservers:\n  - url: http://stale.example.com\n")
 	req := httptest.NewRequest(http.MethodGet, "http://example.com/openapi.yaml", nil)
@@ -101,6 +132,37 @@ func TestHandleOpenAPIYAMLReadsCurrentPublishedSnapshotWithResolvedServerURL(t *
 	}
 	if strings.Contains(body, "http://stale.example.com") {
 		t.Fatalf("expected stale server url to be replaced, got=%s", body)
+	}
+}
+
+func TestHandleOpenAPIYAMLLoadFailureIncludesRequestID(t *testing.T) {
+	app := setupOpenAPIRuntimeApp(t, "openapi: 3.0.3\ninfo:\n  title: Runtime Snapshot\n  version: 1.2.3\n")
+	current, err := app.apiSpecRegistrySvc.CurrentPublished(t.Context())
+	if err != nil {
+		t.Fatalf("failed to load current published spec: %v", err)
+	}
+	if err := os.Remove(current.BundlePath); err != nil {
+		t.Fatalf("failed to remove snapshot file: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/openapi.yaml", nil)
+	req.Header.Set("X-Request-ID", "req-openapi-yaml-failed")
+	recorder := httptest.NewRecorder()
+
+	app.handleOpenAPIYAML(recorder, req)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusInternalServerError)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "openapi_yaml_failed" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Failed to generate OpenAPI YAML" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-openapi-yaml-failed" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -159,7 +221,9 @@ func setupOpenAPIRuntimeApp(t *testing.T, raw string) *App {
 	}
 
 	return &App{
-		apiSpecRegistrySvc: services.NewAPISpecRegistryService(db, dir),
+		apiRuntimeDependencies: apiRuntimeDependencies{
+			apiSpecRegistrySvc: services.NewAPISpecRegistryService(db, dir),
+		},
 	}
 }
 

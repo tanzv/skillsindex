@@ -12,7 +12,7 @@ import (
 )
 
 func TestHandleAPIPublicRankingsReturnsBackendOwnedRankingPayload(t *testing.T) {
-	app, admin := setupPublicMarketplaceAPITestApp(t)
+	app, _, admin := setupPublicMarketplaceAPITestApp(t)
 
 	qualityLeader, err := app.skillService.CreateSkill(context.Background(), services.CreateSkillInput{
 		OwnerID:         admin.ID,
@@ -162,5 +162,59 @@ func TestHandleAPIPublicRankingsReturnsBackendOwnedRankingPayload(t *testing.T) 
 		if item.Name == "Seed Hidden Leader" || item.Name == "Private Hidden Leader" {
 			t.Fatalf("hidden skills must not appear in ranking payload: %+v", payload.RankedItems)
 		}
+	}
+}
+
+func TestHandleAPIPublicRankingsServiceUnavailableIncludesRequestID(t *testing.T) {
+	app, _, _ := setupPublicMarketplaceAPITestApp(t)
+	app.skillService = nil
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/rankings", nil)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Request-ID", "req-public-rankings-service-unavailable")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicRankings(recorder, req)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusServiceUnavailable)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "service_unavailable" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Skill service unavailable" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-public-rankings-service-unavailable" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestHandleAPIPublicRankingsQueryFailureHidesInternalError(t *testing.T) {
+	app, db, _ := setupPublicMarketplaceAPITestApp(t)
+	if err := db.Migrator().DropTable(&models.Skill{}); err != nil {
+		t.Fatalf("failed to drop skills table: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/rankings", nil)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Request-ID", "req-public-rankings-query-failed")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicRankings(recorder, req)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusInternalServerError)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "ranking_query_failed" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Failed to build public rankings" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-public-rankings-query-failed" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

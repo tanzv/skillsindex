@@ -29,7 +29,7 @@ func (a *App) handleSwaggerDocs(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleOpenAPI(w http.ResponseWriter, r *http.Request) {
 	spec, _, err := loadCurrentOpenAPISpec(r.Context(), a.apiSpecRegistrySvc, resolveServerURL(r))
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "openapi_load_failed", "message": "Failed to load OpenAPI document"})
+		writeAPIError(w, r, http.StatusInternalServerError, "openapi_load_failed", "Failed to load OpenAPI document")
 		return
 	}
 	writeJSON(w, http.StatusOK, spec)
@@ -38,7 +38,7 @@ func (a *App) handleOpenAPI(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleOpenAPIYAML(w http.ResponseWriter, r *http.Request) {
 	_, raw, err := loadCurrentOpenAPISpec(r.Context(), a.apiSpecRegistrySvc, resolveServerURL(r))
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "openapi_yaml_failed", "message": "Failed to generate OpenAPI YAML"})
+		writeAPIError(w, r, http.StatusInternalServerError, "openapi_yaml_failed", "Failed to generate OpenAPI YAML")
 		return
 	}
 	w.Header().Set("Content-Type", "application/yaml; charset=utf-8")

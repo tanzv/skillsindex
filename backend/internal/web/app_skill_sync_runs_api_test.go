@@ -61,8 +61,10 @@ func setupSkillSyncRunsTestApp(t *testing.T) (*App, *gorm.DB, models.User, model
 	}
 
 	app := &App{
-		skillService:    services.NewSkillService(db),
-		syncJobSvc:      services.NewSyncJobService(db),
+		skillService: services.NewSkillService(db),
+		syncRuntimeDependencies: syncRuntimeDependencies{
+			syncJobSvc: services.NewSyncJobService(db),
+		},
 		skillVersionSvc: services.NewSkillVersionService(db),
 		auditService:    services.NewAuditService(db),
 	}

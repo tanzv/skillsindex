@@ -12,11 +12,11 @@ import (
 func (a *App) handleAPISkillVersions(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.skillVersionSvc == nil || a.skillService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill version services are unavailable")
 		return
 	}
 
@@ -27,16 +27,16 @@ func (a *App) handleAPISkillVersions(w http.ResponseWriter, r *http.Request) {
 
 	capturedAfter, err := parseOptionalAPITimeQuery(r.URL.Query().Get("from_time"))
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_from_time"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_from_time", "Invalid from_time")
 		return
 	}
 	capturedBefore, err := parseOptionalAPITimeQuery(r.URL.Query().Get("to_time"))
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_to_time"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_to_time", "Invalid to_time")
 		return
 	}
 	if capturedAfter != nil && capturedBefore != nil && capturedAfter.After(*capturedBefore) {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_time_range"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_time_range", "Invalid time range")
 		return
 	}
 
@@ -49,7 +49,7 @@ func (a *App) handleAPISkillVersions(w http.ResponseWriter, r *http.Request) {
 		Limit:           parsePositiveInt(r.URL.Query().Get("limit"), 80),
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "list_failed", err, "Failed to load skill versions")
 		return
 	}
 
@@ -62,11 +62,11 @@ func (a *App) handleAPISkillVersions(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPISkillVersionDetail(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.skillVersionSvc == nil || a.skillService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill version services are unavailable")
 		return
 	}
 
@@ -76,17 +76,17 @@ func (a *App) handleAPISkillVersionDetail(w http.ResponseWriter, r *http.Request
 	}
 	versionID, err := parseUintURLParam(r, "versionID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_version_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_version_id", "Invalid version id")
 		return
 	}
 
 	item, err := a.skillVersionSvc.GetByID(r.Context(), skill.ID, versionID)
 	if err != nil {
 		if errors.Is(err, services.ErrSkillNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "version_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "version_not_found", "Version not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "query_failed", err, "Failed to load skill version")
 		return
 	}
 
@@ -98,22 +98,22 @@ func (a *App) handleAPISkillVersionDetail(w http.ResponseWriter, r *http.Request
 func (a *App) loadManagedSkillForVersionAPI(w http.ResponseWriter, r *http.Request) (models.Skill, bool) {
 	skillID, err := parseUintURLParam(r, "skillID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_skill_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_skill_id", "Invalid skill id")
 		return models.Skill{}, false
 	}
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return models.Skill{}, false
 	}
 
 	skill, err := a.skillService.GetSkillByID(r.Context(), skillID)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{"error": "skill_not_found"})
+		writeAPIError(w, r, http.StatusNotFound, "skill_not_found", "Skill not found")
 		return models.Skill{}, false
 	}
 	if !user.CanManageSkill(skill.OwnerID) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return models.Skill{}, false
 	}
 	return skill, true

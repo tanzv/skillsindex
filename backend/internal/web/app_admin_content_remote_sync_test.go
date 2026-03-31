@@ -62,13 +62,15 @@ func setupRemoteSyncSkillMPTestApp(t *testing.T, skillURL string) (*App, models.
 	}
 
 	app := &App{
-		skillService:      skillSvc,
-		skillMPService:    services.NewSkillMPService("", ""),
-		asyncJobSvc:       services.NewAsyncJobService(db),
-		syncJobSvc:        services.NewSyncJobService(db),
-		skillVersionSvc:   services.NewSkillVersionService(db),
-		auditService:      services.NewAuditService(db),
-		syncGovernanceSvc: services.NewSyncGovernanceService(services.NewAsyncJobService(db), services.NewSyncJobService(db), services.NewSkillVersionService(db), services.NewAuditService(db)),
+		skillService: skillSvc,
+		syncRuntimeDependencies: syncRuntimeDependencies{
+			asyncJobSvc:       services.NewAsyncJobService(db),
+			syncJobSvc:        services.NewSyncJobService(db),
+			syncGovernanceSvc: services.NewSyncGovernanceService(services.NewAsyncJobService(db), services.NewSyncJobService(db), services.NewSkillVersionService(db), services.NewAuditService(db)),
+		},
+		skillMPService:  services.NewSkillMPService("", ""),
+		skillVersionSvc: services.NewSkillVersionService(db),
+		auditService:    services.NewAuditService(db),
 	}
 	return app, owner, skill
 }
@@ -116,13 +118,15 @@ func setupRemoteSyncRepositoryTestApp(t *testing.T, repoURL string) (*App, model
 	}
 
 	app := &App{
-		skillService:      skillSvc,
-		repositoryService: services.NewRepositorySyncService(),
-		asyncJobSvc:       services.NewAsyncJobService(db),
-		syncJobSvc:        services.NewSyncJobService(db),
-		skillVersionSvc:   services.NewSkillVersionService(db),
-		auditService:      services.NewAuditService(db),
-		syncGovernanceSvc: services.NewSyncGovernanceService(services.NewAsyncJobService(db), services.NewSyncJobService(db), services.NewSkillVersionService(db), services.NewAuditService(db)),
+		skillService: skillSvc,
+		syncRuntimeDependencies: syncRuntimeDependencies{
+			repositoryService: services.NewRepositorySyncService(),
+			asyncJobSvc:       services.NewAsyncJobService(db),
+			syncJobSvc:        services.NewSyncJobService(db),
+			syncGovernanceSvc: services.NewSyncGovernanceService(services.NewAsyncJobService(db), services.NewSyncJobService(db), services.NewSkillVersionService(db), services.NewAuditService(db)),
+		},
+		skillVersionSvc: services.NewSkillVersionService(db),
+		auditService:    services.NewAuditService(db),
 	}
 	return app, owner, skill
 }

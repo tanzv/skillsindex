@@ -3,6 +3,7 @@ package web
 func openAPIPathsAdminCore() map[string]any {
 	paths := map[string]any{}
 	mergeOpenAPIPathMap(paths, openAPIPathsAdminOps())
+	mergeOpenAPIPathMap(paths, openAPIPathsAdminAPIManagement())
 	mergeOpenAPIPathMap(paths, openAPIPathsAdminSyncPolicies())
 	mergeOpenAPIPathMap(paths, openAPIPathsAdminAccess())
 	mergeOpenAPIPathMap(paths, openAPIPathsAdminSSO())

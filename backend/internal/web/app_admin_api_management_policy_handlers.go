@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"skillsindex/internal/models"
 	"skillsindex/internal/services"
 
 	"github.com/go-chi/chi/v5"
@@ -134,7 +135,7 @@ func (a *App) handleAPIAdminCurrentOperationPolicyUpsert(w http.ResponseWriter, 
 	operationID := strings.TrimSpace(chi.URLParam(r, "operationID"))
 	item, err := a.apiPolicySvc.UpsertCurrentOperationPolicy(r.Context(), services.UpsertCurrentAPIOperationPolicyInput{
 		OperationID:    operationID,
-		AuthMode:       input.AuthMode,
+		AuthMode:       models.APIOperationAuthMode(input.AuthMode),
 		RequiredRoles:  input.RequiredRoles,
 		RequiredScopes: input.RequiredScopes,
 		Enabled:        input.Enabled,

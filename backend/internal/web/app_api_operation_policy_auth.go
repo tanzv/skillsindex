@@ -18,7 +18,7 @@ func (a *App) authorizePublishedOperation(w http.ResponseWriter, r *http.Request
 		return true
 	}
 	if !match.Policy.Enabled {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "api_operation_disabled"})
+		writeAPIError(w, r, http.StatusForbidden, "api_operation_disabled", "API operation is disabled")
 		return false
 	}
 
@@ -28,11 +28,11 @@ func (a *App) authorizePublishedOperation(w http.ResponseWriter, r *http.Request
 	case models.APIAuthModeSession:
 		user := currentUserFromContext(r.Context())
 		if user == nil {
-			writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+			writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 			return false
 		}
 		if !userSatisfiesOperationRoles(*user, match.Policy.RequiredRoles) {
-			writeJSON(w, http.StatusForbidden, map[string]any{"error": "api_operation_role_denied"})
+			writeAPIError(w, r, http.StatusForbidden, "api_operation_role_denied", "Permission denied")
 			return false
 		}
 		return true
@@ -52,31 +52,31 @@ func (a *App) authorizeOperationAPIKey(w http.ResponseWriter, r *http.Request, r
 		}
 	}
 	if apiKey == "" {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "api_key_invalid"})
+		writeAPIError(w, r, http.StatusUnauthorized, "api_key_invalid", "Invalid API key")
 		return false
 	}
 
 	if _, ok := a.apiKeys[apiKey]; ok {
 		if len(requiredScopes) > 0 {
-			writeJSON(w, http.StatusForbidden, map[string]any{"error": "api_key_scope_denied"})
+			writeAPIError(w, r, http.StatusForbidden, "api_key_scope_denied", "API key scope denied")
 			return false
 		}
 		return true
 	}
 
 	if a.apiKeyService == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "api_key_invalid"})
+		writeAPIError(w, r, http.StatusUnauthorized, "api_key_invalid", "Invalid API key")
 		return false
 	}
 
 	key, valid, err := a.apiKeyService.Validate(r.Context(), apiKey)
 	if err != nil || !valid {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "api_key_invalid"})
+		writeAPIError(w, r, http.StatusUnauthorized, "api_key_invalid", "Invalid API key")
 		return false
 	}
 	for _, scope := range requiredScopes {
 		if !services.APIKeyHasScope(key, scope) {
-			writeJSON(w, http.StatusForbidden, map[string]any{"error": "api_key_scope_denied"})
+			writeAPIError(w, r, http.StatusForbidden, "api_key_scope_denied", "API key scope denied")
 			return false
 		}
 	}

@@ -27,7 +27,7 @@ func (a *App) handleAPIAdminSkills(w http.ResponseWriter, r *http.Request) {
 		skills, err = a.skillService.ListSkillsByOwner(r.Context(), user.ID)
 	}
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "list_failed", err, "Failed to list skills")
 		return
 	}
 

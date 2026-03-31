@@ -113,7 +113,7 @@ func TestHandleAPIAdminCurrentSpecHonorsRuntimeOperationPolicy(t *testing.T) {
 
 	_, err := app.apiPolicySvc.UpsertCurrentOperationPolicy(context.Background(), services.UpsertCurrentAPIOperationPolicyInput{
 		OperationID:   "getCurrentPublishedSpec",
-		AuthMode:      "session",
+		AuthMode:      models.APIAuthModeSession,
 		RequiredRoles: []string{"super_admin"},
 		Enabled:       false,
 		MockEnabled:   false,
@@ -144,7 +144,7 @@ func TestHandleAPIAdminMockResolveReturnsOverride(t *testing.T) {
 
 	if _, err := app.apiPolicySvc.UpsertCurrentOperationPolicy(context.Background(), services.UpsertCurrentAPIOperationPolicyInput{
 		OperationID:    "getCurrentPublishedSpec",
-		AuthMode:       "session",
+		AuthMode:       models.APIAuthModeSession,
 		RequiredRoles:  []string{"super_admin"},
 		RequiredScopes: []string{},
 		Enabled:        true,

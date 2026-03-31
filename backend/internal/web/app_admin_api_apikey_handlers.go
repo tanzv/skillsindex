@@ -13,11 +13,11 @@ import (
 func (a *App) handleAPIAdminAPIKeys(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.apiKeyService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API key service is unavailable")
 		return
 	}
 
@@ -42,7 +42,7 @@ func (a *App) handleAPIAdminAPIKeys(w http.ResponseWriter, r *http.Request) {
 		if ownerFilter != "" &&
 			!strings.EqualFold(ownerFilter, user.Username) &&
 			ownerFilter != strconv.FormatUint(uint64(user.ID), 10) {
-			writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+			writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 			return
 		}
 		keys, err = a.apiKeyService.ListByUser(r.Context(), user.ID)
@@ -54,7 +54,7 @@ func (a *App) handleAPIAdminAPIKeys(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "list_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "list_failed", err, "Failed to list API keys")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -66,17 +66,17 @@ func (a *App) handleAPIAdminAPIKeys(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAPIAdminAPIKeysCreate(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.apiKeyService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API key service is unavailable")
 		return
 	}
 
 	input, err := readAPIKeyCreateInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
@@ -85,7 +85,7 @@ func (a *App) handleAPIAdminAPIKeysCreate(w http.ResponseWriter, r *http.Request
 		ownerUserID = *input.OwnerUserID
 	}
 	if ownerUserID != user.ID && !user.CanManageUsers() {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
@@ -94,10 +94,10 @@ func (a *App) handleAPIAdminAPIKeysCreate(w http.ResponseWriter, r *http.Request
 		ownerUser, ownerErr := a.authService.GetUserByID(r.Context(), ownerUserID)
 		if ownerErr != nil {
 			if errors.Is(ownerErr, services.ErrUserNotFound) {
-				writeJSON(w, http.StatusNotFound, map[string]any{"error": "user_not_found"})
+				writeAPIError(w, r, http.StatusNotFound, "user_not_found", "User not found")
 				return
 			}
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "owner_query_failed", "message": ownerErr.Error()})
+			writeAPIErrorFromError(w, r, http.StatusInternalServerError, "owner_query_failed", ownerErr, "Failed to load API key owner")
 			return
 		}
 		ownerUsername = ownerUser.Username
@@ -112,7 +112,7 @@ func (a *App) handleAPIAdminAPIKeysCreate(w http.ResponseWriter, r *http.Request
 		Scopes:        input.Scopes,
 	})
 	if createErr != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "create_failed", "message": createErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "create_failed", createErr, "Failed to create API key")
 		return
 	}
 
@@ -140,39 +140,39 @@ func (a *App) handleAPIAdminAPIKeysCreate(w http.ResponseWriter, r *http.Request
 func (a *App) handleAPIAdminAPIKeyRevoke(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.apiKeyService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API key service is unavailable")
 		return
 	}
 
 	keyID, err := parseUintURLParam(r, "keyID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_key_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_key_id", "Invalid API key id")
 		return
 	}
 
 	key, err := a.apiKeyService.GetByID(r.Context(), keyID)
 	if err != nil {
 		if errors.Is(err, services.ErrAPIKeyNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "api_key_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "api_key_not_found", "API key not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "query_failed", err, "Failed to load API key")
 		return
 	}
 	if !user.CanManageAPIKeys(key.UserID) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 	if err := a.apiKeyService.Revoke(r.Context(), key.ID, key.UserID); err != nil {
 		if errors.Is(err, services.ErrAPIKeyNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "api_key_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "api_key_not_found", "API key not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "revoke_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "revoke_failed", err, "Failed to revoke API key")
 		return
 	}
 
@@ -193,41 +193,41 @@ func (a *App) handleAPIAdminAPIKeyRevoke(w http.ResponseWriter, r *http.Request)
 func (a *App) handleAPIAdminAPIKeyRotate(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 	if a.apiKeyService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "service_unavailable"})
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "API key service is unavailable")
 		return
 	}
 
 	keyID, err := parseUintURLParam(r, "keyID")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_key_id"})
+		writeAPIError(w, r, http.StatusBadRequest, "invalid_key_id", "Invalid API key id")
 		return
 	}
 
 	key, err := a.apiKeyService.GetByID(r.Context(), keyID)
 	if err != nil {
 		if errors.Is(err, services.ErrAPIKeyNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "api_key_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "api_key_not_found", "API key not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "query_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "query_failed", err, "Failed to load API key")
 		return
 	}
 	if !user.CanManageAPIKeys(key.UserID) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "permission_denied"})
+		writeAPIError(w, r, http.StatusForbidden, "permission_denied", "Permission denied")
 		return
 	}
 
 	rotated, plaintext, rotateErr := a.apiKeyService.Rotate(r.Context(), key.ID, key.UserID)
 	if rotateErr != nil {
 		if errors.Is(rotateErr, services.ErrAPIKeyNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]any{"error": "api_key_not_found"})
+			writeAPIError(w, r, http.StatusNotFound, "api_key_not_found", "API key not found")
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "rotate_failed", "message": rotateErr.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "rotate_failed", rotateErr, "Failed to rotate API key")
 		return
 	}
 

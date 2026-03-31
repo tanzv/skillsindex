@@ -20,19 +20,25 @@ type apiAccountPasswordResetConfirmRequest struct {
 
 func (a *App) handleAPIAccountPasswordResetRequest(w http.ResponseWriter, r *http.Request) {
 	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-			"error":   "service_unavailable",
-			"message": a.apiMessage(r, "api.account.password_reset.auth_service_unavailable", "Authentication service unavailable"),
-		})
+		writeAPIError(
+			w,
+			r,
+			http.StatusServiceUnavailable,
+			"service_unavailable",
+			a.apiMessage(r, "api.account.password_reset.auth_service_unavailable", "Authentication service unavailable"),
+		)
 		return
 	}
 
 	var input apiAccountPasswordResetRequest
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{
-			"error":   "invalid_payload",
-			"message": a.apiMessage(r, "api.account.password_reset.invalid_payload", "Invalid request payload"),
-		})
+		writeAPIError(
+			w,
+			r,
+			http.StatusBadRequest,
+			"invalid_payload",
+			a.apiMessage(r, "api.account.password_reset.invalid_payload", "Invalid request payload"),
+		)
 		return
 	}
 
@@ -77,14 +83,17 @@ func (a *App) handleAPIAccountPasswordResetRequest(w http.ResponseWriter, r *htt
 				"username": username,
 			}),
 		})
-		writeJSON(w, http.StatusTooManyRequests, map[string]any{
-			"error": "too_many_requests",
-			"message": a.apiMessage(
+		writeAPIError(
+			w,
+			r,
+			http.StatusTooManyRequests,
+			"too_many_requests",
+			a.apiMessage(
 				r,
 				"api.account.password_reset.request_rate_limited",
 				"Password reset requests are temporarily rate limited",
 			),
-		})
+		)
 		return
 	default:
 		a.recordRequestAudit(r, nil, services.RecordAuditInput{
@@ -98,14 +107,17 @@ func (a *App) handleAPIAccountPasswordResetRequest(w http.ResponseWriter, r *htt
 				"username": username,
 			}),
 		})
-		writeJSON(w, http.StatusInternalServerError, map[string]any{
-			"error": "password_reset_request_failed",
-			"message": a.apiMessage(
+		writeAPIError(
+			w,
+			r,
+			http.StatusInternalServerError,
+			"password_reset_request_failed",
+			a.apiMessage(
 				r,
 				"api.account.password_reset.request_failed",
 				"Failed to submit password reset request",
 			),
-		})
+		)
 		return
 	}
 
@@ -121,26 +133,35 @@ func (a *App) handleAPIAccountPasswordResetRequest(w http.ResponseWriter, r *htt
 
 func (a *App) handleAPIAccountPasswordResetConfirm(w http.ResponseWriter, r *http.Request) {
 	if a.authService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-			"error":   "service_unavailable",
-			"message": a.apiMessage(r, "api.account.password_reset.auth_service_unavailable", "Authentication service unavailable"),
-		})
+		writeAPIError(
+			w,
+			r,
+			http.StatusServiceUnavailable,
+			"service_unavailable",
+			a.apiMessage(r, "api.account.password_reset.auth_service_unavailable", "Authentication service unavailable"),
+		)
 		return
 	}
 	if a.sessionService == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-			"error":   "service_unavailable",
-			"message": a.apiMessage(r, "api.account.password_reset.session_service_unavailable", "Session service unavailable"),
-		})
+		writeAPIError(
+			w,
+			r,
+			http.StatusServiceUnavailable,
+			"service_unavailable",
+			a.apiMessage(r, "api.account.password_reset.session_service_unavailable", "Session service unavailable"),
+		)
 		return
 	}
 
 	var input apiAccountPasswordResetConfirmRequest
 	if err := decodeJSONOrForm(r, &input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{
-			"error":   "invalid_payload",
-			"message": a.apiMessage(r, "api.account.password_reset.invalid_payload", "Invalid request payload"),
-		})
+		writeAPIError(
+			w,
+			r,
+			http.StatusBadRequest,
+			"invalid_payload",
+			a.apiMessage(r, "api.account.password_reset.invalid_payload", "Invalid request payload"),
+		)
 		return
 	}
 
@@ -177,10 +198,7 @@ func (a *App) handleAPIAccountPasswordResetConfirm(w http.ResponseWriter, r *htt
 				"token_present": strconv.FormatBool(strings.TrimSpace(input.Token) != ""),
 			}),
 		})
-		writeJSON(w, http.StatusBadRequest, map[string]any{
-			"error":   errorCode,
-			"message": errorMessage,
-		})
+		writeAPIError(w, r, http.StatusBadRequest, errorCode, errorMessage)
 		return
 	}
 
@@ -197,14 +215,17 @@ func (a *App) handleAPIAccountPasswordResetConfirm(w http.ResponseWriter, r *htt
 				"session_started": "false",
 			}),
 		})
-		writeJSON(w, http.StatusInternalServerError, map[string]any{
-			"error": "session_start_failed",
-			"message": a.apiMessage(
+		writeAPIError(
+			w,
+			r,
+			http.StatusInternalServerError,
+			"session_start_failed",
+			a.apiMessage(
 				r,
 				"api.account.password_reset.session_start_failed",
 				"Password reset succeeded but failed to start session",
 			),
-		})
+		)
 		return
 	}
 

@@ -14,7 +14,7 @@ type apiAdminIngestionMutationResponse struct {
 	Item    apiAdminSkillItem `json:"item"`
 }
 
-func writeAdminIngestionOperationError(w http.ResponseWriter, err error, defaultCode string) {
+func writeAdminIngestionOperationError(w http.ResponseWriter, r *http.Request, err error, defaultCode string) {
 	status := adminIngestionOperationStatus(err)
 	code := strings.TrimSpace(defaultCode)
 	switch status {
@@ -30,10 +30,7 @@ func writeAdminIngestionOperationError(w http.ResponseWriter, err error, default
 	if code == "" {
 		code = "ingestion_failed"
 	}
-	writeJSON(w, status, map[string]any{
-		"error":   code,
-		"message": adminIngestionOperationMessage(err, "Request failed"),
-	})
+	writeAPIError(w, r, status, code, adminIngestionOperationMessage(err, "Request failed"))
 }
 
 func buildAPIAdminIngestionMutationResponse(result adminIngestionMutationResult) apiAdminIngestionMutationResponse {
@@ -53,19 +50,19 @@ func buildAPIAdminIngestionMutationResponse(result adminIngestionMutationResult)
 func (a *App) handleAPIAdminIngestionManual(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 
 	input, err := readAdminManualIngestionInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
 	result, err := a.submitManualIngestion(r.Context(), user, input)
 	if err != nil {
-		writeAdminIngestionOperationError(w, err, "manual_ingestion_failed")
+		writeAdminIngestionOperationError(w, r, err, "manual_ingestion_failed")
 		return
 	}
 
@@ -75,19 +72,19 @@ func (a *App) handleAPIAdminIngestionManual(w http.ResponseWriter, r *http.Reque
 func (a *App) handleAPIAdminIngestionRepository(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 
 	input, err := readAdminRepositoryIngestionInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
 	result, err := a.submitRepositoryIngestion(r.Context(), user, input)
 	if err != nil {
-		writeAdminIngestionOperationError(w, err, "repository_ingestion_failed")
+		writeAdminIngestionOperationError(w, r, err, "repository_ingestion_failed")
 		return
 	}
 
@@ -97,20 +94,20 @@ func (a *App) handleAPIAdminIngestionRepository(w http.ResponseWriter, r *http.R
 func (a *App) handleAPIAdminIngestionUpload(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 
 	input, archive, header, err := readAdminUploadIngestionInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 	defer archive.Close()
 
 	result, err := a.submitUploadIngestion(r.Context(), user, input, archive, header)
 	if err != nil {
-		writeAdminIngestionOperationError(w, err, "upload_ingestion_failed")
+		writeAdminIngestionOperationError(w, r, err, "upload_ingestion_failed")
 		return
 	}
 
@@ -120,19 +117,19 @@ func (a *App) handleAPIAdminIngestionUpload(w http.ResponseWriter, r *http.Reque
 func (a *App) handleAPIAdminIngestionSkillMP(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
 		return
 	}
 
 	input, err := readAdminSkillMPIngestionInput(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid_payload", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusBadRequest, "invalid_payload", err, "Invalid request payload")
 		return
 	}
 
 	result, err := a.submitSkillMPIngestion(r.Context(), user, input)
 	if err != nil {
-		writeAdminIngestionOperationError(w, err, "skillmp_ingestion_failed")
+		writeAdminIngestionOperationError(w, r, err, "skillmp_ingestion_failed")
 		return
 	}
 

@@ -71,6 +71,22 @@ func TestBuildOpenAPISpecAdminAccessOperationsIncludeRuntimeErrors(t *testing.T)
 	}
 	assertOpenAPIResponsesContain(t, authProvidersPost, "200", "400", "401", "403", "500", "503")
 
+	presentationTaxonomyPath, ok := paths["/api/v1/admin/settings/presentation-taxonomy"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing presentation taxonomy settings path")
+	}
+	presentationTaxonomyGet, ok := presentationTaxonomyPath["get"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing presentation taxonomy settings get operation")
+	}
+	assertOpenAPIResponsesContain(t, presentationTaxonomyGet, "200", "401", "403", "500")
+
+	presentationTaxonomyPost, ok := presentationTaxonomyPath["post"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing presentation taxonomy settings post operation")
+	}
+	assertOpenAPIResponsesContain(t, presentationTaxonomyPost, "200", "400", "401", "403", "500", "503")
+
 	authProviderConfigsPath, ok := paths["/api/v1/admin/auth-provider-configs"].(map[string]any)
 	if !ok {
 		t.Fatalf("missing auth provider configs path")

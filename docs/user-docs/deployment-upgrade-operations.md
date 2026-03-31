@@ -181,8 +181,8 @@ lcode config run --name skillsindex-frontend
 如果使用 `lcode` 管理服务，建议再检查：
 
 1. `lcode running --json` 中前后端均为 `running`
-2. 前端日志中出现 `http://localhost:3000`
-3. 后端日志中出现 `http://localhost:8080`
+2. 前端日志中出现 `http://127.0.0.1:3400`
+3. 后端日志中出现 `http://127.0.0.1:38180`
 
 如果当前部署依赖 API-only 模式，还应验证：
 

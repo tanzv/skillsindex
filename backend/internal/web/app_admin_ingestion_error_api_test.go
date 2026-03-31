@@ -65,6 +65,7 @@ func TestHandleAPIAdminIngestionManualInternalFailure(t *testing.T) {
 		strings.NewReader(`{"name":"Manual API Skill","description":"Manual import","content":"# Manual API Skill","tags":"manual,api","visibility":"public"}`),
 	)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-admin-ingestion-manual-failed")
 	req = withCurrentUser(req, &owner)
 	recorder := httptest.NewRecorder()
 
@@ -81,6 +82,9 @@ func TestHandleAPIAdminIngestionManualInternalFailure(t *testing.T) {
 	if got, _ := payload["message"].(string); got != "Failed to create manual skill" {
 		t.Fatalf("unexpected error message: got=%q payload=%#v", got, payload)
 	}
+	if got, _ := payload["request_id"].(string); got != "req-admin-ingestion-manual-failed" {
+		t.Fatalf("unexpected request id: got=%q payload=%#v", got, payload)
+	}
 }
 
 func TestHandleAPIAdminIngestionUploadStorageFailure(t *testing.T) {
@@ -92,6 +96,7 @@ func TestHandleAPIAdminIngestionUploadStorageFailure(t *testing.T) {
 		"tags":       "upload,api",
 		"visibility": "private",
 	})
+	req.Header.Set("X-Request-ID", "req-admin-ingestion-upload-failed")
 	req = withCurrentUser(req, &owner)
 	recorder := httptest.NewRecorder()
 
@@ -107,5 +112,8 @@ func TestHandleAPIAdminIngestionUploadStorageFailure(t *testing.T) {
 	}
 	if got, _ := payload["message"].(string); got != "Failed to prepare upload storage" {
 		t.Fatalf("unexpected error message: got=%q payload=%#v", got, payload)
+	}
+	if got, _ := payload["request_id"].(string); got != "req-admin-ingestion-upload-failed" {
+		t.Fatalf("unexpected request id: got=%q payload=%#v", got, payload)
 	}
 }

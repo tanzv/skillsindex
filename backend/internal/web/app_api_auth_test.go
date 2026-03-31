@@ -7,7 +7,11 @@ import (
 	"strings"
 	"testing"
 
+	"skillsindex/internal/models"
 	"skillsindex/internal/services"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func applyAPITestTranslations(app *App) {
@@ -192,6 +196,65 @@ func TestHandleAPIAuthCSRFSuccess(t *testing.T) {
 	}
 }
 
+func TestHandleAPIAuthLoginServiceUnavailableIncludesRequestID(t *testing.T) {
+	app, _, _, _ := setupAccountHandlersTestApp(t)
+	app.authService = nil
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/auth/login",
+		strings.NewReader(`{"username":"account-user","password":"Account123!"}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-auth-login-service-unavailable")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAuthLogin(recorder, req)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusServiceUnavailable)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "service_unavailable" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication service unavailable" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-auth-login-service-unavailable" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestHandleAPIAuthLoginInvalidPayloadIncludesRequestID(t *testing.T) {
+	app, _, _, _ := setupAccountHandlersTestApp(t)
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/auth/login",
+		strings.NewReader(`{"username":"account-user"}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-auth-login-invalid-payload")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAuthLogin(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_payload" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Username and password are required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-auth-login-invalid-payload" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestHandleAPIAuthLoginInvalidCredentials(t *testing.T) {
 	app, _, _, _ := setupAccountHandlersTestApp(t)
 
@@ -202,6 +265,7 @@ func TestHandleAPIAuthLoginInvalidCredentials(t *testing.T) {
 	)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Request-ID", "req-auth-login-invalid-credentials")
 	recorder := httptest.NewRecorder()
 
 	app.handleAPIAuthLogin(recorder, req)
@@ -211,6 +275,10 @@ func TestHandleAPIAuthLoginInvalidCredentials(t *testing.T) {
 	}
 	if !strings.Contains(recorder.Body.String(), `"error":"unauthorized"`) {
 		t.Fatalf("expected unauthorized error payload")
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["request_id"] != "req-auth-login-invalid-credentials" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -267,6 +335,38 @@ func TestHandleAPIAuthMeReturnsCurrentUser(t *testing.T) {
 	}
 }
 
+func TestHandleAPIAuthLoginSessionStartFailedIncludesRequestID(t *testing.T) {
+	app, _, _, _ := setupAccountHandlersTestApp(t)
+	app.sessionStarter = func(http.ResponseWriter, *http.Request, uint) error {
+		return gorm.ErrInvalidDB
+	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/auth/login",
+		strings.NewReader(`{"username":"account-user","password":"Account123!"}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-auth-login-session-start-failed")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAuthLogin(recorder, req)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusInternalServerError)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "session_start_failed" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Failed to start session" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-auth-login-session-start-failed" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestHandleAPIAuthMeReturnsNilForAnonymousSession(t *testing.T) {
 	app, _, _, _ := setupAccountHandlersTestApp(t)
 	if err := app.settingsService.SetBool(context.Background(), services.SettingMarketplacePublicAccess, false); err != nil {
@@ -290,6 +390,63 @@ func TestHandleAPIAuthMeReturnsNilForAnonymousSession(t *testing.T) {
 	}
 }
 
+func TestHandleAPIAuthMeSettingsQueryFailureIncludesRequestID(t *testing.T) {
+	app, _, _, _ := setupAccountHandlersTestApp(t)
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("failed to open broken settings db: %v", err)
+	}
+	app.settingsService = services.NewSettingsService(db)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/me", nil)
+	req.Header.Set("X-Request-ID", "req-auth-me-settings-query-failed")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAuthMe(recorder, req)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusInternalServerError)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "settings_query_failed" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Failed to load access settings" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-auth-me-settings-query-failed" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestHandleAPIAuthMeUserNotFoundIncludesRequestID(t *testing.T) {
+	app, _, _, _ := setupAccountHandlersTestApp(t)
+	if err := app.settingsService.SetBool(context.Background(), services.SettingMarketplacePublicAccess, false); err != nil {
+		t.Fatalf("failed to seed marketplace access setting: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/me", nil)
+	req.Header.Set("X-Request-ID", "req-auth-me-user-not-found")
+	req = withCurrentUser(req, &models.User{ID: 999999})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAuthMe(recorder, req)
+
+	if recorder.Code != http.StatusNotFound {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusNotFound)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "user_not_found" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "User not found" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-auth-me-user-not-found" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestRequireAuthReturnsJSONForAPIRequest(t *testing.T) {
 	app := &App{}
 	handler := app.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -298,6 +455,7 @@ func TestRequireAuthReturnsJSONForAPIRequest(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/account/profile", nil)
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Request-ID", "req-require-auth-unauthorized")
 	recorder := httptest.NewRecorder()
 
 	handler.ServeHTTP(recorder, req)
@@ -306,5 +464,9 @@ func TestRequireAuthReturnsJSONForAPIRequest(t *testing.T) {
 	}
 	if !strings.Contains(recorder.Body.String(), `"error":"unauthorized"`) {
 		t.Fatalf("expected unauthorized error payload")
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["request_id"] != "req-require-auth-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

@@ -15,6 +15,7 @@ func TestAPIAdminUserRoleUnauthorized(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/users/10/role", strings.NewReader(`{"role":"admin"}`))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-admin-user-role-unauthorized")
 	req = withURLParam(req, "userID", "10")
 	recorder := httptest.NewRecorder()
 
@@ -22,6 +23,16 @@ func TestAPIAdminUserRoleUnauthorized(t *testing.T) {
 
 	if recorder.Code != http.StatusUnauthorized {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-user-role-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -73,8 +84,9 @@ func TestAPIAdminUserRoleInvalidUserID(t *testing.T) {
 
 func TestAPIAdminUserRoleInvalidPayload(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/users/10/role", strings.NewReader(`{"role":123}`))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/users/10/role", strings.NewReader(`{"role":`))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", "req-admin-user-role-invalid-payload")
 	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleSuperAdmin})
 	req = withURLParam(req, "userID", "10")
 	recorder := httptest.NewRecorder()
@@ -83,6 +95,13 @@ func TestAPIAdminUserRoleInvalidPayload(t *testing.T) {
 
 	if recorder.Code != http.StatusBadRequest {
 		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_payload" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-user-role-invalid-payload" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 

@@ -5,13 +5,17 @@ import "net/http"
 func (a *App) handleAPIAdminOverview(w http.ResponseWriter, r *http.Request) {
 	user := currentUserFromContext(r.Context())
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+		writeAPIError(w, r, http.StatusUnauthorized, "unauthorized", "Authentication required")
+		return
+	}
+	if a.skillService == nil {
+		writeAPIError(w, r, http.StatusServiceUnavailable, "service_unavailable", "Skill service is unavailable")
 		return
 	}
 
 	counts, err := a.skillService.CountDashboardSkills(r.Context(), user.ID, user.CanViewAllSkills())
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "count_failed", "message": err.Error()})
+		writeAPIErrorFromError(w, r, http.StatusInternalServerError, "count_failed", err, "Failed to load overview counts")
 		return
 	}
 

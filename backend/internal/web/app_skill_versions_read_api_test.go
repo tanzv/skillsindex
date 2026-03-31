@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -17,6 +18,7 @@ func TestAPISkillVersionsUnauthorized(t *testing.T) {
 	app, _, _, _, skill := setupSkillVersionHandlersTestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/1/versions", nil)
+	req.Header.Set("X-Request-ID", "req-skill-versions-unauthorized")
 	req = withURLParams(req, map[string]string{
 		"skillID": strconv.FormatUint(uint64(skill.ID), 10),
 	})
@@ -31,6 +33,12 @@ func TestAPISkillVersionsUnauthorized(t *testing.T) {
 	if payload["error"] != "unauthorized" {
 		t.Fatalf("unexpected error payload: %#v", payload)
 	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-versions-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
 }
 
 func TestAPISkillVersionsForbidden(t *testing.T) {
@@ -41,6 +49,7 @@ func TestAPISkillVersionsForbidden(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/1/versions", nil)
+	req.Header.Set("X-Request-ID", "req-skill-versions-permission-denied")
 	req = withCurrentUser(req, &viewer)
 	req = withURLParams(req, map[string]string{
 		"skillID": strconv.FormatUint(uint64(skill.ID), 10),
@@ -56,12 +65,19 @@ func TestAPISkillVersionsForbidden(t *testing.T) {
 	if payload["error"] != "permission_denied" {
 		t.Fatalf("unexpected error payload: %#v", payload)
 	}
+	if payload["message"] != "Permission denied" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-versions-permission-denied" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
 }
 
 func TestAPISkillVersionsRejectsInvalidSkillID(t *testing.T) {
 	app, _, owner, _, _ := setupSkillVersionHandlersTestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/invalid/versions", nil)
+	req.Header.Set("X-Request-ID", "req-skill-versions-invalid-skill-id")
 	req = withCurrentUser(req, &owner)
 	req = withURLParams(req, map[string]string{
 		"skillID": "invalid",
@@ -76,6 +92,12 @@ func TestAPISkillVersionsRejectsInvalidSkillID(t *testing.T) {
 	payload := decodeBodyMap(t, recorder)
 	if payload["error"] != "invalid_skill_id" {
 		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Invalid skill id" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-versions-invalid-skill-id" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -222,6 +244,7 @@ func TestAPISkillVersionsRejectsInvalidTimeFilters(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/1/versions?"+tc.query, nil)
+			req.Header.Set("X-Request-ID", "req-skill-versions-"+strings.ReplaceAll(tc.errKey, "_", "-"))
 			req = withCurrentUser(req, &owner)
 			req = withURLParams(req, map[string]string{
 				"skillID": strconv.FormatUint(uint64(skill.ID), 10),
@@ -237,7 +260,49 @@ func TestAPISkillVersionsRejectsInvalidTimeFilters(t *testing.T) {
 			if payload["error"] != tc.errKey {
 				t.Fatalf("unexpected error payload: %#v", payload)
 			}
+			expectedMessages := map[string]string{
+				"invalid_from_time":  "Invalid from_time",
+				"invalid_to_time":    "Invalid to_time",
+				"invalid_time_range": "Invalid time range",
+			}
+			if payload["message"] != expectedMessages[tc.errKey] {
+				t.Fatalf("unexpected error message: %#v", payload)
+			}
+			if payload["request_id"] != "req-skill-versions-"+strings.ReplaceAll(tc.errKey, "_", "-") {
+				t.Fatalf("unexpected request id: %#v", payload)
+			}
 		})
+	}
+}
+
+func TestAPISkillVersionsListFailureHidesInternalError(t *testing.T) {
+	app, db, owner, _, skill := setupSkillVersionHandlersTestApp(t)
+	if err := db.Migrator().DropTable(&models.SkillVersion{}); err != nil {
+		t.Fatalf("failed to drop skill_versions table: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/1/versions", nil)
+	req.Header.Set("X-Request-ID", "req-skill-versions-list-failed")
+	req = withCurrentUser(req, &owner)
+	req = withURLParams(req, map[string]string{
+		"skillID": strconv.FormatUint(uint64(skill.ID), 10),
+	})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPISkillVersions(recorder, req)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusInternalServerError)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "list_failed" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Failed to load skill versions" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-versions-list-failed" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
@@ -312,6 +377,7 @@ func TestAPISkillVersionDetailVersionNotFound(t *testing.T) {
 	app, _, owner, _, skill := setupSkillVersionHandlersTestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/1/versions/999999", nil)
+	req.Header.Set("X-Request-ID", "req-skill-version-detail-not-found")
 	req = withCurrentUser(req, &owner)
 	req = withURLParams(req, map[string]string{
 		"skillID":   strconv.FormatUint(uint64(skill.ID), 10),
@@ -328,12 +394,19 @@ func TestAPISkillVersionDetailVersionNotFound(t *testing.T) {
 	if payload["error"] != "version_not_found" {
 		t.Fatalf("unexpected error payload: %#v", payload)
 	}
+	if payload["message"] != "Version not found" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-version-detail-not-found" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
 }
 
 func TestAPISkillVersionDetailRejectsInvalidVersionID(t *testing.T) {
 	app, _, owner, _, skill := setupSkillVersionHandlersTestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/1/versions/invalid", nil)
+	req.Header.Set("X-Request-ID", "req-skill-version-detail-invalid-version-id")
 	req = withCurrentUser(req, &owner)
 	req = withURLParams(req, map[string]string{
 		"skillID":   strconv.FormatUint(uint64(skill.ID), 10),
@@ -349,5 +422,43 @@ func TestAPISkillVersionDetailRejectsInvalidVersionID(t *testing.T) {
 	payload := decodeBodyMap(t, recorder)
 	if payload["error"] != "invalid_version_id" {
 		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Invalid version id" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-version-detail-invalid-version-id" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestAPISkillVersionDetailQueryFailureHidesInternalError(t *testing.T) {
+	app, db, owner, _, skill := setupSkillVersionHandlersTestApp(t)
+	if err := db.Migrator().DropTable(&models.SkillVersion{}); err != nil {
+		t.Fatalf("failed to drop skill_versions table: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/skills/1/versions/1", nil)
+	req.Header.Set("X-Request-ID", "req-skill-version-detail-query-failed")
+	req = withCurrentUser(req, &owner)
+	req = withURLParams(req, map[string]string{
+		"skillID":   strconv.FormatUint(uint64(skill.ID), 10),
+		"versionID": "1",
+	})
+	recorder := httptest.NewRecorder()
+
+	app.handleAPISkillVersionDetail(recorder, req)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusInternalServerError)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "query_failed" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Failed to load skill version" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-skill-version-detail-query-failed" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }

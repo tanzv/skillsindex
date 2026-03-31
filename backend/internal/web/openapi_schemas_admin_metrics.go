@@ -53,8 +53,28 @@ func openAPISchemasAdminMetrics() map[string]any {
 				"owner_username":  map[string]any{"type": "string"},
 				"visibility":      map[string]any{"type": "string"},
 				"organization_id": map[string]any{"type": "integer"},
+				"source_analysis": map[string]any{"$ref": "#/components/schemas/AdminSourceAnalysis"},
 				"created_at":      map[string]any{"type": "string", "format": "date-time"},
 				"last_synced_at":  map[string]any{"type": "string", "format": "date-time"},
+			},
+		},
+		"AdminSourceAnalysis": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"entry_file":       map[string]any{"type": "string"},
+				"mechanism":        map[string]any{"type": "string"},
+				"metadata_sources": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+				"reference_paths":  map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+				"dependencies": map[string]any{
+					"type": "array",
+					"items": map[string]any{
+						"type": "object",
+						"properties": map[string]any{
+							"kind":   map[string]any{"type": "string"},
+							"target": map[string]any{"type": "string"},
+						},
+					},
+				},
 			},
 		},
 		"AdminSkillsResponse": map[string]any{

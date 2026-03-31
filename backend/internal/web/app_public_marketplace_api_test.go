@@ -17,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func setupPublicMarketplaceAPITestApp(t *testing.T) (*App, models.User) {
+func setupPublicMarketplaceAPITestApp(t *testing.T) (*App, *gorm.DB, models.User) {
 	t.Helper()
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
 	database, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
@@ -92,11 +92,11 @@ func setupPublicMarketplaceAPITestApp(t *testing.T) (*App, models.User) {
 	return &App{
 		skillService:    skillService,
 		settingsService: services.NewSettingsService(database),
-	}, admin
+	}, database, admin
 }
 
 func TestHandleAPIPublicMarketplaceReturnsExpectedPayload(t *testing.T) {
-	app, _ := setupPublicMarketplaceAPITestApp(t)
+	app, _, _ := setupPublicMarketplaceAPITestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/marketplace?q=react&category=development&sort=stars&mode=keyword&page=1", nil)
 	req.Header.Set("Accept", "application/json")
@@ -180,7 +180,7 @@ func TestHandleAPIPublicMarketplaceReturnsExpectedPayload(t *testing.T) {
 }
 
 func TestHandleAPIPublicMarketplaceSupportsGroupedCategoryFilters(t *testing.T) {
-	app, _ := setupPublicMarketplaceAPITestApp(t)
+	app, _, _ := setupPublicMarketplaceAPITestApp(t)
 
 	req := httptest.NewRequest(
 		http.MethodGet,
@@ -224,7 +224,7 @@ func TestHandleAPIPublicMarketplaceSupportsGroupedCategoryFilters(t *testing.T) 
 }
 
 func TestHandleAPIPublicMarketplaceUsesStableLowercaseTopTagKeys(t *testing.T) {
-	app, _ := setupPublicMarketplaceAPITestApp(t)
+	app, _, _ := setupPublicMarketplaceAPITestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/marketplace", nil)
 	req.Header.Set("Accept", "application/json")
@@ -259,8 +259,90 @@ func TestHandleAPIPublicMarketplaceUsesStableLowercaseTopTagKeys(t *testing.T) {
 	}
 }
 
+func TestHandleAPIPublicMarketplaceServiceUnavailable(t *testing.T) {
+	app, _, _ := setupPublicMarketplaceAPITestApp(t)
+	app.skillService = nil
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/marketplace", nil)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Request-ID", "req-public-marketplace-service-unavailable")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIPublicMarketplace(recorder, req)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusServiceUnavailable)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "service_unavailable" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Skill service unavailable" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-public-marketplace-service-unavailable" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestHandleAPISearchFailureHidesInternalError(t *testing.T) {
+	app, db, _ := setupPublicMarketplaceAPITestApp(t)
+	if err := db.Migrator().DropTable(&models.Skill{}); err != nil {
+		t.Fatalf("failed to drop skills table: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/search?q=react", nil)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Request-ID", "req-public-search-failed")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPISearch(recorder, req)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusInternalServerError)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "search_failed" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Failed to search marketplace skills" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-public-search-failed" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestHandleAPIAISearchFailureHidesInternalError(t *testing.T) {
+	app, db, _ := setupPublicMarketplaceAPITestApp(t)
+	if err := db.Migrator().DropTable(&models.Skill{}); err != nil {
+		t.Fatalf("failed to drop skills table: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/search/ai?q=react", nil)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Request-ID", "req-public-ai-search-failed")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAISearch(recorder, req)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusInternalServerError)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "ai_search_failed" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Failed to run AI search" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-public-ai-search-failed" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestHandleAPIPublicMarketplaceRespectsRequestedPageSize(t *testing.T) {
-	app, _ := setupPublicMarketplaceAPITestApp(t)
+	app, _, _ := setupPublicMarketplaceAPITestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/marketplace?sort=quality&page=1&page_size=1", nil)
 	req.Header.Set("Accept", "application/json")
@@ -302,7 +384,7 @@ func TestHandleAPIPublicMarketplaceRespectsRequestedPageSize(t *testing.T) {
 }
 
 func TestHandleAPIPublicMarketplaceIncludesSessionUserContext(t *testing.T) {
-	app, admin := setupPublicMarketplaceAPITestApp(t)
+	app, _, admin := setupPublicMarketplaceAPITestApp(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/public/marketplace", nil)
 	req.Header.Set("Accept", "application/json")
@@ -327,7 +409,7 @@ func TestHandleAPIPublicMarketplaceIncludesSessionUserContext(t *testing.T) {
 }
 
 func TestHandleAPIPublicMarketplaceRequiresAuthenticationWhenMarketplaceIsPrivate(t *testing.T) {
-	app, admin := setupPublicMarketplaceAPITestApp(t)
+	app, _, admin := setupPublicMarketplaceAPITestApp(t)
 	if err := app.settingsService.SetBool(context.Background(), services.SettingMarketplacePublicAccess, false); err != nil {
 		t.Fatalf("failed to seed marketplace access setting: %v", err)
 	}
@@ -358,7 +440,7 @@ func TestHandleAPIPublicMarketplaceRequiresAuthenticationWhenMarketplaceIsPrivat
 }
 
 func TestHandleAPIPublicMarketplaceExcludesSeedRecords(t *testing.T) {
-	app, admin := setupPublicMarketplaceAPITestApp(t)
+	app, _, admin := setupPublicMarketplaceAPITestApp(t)
 
 	seedSkill, err := app.skillService.CreateSkill(context.Background(), services.CreateSkillInput{
 		OwnerID:         admin.ID,

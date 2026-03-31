@@ -26,7 +26,7 @@ func TestAPIContractRuntimeServiceMatchRequestSupportsPathParameters(t *testing.
 
 	if _, err := policyService.UpsertCurrentOperationPolicy(context.Background(), UpsertCurrentAPIOperationPolicyInput{
 		OperationID:    "upsertCurrentAPIOperationPolicy",
-		AuthMode:       string(models.APIAuthModeSession),
+		AuthMode:       models.APIAuthModeSession,
 		RequiredRoles:  []string{string(models.RoleSuperAdmin)},
 		RequiredScopes: []string{},
 		Enabled:        true,

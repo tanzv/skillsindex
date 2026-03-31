@@ -128,9 +128,31 @@ describe("mock backend public marketplace endpoints", () => {
 
     const detailResponse = await fetch(`${baseURL}/api/v1/public/skills/101`);
     expect(detailResponse.ok).toBe(true);
-    const detailPayload = (await detailResponse.json()) as { skill: { id: number }; stats: { favorite_count: number } };
+    const detailPayload = (await detailResponse.json()) as {
+      skill: { id: number };
+      stats: { favorite_count: number };
+      related_skills?: Array<{ id: number }>;
+    };
     expect(detailPayload.skill.id).toBe(101);
     expect(detailPayload.stats.favorite_count).toBeGreaterThan(0);
+    expect((detailPayload.related_skills || []).length).toBeGreaterThan(0);
+
+    const resourcesResponse = await fetch(`${baseURL}/api/v1/public/skills/101/resources`);
+    expect(resourcesResponse.ok).toBe(true);
+    const resourcesPayload = (await resourcesResponse.json()) as {
+      entry_file?: string;
+      mechanism?: string;
+      metadata_sources?: string[];
+      reference_paths?: string[];
+      dependencies?: Array<{ kind: string; target: string }>;
+    };
+    expect(resourcesPayload.entry_file).toBe("README.md");
+    expect(resourcesPayload.mechanism).toBe("skill_manifest");
+    expect(resourcesPayload.metadata_sources).toEqual(expect.arrayContaining(["README.md", "package.json"]));
+    expect(resourcesPayload.reference_paths).toEqual(expect.arrayContaining(["skills/release-readiness"]));
+    expect(resourcesPayload.dependencies).toEqual(
+      expect.arrayContaining([expect.objectContaining({ kind: "skill", target: "repository-sync-blueprint" })])
+    );
   }, mockBackendTestTimeoutMs);
 
   it("supports grouped category filters for public marketplace payloads", async () => {

@@ -49,6 +49,7 @@ func TestHandleAPIAuthLoginRateLimitedAfterRepeatedFailures(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("X-Real-IP", "203.0.113.10")
+	req.Header.Set("X-Request-ID", "req-auth-login-rate-limited")
 	recorder := httptest.NewRecorder()
 
 	app.handleAPIAuthLogin(recorder, req)
@@ -58,6 +59,10 @@ func TestHandleAPIAuthLoginRateLimitedAfterRepeatedFailures(t *testing.T) {
 	}
 	if !strings.Contains(recorder.Body.String(), `"error":"too_many_requests"`) {
 		t.Fatalf("expected too_many_requests payload, got=%s", recorder.Body.String())
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["request_id"] != "req-auth-login-rate-limited" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 

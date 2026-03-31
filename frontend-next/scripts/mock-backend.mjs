@@ -208,6 +208,20 @@ function createMockBackendServer() {
       );
     }
 
+    if (method === "POST" && pathname === "/api/v1/auth/logout") {
+      return json(
+        response,
+        200,
+        { ok: true },
+        {
+          "set-cookie": [
+            "skillsindex_session=; Path=/; Max-Age=0; HttpOnly",
+            "skillsindex_csrf=; Path=/; Max-Age=0; HttpOnly"
+          ]
+        }
+      );
+    }
+
     if (method === "GET" && pathname === "/api/v1/auth/me") {
       if (!isAuthenticated(request)) {
         return unauthorized(response);

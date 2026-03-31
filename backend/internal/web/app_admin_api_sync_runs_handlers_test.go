@@ -12,6 +12,29 @@ import (
 	"skillsindex/internal/services"
 )
 
+func TestAPIAdminSyncRunsUnauthorized(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/sync-runs", nil)
+	req.Header.Set("X-Request-ID", "req-admin-sync-runs-unauthorized")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminSyncRuns(recorder, req)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusUnauthorized)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "unauthorized" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Authentication required" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-sync-runs-unauthorized" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
 func TestAPIAdminSyncRunsFiltersByStatusTriggerAndTargetSkill(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	ownerID := uint(21)
@@ -143,6 +166,7 @@ func TestAPIAdminSyncRunsMemberScopeForcesCurrentOwner(t *testing.T) {
 func TestAPIAdminSyncRunsRejectsInvalidTriggerType(t *testing.T) {
 	app := setupAccessSettingsTestApp(t)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/sync-runs?trigger_type=invalid", nil)
+	req.Header.Set("X-Request-ID", "req-admin-sync-runs-invalid-trigger")
 	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleAdmin})
 	recorder := httptest.NewRecorder()
 
@@ -153,6 +177,37 @@ func TestAPIAdminSyncRunsRejectsInvalidTriggerType(t *testing.T) {
 	payload := decodeBodyMap(t, recorder)
 	if payload["error"] != "invalid_trigger_type" {
 		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Invalid trigger type filter" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-sync-runs-invalid-trigger" {
+		t.Fatalf("unexpected request id: %#v", payload)
+	}
+}
+
+func TestAPIAdminSyncRunDetailInvalidRunID(t *testing.T) {
+	app := setupAccessSettingsTestApp(t)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/sync-runs/invalid", nil)
+	req.Header.Set("X-Request-ID", "req-admin-sync-run-detail-invalid-id")
+	req = withCurrentUser(req, &models.User{ID: 1, Role: models.RoleAdmin})
+	req = withURLParam(req, "runID", "invalid")
+	recorder := httptest.NewRecorder()
+
+	app.handleAPIAdminSyncRunDetail(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status code: got=%d want=%d", recorder.Code, http.StatusBadRequest)
+	}
+	payload := decodeBodyMap(t, recorder)
+	if payload["error"] != "invalid_run_id" {
+		t.Fatalf("unexpected error payload: %#v", payload)
+	}
+	if payload["message"] != "Invalid sync run id" {
+		t.Fatalf("unexpected error message: %#v", payload)
+	}
+	if payload["request_id"] != "req-admin-sync-run-detail-invalid-id" {
+		t.Fatalf("unexpected request id: %#v", payload)
 	}
 }
 
