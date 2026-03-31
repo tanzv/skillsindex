@@ -5,6 +5,11 @@ import { AdminDetailDrawer } from "@/src/components/admin/AdminOverlaySurface";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import type { AdminIngestionRoute } from "@/src/lib/routing/adminRouteRegistry";
+import {
+  adminImportsRoute,
+  adminManualIntakeRoute,
+  adminRepositoryIntakeRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 
 import {
   type ImportsIngestionViewProps,
@@ -66,6 +71,53 @@ export function AdminIngestionContent({
   const { messages } = useProtectedI18n();
   const commonMessages = messages.adminCommon;
   const ingestionMessages = messages.adminIngestion;
+  const isManualRoute = route === adminManualIntakeRoute;
+  const isRepositoryRoute = route === adminRepositoryIntakeRoute;
+  const isImportsRoute = route === adminImportsRoute;
+
+  function renderHeaderActions() {
+    if (isManualRoute) {
+      return (
+        <>
+          <Button onClick={manualView.onOpenCreate}>{ingestionMessages.createManualAction}</Button>
+          <Button variant="outline" onClick={onRefresh}>
+            {loading ? commonMessages.refreshing : commonMessages.refresh}
+          </Button>
+        </>
+      );
+    }
+
+    if (isRepositoryRoute) {
+      return (
+        <>
+          <Button onClick={repositoryView.onOpenRepositoryIntake}>{ingestionMessages.startRepositoryAction}</Button>
+          <Button variant="outline" onClick={onRefresh}>
+            {loading ? commonMessages.refreshing : commonMessages.refresh}
+          </Button>
+        </>
+      );
+    }
+
+    if (isImportsRoute) {
+      return (
+        <>
+          <Button onClick={importsView.onOpenArchiveImport}>{ingestionMessages.importArchiveAction}</Button>
+          <Button variant="outline" onClick={importsView.onOpenSkillMPImport}>
+            {ingestionMessages.importSkillmpAction}
+          </Button>
+          <Button variant="outline" onClick={onRefresh}>
+            {loading ? commonMessages.refreshing : commonMessages.refresh}
+          </Button>
+        </>
+      );
+    }
+
+    return (
+      <Button variant="outline" onClick={onRefresh}>
+        {loading ? commonMessages.refreshing : commonMessages.refresh}
+      </Button>
+    );
+  }
 
   function renderDetailDrawer() {
     if (!overlay) {
@@ -198,14 +250,14 @@ export function AdminIngestionContent({
       eyebrow={commonMessages.adminEyebrow}
       title={title}
       description={description}
-      actions={<Button onClick={onRefresh}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>}
+      actions={renderHeaderActions()}
       error={error}
     >
       <IngestionMessage message={message} />
       <IngestionMetricGrid metrics={metrics} />
-      {route === "/admin/ingestion/manual" ? <ManualIngestionView {...manualView} detailDrawer={detailDrawer} /> : null}
-      {route === "/admin/ingestion/repository" ? <RepositoryIngestionView {...repositoryView} detailDrawer={detailDrawer} /> : null}
-      {route === "/admin/records/imports" ? <ImportsIngestionView {...importsView} detailDrawer={detailDrawer} /> : null}
+      {isManualRoute ? <ManualIngestionView {...manualView} detailDrawer={detailDrawer} /> : null}
+      {isRepositoryRoute ? <RepositoryIngestionView {...repositoryView} detailDrawer={detailDrawer} /> : null}
+      {isImportsRoute ? <ImportsIngestionView {...importsView} detailDrawer={detailDrawer} /> : null}
     </AdminPageScaffold>
   );
 }

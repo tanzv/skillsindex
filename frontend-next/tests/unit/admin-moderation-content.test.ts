@@ -194,13 +194,18 @@ function expectMarkupToContainAll(markup: string, fragments: string[]) {
   }
 }
 
-function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
-  for (const fragment of fragments) {
-    expect(markup).not.toContain(fragment);
-  }
+function countOccurrences(markup: string, text: string) {
+  return markup.split(text).length - 1;
 }
 
 describe("admin moderation content", () => {
+  it("renders top-level moderation actions without a duplicated create trigger card", () => {
+    const markup = renderModerationContent();
+
+    expectMarkupToContainAll(markup, ["Open Create Case", "Reset Filters", "Refresh"]);
+    expect(countOccurrences(markup, "Create a moderation case.")).toBe(0);
+  });
+
   it("renders the create case drawer with form controls", () => {
     const markup = renderModerationContent({ activePane: "create" });
 
@@ -217,7 +222,6 @@ describe("admin moderation content", () => {
       'aria-label="Case reason code"',
       'aria-label="Case reason detail"'
     ]);
-    expectMarkupToExcludeAll(markup, ["Open Create Case"]);
     expect(markup).toContain('role="dialog"');
   });
 
@@ -236,7 +240,6 @@ describe("admin moderation content", () => {
       "Resolve Case",
       "Reject Case"
     ]);
-    expectMarkupToExcludeAll(markup, ["Open Create Case"]);
     expect(markup).toContain('role="dialog"');
   });
 });

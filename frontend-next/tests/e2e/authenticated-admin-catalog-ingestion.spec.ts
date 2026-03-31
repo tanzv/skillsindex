@@ -10,8 +10,7 @@ test("renders the remaining admin catalog and ingestion routes", async ({ page }
   await expect(page.getByRole("heading", { name: "Skill Governance", level: 1 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Governed Inventory", exact: true })).toBeVisible();
   await expect(page.locator('[data-testid^="admin-catalog-row-"]').first()).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Selected Skill", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Open Skill Detail" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open Details" }).first()).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await gotoProtectedRoute(page, "/admin/jobs");

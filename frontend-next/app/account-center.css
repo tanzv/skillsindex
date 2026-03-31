@@ -75,9 +75,8 @@
 }
 
 .account-center-action,
-.account-center-tab-link,
-.account-center-badge {
-  min-height: 36px;
+.account-center-tab-link {
+  min-height: 44px;
   padding: 0 14px;
   border: 1px solid var(--protected-shell-border);
   border-radius: 999px;
@@ -92,6 +91,20 @@
     background-color var(--motion-duration-fast) var(--motion-ease-standard),
     border-color var(--motion-duration-fast) var(--motion-ease-standard),
     color var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.account-center-badge {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--protected-shell-border);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--protected-shell-text-secondary);
+  background: var(--protected-shell-interactive-bg);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .account-center-action:hover,
@@ -165,14 +178,6 @@
   display: grid;
   gap: 14px;
   min-width: 0;
-}
-
-.account-center-credentials-work-pane {
-  --inline-work-pane-border: var(--protected-shell-border);
-  --inline-work-pane-bg: var(--protected-shell-panel-surface);
-  --inline-work-pane-shadow: var(--protected-shell-panel-shadow);
-  --inline-work-pane-title: var(--protected-shell-text);
-  --inline-work-pane-description: var(--protected-shell-text-secondary);
 }
 
 .account-center-left,
@@ -282,18 +287,6 @@
 .account-center-side-panel-highlight .account-center-panel-description,
 .account-center-side-panel-highlight .account-center-surface-copy {
   color: var(--protected-shell-text);
-}
-
-@media (min-width: 1181px) {
-  .account-center-credentials-layout.has-work-pane {
-    grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr);
-    align-items: start;
-  }
-
-  .account-center-credentials-work-pane {
-    position: sticky;
-    top: 16px;
-  }
 }
 
 @media (max-width: 1180px) {

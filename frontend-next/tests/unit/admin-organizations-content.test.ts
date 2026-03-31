@@ -187,7 +187,19 @@ function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
   }
 }
 
+function countOccurrences(markup: string, text: string) {
+  return markup.split(text).length - 1;
+}
+
 describe("admin organizations content", () => {
+  it("renders top-level organization actions without a duplicated create trigger card", () => {
+    const markup = renderOrganizationsContent();
+
+    expectMarkupToContainAll(markup, ["Create Organization", "Assign Member", "Refresh"]);
+    expect(countOccurrences(markup, "Create a new organization.")).toBe(0);
+    expect(countOccurrences(markup, "Assign a user to the selected organization.")).toBe(0);
+  });
+
   it("renders the member assignment drawer with organization summary and form controls", () => {
     const markup = renderOrganizationsContent({ activePane: "memberAssign", selectedMember: null });
 

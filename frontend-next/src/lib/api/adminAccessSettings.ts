@@ -3,6 +3,14 @@ import type {
   AdminNormalizedCategoryCatalogItem,
   AdminNormalizedPresentationTaxonomyCategory
 } from "@/src/lib/admin/adminAccountSettingsModel";
+import {
+  adminAccountsBFFEndpoint,
+  adminAuthProvidersSettingsBFFEndpoint,
+  adminCategoryCatalogSettingsBFFEndpoint,
+  adminMarketplaceRankingSettingsBFFEndpoint,
+  adminPresentationTaxonomySettingsBFFEndpoint,
+  adminRegistrationSettingsBFFEndpoint
+} from "@/src/lib/routing/protectedSurfaceEndpoints";
 
 export interface AdminAccessSettingsPayloads {
   accounts: unknown;
@@ -29,12 +37,12 @@ type ClientFetchJSON = typeof clientFetchJSON;
 
 export async function loadAdminAccessSettingsPayloads(fetchJSON: ClientFetchJSON = clientFetchJSON): Promise<AdminAccessSettingsPayloads> {
   const [accounts, registration, marketplaceRanking, categoryCatalog, presentationTaxonomy, authProviders] = await Promise.all([
-    fetchJSON("/api/bff/admin/accounts"),
-    fetchJSON("/api/bff/admin/settings/registration"),
-    fetchJSON("/api/bff/admin/settings/marketplace-ranking"),
-    fetchJSON("/api/bff/admin/settings/category-catalog"),
-    fetchJSON("/api/bff/admin/settings/presentation-taxonomy"),
-    fetchJSON("/api/bff/admin/settings/auth-providers")
+    fetchJSON(adminAccountsBFFEndpoint),
+    fetchJSON(adminRegistrationSettingsBFFEndpoint),
+    fetchJSON(adminMarketplaceRankingSettingsBFFEndpoint),
+    fetchJSON(adminCategoryCatalogSettingsBFFEndpoint),
+    fetchJSON(adminPresentationTaxonomySettingsBFFEndpoint),
+    fetchJSON(adminAuthProvidersSettingsBFFEndpoint)
   ]);
 
   return {
@@ -52,14 +60,14 @@ export async function saveAdminAccessSettings(
   fetchJSON: ClientFetchJSON = clientFetchJSON
 ): Promise<void> {
   await Promise.all([
-    fetchJSON("/api/bff/admin/settings/registration", {
+    fetchJSON(adminRegistrationSettingsBFFEndpoint, {
       method: "POST",
       body: {
         allow_registration: input.allowRegistration,
         marketplace_public_access: input.marketplacePublicAccess
       }
     }),
-    fetchJSON("/api/bff/admin/settings/marketplace-ranking", {
+    fetchJSON(adminMarketplaceRankingSettingsBFFEndpoint, {
       method: "POST",
       body: {
         default_sort: input.rankingDefaultSort,
@@ -68,7 +76,7 @@ export async function saveAdminAccessSettings(
         category_leader_limit: input.categoryLeaderLimit
       }
     }),
-    fetchJSON("/api/bff/admin/settings/category-catalog", {
+    fetchJSON(adminCategoryCatalogSettingsBFFEndpoint, {
       method: "POST",
       body: {
         items: input.categoryCatalog.map((category) => ({
@@ -86,7 +94,7 @@ export async function saveAdminAccessSettings(
         }))
       }
     }),
-    fetchJSON("/api/bff/admin/settings/presentation-taxonomy", {
+    fetchJSON(adminPresentationTaxonomySettingsBFFEndpoint, {
       method: "POST",
       body: {
         items: input.presentationTaxonomy.map((category) => ({
@@ -107,7 +115,7 @@ export async function saveAdminAccessSettings(
         }))
       }
     }),
-    fetchJSON("/api/bff/admin/settings/auth-providers", {
+    fetchJSON(adminAuthProvidersSettingsBFFEndpoint, {
       method: "POST",
       body: {
         auth_providers: input.enabledProviders

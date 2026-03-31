@@ -5,8 +5,8 @@ import type { ReactNode } from "react";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 
 import type { ImportsIngestionViewProps, ManualIngestionViewProps, RepositoryIngestionViewProps } from "./AdminIngestionViewProps";
-import { ImportJobsCard, ManualGuidanceCard, RecentSyncRunsCard } from "./AdminIngestionPanels";
-import { IngestionTriggerCard, SkillInventoryList } from "./shared";
+import { ImportJobsCard, ManualGuidanceCard, RecentSyncRunsCard, RepositoryPolicySummaryCard } from "./AdminIngestionPanels";
+import { SkillInventoryList } from "./shared";
 
 export function ManualIngestionView(props: ManualIngestionViewProps & { detailDrawer?: ReactNode }) {
   const { messages } = useProtectedI18n();
@@ -23,12 +23,6 @@ export function ManualIngestionView(props: ManualIngestionViewProps & { detailDr
         onOpenItem={props.onOpenSkillDetail}
       />
       <div className="space-y-6">
-        <IngestionTriggerCard
-          title={ingestionMessages.manualAuthoringTitle}
-          description={ingestionMessages.manualAuthoringDescription}
-          actionLabel={ingestionMessages.createManualAction}
-          onAction={props.onOpenCreate}
-        />
         {props.detailDrawer}
         <ManualGuidanceCard />
       </div>
@@ -51,19 +45,8 @@ export function RepositoryIngestionView(props: RepositoryIngestionViewProps & { 
         onOpenItem={props.onOpenSkillDetail}
       />
       <div className="space-y-6">
-        <IngestionTriggerCard
-          title={ingestionMessages.repositoryIntakeTitle}
-          description={ingestionMessages.repositoryIntakeDescription}
-          actionLabel={ingestionMessages.startRepositoryAction}
-          onAction={props.onOpenRepositoryIntake}
-        />
-        <IngestionTriggerCard
-          title={ingestionMessages.schedulerPolicyTitle}
-          description={ingestionMessages.schedulerPolicyDescription}
-          actionLabel={ingestionMessages.savePolicyAction}
-          onAction={props.onOpenPolicy}
-        />
         {props.detailDrawer}
+        <RepositoryPolicySummaryCard policy={props.policy} onOpenPolicy={props.onOpenPolicy} />
         <RecentSyncRunsCard syncRuns={props.syncRuns} onOpenDetail={props.onOpenSyncRunDetail} />
       </div>
     </div>
@@ -76,20 +59,6 @@ export function ImportsIngestionView(props: ImportsIngestionViewProps & { detail
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 xl:grid-cols-2">
-        <IngestionTriggerCard
-          title={ingestionMessages.archiveImportTitle}
-          description={ingestionMessages.archiveImportDescription}
-          actionLabel={ingestionMessages.importArchiveAction}
-          onAction={props.onOpenArchiveImport}
-        />
-        <IngestionTriggerCard
-          title={ingestionMessages.skillmpImportTitle}
-          description={ingestionMessages.skillmpImportDescription}
-          actionLabel={ingestionMessages.importSkillmpAction}
-          onAction={props.onOpenSkillMPImport}
-        />
-      </div>
       {props.detailDrawer}
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <SkillInventoryList

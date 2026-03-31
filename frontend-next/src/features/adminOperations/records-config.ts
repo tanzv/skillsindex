@@ -1,5 +1,12 @@
 import type { AdminOperationsMessages } from "@/src/lib/i18n/protectedPageMessages.operations";
 import type { AdminOperationsRecordsRoute } from "@/src/lib/routing/adminRouteRegistry";
+import {
+  adminBackupPlansRoute,
+  adminBackupRunsRoute,
+  adminChangeApprovalsRoute,
+  adminRecoveryDrillsRoute,
+  adminReleasesRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 
 export type RecordsRoute = AdminOperationsRecordsRoute;
 
@@ -75,12 +82,15 @@ type RecordsConfigMessages = Pick<
   | "backupRunNotePlaceholder"
 >;
 
-type MutableRecordsRoute =
-  | "/admin/ops/recovery-drills"
-  | "/admin/ops/releases"
-  | "/admin/ops/change-approvals"
-  | "/admin/ops/backup/plans"
-  | "/admin/ops/backup/runs";
+const mutableRecordsRoutes = [
+  adminRecoveryDrillsRoute,
+  adminReleasesRoute,
+  adminChangeApprovalsRoute,
+  adminBackupPlansRoute,
+  adminBackupRunsRoute
+] as const;
+
+type MutableRecordsRoute = (typeof mutableRecordsRoutes)[number];
 
 type RecordsFieldOptionSpec = {
   value: string;
@@ -146,7 +156,7 @@ function buildFieldPayloadValue(field: RecordsFieldSpec, draft: RecordsDraft): u
 }
 
 const recordsRouteConfigs: Record<MutableRecordsRoute, RecordsRouteConfig> = {
-  "/admin/ops/recovery-drills": {
+  [adminRecoveryDrillsRoute]: {
     fields: [
       {
         key: "rpo_hours",
@@ -171,7 +181,7 @@ const recordsRouteConfigs: Record<MutableRecordsRoute, RecordsRouteConfig> = {
       }
     ]
   },
-  "/admin/ops/releases": {
+  [adminReleasesRoute]: {
     fields: [
       {
         key: "version",
@@ -219,7 +229,7 @@ const recordsRouteConfigs: Record<MutableRecordsRoute, RecordsRouteConfig> = {
       }
     ]
   },
-  "/admin/ops/change-approvals": {
+  [adminChangeApprovalsRoute]: {
     fields: [
       {
         key: "ticket_id",
@@ -255,7 +265,7 @@ const recordsRouteConfigs: Record<MutableRecordsRoute, RecordsRouteConfig> = {
       }
     ]
   },
-  "/admin/ops/backup/plans": {
+  [adminBackupPlansRoute]: {
     fields: [
       {
         key: "plan_key",
@@ -306,7 +316,7 @@ const recordsRouteConfigs: Record<MutableRecordsRoute, RecordsRouteConfig> = {
       }
     ]
   },
-  "/admin/ops/backup/runs": {
+  [adminBackupRunsRoute]: {
     fields: [
       {
         key: "plan_key",
@@ -354,7 +364,11 @@ const recordsRouteConfigs: Record<MutableRecordsRoute, RecordsRouteConfig> = {
 };
 
 function resolveRecordsRouteConfig(route: RecordsRoute): RecordsRouteConfig | null {
-  return route in recordsRouteConfigs ? recordsRouteConfigs[route as MutableRecordsRoute] : null;
+  if ((mutableRecordsRoutes as readonly string[]).includes(route)) {
+    return recordsRouteConfigs[route as MutableRecordsRoute];
+  }
+
+  return null;
 }
 
 export function getRecordsFormFields(route: RecordsRoute, messages: RecordsConfigMessages): RecordsFormField[] {

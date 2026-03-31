@@ -258,6 +258,11 @@ export function normalizeRepositorySyncPolicyPayload(payload: unknown): Reposito
   };
 }
 
+import {
+  adminManualIntakeRoute,
+  adminRepositoryIntakeRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
+
 export function createAdminIngestionRepositorySnapshot(input: {
   skillsPayload: unknown;
   policyPayload: unknown;
@@ -300,7 +305,7 @@ export function buildAdminIngestionMetrics(
 ) {
   const messages = options?.messages || defaultAdminIngestionMetricMessages;
 
-  if (route === "/admin/ingestion/manual") {
+  if (route === adminManualIntakeRoute) {
     const manualSkills = input.skills.filter((item) => item.sourceType === "manual");
     const publicCount = manualSkills.filter((item) => item.visibility.toLowerCase() === "public").length;
     return [
@@ -310,7 +315,7 @@ export function buildAdminIngestionMetrics(
     ];
   }
 
-  if (route === "/admin/ingestion/repository") {
+  if (route === adminRepositoryIntakeRoute) {
     const repositorySkills = input.skills.filter((item) => item.sourceType === "repository");
     const failedRuns = input.syncRuns.filter((item) => item.status.toLowerCase() === "failed" || item.failed > 0).length;
     return [

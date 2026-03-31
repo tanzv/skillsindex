@@ -1,5 +1,12 @@
 import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
 import type { AdminOperationsMessages } from "@/src/lib/i18n/protectedPageMessages.operations";
+import {
+  adminBackupPlansRoute,
+  adminBackupRunsRoute,
+  adminChangeApprovalsRoute,
+  adminRecoveryDrillsRoute,
+  adminReleasesRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 
 import { formatDateTime } from "../adminGovernance/shared";
 import type {
@@ -286,15 +293,15 @@ export function buildOpsRecordChips(
   messages: OpsDisplayMessages
 ): OpsDisplayChip[] {
   switch (route) {
-    case "/admin/ops/recovery-drills":
+    case adminRecoveryDrillsRoute:
       return buildRecoveryDrillChips(row as OpsRecoveryDrillRecordItem, locale, messages);
-    case "/admin/ops/releases":
+    case adminReleasesRoute:
       return buildReleaseChips(row as OpsReleaseItem, locale, messages);
-    case "/admin/ops/change-approvals":
+    case adminChangeApprovalsRoute:
       return buildChangeApprovalChips(row as OpsChangeApprovalItem, locale, messages);
-    case "/admin/ops/backup/plans":
+    case adminBackupPlansRoute:
       return buildBackupPlanChips(row as OpsBackupPlanItem, locale, messages);
-    case "/admin/ops/backup/runs":
+    case adminBackupRunsRoute:
       return buildBackupRunChips(row as OpsBackupRunItem, locale, messages);
     default:
       return [];

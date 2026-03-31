@@ -183,19 +183,22 @@ test("executes admin governance actions and renders additional admin routes", as
   await expect(page.getByRole("heading", { name: "Access", level: 1 })).toBeVisible();
 
   await gotoProtectedRoute(page, "/admin/accounts/new");
-  await expect(page.getByRole("heading", { name: "Account Provisioning", level: 1 })).toBeVisible();
-  await expect(page.getByText("Registration enabled · Marketplace public")).toBeVisible();
-  const allowRegistrationCheckbox = page.getByLabel("Allow registration");
-  const marketplacePublicAccessCheckbox = page.getByLabel("Marketplace public access");
+  await expect(page.locator("h1").filter({ hasText: "Accounts" })).toBeVisible();
+  const provisioningDrawer = page.getByTestId("admin-accounts-provisioning-drawer");
+  await expect(provisioningDrawer).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(provisioningDrawer.getByText("Registration enabled · Marketplace public")).toBeVisible();
+  const allowRegistrationCheckbox = provisioningDrawer.getByLabel("Allow registration");
+  const marketplacePublicAccessCheckbox = provisioningDrawer.getByLabel("Marketplace public access");
   await allowRegistrationCheckbox.setChecked(false);
   await marketplacePublicAccessCheckbox.setChecked(false);
   await expect(allowRegistrationCheckbox).not.toBeChecked();
   await expect(marketplacePublicAccessCheckbox).not.toBeChecked();
-  await page.getByRole("button", { name: "Save Policy" }).click();
+  await provisioningDrawer.getByRole("button", { name: "Save Policy" }).click();
   await expect(page.getByText("Provisioning policy updated.")).toBeVisible();
   await page.reload();
-  await expect(page.getByLabel("Allow registration")).not.toBeChecked();
-  await expect(page.getByLabel("Marketplace public access")).not.toBeChecked();
+  await expect(provisioningDrawer.getByLabel("Allow registration")).not.toBeChecked();
+  await expect(provisioningDrawer.getByLabel("Marketplace public access")).not.toBeChecked();
 
   await gotoProtectedRoute(page, "/admin/accounts");
   await expect(page.locator("h1").filter({ hasText: "Accounts" })).toBeVisible();
@@ -231,6 +234,13 @@ test("executes admin governance actions and renders additional admin routes", as
   await roleDrawer.getByRole("button", { name: "Apply Role" }).click();
   await expect(page.getByText("Role updated for user 2.")).toBeVisible();
   await expect(page.getByTestId("admin-account-card-2")).toContainText(/viewer/i);
+
+  await gotoProtectedRoute(page, "/admin/roles/new");
+  await expect(page.locator("h1").filter({ hasText: "Roles" })).toBeVisible();
+  const rolePlaybookDrawer = page.getByTestId("admin-accounts-role-playbook-drawer");
+  await expect(rolePlaybookDrawer).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(rolePlaybookDrawer.getByRole("heading", { name: "Role Playbook" })).toBeVisible();
 
   await gotoProtectedRoute(page, "/admin/records/imports");
   await expect(page.getByRole("heading", { name: "Import Records", level: 1 })).toBeVisible();

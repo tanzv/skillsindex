@@ -8,6 +8,11 @@ import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nPro
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
+import { adminOverviewBFFEndpoint } from "@/src/lib/routing/protectedSurfaceEndpoints";
+import {
+  adminAlertsRoute,
+  adminRepositoryIntakeRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 
 import {
   type AdminOverviewSnapshot,
@@ -30,7 +35,7 @@ export function AdminOverviewPage() {
     setLoading(true);
     setError("");
     try {
-      const payload = await clientFetchJSON("/api/bff/admin/overview");
+      const payload = await clientFetchJSON(adminOverviewBFFEndpoint);
       setSnapshot(normalizeAdminOverviewPayload(payload));
     } catch (loadError) {
       setSnapshot(null);
@@ -144,10 +149,10 @@ export function AdminOverviewPage() {
           <button type="button" className="admin-overview-action is-primary" onClick={() => void loadData()}>
             {loading ? commonMessages.refreshing : commonMessages.refresh}
           </button>
-          <Link href="/admin/ingestion/repository" className="admin-overview-action">
+          <Link href={adminRepositoryIntakeRoute} className="admin-overview-action">
             {overviewMessages.openIntakeAction}
           </Link>
-          <Link href="/admin/ops/alerts" className="admin-overview-action">
+          <Link href={adminAlertsRoute} className="admin-overview-action">
             {overviewMessages.openAlertsAction}
           </Link>
         </div>

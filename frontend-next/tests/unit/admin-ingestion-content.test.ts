@@ -24,6 +24,10 @@ function renderAdminIngestionRoute(route: AdminIngestionRoute, overlay: AdminIng
   );
 }
 
+function countOccurrences(markup: string, text: string) {
+  return markup.split(text).length - 1;
+}
+
 describe("admin ingestion content", () => {
   it("renders the manual route with inventory and create trigger while keeping the page context inline", () => {
     const markup = renderAdminIngestionRoute("/admin/ingestion/manual");
@@ -31,6 +35,7 @@ describe("admin ingestion content", () => {
     expect(markup).toContain("Manual Inventory");
     expect(markup).toContain("Create Manual Skill");
     expect(markup).toContain("Publishing Guardrails");
+    expect(countOccurrences(markup, "Manual Authoring")).toBe(0);
     expect(markup).not.toContain('role="dialog"');
   });
 
@@ -41,15 +46,18 @@ describe("admin ingestion content", () => {
     expect(markup).toContain("Start Repository Intake");
     expect(markup).toContain("Save Policy");
     expect(markup).toContain("Recent Sync Runs");
+    expect(countOccurrences(markup, "Repository Intake")).toBe(1);
   });
 
   it("renders the imports route with source triggers and import jobs", () => {
     const markup = renderAdminIngestionRoute("/admin/records/imports");
 
-    expect(markup).toContain("Archive Import");
+    expect(markup).toContain("Import Archive");
     expect(markup).toContain("Import SkillMP");
     expect(markup).toContain("Imported Inventory");
     expect(markup).toContain("Import Jobs");
+    expect(countOccurrences(markup, "Archive Import")).toBe(0);
+    expect(countOccurrences(markup, "SkillMP Import")).toBe(0);
   });
 
   it("renders the manual create drawer when a create overlay is active", () => {

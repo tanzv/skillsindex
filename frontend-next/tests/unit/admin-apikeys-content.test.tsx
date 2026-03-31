@@ -110,7 +110,64 @@ const messages = {
 } as unknown as ProtectedPageMessages;
 
 describe("AdminAPIKeysContent", () => {
-  it("renders the inline detail pane for the selected key", () => {
+  it("keeps create as a header action without a duplicated create card", () => {
+    const overview = buildAdminAPIKeyOverview(payload, {
+      metricTotalKeys: "Total Keys",
+      metricActiveKeys: "Active Keys",
+      metricRevokedKeys: "Revoked Keys",
+      metricExpiredKeys: "Expired Keys",
+      ownerUnknown: "Unknown Owner"
+    });
+
+    const markup = renderToStaticMarkup(
+      createElement(
+        ProtectedI18nProvider,
+        {
+          locale: "en",
+          messages
+        },
+        createElement(AdminAPIKeysContent, {
+          loading: false,
+          busyAction: "",
+          error: "",
+          message: "",
+          plaintextSecret: "",
+          payload,
+          overview,
+          filters: { owner: "", status: "all" },
+          createDraft: {
+            name: "",
+            purpose: "",
+            expiresInDays: "90",
+            ownerUserId: "",
+            scopes: ""
+          },
+          scopeDrafts: {
+            7: "skills:read, skills:write"
+          },
+          activePane: "idle",
+          selectedItem: null,
+          onRefresh: () => {},
+          onFiltersChange: () => {},
+          onResetFilters: () => {},
+          onCreateDraftChange: () => {},
+          onScopeDraftChange: () => {},
+          onOpenCreatePane: () => {},
+          onOpenDetail: () => {},
+          onClosePane: () => {},
+          onCreateKey: () => {},
+          onRotateKey: () => {},
+          onRevokeKey: () => {},
+          onUpdateScopes: () => {}
+        })
+      )
+    );
+
+    expect(markup).toContain("Create Key");
+    expect(markup).not.toContain("Issue a new key.");
+  });
+
+  it("renders the detail drawer for the selected key", () => {
     const overview = buildAdminAPIKeyOverview(payload, {
       metricTotalKeys: "Total Keys",
       metricActiveKeys: "Active Keys",

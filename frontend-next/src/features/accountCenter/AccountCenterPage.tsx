@@ -8,6 +8,16 @@ import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors"
 import { resolveAccountRoleLabel, resolveAccountStatusLabel } from "@/src/lib/accountDisplay";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 import { resolveAccountRouteMeta } from "@/src/lib/routing/accountRouteMeta";
+import {
+  accountAPIKeysBFFEndpoint,
+  accountProfileBFFEndpoint,
+  accountSecurityPasswordBFFEndpoint,
+  accountSessionsRevokeOthersBFFEndpoint,
+  buildAccountAPIKeyRevokeBFFEndpoint,
+  buildAccountAPIKeyRotateBFFEndpoint,
+  buildAccountAPIKeyScopesBFFEndpoint,
+  buildAccountSessionRevokeBFFEndpoint
+} from "@/src/lib/routing/protectedSurfaceEndpoints";
 
 import {
   buildAccountAPIKeyCreateDraft,
@@ -154,7 +164,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     clearFeedback();
     setSaving(true);
     try {
-      await clientFetchJSON("/api/bff/account/profile", {
+      await clientFetchJSON(accountProfileBFFEndpoint, {
         method: "POST",
         body: sanitizeAccountProfileDraft(profileDraft)
       });
@@ -175,7 +185,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     }
     setSaving(true);
     try {
-      await clientFetchJSON("/api/bff/account/security/password", {
+      await clientFetchJSON(accountSecurityPasswordBFFEndpoint, {
         method: "POST",
         body: {
           current_password: passwordDraft.currentPassword,
@@ -197,7 +207,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     clearFeedback();
     setSaving(true);
     try {
-      await clientFetchJSON(`/api/bff/account/sessions/${encodeURIComponent(sessionId)}/revoke`, { method: "POST" });
+      await clientFetchJSON(buildAccountSessionRevokeBFFEndpoint(sessionId), { method: "POST" });
       setMessage(formatProtectedMessage(accountMessages.revokeSessionSuccess, { sessionId }));
       await loadRouteData();
     } catch (actionError) {
@@ -211,7 +221,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     clearFeedback();
     setSaving(true);
     try {
-      await clientFetchJSON("/api/bff/account/sessions/revoke-others", { method: "POST" });
+      await clientFetchJSON(accountSessionsRevokeOthersBFFEndpoint, { method: "POST" });
       setMessage(accountMessages.revokeOtherSessionsSuccess);
       await loadRouteData();
     } catch (actionError) {
@@ -225,7 +235,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     clearFeedback();
     setSaving(true);
     try {
-      const payload = await clientFetchJSON<{ item: { name: string }; plaintext_key: string }>("/api/bff/account/apikeys", {
+      const payload = await clientFetchJSON<{ item: { name: string }; plaintext_key: string }>(accountAPIKeysBFFEndpoint, {
         method: "POST",
         body: sanitizeAccountAPIKeyCreateDraft(credentialDraft)
       });
@@ -245,7 +255,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     clearFeedback();
     setSaving(true);
     try {
-      const payload = await clientFetchJSON<{ item: { name: string }; plaintext_key: string }>(`/api/bff/account/apikeys/${keyId}/rotate`, {
+      const payload = await clientFetchJSON<{ item: { name: string }; plaintext_key: string }>(buildAccountAPIKeyRotateBFFEndpoint(keyId), {
         method: "POST"
       });
       setLatestCredentialSecret({ action: "rotated", name: payload.item.name, plaintextKey: payload.plaintext_key });
@@ -262,7 +272,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     clearFeedback();
     setSaving(true);
     try {
-      await clientFetchJSON(`/api/bff/account/apikeys/${keyId}/revoke`, { method: "POST" });
+      await clientFetchJSON(buildAccountAPIKeyRevokeBFFEndpoint(keyId), { method: "POST" });
       setMessage(formatProtectedMessage(accountMessages.credentialRevokeSuccess, { keyId }));
       await loadRouteData();
     } catch (actionError) {
@@ -276,7 +286,7 @@ export function AccountCenterPage({ route }: { route: AccountRoute }) {
     clearFeedback();
     setSaving(true);
     try {
-      await clientFetchJSON(`/api/bff/account/apikeys/${keyId}/scopes`, {
+      await clientFetchJSON(buildAccountAPIKeyScopesBFFEndpoint(keyId), {
         method: "POST",
         body: { scopes: credentialScopeDrafts[keyId] || [] }
       });

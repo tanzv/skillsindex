@@ -24,17 +24,26 @@ import {
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
+import {
+  buildAdminAccountForceSignoutBFFEndpoint,
+  buildAdminAccountPasswordResetBFFEndpoint,
+  buildAdminAccountStatusBFFEndpoint,
+  buildAdminUserRoleBFFEndpoint
+} from "@/src/lib/routing/protectedSurfaceEndpoints";
 import { resolveAdminAccountsPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 
 import { AdminAccountsContent } from "./AdminAccountsContent";
 import {
   type AdminAccountsRoute,
+  type AdminAccountsCreateOverlayEntity,
   buildAccountsOverview,
   filterAccounts,
   normalizeAccountsPayload,
   normalizeAuthProvidersPayload,
   normalizeAccountStatus,
   normalizeAssignableRoleName,
+  resolveAdminAccountsCreateOverlayEntity,
+  resolveAdminAccountsDisplayRoute,
   resolveSelectedAdminAccount,
   resolveRoleTargetUserId,
   normalizeRegistrationPayload,
@@ -44,9 +53,14 @@ import {
 export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   const { messages } = useProtectedI18n();
   const accountMessages = messages.adminAccounts;
+  const displayRoute = useMemo(() => resolveAdminAccountsDisplayRoute(route), [route]);
+  const createOverlayEntity = useMemo(
+    () => resolveAdminAccountsCreateOverlayEntity(route),
+    [route],
+  );
   const meta = useMemo(
-    () => resolveAdminAccountsPageRouteMeta(route, accountMessages),
-    [accountMessages, route],
+    () => resolveAdminAccountsPageRouteMeta(displayRoute, accountMessages),
+    [accountMessages, displayRoute],
   );
   const latestLoadRequestRef = useRef(0);
   const [loading, setLoading] = useState(true);
@@ -69,7 +83,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     null,
   );
   const { overlay, openOverlay, closeOverlay } =
-    useAdminOverlayState<"accountDetail">();
+    useAdminOverlayState<"accountDetail" | AdminAccountsCreateOverlayEntity>();
   const [accountEditor, setAccountEditor] = useState({
     userId: "",
     status: "active",
@@ -208,8 +222,16 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   });
 
   useEffect(() => {
+    if (createOverlayEntity) {
+      openOverlay({
+        kind: "create",
+        entity: createOverlayEntity,
+      });
+      return;
+    }
+
     closeOverlay();
-  }, [closeOverlay, route]);
+  }, [closeOverlay, createOverlayEntity, openOverlay]);
 
   useEffect(() => {
     const nextSettingsDraft: SaveAdminAccessSettingsInput = {
@@ -316,7 +338,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     setError("");
     setMessage("");
     try {
-      await clientFetchJSON(`/api/bff/admin/accounts/${userId}/status`, {
+      await clientFetchJSON(buildAdminAccountStatusBFFEndpoint(userId), {
         method: "POST",
         body: { status },
       });
@@ -336,7 +358,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     setError("");
     setMessage("");
     try {
-      await clientFetchJSON(`/api/bff/admin/accounts/${userId}/force-signout`, {
+      await clientFetchJSON(buildAdminAccountForceSignoutBFFEndpoint(userId), {
         method: "POST",
       });
       setMessage(
@@ -361,13 +383,10 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     setError("");
     setMessage("");
     try {
-      await clientFetchJSON(
-        `/api/bff/admin/accounts/${userId}/password-reset`,
-        {
-          method: "POST",
-          body: { new_password: newPassword },
-        },
-      );
+      await clientFetchJSON(buildAdminAccountPasswordResetBFFEndpoint(userId), {
+        method: "POST",
+        body: { new_password: newPassword },
+      });
       setMessage(
         formatProtectedMessage(accountMessages.resetPasswordSuccess, {
           userId,
@@ -395,7 +414,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     setError("");
     setMessage("");
     try {
-      await clientFetchJSON(`/api/bff/admin/users/${userId}/role`, {
+      await clientFetchJSON(buildAdminUserRoleBFFEndpoint(userId), {
         method: "POST",
         body: { role },
       });
@@ -461,6 +480,11 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       accountEditor={accountEditor}
       roleEditor={roleEditor}
       detailPaneOpen={overlay?.entity === "accountDetail"}
+      createDrawer={
+        overlay?.entity === "provisioningPolicy" || overlay?.entity === "rolePlaybook"
+          ? overlay.entity
+          : null
+      }
       settingsDraft={settingsDraft}
       onRefresh={() => void loadData()}
       onSelectAccount={(accountId) => {
@@ -477,7 +501,20 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
       }
       onAccountEditorChange={updateAccountEditor}
       onRoleEditorChange={updateRoleEditor}
+      onOpenProvisioningDrawer={() =>
+        openOverlay({
+          kind: "create",
+          entity: "provisioningPolicy",
+        })
+      }
+      onOpenRolePlaybookDrawer={() =>
+        openOverlay({
+          kind: "create",
+          entity: "rolePlaybook",
+        })
+      }
       onCloseDetailPane={closeOverlay}
+      onCloseCreateDrawer={closeOverlay}
       onSettingsDraftChange={(patch) =>
         setSettingsDraft((current) => ({ ...current, ...patch }))
       }

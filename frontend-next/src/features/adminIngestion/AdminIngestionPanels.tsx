@@ -8,6 +8,7 @@ import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nPro
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 
 import {
+  type RepositorySyncPolicy,
   canCancelImportJob,
   canRetryImportJob,
   formatAdminIngestionDate,
@@ -35,6 +36,45 @@ export function ManualGuidanceCard() {
       <CardContent className="space-y-3 text-sm text-[color:var(--ui-text-secondary)]">
         <div className="rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] px-4 py-3">{ingestionMessages.publishingGuardrailsItemOne}</div>
         <div className="rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] px-4 py-3">{ingestionMessages.publishingGuardrailsItemTwo}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function RepositoryPolicySummaryCard({
+  policy,
+  onOpenPolicy
+}: {
+  policy: RepositorySyncPolicy;
+  onOpenPolicy: () => void;
+}) {
+  const { messages } = useProtectedI18n();
+  const ingestionMessages = messages.adminIngestion;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{ingestionMessages.schedulerPolicyTitle}</CardTitle>
+        <CardDescription>{ingestionMessages.schedulerPolicyDescription}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap gap-2 text-xs text-[color:var(--ui-text-secondary)]">
+          <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
+            {policy.enabled ? ingestionMessages.valueEnabled : ingestionMessages.valueDisabled}
+          </span>
+          <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
+            {`${ingestionMessages.intervalLabel}: ${policy.interval}`}
+          </span>
+          <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
+            {`${ingestionMessages.timeoutLabel}: ${policy.timeout}`}
+          </span>
+          <span className="rounded-full bg-[color:var(--ui-card-muted-bg)] px-2.5 py-1">
+            {`${ingestionMessages.batchSizeLabel}: ${String(policy.batchSize)}`}
+          </span>
+        </div>
+        <Button variant="outline" onClick={onOpenPolicy}>
+          {ingestionMessages.savePolicyAction}
+        </Button>
       </CardContent>
     </Card>
   );

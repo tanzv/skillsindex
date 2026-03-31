@@ -3,6 +3,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { resolveAccountRoleLabel, resolveAccountStatusLabel, resolveAccountUsernameLabel } from "@/src/lib/accountDisplay";
+import { adminAccountsRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 
 import { type AdminAccountItem, type AdminAccountsRoute, buildAccountTableMeta, normalizeAccountStatus } from "./model";
 
@@ -45,7 +46,7 @@ export function AccountDirectoryCard({
 }: AccountDirectoryCardProps) {
   const { locale, messages } = useProtectedI18n();
   const accountMessages = messages.adminAccounts;
-  const canForceSignout = route === "/admin/accounts";
+  const canForceSignout = route === adminAccountsRoute;
 
   return (
     <AdminSelectableRecordCard selected={selected} data-testid={`admin-account-card-${account.id}`}>

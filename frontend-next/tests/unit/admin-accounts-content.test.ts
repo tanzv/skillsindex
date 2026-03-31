@@ -7,6 +7,8 @@ import { ProtectedI18nProvider } from "@/src/features/protected/i18n/ProtectedI1
 import type { AdminAccountsRoute } from "@/src/features/adminAccounts/model";
 import { createProtectedPageTestMessages } from "./protected-page-test-messages";
 
+type AdminAccountsCreateDrawer = "provisioningPolicy" | "rolePlaybook" | null;
+
 function createMessages() {
   return {
     ...createProtectedPageTestMessages({
@@ -119,7 +121,20 @@ function createMessages() {
   };
 }
 
-function renderAdminAccountsRoute(route: AdminAccountsRoute) {
+function renderAdminAccountsRoute(
+  route: AdminAccountsRoute,
+  {
+    detailPaneOpen = route === "/admin/accounts" || route === "/admin/roles",
+    createDrawer = route === "/admin/accounts/new"
+      ? "provisioningPolicy"
+      : route === "/admin/roles/new"
+        ? "rolePlaybook"
+        : null
+  }: {
+    detailPaneOpen?: boolean;
+    createDrawer?: AdminAccountsCreateDrawer;
+  } = {}
+) {
   return renderToStaticMarkup(
     createElement(
       ProtectedI18nProvider,
@@ -177,7 +192,8 @@ function renderAdminAccountsRoute(route: AdminAccountsRoute) {
           userId: "2",
           role: "admin"
         },
-        detailPaneOpen: true,
+        detailPaneOpen,
+        createDrawer,
         settingsDraft: {
           allowRegistration: true,
           marketplacePublicAccess: true,
@@ -189,7 +205,10 @@ function renderAdminAccountsRoute(route: AdminAccountsRoute) {
         onStatusFilterChange: () => undefined,
         onAccountEditorChange: () => undefined,
         onRoleEditorChange: () => undefined,
+        onOpenProvisioningDrawer: () => undefined,
+        onOpenRolePlaybookDrawer: () => undefined,
         onCloseDetailPane: () => undefined,
+        onCloseCreateDrawer: () => undefined,
         onSettingsDraftChange: () => undefined,
         onToggleProvider: () => undefined,
         onApplyAccountStatus: () => undefined,
@@ -206,28 +225,42 @@ describe("admin accounts content", () => {
   it("renders accounts route as directory plus account actions", () => {
     const markup = renderAdminAccountsRoute("/admin/accounts");
 
+    expect(markup).toContain(">Accounts<");
     expect(markup).toContain("Account Directory");
     expect(markup).toContain('role="dialog"');
     expect(markup).toContain('data-testid="admin-accounts-detail-drawer"');
     expect(markup).toContain("Account Actions");
-    expect(markup).not.toContain("Provisioning Policy");
+    expect(markup).toContain("Provisioning Policy");
+    expect(markup).not.toContain('data-testid="admin-accounts-provisioning-drawer"');
   });
 
-  it("renders provisioning route as policy workspace", () => {
+  it("renders the provisioning compatibility route as an accounts page with a drawer", () => {
     const markup = renderAdminAccountsRoute("/admin/accounts/new");
 
+    expect(markup).toContain(">Accounts<");
     expect(markup).toContain("Provisioning Policy");
     expect(markup).toContain("Authentication Providers");
     expect(markup).toContain("Registration enabled · Marketplace public");
-    expect(markup).not.toContain("Account Actions");
+    expect(markup).toContain('data-testid="admin-accounts-provisioning-drawer"');
+    expect(markup).not.toContain('data-testid="admin-accounts-detail-drawer"');
   });
 
-  it("renders role configuration route with playbook and assignment flow", () => {
-    const markup = renderAdminAccountsRoute("/admin/roles/new");
+  it("renders roles route as directory plus role assignment", () => {
+    const markup = renderAdminAccountsRoute("/admin/roles");
 
-    expect(markup).toContain('role="dialog"');
+    expect(markup).toContain(">Roles<");
     expect(markup).toContain('data-testid="admin-accounts-detail-drawer"');
     expect(markup).toContain("Role Assignment");
+    expect(markup).toContain("Role Playbook");
+    expect(markup).not.toContain('data-testid="admin-accounts-role-playbook-drawer"');
+  });
+
+  it("renders the role configuration compatibility route as a roles page with a drawer", () => {
+    const markup = renderAdminAccountsRoute("/admin/roles/new");
+
+    expect(markup).toContain(">Roles<");
+    expect(markup).toContain('role="dialog"');
+    expect(markup).toContain('data-testid="admin-accounts-role-playbook-drawer"');
     expect(markup).toContain("Role Playbook");
     expect(markup).toContain("Role Summary");
   });

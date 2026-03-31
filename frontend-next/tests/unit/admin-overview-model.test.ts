@@ -7,6 +7,12 @@ import {
   buildAdminOverviewQuickLinks,
   normalizeAdminOverviewPayload
 } from "@/src/features/adminOverview/model";
+import {
+  adminAccessRoute,
+  adminMetricsRoute,
+  adminRepositoryIntakeRoute,
+  adminSkillsRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 import { createProtectedPageTestMessages } from "./protected-page-test-messages";
 
 const overviewMessages = createProtectedPageTestMessages({
@@ -121,8 +127,10 @@ describe("admin overview model", () => {
     );
     expect(quickLinks).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ href: "/admin/skills", label: "Skill Governance" }),
-        expect.objectContaining({ href: "/admin/ops/metrics", label: "Operations" })
+        expect.objectContaining({ href: adminSkillsRoute, label: "Skill Governance" }),
+        expect.objectContaining({ href: adminRepositoryIntakeRoute, label: "Repository Intake" }),
+        expect.objectContaining({ href: adminAccessRoute, label: "Access Control" }),
+        expect.objectContaining({ href: adminMetricsRoute, label: "Operations" })
       ])
     );
   });

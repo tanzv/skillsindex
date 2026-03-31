@@ -11,6 +11,10 @@ import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors"
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 import { resolveAdminIngestionPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 import type { AdminIngestionRoute } from "@/src/lib/routing/adminRouteRegistry";
+import {
+  adminManualIntakeRoute,
+  adminRepositoryIntakeRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 
 import { AdminIngestionContent } from "./AdminIngestionContent";
 import type { AdminIngestionOverlayEntity } from "./AdminIngestionViewProps";
@@ -54,10 +58,12 @@ export function AdminIngestionPage({
   const ingestionMessages = messages.adminIngestion;
   const meta = useMemo(() => resolveAdminIngestionPageRouteMeta(route, ingestionMessages), [ingestionMessages, route]);
   const { overlay, openOverlay, closeOverlay } = useAdminOverlayState<AdminIngestionOverlayEntity>();
+  const isRepositoryRoute = route === adminRepositoryIntakeRoute;
+  const isManualRoute = route === adminManualIntakeRoute;
   const hasInitialRepositorySnapshotRef = useRef(
-    route === "/admin/ingestion/repository" && initialRepositorySnapshot !== null
+    isRepositoryRoute && initialRepositorySnapshot !== null
   );
-  const [loading, setLoading] = useState(() => !(route === "/admin/ingestion/repository" && initialRepositorySnapshot));
+  const [loading, setLoading] = useState(() => !(isRepositoryRoute && initialRepositorySnapshot));
   const [busyAction, setBusyAction] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -74,7 +80,7 @@ export function AdminIngestionPage({
   const [importsDraft, setImportsDraft] = useState(createImportsDraft);
   const [archiveFile, setArchiveFile] = useState<File | null>(null);
   const [loadedRoute, setLoadedRoute] = useState<AdminIngestionRoute | null>(
-    route === "/admin/ingestion/repository" && initialRepositorySnapshot !== null ? route : null
+    isRepositoryRoute && initialRepositorySnapshot !== null ? route : null
   );
 
   const selectedSkill = useMemo(
@@ -95,7 +101,7 @@ export function AdminIngestionPage({
     setError("");
 
     try {
-      if (route === "/admin/ingestion/manual") {
+      if (isManualRoute) {
         const payload = await clientFetchJSON("/api/bff/admin/skills?source=manual");
         setSkills(normalizeSkillInventoryPayload(payload).items);
         setImportJobs([]);
@@ -105,7 +111,7 @@ export function AdminIngestionPage({
         return;
       }
 
-      if (route === "/admin/ingestion/repository") {
+      if (isRepositoryRoute) {
         const [skillsPayload, policyPayload, syncRunsPayload] = await Promise.all([
           clientFetchJSON("/api/bff/admin/skills?source=repository"),
           clientFetchJSON("/api/bff/admin/sync-policy/repository"),
@@ -141,16 +147,16 @@ export function AdminIngestionPage({
     } finally {
       setLoading(false);
     }
-  }, [ingestionMessages.loadError, route]);
+  }, [ingestionMessages.loadError, isManualRoute, isRepositoryRoute, route]);
 
   useEffect(() => {
     closeOverlay();
-    if (route === "/admin/ingestion/repository" && hasInitialRepositorySnapshotRef.current) {
+    if (isRepositoryRoute && hasInitialRepositorySnapshotRef.current) {
       hasInitialRepositorySnapshotRef.current = false;
       return;
     }
     void loadData();
-  }, [closeOverlay, loadData, route]);
+  }, [closeOverlay, isRepositoryRoute, loadData]);
 
   const loadState = resolveAdminPageLoadState({ loading, error, hasData: loadedRoute === route });
 

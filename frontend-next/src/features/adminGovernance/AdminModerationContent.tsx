@@ -9,7 +9,6 @@ import type { ModerationCaseItem, ModerationCasesPayload } from "./moderationMod
 import type { CreateModerationDraft, ResolveModerationDraft } from "./AdminModerationForms";
 import { CreateModerationCaseForm, ModerationDispositionForm } from "./AdminModerationForms";
 import {
-  CreateModerationTriggerCard,
   ModerationFiltersCard,
   ModerationQueueCard,
   SelectedModerationCaseCard,
@@ -82,10 +81,13 @@ export function AdminModerationContent({
       description={moderationMessages.pageDescription}
       actions={
         <>
+          <Button onClick={onOpenCreatePane} disabled={Boolean(busyAction) || loading}>
+            {moderationMessages.openCreateCaseAction}
+          </Button>
           <Button variant="outline" onClick={onResetFilters}>
             {moderationMessages.resetFilters}
           </Button>
-          <Button onClick={onRefresh} disabled={loading}>
+          <Button variant="outline" onClick={onRefresh} disabled={loading}>
             {loading ? commonMessages.refreshing : commonMessages.refresh}
           </Button>
         </>
@@ -106,9 +108,6 @@ export function AdminModerationContent({
         </div>
 
         <div className="space-y-6">
-          {activePane === "idle" ? (
-            <CreateModerationTriggerCard busyAction={busyAction} loading={loading} onOpen={onOpenCreatePane} />
-          ) : null}
           {activePane === "create" ? (
             <AdminDetailDrawer
               open

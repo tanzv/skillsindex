@@ -8,6 +8,12 @@ import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 import { resolveAdminCatalogPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
+import {
+  adminJobsRoute,
+  adminSkillsRoute,
+  adminSyncJobsRoute,
+  adminSyncPolicyRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 import { Button } from "@/src/components/ui/button";
 
 import { AdminCatalogContent } from "./AdminCatalogContent";
@@ -43,7 +49,7 @@ export function AdminCatalogPage({
   const adminCatalogMessages = messages.adminCatalog;
   const meta = useMemo(() => resolveAdminCatalogPageRouteMeta(route, adminCatalogMessages), [adminCatalogMessages, route]);
   const policyMeta = useMemo(
-    () => resolveAdminCatalogPageRouteMeta("/admin/sync-policy/repository", adminCatalogMessages),
+    () => resolveAdminCatalogPageRouteMeta(adminSyncPolicyRoute, adminCatalogMessages),
     [adminCatalogMessages]
   );
 
@@ -78,19 +84,19 @@ export function AdminCatalogPage({
 
   const normalizedPolicy = useMemo(() => normalizeSyncPolicyPayload(rawPayload), [rawPayload]);
   const viewModel = useMemo(() => {
-    if (route === "/admin/skills") {
+    if (route === adminSkillsRoute) {
       return buildAdminCatalogViewModel(route, normalizeSkillsPayload(rawPayload), {
         locale,
         messages: adminCatalogMessages
       });
     }
-    if (route === "/admin/jobs") {
+    if (route === adminJobsRoute) {
       return buildAdminCatalogViewModel(route, normalizeJobsPayload(rawPayload), {
         locale,
         messages: adminCatalogMessages
       });
     }
-    if (route === "/admin/sync-jobs") {
+    if (route === adminSyncJobsRoute) {
       return buildAdminCatalogViewModel(route, normalizeSyncJobsPayload(rawPayload), {
         locale,
         messages: adminCatalogMessages
@@ -108,7 +114,7 @@ export function AdminCatalogPage({
     try {
       const payload = await clientFetchJSON(buildPath(meta.endpoint, query));
       setRawPayload(payload);
-      if (route === "/admin/sync-policy/repository") {
+      if (route === adminSyncPolicyRoute) {
         commitPolicyDraft(normalizeSyncPolicyPayload(payload));
       }
     } catch (loadError) {

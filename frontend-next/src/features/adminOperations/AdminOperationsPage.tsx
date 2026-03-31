@@ -12,6 +12,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { resolveAdminOperationsDashboardRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
+import {
+  adminAlertsRoute,
+  adminMetricsRoute,
+  adminReleaseGatesRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 
 import {
   type AdminOperationsDashboardRoute,
@@ -73,18 +78,21 @@ export function AdminOperationsPage({ route }: { route: AdminOperationsDashboard
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [rawPayload, setRawPayload] = useState<unknown>(null);
+  const isMetricsRoute = route === adminMetricsRoute;
+  const isAlertsRoute = route === adminAlertsRoute;
+  const isReleaseGatesRoute = route === adminReleaseGatesRoute;
 
   const metricsPayload = useMemo<OpsMetricItem | null>(
-    () => (route === "/admin/ops/metrics" ? normalizeOpsMetricsPayload(rawPayload) : null),
-    [rawPayload, route]
+    () => (isMetricsRoute ? normalizeOpsMetricsPayload(rawPayload) : null),
+    [isMetricsRoute, rawPayload]
   );
   const alertPayload = useMemo<{ total: number; items: OpsAlertItem[] } | null>(
-    () => (route === "/admin/ops/alerts" ? normalizeOpsAlertsPayload(rawPayload) : null),
-    [rawPayload, route]
+    () => (isAlertsRoute ? normalizeOpsAlertsPayload(rawPayload) : null),
+    [isAlertsRoute, rawPayload]
   );
   const releaseGatePayload = useMemo<OpsReleaseGateSnapshot | null>(
-    () => (route === "/admin/ops/release-gates" ? normalizeOpsReleaseGatesPayload(rawPayload) : null),
-    [rawPayload, route]
+    () => (isReleaseGatesRoute ? normalizeOpsReleaseGatesPayload(rawPayload) : null),
+    [isReleaseGatesRoute, rawPayload]
   );
 
   const loadData = useCallback(async () => {
@@ -190,7 +198,7 @@ export function AdminOperationsPage({ route }: { route: AdminOperationsDashboard
       />
       {message ? <AdminMessageBanner message={message} /> : null}
 
-      {route === "/admin/ops/metrics" ? (
+      {isMetricsRoute ? (
         <>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {metricCards.map((metric) => (
@@ -242,7 +250,7 @@ export function AdminOperationsPage({ route }: { route: AdminOperationsDashboard
         </>
       ) : null}
 
-      {route === "/admin/ops/alerts" ? (
+      {isAlertsRoute ? (
         <>
           <AdminMetricGrid metrics={alertOverview?.metrics || []} columnsClassName="grid gap-4 md:grid-cols-3" />
 
@@ -282,7 +290,7 @@ export function AdminOperationsPage({ route }: { route: AdminOperationsDashboard
         </>
       ) : null}
 
-      {route === "/admin/ops/release-gates" ? (
+      {isReleaseGatesRoute ? (
         <>
           <AdminMetricGrid metrics={releaseOverview?.metrics || []} columnsClassName="grid gap-4 md:grid-cols-3" />
 

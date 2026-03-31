@@ -366,6 +366,90 @@ $account-menu-transition: var(--motion-duration-fast) var(--motion-ease-standard
   border-radius: 8px;
 }
 
+@media (max-height: 820px) {
+  .menu {
+    width: min(420px, calc(100vw - 24px));
+    max-height: min(620px, calc(100vh - 24px));
+  }
+
+  .card {
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .summary {
+    gap: 10px;
+    padding: 8px 10px 10px;
+  }
+
+  .section {
+    gap: 6px;
+    padding: 7px 10px;
+  }
+
+  .accountLink,
+  .accountLogout {
+    min-height: 34px;
+    padding: 6px 8px 6px 9px;
+  }
+
+  .linkCopy {
+    gap: 0;
+  }
+
+  .summaryKicker,
+  .summaryMeta,
+  .linkDescription {
+    display: none;
+  }
+
+  .preferenceRow {
+    gap: 6px;
+  }
+
+  .segmentedControl {
+    gap: 3px;
+  }
+
+  .segmentedButton {
+    min-height: 34px;
+    padding: 0 8px;
+    gap: 5px;
+  }
+
+  .copy {
+    gap: 2px;
+  }
+
+  .copy strong {
+    font-size: 13px;
+  }
+
+  .copy small {
+    font-size: 9px;
+    line-height: 1.2;
+  }
+
+  .linkTitle {
+    font-size: 11px;
+  }
+}
+
+@media (max-height: 820px) and (min-width: 640px) {
+  .actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iconShell {
+    width: 20px;
+    height: 20px;
+  }
+
+  .accountLogout {
+    justify-content: center;
+  }
+}
+
 @media (max-width: 780px) {
   .menu {
     width: min(320px, calc(100vw - 20px));

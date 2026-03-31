@@ -9,6 +9,7 @@ import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input as TextInput } from "@/src/components/ui/input";
 import { Switch } from "@/src/components/ui/switch";
+import { adminRepositoryIntakeRoute, adminSyncPolicyRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 
 import type { AdminCatalogRow, AdminCatalogViewModel, RepositorySyncPolicy } from "./model";
 import { CatalogDetailPane, RowSelectionButton, SidePanels, useSelectedRow } from "./AdminCatalogShared";
@@ -92,7 +93,7 @@ export function SkillsView({
                   <Link href={`/skills/${selectedRow.id}`}>{adminCatalogMessages.openSkillDetailAction}</Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link href="/admin/ingestion/repository">{adminCatalogMessages.openIntakeAction}</Link>
+                  <Link href={adminRepositoryIntakeRoute}>{adminCatalogMessages.openIntakeAction}</Link>
                 </Button>
               </>
             ) : null
@@ -270,7 +271,7 @@ export function SyncRunsView({
           actions={
             selectedRow ? (
               <Button asChild variant="outline">
-                <Link href="/admin/sync-policy/repository">{adminCatalogMessages.openSyncPolicyAction}</Link>
+                <Link href={adminSyncPolicyRoute}>{adminCatalogMessages.openSyncPolicyAction}</Link>
               </Button>
             ) : null
           }

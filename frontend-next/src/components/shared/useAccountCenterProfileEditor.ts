@@ -10,6 +10,7 @@ import {
 } from "@/src/lib/account/accountProfile";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
+import { accountProfileBFFEndpoint } from "@/src/lib/routing/protectedSurfaceEndpoints";
 
 interface AccountCenterProfileEditorMessages {
   profileSaveSuccess: string;
@@ -45,7 +46,7 @@ export function useAccountCenterProfileEditor({
     setProfileLoading(true);
 
     try {
-      const payload = await clientFetchJSON<AccountProfilePayload>("/api/bff/account/profile");
+      const payload = await clientFetchJSON<AccountProfilePayload>(accountProfileBFFEndpoint);
       setProfilePayload(payload);
       setProfileDraft(buildAccountProfileDraft(payload, fallbackUserName));
     } catch (error) {
@@ -66,7 +67,7 @@ export function useAccountCenterProfileEditor({
     setProfileSaving(true);
 
     try {
-      const payload = await clientFetchJSON<AccountProfilePayload>("/api/bff/account/profile", {
+      const payload = await clientFetchJSON<AccountProfilePayload>(accountProfileBFFEndpoint, {
         method: "POST",
         body: sanitizeAccountProfileDraft(profileDraft)
       });

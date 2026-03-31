@@ -8,9 +8,7 @@ import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nPro
 import type { OrganizationItem, OrganizationMemberItem, OrganizationsOverview } from "./organizationsModel";
 import {
   CreateOrganizationForm,
-  CreateOrganizationTriggerPanel,
   MemberAssignmentForm,
-  MemberAssignmentTriggerPanel,
   MemberLedgerPanel,
   OrganizationDirectoryPanel,
   OrganizationMemberDetailForm,
@@ -106,7 +104,19 @@ export function AdminOrganizationsContent({
       eyebrow={commonMessages.adminEyebrow}
       title={organizationMessages.pageTitle}
       description={organizationMessages.pageDescription}
-      actions={<Button onClick={onRefresh}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>}
+      actions={
+        <>
+          <Button onClick={onOpenCreatePane} disabled={Boolean(busyAction) || loading}>
+            {organizationMessages.createAction}
+          </Button>
+          <Button variant="outline" onClick={onOpenMemberAssignmentPane} disabled={Boolean(busyAction) || loading || !selectedOrgId}>
+            {organizationMessages.openMemberAssignmentAction}
+          </Button>
+          <Button variant="outline" onClick={onRefresh}>
+            {loading ? commonMessages.refreshing : commonMessages.refresh}
+          </Button>
+        </>
+      }
       metrics={metrics}
     >
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
@@ -129,17 +139,6 @@ export function AdminOrganizationsContent({
         </div>
 
         <div className="space-y-6">
-          <CreateOrganizationTriggerPanel
-            busyAction={busyAction}
-            loading={loading}
-            onOpen={onOpenCreatePane}
-          />
-          <MemberAssignmentTriggerPanel
-            selectedOrgId={selectedOrgId}
-            busyAction={busyAction}
-            loading={loading}
-            onOpen={onOpenMemberAssignmentPane}
-          />
           {activePane !== "idle" ? (
             <AdminDetailDrawer
               open

@@ -9,6 +9,14 @@ import { useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { resolveAdminOperationsRecordsRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
+import {
+  adminAuditExportRoute,
+  adminAuditRoute,
+  adminBackupPlansRoute,
+  adminChangeApprovalsRoute,
+  adminRecoveryDrillsRoute,
+  adminReleasesRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 
 import { AdminOperationsRecordsContent } from "./AdminOperationsRecordsContent";
 import type { OperationsRecordDetailState } from "./AdminOperationsRecordsPanels";
@@ -43,26 +51,26 @@ export function AdminOperationsRecordsPage({ route }: { route: RecordsRoute }) {
   const [selectedRecord, setSelectedRecord] = useState<OperationsRecordDetailState | null>(null);
 
   const view = useMemo(() => {
-    if (route === "/admin/ops/audit-export") {
+    if (route === adminAuditRoute || route === adminAuditExportRoute) {
       const rows = normalizeOpsAuditExportPayload(rawPayload);
       return {
         metrics: buildAuditExportOverview(rows, operationsMessages).metrics,
         rows: rows.map((row) => JSON.stringify(row))
       };
     }
-    if (route === "/admin/ops/recovery-drills") {
+    if (route === adminRecoveryDrillsRoute) {
       const payload = normalizeOpsRecoveryDrillsPayload(rawPayload);
       return { metrics: buildRecoveryDrillsOverview(payload, operationsMessages).metrics, rows: payload.items };
     }
-    if (route === "/admin/ops/releases") {
+    if (route === adminReleasesRoute) {
       const payload = normalizeOpsReleasesPayload(rawPayload);
       return { metrics: buildReleasesOverview(payload, operationsMessages).metrics, rows: payload.items };
     }
-    if (route === "/admin/ops/change-approvals") {
+    if (route === adminChangeApprovalsRoute) {
       const payload = normalizeOpsChangeApprovalsPayload(rawPayload);
       return { metrics: buildChangeApprovalsOverview(payload, operationsMessages).metrics, rows: payload.items };
     }
-    if (route === "/admin/ops/backup/plans") {
+    if (route === adminBackupPlansRoute) {
       const payload = normalizeOpsBackupPlansPayload(rawPayload);
       return { metrics: buildBackupPlansOverview(payload, operationsMessages).metrics, rows: payload.items };
     }

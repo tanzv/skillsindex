@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveRoleTargetUserId, resolveSelectedAdminAccount } from "@/src/features/adminAccounts/model";
+import {
+  resolveAdminAccountsCreateOverlayEntity,
+  resolveAdminAccountsDisplayRoute,
+  resolveRoleTargetUserId,
+  resolveSelectedAdminAccount
+} from "@/src/features/adminAccounts/model";
 
 const accounts = [
   {
@@ -24,6 +29,20 @@ const accounts = [
 ];
 
 describe("admin accounts model", () => {
+  it("maps compatibility create routes back to the canonical surface route", () => {
+    expect(resolveAdminAccountsDisplayRoute("/admin/accounts")).toBe("/admin/accounts");
+    expect(resolveAdminAccountsDisplayRoute("/admin/accounts/new")).toBe("/admin/accounts");
+    expect(resolveAdminAccountsDisplayRoute("/admin/roles")).toBe("/admin/roles");
+    expect(resolveAdminAccountsDisplayRoute("/admin/roles/new")).toBe("/admin/roles");
+  });
+
+  it("derives create-overlay intent from compatibility create routes", () => {
+    expect(resolveAdminAccountsCreateOverlayEntity("/admin/accounts")).toBeNull();
+    expect(resolveAdminAccountsCreateOverlayEntity("/admin/accounts/new")).toBe("provisioningPolicy");
+    expect(resolveAdminAccountsCreateOverlayEntity("/admin/roles")).toBeNull();
+    expect(resolveAdminAccountsCreateOverlayEntity("/admin/roles/new")).toBe("rolePlaybook");
+  });
+
   it("prefers an explicit role editor target over the selected account", () => {
     expect(resolveRoleTargetUserId("7", 2)).toBe(7);
   });

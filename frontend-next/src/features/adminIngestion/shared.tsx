@@ -71,30 +71,6 @@ export function IngestionMessage({ message }: { message: string }) {
   return <AdminMessageBanner message={message} />;
 }
 
-export function IngestionTriggerCard({
-  title,
-  description,
-  actionLabel,
-  onAction
-}: {
-  title: string;
-  description: string;
-  actionLabel: string;
-  onAction: () => void;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button onClick={onAction}>{actionLabel}</Button>
-      </CardContent>
-    </Card>
-  );
-}
-
 export function SkillInventoryList({
   title,
   description,

@@ -11,11 +11,19 @@ import {
   type AdminNormalizedAuthProvidersPayload,
   type AdminNormalizedRegistrationPayload
 } from "@/src/lib/admin/adminAccountSettingsModel";
+import {
+  adminAccountsNewRoute,
+  adminAccountsRoute,
+  adminRolesNewRoute,
+  adminRolesRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
 
 import { asString, formatDateTime } from "../adminGovernance/shared";
 
 export type AdminAccountsRoute = AdminAccountManagementRoute;
+export type AdminAccountsDisplayRoute = typeof adminAccountsRoute | typeof adminRolesRoute;
+export type AdminAccountsCreateOverlayEntity = "provisioningPolicy" | "rolePlaybook";
 export type AccountStatusFilter = "all" | "active" | "disabled";
 
 export type AdminAccountItem = AdminNormalizedAccountItem;
@@ -61,6 +69,30 @@ export function normalizeAccountStatus(value: string): string {
 
 export function normalizeRoleName(value: string): string {
   return normalizeAdminRoleName(value);
+}
+
+export function resolveAdminAccountsDisplayRoute(route: AdminAccountsRoute): AdminAccountsDisplayRoute {
+  if (route === adminAccountsNewRoute) {
+    return adminAccountsRoute;
+  }
+
+  if (route === adminRolesNewRoute) {
+    return adminRolesRoute;
+  }
+
+  return route;
+}
+
+export function resolveAdminAccountsCreateOverlayEntity(route: AdminAccountsRoute): AdminAccountsCreateOverlayEntity | null {
+  if (route === adminAccountsNewRoute) {
+    return "provisioningPolicy";
+  }
+
+  if (route === adminRolesNewRoute) {
+    return "rolePlaybook";
+  }
+
+  return null;
 }
 
 export function normalizeAssignableRoleName(value: string): string {

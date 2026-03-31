@@ -169,10 +169,6 @@ export function AdminAPIKeysContent({
           </div>
 
           <div className="space-y-6">
-            <AdminSectionCard title={apiKeyMessages.createTitle} description={apiKeyMessages.createDescription}>
-              <Button onClick={onOpenCreatePane}>{apiKeyMessages.createAction}</Button>
-            </AdminSectionCard>
-
             <AdminSectionCard title={apiKeyMessages.ownerSummaryTitle} description={apiKeyMessages.ownerSummaryDescription} contentClassName="space-y-3">
               {overview.ownerSummary.map((item) => (
                 <div key={item.owner} className="flex items-center justify-between rounded-2xl bg-[color:var(--ui-card-muted-bg)] px-4 py-3">

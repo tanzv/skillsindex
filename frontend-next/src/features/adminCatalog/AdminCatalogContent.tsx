@@ -4,6 +4,12 @@ import { AdminEmptyBlock, AdminPageScaffold } from "@/src/components/admin/Admin
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
+import {
+  adminJobsRoute,
+  adminSkillsRoute,
+  adminSyncJobsRoute,
+  adminSyncPolicyRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 
 import type { AdminCatalogRoute, AdminCatalogViewModel, RepositorySyncPolicy } from "./model";
 import { JobsView, PolicyView, QueryFilters, SkillsView, SyncRunsView } from "./AdminCatalogViews";
@@ -54,6 +60,10 @@ export function AdminCatalogContent({
   const commonMessages = messages.adminCommon;
   const catalogMessages = messages.adminCatalog;
   const rows = viewModel.table?.rows || [];
+  const isSkillsRoute = route === adminSkillsRoute;
+  const isJobsRoute = route === adminJobsRoute;
+  const isSyncJobsRoute = route === adminSyncJobsRoute;
+  const isSyncPolicyRoute = route === adminSyncPolicyRoute;
 
   return (
     <AdminPageScaffold
@@ -80,18 +90,18 @@ export function AdminCatalogContent({
         </Card>
       ) : null}
 
-      {!loading && !rows.length && route !== "/admin/sync-policy/repository" ? (
+      {!loading && !rows.length && !isSyncPolicyRoute ? (
         <AdminEmptyBlock>{catalogMessages.emptyRows}</AdminEmptyBlock>
       ) : null}
 
-      {route === "/admin/skills" ? (
+      {isSkillsRoute ? (
         <SkillsView rows={rows} busyAction={busyAction} sidePanels={viewModel.sidePanel} onSyncSkill={onSyncSkill} />
       ) : null}
-      {route === "/admin/jobs" ? (
+      {isJobsRoute ? (
         <JobsView rows={rows} busyAction={busyAction} sidePanels={viewModel.sidePanel} onRunJobAction={onRunJobAction} />
       ) : null}
-      {route === "/admin/sync-jobs" ? <SyncRunsView rows={rows} sidePanels={viewModel.sidePanel} /> : null}
-      {route === "/admin/sync-policy/repository" ? (
+      {isSyncJobsRoute ? <SyncRunsView rows={rows} sidePanels={viewModel.sidePanel} /> : null}
+      {isSyncPolicyRoute ? (
         <PolicyView
           busyAction={busyAction}
           sidePanels={viewModel.sidePanel}

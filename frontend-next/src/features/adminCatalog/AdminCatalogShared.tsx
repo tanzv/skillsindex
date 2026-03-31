@@ -10,6 +10,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
+import { adminJobsRoute, adminSkillsRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 
 import type {
   AdminCatalogDetailSection,
@@ -76,7 +77,9 @@ export function QueryFilters({
 }: QueryFiltersProps) {
   const { messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
-  if (route !== "/admin/skills" && route !== "/admin/jobs") {
+  const isSkillsRoute = route === adminSkillsRoute;
+
+  if (!isSkillsRoute && route !== adminJobsRoute) {
     return null;
   }
 
@@ -94,16 +97,16 @@ export function QueryFilters({
           onChange={(event) => onQueryChange("q", event.target.value)}
         />
         <Input
-          aria-label={route === "/admin/skills" ? adminCatalogMessages.sourceLabel : adminCatalogMessages.statusLabel}
-          value={route === "/admin/skills" ? query.source || "" : query.status || ""}
-          placeholder={route === "/admin/skills" ? adminCatalogMessages.sourcePlaceholder : adminCatalogMessages.statusPlaceholder}
-          onChange={(event) => onQueryChange(route === "/admin/skills" ? "source" : "status", event.target.value)}
+          aria-label={isSkillsRoute ? adminCatalogMessages.sourceLabel : adminCatalogMessages.statusLabel}
+          value={isSkillsRoute ? query.source || "" : query.status || ""}
+          placeholder={isSkillsRoute ? adminCatalogMessages.sourcePlaceholder : adminCatalogMessages.statusPlaceholder}
+          onChange={(event) => onQueryChange(isSkillsRoute ? "source" : "status", event.target.value)}
         />
         <Input
-          aria-label={route === "/admin/skills" ? adminCatalogMessages.visibilityLabel : adminCatalogMessages.jobTypeLabel}
-          value={route === "/admin/skills" ? query.visibility || "" : query.job_type || ""}
-          placeholder={route === "/admin/skills" ? adminCatalogMessages.visibilityPlaceholder : adminCatalogMessages.jobTypePlaceholder}
-          onChange={(event) => onQueryChange(route === "/admin/skills" ? "visibility" : "job_type", event.target.value)}
+          aria-label={isSkillsRoute ? adminCatalogMessages.visibilityLabel : adminCatalogMessages.jobTypeLabel}
+          value={isSkillsRoute ? query.visibility || "" : query.job_type || ""}
+          placeholder={isSkillsRoute ? adminCatalogMessages.visibilityPlaceholder : adminCatalogMessages.jobTypePlaceholder}
+          onChange={(event) => onQueryChange(isSkillsRoute ? "visibility" : "job_type", event.target.value)}
         />
         <div className={styles.filterActions}>
           <Button onClick={onRefresh} disabled={loading}>

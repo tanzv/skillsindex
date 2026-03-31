@@ -1,4 +1,10 @@
 import type { AdminOverviewMessages } from "@/src/lib/i18n/protectedPageMessages";
+import {
+  adminAccessRoute,
+  adminMetricsRoute,
+  adminRepositoryIntakeRoute,
+  adminSkillsRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 
 export interface AdminOverviewSnapshot {
   totalSkills: number;
@@ -158,22 +164,22 @@ export function buildAdminOverviewQuickLinks(
 ): AdminOverviewQuickLink[] {
   return [
     {
-      href: "/admin/skills",
+      href: adminSkillsRoute,
       label: messages.quickLinkSkillGovernanceLabel,
       description: messages.quickLinkSkillGovernanceDescription
     },
     {
-      href: "/admin/ingestion/repository",
+      href: adminRepositoryIntakeRoute,
       label: messages.quickLinkRepositoryIntakeLabel,
       description: messages.quickLinkRepositoryIntakeDescription
     },
     {
-      href: "/admin/access",
+      href: adminAccessRoute,
       label: messages.quickLinkAccessControlLabel,
       description: messages.quickLinkAccessControlDescription
     },
     {
-      href: "/admin/ops/metrics",
+      href: adminMetricsRoute,
       label: messages.quickLinkOperationsLabel,
       description: messages.quickLinkOperationsDescription
     }

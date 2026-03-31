@@ -1,5 +1,10 @@
 import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
+import {
+  adminJobsRoute,
+  adminSkillsRoute,
+  adminSyncJobsRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 
 import type { AdminCatalogDisplayMessages } from "./display";
 import {
@@ -83,7 +88,7 @@ function buildAdminSkillSearchLink(value: string): string | undefined {
     return undefined;
   }
 
-  return `/admin/skills?q=${encodeURIComponent(normalized)}`;
+  return `${adminSkillsRoute}?q=${encodeURIComponent(normalized)}`;
 }
 
 function normalizeSkillLookupKey(value: string): string {
@@ -496,15 +501,15 @@ export function buildAdminCatalogViewModel(
     options?.messages as Partial<AdminCatalogDisplayMessages> | undefined
   );
 
-  if (route === "/admin/skills") {
+  if (route === adminSkillsRoute) {
     return buildSkillsViewModel(payload as SkillsPayload, locale, messages, displayMessages);
   }
 
-  if (route === "/admin/jobs") {
+  if (route === adminJobsRoute) {
     return buildJobsViewModel(payload as JobsPayload, locale, messages, displayMessages);
   }
 
-  if (route === "/admin/sync-jobs") {
+  if (route === adminSyncJobsRoute) {
     return buildSyncJobsViewModel(payload as SyncJobsPayload, locale, messages, displayMessages);
   }
 

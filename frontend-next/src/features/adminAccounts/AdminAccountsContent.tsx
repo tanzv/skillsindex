@@ -6,12 +6,18 @@ import { Select } from "@/src/components/ui/select";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { resolveAccountUsernameLabel } from "@/src/lib/accountDisplay";
 import { resolveAdminAccountsPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
+import {
+  adminAccountsRoute,
+  adminRolesRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 
 import {
   type AdminAccountItem,
+  type AdminAccountsCreateOverlayEntity,
   type AdminAccountsRoute,
   type AuthProvidersPayload,
-  type RegistrationPayload
+  type RegistrationPayload,
+  resolveAdminAccountsDisplayRoute
 } from "./model";
 import {
   AccountActionsPanel,
@@ -47,6 +53,7 @@ interface AdminAccountsContentProps {
     role: string;
   };
   detailPaneOpen: boolean;
+  createDrawer: AdminAccountsCreateOverlayEntity | null;
   settingsDraft: {
     allowRegistration: boolean;
     marketplacePublicAccess: boolean;
@@ -62,7 +69,10 @@ interface AdminAccountsContentProps {
   onStatusFilterChange: (value: string) => void;
   onAccountEditorChange: (patch: Partial<AdminAccountsContentProps["accountEditor"]>) => void;
   onRoleEditorChange: (patch: Partial<AdminAccountsContentProps["roleEditor"]>) => void;
+  onOpenProvisioningDrawer: () => void;
+  onOpenRolePlaybookDrawer: () => void;
   onCloseDetailPane: () => void;
+  onCloseCreateDrawer: () => void;
   onSettingsDraftChange: (patch: Partial<AdminAccountsContentProps["settingsDraft"]>) => void;
   onToggleProvider: (provider: string) => void;
   onApplyAccountStatus: () => void;
@@ -89,6 +99,7 @@ export function AdminAccountsContent({
   accountEditor,
   roleEditor,
   detailPaneOpen,
+  createDrawer,
   settingsDraft,
   onRefresh,
   onSelectAccount,
@@ -96,7 +107,10 @@ export function AdminAccountsContent({
   onStatusFilterChange,
   onAccountEditorChange,
   onRoleEditorChange,
+  onOpenProvisioningDrawer,
+  onOpenRolePlaybookDrawer,
   onCloseDetailPane,
+  onCloseCreateDrawer,
   onSettingsDraftChange,
   onToggleProvider,
   onApplyAccountStatus,
@@ -108,12 +122,11 @@ export function AdminAccountsContent({
   const { messages } = useProtectedI18n();
   const commonMessages = messages.adminCommon;
   const accountMessages = messages.adminAccounts;
-  const meta = resolveAdminAccountsPageRouteMeta(route, accountMessages);
-  const showRolePanel = route === "/admin/roles" || route === "/admin/roles/new";
-  const showSettingsPanel = route === "/admin/accounts/new";
-  const showAccountActionsPanel = route === "/admin/accounts";
+  const displayRoute = resolveAdminAccountsDisplayRoute(route);
+  const meta = resolveAdminAccountsPageRouteMeta(displayRoute, accountMessages);
+  const showRolePanel = displayRoute === adminRolesRoute;
+  const showAccountActionsPanel = displayRoute === adminAccountsRoute;
   const showDetailPane = showAccountActionsPanel || showRolePanel;
-  const showDirectoryControls = route !== "/admin/accounts/new";
   const detailPaneTitle = selectedAccount
     ? `${resolveAccountUsernameLabel(selectedAccount.username, accountMessages)} #${selectedAccount.id}`
     : showAccountActionsPanel
@@ -123,23 +136,73 @@ export function AdminAccountsContent({
     ? accountMessages.actionsDescription
     : accountMessages.roleAssignmentDescription;
 
-  const directoryTitle = showSettingsPanel
-    ? accountMessages.snapshotTitle
-    : showRolePanel
-      ? accountMessages.roleTargetsTitle
-      : accountMessages.directoryTitle;
-  const directoryDescription = showSettingsPanel
-    ? accountMessages.snapshotDescription
-    : showRolePanel
-      ? accountMessages.roleTargetsDescription
-      : accountMessages.directoryDescription;
+  const directoryTitle = showRolePanel ? accountMessages.roleTargetsTitle : accountMessages.directoryTitle;
+  const directoryDescription = showRolePanel ? accountMessages.roleTargetsDescription : accountMessages.directoryDescription;
+
+  function renderHeaderActions() {
+    return (
+      <>
+        {showAccountActionsPanel ? (
+          <Button onClick={onOpenProvisioningDrawer}>{accountMessages.provisioningTitle}</Button>
+        ) : null}
+        {showRolePanel ? (
+          <Button onClick={onOpenRolePlaybookDrawer}>{accountMessages.rolePlaybookTitle}</Button>
+        ) : null}
+        <Button variant="outline" onClick={onRefresh}>
+          {loading ? commonMessages.refreshing : commonMessages.refresh}
+        </Button>
+      </>
+    );
+  }
+
+  function renderCreateDrawer() {
+    if (createDrawer === "provisioningPolicy") {
+      return (
+        <AdminDetailDrawer
+          open
+          title={accountMessages.provisioningTitle}
+          description={accountMessages.provisioningDescription}
+          closeLabel={accountMessages.closePanelAction}
+          onClose={onCloseCreateDrawer}
+          dataTestId="admin-accounts-provisioning-drawer"
+        >
+          <ProvisioningPolicyPanel
+            registration={registration}
+            authProviders={authProviders}
+            settingsDraft={settingsDraft}
+            busyAction={busyAction}
+            onSettingsDraftChange={onSettingsDraftChange}
+            onToggleProvider={onToggleProvider}
+            onSaveSettings={onSaveSettings}
+          />
+        </AdminDetailDrawer>
+      );
+    }
+
+    if (createDrawer === "rolePlaybook") {
+      return (
+        <AdminDetailDrawer
+          open
+          title={accountMessages.rolePlaybookTitle}
+          description={accountMessages.rolePlaybookDescription}
+          closeLabel={accountMessages.closePanelAction}
+          onClose={onCloseCreateDrawer}
+          dataTestId="admin-accounts-role-playbook-drawer"
+        >
+          <RolePlaybookPanel />
+        </AdminDetailDrawer>
+      );
+    }
+
+    return null;
+  }
 
   return (
     <AdminPageScaffold
       eyebrow={commonMessages.adminEyebrow}
       title={meta.title}
       description={meta.description}
-      actions={<Button onClick={onRefresh}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>}
+      actions={renderHeaderActions()}
       metrics={metrics}
       error={error}
       message={message}
@@ -152,66 +215,54 @@ export function AdminAccountsContent({
             description={directoryDescription}
             contentClassName="space-y-4"
           >
-              {showDirectoryControls ? (
-                <AdminFilterBar className="md:grid-cols-[1fr_180px_auto]">
-                  <Input
-                    aria-label={accountMessages.searchLabel}
-                    value={searchQuery}
-                    placeholder={accountMessages.searchPlaceholder}
-                    onChange={(event) => onSearchQueryChange(event.target.value)}
-                  />
-                  <Select
-                    aria-label={accountMessages.statusFilterLabel}
-                    value={statusFilter}
-                    onChange={(event) => onStatusFilterChange(event.target.value)}
-                  >
-                    <option value="all">{accountMessages.statusOptionAll}</option>
-                    <option value="active">{accountMessages.statusOptionActive}</option>
-                    <option value="disabled">{accountMessages.statusOptionDisabled}</option>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      onSearchQueryChange("");
-                      onStatusFilterChange("all");
-                    }}
-                  >
-                      {commonMessages.clear}
-                  </Button>
-                </AdminFilterBar>
-              ) : null}
+            <AdminFilterBar className="md:grid-cols-[1fr_180px_auto]">
+              <Input
+                aria-label={accountMessages.searchLabel}
+                value={searchQuery}
+                placeholder={accountMessages.searchPlaceholder}
+                onChange={(event) => onSearchQueryChange(event.target.value)}
+              />
+              <Select
+                aria-label={accountMessages.statusFilterLabel}
+                value={statusFilter}
+                onChange={(event) => onStatusFilterChange(event.target.value)}
+              >
+                <option value="all">{accountMessages.statusOptionAll}</option>
+                <option value="active">{accountMessages.statusOptionActive}</option>
+                <option value="disabled">{accountMessages.statusOptionDisabled}</option>
+              </Select>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  onSearchQueryChange("");
+                  onStatusFilterChange("all");
+                }}
+              >
+                {commonMessages.clear}
+              </Button>
+            </AdminFilterBar>
 
-              <div className="space-y-3">
-                {accounts.map((account) => (
-                  <AccountDirectoryCard
-                    key={account.id}
-                    account={account}
-                    selected={selectedAccount?.id === account.id}
-                    route={route}
-                    busyAction={busyAction}
-                    onSelectAccount={onSelectAccount}
-                    onForceSignout={onForceSignout}
-                  />
-                ))}
-                {!accounts.length && !loading ? (
-                  <AdminEmptyBlock>{accountMessages.directoryEmpty}</AdminEmptyBlock>
-                ) : null}
-              </div>
+            <div className="space-y-3">
+              {accounts.map((account) => (
+                <AccountDirectoryCard
+                  key={account.id}
+                  account={account}
+                  selected={selectedAccount?.id === account.id}
+                  route={displayRoute}
+                  busyAction={busyAction}
+                  onSelectAccount={onSelectAccount}
+                  onForceSignout={onForceSignout}
+                />
+              ))}
+              {!accounts.length && !loading ? (
+                <AdminEmptyBlock>{accountMessages.directoryEmpty}</AdminEmptyBlock>
+              ) : null}
+            </div>
           </AdminSectionCard>
         </div>
 
         <div className="space-y-6">
-          {showSettingsPanel ? (
-            <ProvisioningPolicyPanel
-              registration={registration}
-              authProviders={authProviders}
-              settingsDraft={settingsDraft}
-              busyAction={busyAction}
-              onSettingsDraftChange={onSettingsDraftChange}
-              onToggleProvider={onToggleProvider}
-              onSaveSettings={onSaveSettings}
-            />
-          ) : null}
+          {renderCreateDrawer()}
           {showDetailPane && detailPaneOpen && selectedAccount ? (
             <AdminDetailDrawer
               open
@@ -245,9 +296,6 @@ export function AdminAccountsContent({
                 ) : null}
               </div>
             </AdminDetailDrawer>
-          ) : null}
-          {showRolePanel ? (
-            route === "/admin/roles/new" ? <RolePlaybookPanel /> : null
           ) : null}
           <RoleSummaryPanel roleSummary={roleSummary} />
         </div>
