@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
@@ -59,6 +59,22 @@ export function AdminCatalogPage({
     timeout: "10m",
     batchSize: 20
   });
+  const policyDraftRef = useRef(policyDraft);
+
+  const commitPolicyDraft = useCallback((nextPolicyDraft: RepositorySyncPolicy) => {
+    policyDraftRef.current = nextPolicyDraft;
+    setPolicyDraft(nextPolicyDraft);
+  }, []);
+
+  const patchPolicyDraft = useCallback(
+    (patch: Partial<RepositorySyncPolicy>) => {
+      commitPolicyDraft({
+        ...policyDraftRef.current,
+        ...patch
+      });
+    },
+    [commitPolicyDraft]
+  );
 
   const normalizedPolicy = useMemo(() => normalizeSyncPolicyPayload(rawPayload), [rawPayload]);
   const viewModel = useMemo(() => {
@@ -93,7 +109,7 @@ export function AdminCatalogPage({
       const payload = await clientFetchJSON(buildPath(meta.endpoint, query));
       setRawPayload(payload);
       if (route === "/admin/sync-policy/repository") {
-        setPolicyDraft(normalizeSyncPolicyPayload(payload));
+        commitPolicyDraft(normalizeSyncPolicyPayload(payload));
       }
     } catch (loadError) {
       setError(resolveRequestErrorDisplayMessage(loadError, adminCatalogMessages.loadError));
@@ -101,7 +117,7 @@ export function AdminCatalogPage({
     } finally {
       setLoading(false);
     }
-  }, [adminCatalogMessages.loadError, meta.endpoint, query, route]);
+  }, [adminCatalogMessages.loadError, commitPolicyDraft, meta.endpoint, query, route]);
 
   useEffect(() => {
     void loadData();
@@ -149,6 +165,7 @@ export function AdminCatalogPage({
   }
 
   async function savePolicy() {
+    const nextPolicyDraft = policyDraftRef.current;
     setBusyAction("save-policy");
     setMessage("");
     setError("");
@@ -156,10 +173,10 @@ export function AdminCatalogPage({
       await clientFetchJSON(policyMeta.endpoint, {
         method: "POST",
         body: {
-          enabled: policyDraft.enabled,
-          interval: policyDraft.interval,
-          timeout: policyDraft.timeout,
-          batch_size: policyDraft.batchSize
+          enabled: nextPolicyDraft.enabled,
+          interval: nextPolicyDraft.interval,
+          timeout: nextPolicyDraft.timeout,
+          batch_size: nextPolicyDraft.batchSize
         }
       });
       setMessage(adminCatalogMessages.policySaveSuccess);
@@ -200,8 +217,8 @@ export function AdminCatalogPage({
       onRefresh={() => void loadData()}
       onSyncSkill={(skillId) => void syncSkill(skillId)}
       onRunJobAction={(jobId, action) => void runJobAction(jobId, action)}
-      onPolicyDraftChange={(patch) => setPolicyDraft((current) => ({ ...current, ...patch }))}
-      onResetPolicyDraft={() => setPolicyDraft(normalizedPolicy)}
+      onPolicyDraftChange={patchPolicyDraft}
+      onResetPolicyDraft={() => commitPolicyDraft(normalizedPolicy)}
       onSavePolicy={() => void savePolicy()}
     />
   );

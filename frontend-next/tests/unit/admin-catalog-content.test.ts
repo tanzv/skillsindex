@@ -275,33 +275,19 @@ function expectMarkupToExcludeAll(markup: string, fragments: string[]) {
 }
 
 describe("admin catalog content", () => {
-  it("renders the skills route with the inline detail contract and primary skill actions", () => {
+  it("renders the skills route with drawer entry actions and primary skill actions", () => {
     const markup = renderCatalogRoute("/admin/skills");
 
     expectMarkupToContainAll(markup, [
       "Governed Inventory",
       "Release Readiness Checklist",
       'data-testid="admin-catalog-row-11"',
-      'data-testid="admin-skills-inline-detail"',
-      "Selected Skill",
-      'data-testid="admin-skill-topology"',
-      "Topology",
-      "Skill Entry",
-      "skill_manifest",
-      "Source Analysis",
-      "Entry File",
-      "README.md",
-      'href="/admin/skills?q=README.md"',
-      'href="/admin/skills?q=skills%2Frelease"',
-      "Dependencies",
-      "using-superpowers",
-      'href="/admin/skills?q=using-superpowers"',
       "Selected",
+      "Open Details",
       "Sync now",
-      'href="/skills/11"',
-      'href="/admin/ingestion/repository"'
+      "Catalog Signals"
     ]);
-    expectMarkupToExcludeAll(markup, ['role="dialog"']);
+    expectMarkupToExcludeAll(markup, ['role="dialog"', 'data-testid="admin-skills-inline-detail"', "Selected Skill", "Topology"]);
   });
 
   it("renders the jobs route with queue actions while keeping the detail pane closed by default", () => {

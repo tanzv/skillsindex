@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, type ReactNode, type RefObject } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from "react";
 import { X } from "lucide-react";
 
 import { Dialog, DialogContent } from "@/src/components/ui/dialog";
@@ -11,6 +11,46 @@ import { useReducedMotion } from "@/src/lib/motion/useReducedMotion";
 import { cn } from "@/src/lib/utils";
 
 import styles from "./DetailFormSurface.module.scss";
+
+const DETAIL_DRAWER_MOBILE_MEDIA_QUERY = "(max-width: 768px)";
+
+function useCompactDetailDrawerViewport() {
+  const [isCompactViewport, setIsCompactViewport] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const mediaQueryList = window.matchMedia(DETAIL_DRAWER_MOBILE_MEDIA_QUERY);
+    const animationFrameId = window.requestAnimationFrame(() => {
+      setIsCompactViewport(mediaQueryList.matches);
+    });
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsCompactViewport(event.matches);
+    };
+
+    mediaQueryList.addEventListener("change", handleChange);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      mediaQueryList.removeEventListener("change", handleChange);
+    };
+  }, []);
+
+  return isCompactViewport;
+}
+
+function resolveFirstFocusableElement(container: HTMLElement | null) {
+  if (!container) {
+    return null;
+  }
+
+  return container.querySelector<HTMLElement>(
+    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  );
+}
 
 export interface DetailFormSurfaceProps {
   open: boolean;
@@ -49,13 +89,15 @@ export function DetailFormSurface({
 }: DetailFormSurfaceProps) {
   const titleId = useId();
   const descriptionId = useId();
-  const panelRef = useRef<HTMLDivElement | null>(null);
+  const bodyRef = useRef<HTMLDivElement | null>(null);
   const reducedMotion = useReducedMotion();
+  const isCompactViewport = useCompactDetailDrawerViewport();
   const { isPresent, motionState } = usePresenceMotion({
     open,
     reducedMotion,
     exitDurationMs: MOTION_EXIT_DURATION_MS
   });
+  const drawerSide = isCompactViewport ? "bottom" : "right";
 
   useEffect(() => {
     if (!isPresent) {
@@ -70,33 +112,6 @@ export function DetailFormSurface({
     };
   }, [isPresent]);
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [onClose, open]);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const nextFocusTarget = initialFocusRef?.current ?? panelRef.current;
-    nextFocusTarget?.focus();
-  }, [initialFocusRef, open]);
-
   if (!isPresent) {
     return null;
   }
@@ -110,14 +125,13 @@ export function DetailFormSurface({
 
   const panelContent = (
     <div
-      ref={panelRef}
       aria-labelledby={titleId}
       aria-describedby={description ? descriptionId : undefined}
       data-variant={variant}
       data-size={size}
+      data-sheet-side={variant === "drawer" ? drawerSide : undefined}
       data-motion-state={motionState}
       data-testid={dataTestId}
-      tabIndex={-1}
       className={sharedPanelClassName}
     >
       <div className={styles.header}>
@@ -139,7 +153,9 @@ export function DetailFormSurface({
         </div>
       </div>
 
-      <div className={cn(styles.body, bodyClassName)}>{children}</div>
+      <div ref={bodyRef} className={cn(styles.body, bodyClassName)}>
+        {children}
+      </div>
 
       {footer ? <div className={styles.footer}>{footer}</div> : null}
     </div>
@@ -158,14 +174,23 @@ export function DetailFormSurface({
           data-variant={variant}
           data-size={size}
           data-motion-state={motionState}
-          onPointerDownOutside={(event) => {
-            if (!closeOnBackdrop) {
-              event.preventDefault();
-            }
-          }}
-        >
-          {panelContent}
-        </DialogContent>
+        onPointerDownOutside={(event) => {
+          if (!closeOnBackdrop) {
+            event.preventDefault();
+          }
+        }}
+        onOpenAutoFocus={(event) => {
+          const nextFocusTarget = initialFocusRef?.current ?? resolveFirstFocusableElement(bodyRef.current);
+          if (!nextFocusTarget) {
+            return;
+          }
+
+          event.preventDefault();
+          nextFocusTarget.focus();
+        }}
+      >
+        {panelContent}
+      </DialogContent>
       </Dialog>
     );
   }
@@ -173,7 +198,7 @@ export function DetailFormSurface({
   return (
     <Sheet open={isPresent} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <SheetContent
-        side="right"
+        side={drawerSide}
         hideClose
         overlayClassName={overlayClassName}
         aria-labelledby={titleId}
@@ -185,6 +210,15 @@ export function DetailFormSurface({
           if (!closeOnBackdrop) {
             event.preventDefault();
           }
+        }}
+        onOpenAutoFocus={(event) => {
+          const nextFocusTarget = initialFocusRef?.current ?? resolveFirstFocusableElement(bodyRef.current);
+          if (!nextFocusTarget) {
+            return;
+          }
+
+          event.preventDefault();
+          nextFocusTarget.focus();
         }}
       >
         {panelContent}

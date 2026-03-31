@@ -208,7 +208,7 @@ describe("admin accounts content", () => {
 
     expect(markup).toContain("Account Directory");
     expect(markup).toContain('role="dialog"');
-    expect(markup).toContain('data-testid="admin-accounts-work-pane"');
+    expect(markup).toContain('data-testid="admin-accounts-detail-drawer"');
     expect(markup).toContain("Account Actions");
     expect(markup).not.toContain("Provisioning Policy");
   });
@@ -226,7 +226,7 @@ describe("admin accounts content", () => {
     const markup = renderAdminAccountsRoute("/admin/roles/new");
 
     expect(markup).toContain('role="dialog"');
-    expect(markup).toContain('data-testid="admin-accounts-work-pane"');
+    expect(markup).toContain('data-testid="admin-accounts-detail-drawer"');
     expect(markup).toContain("Role Assignment");
     expect(markup).toContain("Role Playbook");
     expect(markup).toContain("Role Summary");

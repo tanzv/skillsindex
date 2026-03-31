@@ -35,11 +35,7 @@ export function useSelectedRow(rows: AdminCatalogRow[]) {
   const [selectedRowId, setSelectedRowId] = useState<number | null>(rows[0]?.id ?? null);
 
   const selectedRow = useMemo(() => {
-    if (rows.length === 0) {
-      return null;
-    }
-
-    return rows.find((row) => row.id === selectedRowId) || rows[0] || null;
+    return resolveSelectedCatalogRow(rows, selectedRowId);
   }, [rows, selectedRowId]);
 
   return {
@@ -47,6 +43,18 @@ export function useSelectedRow(rows: AdminCatalogRow[]) {
     selectedRowId: selectedRow?.id || null,
     setSelectedRowId
   };
+}
+
+export function resolveSelectedCatalogRow<TRow extends AdminCatalogRow>(rows: TRow[], selectedRowId: number | null): TRow | null {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  if (selectedRowId === null) {
+    return rows[0] || null;
+  }
+
+  return rows.find((row) => row.id === selectedRowId) || null;
 }
 
 interface QueryFiltersProps {

@@ -1,8 +1,31 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { gotoProtectedRoute, loginAsAdmin } from "./helpers/auth";
 
 test.describe.configure({ timeout: 180_000 });
+
+async function expectOverlayToFitViewport(page: Page, overlay: Locator, bottomControl: Locator) {
+  const viewport = page.viewportSize();
+  const overlayBox = await overlay.boundingBox();
+  const bottomControlBox = await bottomControl.boundingBox();
+
+  expect(viewport).not.toBeNull();
+  expect(overlayBox).not.toBeNull();
+  expect(bottomControlBox).not.toBeNull();
+
+  if (!viewport || !overlayBox || !bottomControlBox) {
+    return;
+  }
+
+  expect(overlayBox.x).toBeGreaterThanOrEqual(0);
+  expect(overlayBox.y).toBeGreaterThanOrEqual(0);
+  expect(overlayBox.x + overlayBox.width).toBeLessThanOrEqual(viewport.width - 4);
+  expect(overlayBox.y + overlayBox.height).toBeLessThanOrEqual(viewport.height - 4);
+  expect(bottomControlBox.x).toBeGreaterThanOrEqual(0);
+  expect(bottomControlBox.y).toBeGreaterThanOrEqual(0);
+  expect(bottomControlBox.x + bottomControlBox.width).toBeLessThanOrEqual(viewport.width - 4);
+  expect(bottomControlBox.y + bottomControlBox.height).toBeLessThanOrEqual(viewport.height - 4);
+}
 
 test("renders the remaining workspace routes for an authenticated user", async ({ page }) => {
   await loginAsAdmin(page, "/workspace");
@@ -48,14 +71,14 @@ test("renders the remaining workspace routes for an authenticated user", async (
   await expect(topbarNavRow.getByRole("link", { name: "Workspace", exact: true })).toHaveAttribute("aria-current", "page");
 });
 
-test("opens workspace detail panes across queue, activity, policy, and runbook routes", async ({ page }) => {
+test("opens workspace detail drawers across queue, activity, policy, and runbook routes", async ({ page }) => {
   await loginAsAdmin(page, "/workspace/queue");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Open Details" }).first().click();
   const detailPane = page.getByTestId("workspace-entry-detail-pane");
   await expect(detailPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await expect(detailPane.getByRole("link", { name: "Open Skill Detail" }).first()).toBeVisible();
   await detailPane.getByRole("button", { name: "Close Panel" }).click();
   await expect(detailPane).toHaveCount(0);
@@ -63,7 +86,7 @@ test("opens workspace detail panes across queue, activity, policy, and runbook r
   await gotoProtectedRoute(page, "/workspace/activity");
   await page.getByRole("button", { name: "Open Details" }).first().click();
   await expect(detailPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await expect(detailPane.getByRole("link", { name: "Open Queue" })).toBeVisible();
   await detailPane.getByRole("button", { name: "Close Panel" }).click();
   await expect(detailPane).toHaveCount(0);
@@ -71,7 +94,7 @@ test("opens workspace detail panes across queue, activity, policy, and runbook r
   await gotoProtectedRoute(page, "/workspace/policy");
   await page.getByRole("button", { name: "Open Details" }).first().click();
   await expect(detailPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await expect(detailPane.getByRole("link", { name: "Open Queue" })).toBeVisible();
   await detailPane.getByRole("button", { name: "Close Panel" }).click();
   await expect(detailPane).toHaveCount(0);
@@ -79,7 +102,7 @@ test("opens workspace detail panes across queue, activity, policy, and runbook r
   await gotoProtectedRoute(page, "/workspace/runbook");
   await page.getByRole("button", { name: "Open Details" }).first().click();
   await expect(detailPane).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await expect(detailPane.getByRole("heading", { name: "Response Script", exact: true })).toBeVisible();
   await detailPane.getByRole("button", { name: "Close Panel" }).click();
   await expect(detailPane).toHaveCount(0);
@@ -107,12 +130,13 @@ test("executes account security and credential management actions", async ({ pag
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Create Credential" }).click();
-  const credentialWorkPane = page.getByTestId("account-credentials-work-pane");
-  await expect(credentialWorkPane).toContainText("Credential Factory");
-  await credentialWorkPane.getByPlaceholder("Credential name").fill("Smoke Credential");
-  await credentialWorkPane.getByPlaceholder("Purpose").fill("Extended authenticated coverage");
-  await credentialWorkPane.getByPlaceholder("Scopes separated by commas").fill("skills.read, skills.search.read");
-  await credentialWorkPane.getByRole("button", { name: "Create Credential" }).click();
+  const credentialDrawer = page.getByTestId("account-credentials-detail-drawer");
+  await expect(credentialDrawer).toContainText("Credential Factory");
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await credentialDrawer.getByPlaceholder("Credential name").fill("Smoke Credential");
+  await credentialDrawer.getByPlaceholder("Purpose").fill("Extended authenticated coverage");
+  await credentialDrawer.getByPlaceholder("Scopes separated by commas").fill("skills.read, skills.search.read");
+  await credentialDrawer.getByRole("button", { name: "Create Credential" }).click();
   await expect(page.getByText("Credential created.")).toBeVisible();
   await expect(page.getByText("sk_test_created_key")).toBeVisible();
 
@@ -120,18 +144,18 @@ test("executes account security and credential management actions", async ({ pag
   await expect(credentialCard).toBeVisible();
   await expect(credentialCard).toContainText("Extended authenticated coverage");
   await credentialCard.getByRole("button", { name: "Open Details" }).click();
-  await expect(credentialWorkPane).toContainText("Smoke Credential");
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  const scopesInput = credentialWorkPane.getByPlaceholder("Update scopes");
+  await expect(credentialDrawer).toContainText("Smoke Credential");
+  await expect(page.getByRole("dialog")).toBeVisible();
+  const scopesInput = credentialDrawer.getByPlaceholder("Update scopes");
   await scopesInput.fill("skills.ai_search.read");
-  await credentialWorkPane.getByRole("button", { name: "Apply Scopes" }).click();
+  await credentialDrawer.getByRole("button", { name: "Apply Scopes" }).click();
   await expect(page.getByText(/Scopes updated for credential/)).toBeVisible();
 
-  await credentialWorkPane.getByRole("button", { name: "Rotate" }).click();
+  await credentialDrawer.getByRole("button", { name: "Rotate" }).click();
   await expect(page.getByText(/Credential \d+ rotated\./)).toBeVisible();
   await expect(page.getByText("sk_test_rotated_key")).toBeVisible();
 
-  await credentialWorkPane.getByRole("button", { name: "Revoke" }).click();
+  await credentialDrawer.getByRole("button", { name: "Revoke" }).click();
   await expect(page.getByText(/Credential \d+ revoked\./)).toBeVisible();
   await expect(credentialCard).toContainText(/revoked/i);
 });
@@ -144,15 +168,17 @@ test("executes admin governance actions and renders additional admin routes", as
   await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Organizations", exact: true })).toHaveAttribute("aria-current", "page");
   await page.getByTestId("admin-topbar-account-trigger").click();
   const accountCenterMenu = page.getByTestId("admin-topbar-account-menu");
+  const accessLink = accountCenterMenu.getByRole("link", { name: /^Access\b/i });
+  const rolesLink = accountCenterMenu.getByRole("link", { name: /^Roles\b/i });
+  const integrationsLink = accountCenterMenu.getByRole("link", { name: /^Integrations\b/i });
   await expect(accountCenterMenu).toBeVisible();
-  await expect(
-    accountCenterMenu.getByRole("button", { name: "Access Manage access registration and authorization controls." })
-  ).toBeVisible();
-  await expect(accountCenterMenu.getByRole("button", { name: "Roles Review role definitions and access shape." })).toBeVisible();
-  await expect(
-    accountCenterMenu.getByRole("button", { name: "Integrations Review connector inventory and webhook delivery coverage." })
-  ).toBeVisible();
-  await accountCenterMenu.getByRole("button", { name: "Access Manage access registration and authorization controls." }).click();
+  await expect(accessLink).toBeVisible();
+  await expect(rolesLink).toBeVisible();
+  await expect(integrationsLink).toBeVisible();
+  await expect(page.getByTestId("admin-topbar-theme-light")).toBeVisible();
+  await expect(page.getByTestId("admin-topbar-logout")).toBeVisible();
+  await expectOverlayToFitViewport(page, accountCenterMenu, page.getByTestId("admin-topbar-logout"));
+  await accessLink.click();
   await page.waitForURL("**/admin/access");
   await expect(page.getByRole("heading", { name: "Access", level: 1 })).toBeVisible();
 
@@ -172,35 +198,39 @@ test("executes admin governance actions and renders additional admin routes", as
   await expect(page.getByLabel("Marketplace public access")).not.toBeChecked();
 
   await gotoProtectedRoute(page, "/admin/accounts");
-  await expect(page.getByRole("heading", { name: "Accounts", level: 1 })).toBeVisible();
-  await page.getByLabel("Search accounts").fill("operator");
-  const accountWorkPane = page.getByTestId("admin-accounts-work-pane");
-  await expect(accountWorkPane).toBeVisible();
+  await expect(page.locator("h1").filter({ hasText: "Accounts" })).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await accountWorkPane.getByLabel("Target user ID").fill("2");
-  await accountWorkPane.getByLabel("Target account status").selectOption("disabled");
-  await accountWorkPane.getByRole("button", { name: "Apply Status" }).click();
+  await page.getByTestId("admin-account-card-2").getByRole("button", { name: "Select" }).click();
+  await page.getByPlaceholder("Search username, role, or status").fill("operator");
+  const accountDrawer = page.getByTestId("admin-accounts-detail-drawer");
+  await expect(accountDrawer).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await accountDrawer.getByLabel("Target user ID").fill("2");
+  await accountDrawer.getByLabel("Target account status").selectOption("disabled");
+  await accountDrawer.getByRole("button", { name: "Apply Status" }).click();
   await expect(page.getByText("Account 2 status updated.")).toBeVisible();
   await expect(page.getByTestId("admin-account-card-2")).toContainText(/disabled/i);
 
-  await accountWorkPane.getByRole("button", { name: "Force Sign-out" }).click();
+  await accountDrawer.getByRole("button", { name: "Force Sign-out" }).click();
   await expect(page.getByText("Force sign-out requested for user 2.")).toBeVisible();
 
-  await accountWorkPane.getByLabel("Target new password").fill("Operator987654!");
-  await accountWorkPane.getByRole("button", { name: "Reset Password" }).click();
+  await accountDrawer.getByLabel("Target new password").fill("Operator987654!");
+  await accountDrawer.getByRole("button", { name: "Reset Password" }).click();
   await expect(page.getByText("Password rotated for user 2.")).toBeVisible();
 
   await gotoProtectedRoute(page, "/admin/roles");
-  await expect(page.getByRole("heading", { name: "Roles", level: 1 })).toBeVisible();
-  await page.getByLabel("Search accounts").fill("operator");
-  const roleWorkPane = page.getByTestId("admin-accounts-work-pane");
-  await expect(roleWorkPane).toBeVisible();
+  await expect(page.locator("h1").filter({ hasText: "Roles" })).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await roleWorkPane.getByLabel("Role target user ID").fill("2");
-  await roleWorkPane.getByLabel("Target role").selectOption("auditor");
-  await roleWorkPane.getByRole("button", { name: "Apply Role" }).click();
+  await page.getByTestId("admin-account-card-2").getByRole("button", { name: "Select" }).click();
+  await page.getByPlaceholder("Search username, role, or status").fill("operator");
+  const roleDrawer = page.getByTestId("admin-accounts-detail-drawer");
+  await expect(roleDrawer).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await roleDrawer.getByLabel("Role target user ID").fill("2");
+  await roleDrawer.getByLabel("Target role").selectOption("viewer");
+  await roleDrawer.getByRole("button", { name: "Apply Role" }).click();
   await expect(page.getByText("Role updated for user 2.")).toBeVisible();
-  await expect(page.getByTestId("admin-account-card-2")).toContainText(/auditor/i);
+  await expect(page.getByTestId("admin-account-card-2")).toContainText(/viewer/i);
 
   await gotoProtectedRoute(page, "/admin/records/imports");
   await expect(page.getByRole("heading", { name: "Import Records", level: 1 })).toBeVisible();
@@ -300,11 +330,13 @@ test("uses the right account avatar as the protected personal center trigger", a
   await trigger.focus();
   await trigger.press("Enter");
   await expect(trigger).toHaveAttribute("aria-label", "Close account center");
-  await expect(menu).toHaveAttribute("aria-hidden", "false");
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(menu).toBeVisible();
   await expect(menu.getByRole("button", { name: /Profile/i })).toBeVisible();
-  await expect(menu.getByRole("button", { name: /Security/i })).toBeVisible();
-  await expect(menu.getByRole("button", { name: /Sessions/i })).toBeVisible();
-  await expect(menu.getByRole("button", { name: /API Credentials/i })).toBeVisible();
+  await expect(menu.locator('a[href="/account/security"]')).toBeVisible();
+  await expect(menu.locator('a[href="/account/sessions"]')).toBeVisible();
+  await expect(menu.locator('a[href="/account/api-credentials"]')).toBeVisible();
+  await expectOverlayToFitViewport(page, menu, page.getByTestId("workspace-topbar-logout"));
   await page.getByTestId("workspace-topbar-theme-dark").click();
   await expect(shell).toHaveAttribute("data-protected-theme", "dark");
 
@@ -328,9 +360,62 @@ test("uses the right account avatar as the protected personal center trigger", a
   await expect(trigger).toHaveAttribute("title", "Admin Commander");
 
   await trigger.click();
-  await expect(menu).toHaveAttribute("aria-hidden", "false");
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(menu).toBeVisible();
   await expect(menu.getByText("Admin Commander")).toBeVisible();
-  await menu.getByRole("button", { name: /Security/i }).click();
+  await menu.locator('a[href="/account/security"]').click();
   await page.waitForURL("**/account/security");
   await expect(page.getByRole("heading", { name: "Account Center", level: 1 })).toBeVisible();
+
+  await gotoProtectedRoute(page, "/workspace");
+  await trigger.click();
+  await menu.locator('a[href="/account/sessions"]').click();
+  await page.waitForURL("**/account/sessions");
+  await expect(page.getByRole("heading", { name: "Account Center", level: 1 })).toBeVisible();
+
+  await gotoProtectedRoute(page, "/workspace");
+  await trigger.click();
+  await menu.locator('a[href="/account/api-credentials"]').click();
+  await page.waitForURL("**/account/api-credentials");
+  await expect(page.getByRole("heading", { name: "Account Center", level: 1 })).toBeVisible();
+});
+
+test("switches account menu locale and signs out from the protected shell", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await loginAsAdmin(page, "/workspace");
+
+  const trigger = page.getByTestId("workspace-topbar-account-trigger");
+  const menu = page.getByTestId("workspace-topbar-account-menu");
+
+  await expect(trigger).toBeVisible();
+  await trigger.focus();
+  await trigger.press("Enter");
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(menu).toBeVisible();
+  await page.getByTestId("workspace-topbar-locale-zh").click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "zh");
+  await trigger.focus();
+  await trigger.press("Enter");
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(menu).toBeVisible();
+  await expect(page.getByTestId("workspace-topbar-locale-zh")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("workspace-topbar-logout")).toContainText("退出登录");
+  await expect(menu.getByRole("button", { name: /资料/i })).toBeVisible();
+
+  await menu.getByRole("button", { name: /资料/i }).click();
+  const profileDialog = page.getByRole("dialog", { name: "资料" });
+  await expect(profileDialog).toBeVisible();
+  await expect(profileDialog.getByLabel("显示名称")).toBeVisible();
+  await expect(profileDialog.getByLabel("头像 URL")).toBeVisible();
+  await expect(profileDialog.getByLabel("简介")).toBeVisible();
+  await profileDialog.getByLabel("关闭账户中心").click();
+  await expect(profileDialog).not.toBeVisible();
+
+  await trigger.focus();
+  await trigger.press("Enter");
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(menu).toBeVisible();
+  await page.getByTestId("workspace-topbar-logout").click();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("button", { name: /登录|Sign In/i })).toBeVisible();
 });

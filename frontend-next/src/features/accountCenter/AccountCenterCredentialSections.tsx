@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
+import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { resolveApiKeyStatusLabel, resolveApiKeyStatusTone } from "@/src/lib/apiKeyDisplay";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
@@ -102,13 +102,13 @@ export function AccountCredentialsSection({
   );
   const activePane = createPaneOpen ? "create" : selectedCredential ? "detail" : null;
 
-  function closeWorkPane() {
+  function closeDetailDrawer() {
     setCreatePaneOpen(false);
     setSelectedCredentialId(null);
   }
 
   return (
-    <div className={`account-center-credentials-layout ${activePane ? "has-work-pane" : ""}`}>
+    <div className="account-center-credentials-layout">
       <div className="account-center-credentials-main">
         <section className="account-center-stage-panel account-center-section-stack">
           <div className="account-center-panel-title-row">
@@ -153,7 +153,8 @@ export function AccountCredentialsSection({
       </div>
 
       {activePane ? (
-        <InlineWorkPaneSurface
+        <DetailFormSurface
+          open
           title={createPaneOpen ? accountMessages.credentialsFactoryTitle : selectedCredential?.name || accountMessages.credentialsInventoryTitle}
           description={
             createPaneOpen
@@ -161,12 +162,12 @@ export function AccountCredentialsSection({
               : selectedCredential?.purpose || accountMessages.credentialNoPurpose
           }
           closeLabel={accountMessages.closePanelAction}
-          onClose={closeWorkPane}
-          dataTestId="account-credentials-work-pane"
-          className="account-center-credentials-work-pane"
+          onClose={closeDetailDrawer}
+          variant="drawer"
+          dataTestId="account-credentials-detail-drawer"
         >
           {createPaneOpen ? (
-            <div className="account-center-section-stack" data-testid="account-credentials-create-pane">
+            <div className="account-center-section-stack" data-testid="account-credentials-create-drawer">
               <div className="account-center-form-grid">
                 <input
                   className="account-center-field"
@@ -208,7 +209,7 @@ export function AccountCredentialsSection({
                   onClick={async () => {
                     const createSucceeded = await onCreateCredential();
                     if (shouldCloseCredentialCreatePaneAfterSubmit(createSucceeded)) {
-                      closeWorkPane();
+                      closeDetailDrawer();
                     }
                   }}
                   disabled={saving || loading}
@@ -218,7 +219,7 @@ export function AccountCredentialsSection({
               </div>
             </div>
           ) : selectedCredential ? (
-            <div className="account-center-section-stack" data-testid="account-credentials-detail-pane">
+            <div className="account-center-section-stack" data-testid="account-credentials-detail-content">
               <div className="account-center-panel-title-row">
                 <div className="account-center-section-badges">
                   <span
@@ -270,7 +271,7 @@ export function AccountCredentialsSection({
               </div>
             </div>
           ) : null}
-        </InlineWorkPaneSurface>
+        </DetailFormSurface>
       ) : null}
     </div>
   );

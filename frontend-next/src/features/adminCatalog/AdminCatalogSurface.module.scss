@@ -79,7 +79,7 @@
   background: color-mix(in srgb, var(--ui-card-highlight-bg) 58%, var(--ui-card-bg) 42%);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--ui-accent) 18%, transparent),
-    0 14px 32px rgba(15, 23, 42, 0.08);
+    0 14px 32px color-mix(in srgb, var(--ui-text-primary) 8%, transparent);
 }
 
 .rowLayout {

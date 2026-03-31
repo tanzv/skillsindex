@@ -38,9 +38,12 @@ describe("admin accounts model", () => {
     expect(resolveRoleTargetUserId("0", 2)).toBeNull();
   });
 
-  it("keeps the selected account inside the currently visible directory set", () => {
+  it("keeps the selected account when it remains inside the visible directory set", () => {
     expect(resolveSelectedAdminAccount(accounts, [accounts[1]], 2)?.id).toBe(2);
-    expect(resolveSelectedAdminAccount(accounts, [accounts[1]], 1)?.id).toBe(2);
+  });
+
+  it("clears the selected account instead of silently remapping to the first visible row", () => {
+    expect(resolveSelectedAdminAccount(accounts, [accounts[1]], 1)).toBeNull();
   });
 
   it("clears the selected account when the filtered directory is empty", () => {

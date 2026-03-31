@@ -18,7 +18,7 @@ import {
 } from "@/src/lib/navigation/protectedNavigationRegistry";
 import { canManagePlatformUsers, canViewAllAdminData } from "@/src/lib/auth/roleAccess";
 import { marketplaceHomeRoute } from "@/src/lib/routing/protectedSurfaceLinks";
-import { buildMarketplaceHrefForTheme } from "@/src/lib/theme/sharedThemePreference";
+import { buildMarketplaceHrefForTheme, type SharedThemePreference } from "@/src/lib/theme/sharedThemePreference";
 
 import { buildAccountCenterMenuConfig, buildAdminAccountCenterMenuConfig } from "./protectedTopbarConfigs";
 import { ProtectedConsoleShell } from "./ProtectedConsoleShell";
@@ -27,6 +27,7 @@ import { ProtectedTopbar } from "./ProtectedTopbar";
 
 interface AdminShellProps {
   children: ReactNode;
+  initialTheme: SharedThemePreference;
   session: SessionContext;
   messages: {
     shell: AdminShellMessages;
@@ -36,7 +37,7 @@ interface AdminShellProps {
   };
 }
 
-export function AdminShell({ children, session, messages }: AdminShellProps) {
+export function AdminShell({ children, initialTheme, session, messages }: AdminShellProps) {
   const pathname = usePathname();
   const includeElevatedGovernance = canViewAllAdminData(session);
   const includeUserManagement = canManagePlatformUsers(session);
@@ -58,6 +59,7 @@ export function AdminShell({ children, session, messages }: AdminShellProps) {
   return (
     <ProtectedConsoleShell
       key={pathname}
+      initialTheme={initialTheme}
       scope="admin-shell"
       shellTestId="admin-shell"
       sideNavTestId="admin-side-nav"

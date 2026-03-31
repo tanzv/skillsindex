@@ -28,6 +28,11 @@ interface RequestState {
   path: string;
 }
 
+interface WorkbenchFieldIds {
+  controlId: string;
+  labelId: string;
+}
+
 function buildInitialValues(fields: FieldDefinition[] | undefined): Record<string, unknown> {
   return Object.fromEntries((fields || []).map((field) => [field.key, field.defaultValue ?? (field.type === "switch" ? false : "")]));
 }
@@ -36,8 +41,16 @@ function normalizePayload(values: Record<string, unknown>): Record<string, unkno
   return Object.fromEntries(Object.entries(values).filter(([, value]) => value !== "" && value !== undefined && value !== null));
 }
 
+function buildFieldIds(sectionKey: string, fieldKey: string): WorkbenchFieldIds {
+  return {
+    controlId: `${sectionKey}-${fieldKey}-control`,
+    labelId: `${sectionKey}-${fieldKey}-label`
+  };
+}
+
 function renderField(
   field: FieldDefinition,
+  ids: WorkbenchFieldIds,
   values: Record<string, unknown>,
   onChange: (key: string, value: unknown) => void
 ) {
@@ -46,7 +59,8 @@ function renderField(
   if (field.type === "textarea") {
     return (
       <Textarea
-        className="border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-sky-500"
+        id={ids.controlId}
+        aria-labelledby={ids.labelId}
         value={String(value ?? "")}
         placeholder={field.placeholder}
         onChange={(event) => onChange(field.key, event.target.value)}
@@ -56,8 +70,13 @@ function renderField(
 
   if (field.type === "switch") {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-        <Switch checked={Boolean(value)} aria-label={field.label} onCheckedChange={(checked) => onChange(field.key, checked)} />
+      <div className="flex min-h-10 items-center gap-3 rounded-xl border border-[color:var(--ui-control-border)] bg-[color:var(--ui-control-bg-subtle)] px-3 py-2 text-sm text-[color:var(--ui-text-secondary)]">
+        <Switch
+          id={ids.controlId}
+          aria-labelledby={ids.labelId}
+          checked={Boolean(value)}
+          onCheckedChange={(checked) => onChange(field.key, checked)}
+        />
       </div>
     );
   }
@@ -65,7 +84,8 @@ function renderField(
   if (field.type === "select") {
     return (
       <Select
-        className="border-slate-300 bg-white text-slate-900 focus-visible:ring-sky-500"
+        id={ids.controlId}
+        aria-labelledby={ids.labelId}
         value={String(value ?? "")}
         onChange={(event) => onChange(field.key, event.target.value)}
       >
@@ -80,6 +100,8 @@ function renderField(
 
   return (
     <Input
+      id={ids.controlId}
+      aria-labelledby={ids.labelId}
       type={field.type === "number" ? "number" : field.type === "password" ? "password" : "text"}
       value={String(value ?? "")}
       min={field.min}
@@ -222,7 +244,7 @@ export function ConsoleWorkbench({ definition, scope }: ConsoleWorkbenchProps) {
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="space-y-2">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">{scope}</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--ui-text-muted)]">{scope}</div>
               <CardTitle>{definition.title}</CardTitle>
               <CardDescription>{definition.subtitle}</CardDescription>
             </div>
@@ -266,19 +288,29 @@ export function ConsoleWorkbench({ definition, scope }: ConsoleWorkbenchProps) {
                 <CardContent className="space-y-4">
                   {resource.fields?.length ? (
                     <div className="grid gap-4 md:grid-cols-2">
-                      {resource.fields.map((field) => (
-                        <div key={field.key} className="space-y-2">
-                          <div className="text-sm font-medium text-slate-700">{field.label}</div>
-                          {renderField(field, values, (key, value) =>
-                            setResourceValues((current) => ({ ...current, [resource.key]: { ...values, [key]: value } }))
-                          )}
-                        </div>
-                      ))}
+                      {resource.fields.map((field) => {
+                        const fieldIds = buildFieldIds(resource.key, field.key);
+
+                        return (
+                          <div key={field.key} className="space-y-2">
+                            <label
+                              id={fieldIds.labelId}
+                              htmlFor={fieldIds.controlId}
+                              className="block text-sm font-medium text-[color:var(--ui-text-primary)]"
+                            >
+                              {field.label}
+                            </label>
+                            {renderField(field, fieldIds, values, (key, value) =>
+                              setResourceValues((current) => ({ ...current, [resource.key]: { ...values, [key]: value } }))
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : null}
                   {state?.error ? <ErrorState description={state.error} /> : null}
-                  {state?.loading ? <p className="text-sm text-slate-500">Loading...</p> : null}
-                  <pre className="overflow-auto rounded-2xl bg-slate-950 p-4 text-xs leading-6 text-slate-100">
+                  {state?.loading ? <p className="text-sm text-[color:var(--ui-text-secondary)]">Loading...</p> : null}
+                  <pre className="overflow-auto rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] p-4 text-xs leading-6 text-[color:var(--ui-text-primary)]">
                     {JSON.stringify(state?.data ?? {}, null, 2)}
                   </pre>
                 </CardContent>
@@ -299,20 +331,30 @@ export function ConsoleWorkbench({ definition, scope }: ConsoleWorkbenchProps) {
                   {action.description ? <CardDescription>{action.description}</CardDescription> : null}
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {action.fields?.map((field) => (
-                    <div key={field.key} className="space-y-2">
-                      <div className="text-sm font-medium text-slate-700">{field.label}</div>
-                      {renderField(field, values, (key, value) =>
-                        setActionValues((current) => ({ ...current, [action.key]: { ...values, [key]: value } }))
-                      )}
-                    </div>
-                  ))}
+                  {action.fields?.map((field) => {
+                    const fieldIds = buildFieldIds(action.key, field.key);
+
+                    return (
+                      <div key={field.key} className="space-y-2">
+                        <label
+                          id={fieldIds.labelId}
+                          htmlFor={fieldIds.controlId}
+                          className="block text-sm font-medium text-[color:var(--ui-text-primary)]"
+                        >
+                          {field.label}
+                        </label>
+                        {renderField(field, fieldIds, values, (key, value) =>
+                          setActionValues((current) => ({ ...current, [action.key]: { ...values, [key]: value } }))
+                        )}
+                      </div>
+                    );
+                  })}
                   {state?.error ? <ErrorState description={state.error} /> : null}
                   <Button className="w-full" onClick={() => void runAction(action)} disabled={Boolean(state?.loading)}>
                     {state?.loading ? "Running..." : action.submitText || action.title}
                   </Button>
                   {state?.data ? (
-                    <pre className="overflow-auto rounded-2xl bg-slate-950 p-4 text-xs leading-6 text-slate-100">
+                    <pre className="overflow-auto rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] p-4 text-xs leading-6 text-[color:var(--ui-text-primary)]">
                       {JSON.stringify(state.data, null, 2)}
                     </pre>
                   ) : null}

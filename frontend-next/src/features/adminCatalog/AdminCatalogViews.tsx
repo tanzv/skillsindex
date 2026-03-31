@@ -11,7 +11,7 @@ import { Input as TextInput } from "@/src/components/ui/input";
 import { Switch } from "@/src/components/ui/switch";
 
 import type { AdminCatalogRow, AdminCatalogViewModel, RepositorySyncPolicy } from "./model";
-import { CatalogDetailPane, DetailCard, RowSelectionButton, SidePanels, useSelectedRow } from "./AdminCatalogShared";
+import { CatalogDetailPane, RowSelectionButton, SidePanels, useSelectedRow } from "./AdminCatalogShared";
 import styles from "./AdminCatalogSurface.module.scss";
 
 export { QueryFilters } from "./AdminCatalogShared";
@@ -30,6 +30,8 @@ export function SkillsView({
   const { messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
   const { selectedRow, selectedRowId, setSelectedRowId } = useSelectedRow(rows);
+  const [detailPaneOpen, setDetailPaneOpen] = useState(false);
+  const detailDrawerOpen = detailPaneOpen && Boolean(selectedRow);
 
   return (
     <div className={styles.splitLayout}>
@@ -48,6 +50,16 @@ export function SkillsView({
                 buttonLabel={adminCatalogMessages.inspectAction}
                 onSelect={() => setSelectedRowId(row.id)}
               >
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedRowId(row.id);
+                    setDetailPaneOpen(true);
+                  }}
+                >
+                  {adminCatalogMessages.openDetailAction}
+                </Button>
                 {row.syncable ? (
                   <Button size="sm" variant="outline" onClick={() => onSyncSkill(row.id)} disabled={Boolean(busyAction)}>
                     {busyAction === `sync-skill-${row.id}` ? adminCatalogMessages.syncingAction : adminCatalogMessages.syncNowAction}
@@ -61,12 +73,13 @@ export function SkillsView({
       </div>
 
       <div className={`${styles.column} ${styles.detailRail}`}>
-        <DetailCard
-          title={adminCatalogMessages.selectedSkillTitle}
-          description={adminCatalogMessages.selectedSkillDescription}
+        <CatalogDetailPane
+          open={detailDrawerOpen}
           row={selectedRow}
-          emptyText={adminCatalogMessages.selectedSkillEmpty}
-          testId="admin-skills-inline-detail"
+          description={adminCatalogMessages.selectedSkillDescription}
+          closeLabel={adminCatalogMessages.closePanelAction}
+          onClose={() => setDetailPaneOpen(false)}
+          dataTestId="admin-skills-detail-pane"
           actions={
             selectedRow ? (
               <>
@@ -106,6 +119,7 @@ export function JobsView({
   const adminCatalogMessages = messages.adminCatalog;
   const { selectedRow, selectedRowId, setSelectedRowId } = useSelectedRow(rows);
   const [detailPaneOpen, setDetailPaneOpen] = useState(false);
+  const detailDrawerOpen = detailPaneOpen && Boolean(selectedRow);
 
   return (
     <div className={styles.splitLayout}>
@@ -159,7 +173,7 @@ export function JobsView({
 
       <div className={`${styles.column} ${styles.detailRail}`}>
         <CatalogDetailPane
-          open={detailPaneOpen}
+          open={detailDrawerOpen}
           row={selectedRow}
           description={adminCatalogMessages.selectedJobDescription}
           closeLabel={adminCatalogMessages.closePanelAction}
@@ -209,6 +223,7 @@ export function SyncRunsView({
   const adminCatalogMessages = messages.adminCatalog;
   const { selectedRow, selectedRowId, setSelectedRowId } = useSelectedRow(rows);
   const [detailPaneOpen, setDetailPaneOpen] = useState(false);
+  const detailDrawerOpen = detailPaneOpen && Boolean(selectedRow);
 
   return (
     <div className={styles.compactSplitLayout}>
@@ -246,7 +261,7 @@ export function SyncRunsView({
 
       <div className={`${styles.column} ${styles.detailRail}`}>
         <CatalogDetailPane
-          open={detailPaneOpen}
+          open={detailDrawerOpen}
           row={selectedRow}
           description={adminCatalogMessages.selectedSyncRunDescription}
           closeLabel={adminCatalogMessages.closePanelAction}

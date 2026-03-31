@@ -67,7 +67,7 @@ export function AdminIngestionContent({
   const commonMessages = messages.adminCommon;
   const ingestionMessages = messages.adminIngestion;
 
-  function renderWorkPane() {
+  function renderDetailDrawer() {
     if (!overlay) {
       return null;
     }
@@ -191,7 +191,7 @@ export function AdminIngestionContent({
     }
   }
 
-  const workPane = renderWorkPane();
+  const detailDrawer = renderDetailDrawer();
 
   return (
     <AdminPageScaffold
@@ -203,9 +203,9 @@ export function AdminIngestionContent({
     >
       <IngestionMessage message={message} />
       <IngestionMetricGrid metrics={metrics} />
-      {route === "/admin/ingestion/manual" ? <ManualIngestionView {...manualView} workPane={workPane} /> : null}
-      {route === "/admin/ingestion/repository" ? <RepositoryIngestionView {...repositoryView} workPane={workPane} /> : null}
-      {route === "/admin/records/imports" ? <ImportsIngestionView {...importsView} workPane={workPane} /> : null}
+      {route === "/admin/ingestion/manual" ? <ManualIngestionView {...manualView} detailDrawer={detailDrawer} /> : null}
+      {route === "/admin/ingestion/repository" ? <RepositoryIngestionView {...repositoryView} detailDrawer={detailDrawer} /> : null}
+      {route === "/admin/records/imports" ? <ImportsIngestionView {...importsView} detailDrawer={detailDrawer} /> : null}
     </AdminPageScaffold>
   );
 }

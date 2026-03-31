@@ -8,6 +8,7 @@ describe("ProtectedConsoleShell", () => {
   it("renders desktop and drawer navigation containers through the shared shell contract", () => {
     const markup = renderToStaticMarkup(
       createElement(ProtectedConsoleShell, {
+        initialTheme: "light",
         scope: "workspace-shell",
         shellTestId: "workspace-shell",
         sideNavTestId: "workspace-side-nav",
@@ -29,5 +30,6 @@ describe("ProtectedConsoleShell", () => {
     expect(markup).toContain("workspace-side-nav");
     expect(markup).toContain("workspace-side-nav-drawer");
     expect(markup).toContain("protected-console-drawer-backdrop");
+    expect(markup).toContain('data-protected-theme="light"');
   });
 });

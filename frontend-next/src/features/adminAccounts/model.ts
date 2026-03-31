@@ -86,16 +86,15 @@ export function resolveSelectedAdminAccount<TAccount extends AdminAccountItem>(
   visibleAccounts: TAccount[],
   selectedAccountId: number | null
 ): TAccount | null {
-  if (!visibleAccounts.length) {
+  if (!visibleAccounts.length || !allAccounts.length) {
     return null;
   }
 
-  return (
-    visibleAccounts.find((account) => account.id === selectedAccountId) ||
-    visibleAccounts[0] ||
-    allAccounts.find((account) => account.id === selectedAccountId) ||
-    null
-  );
+  if (selectedAccountId === null) {
+    return visibleAccounts[0] || null;
+  }
+
+  return visibleAccounts.find((account) => account.id === selectedAccountId) || null;
 }
 
 export function sortAccountsByUpdatedAt<TAccount extends AdminAccountItem>(accounts: TAccount[]): TAccount[] {

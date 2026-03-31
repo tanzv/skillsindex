@@ -27,10 +27,15 @@ export function AdminDataPage({ title, description, endpoint, payload, messages 
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-3 text-sm text-slate-600">
-          <span className="rounded-full bg-slate-100 px-3 py-1 font-medium">{endpoint}</span>
+        <CardContent className="flex flex-wrap gap-3 text-sm text-[color:var(--ui-text-secondary)]">
+          <span className="rounded-full border border-[color:var(--ui-control-border)] bg-[color:var(--ui-control-bg-subtle)] px-3 py-1 font-medium text-[color:var(--ui-text-primary)]">
+            {endpoint}
+          </span>
           {secondaryPairs.slice(0, 4).map(([key, value]) => (
-            <span key={key} className="rounded-full bg-sky-50 px-3 py-1 font-medium text-sky-700">
+            <span
+              key={key}
+              className="rounded-full border border-[color:var(--ui-accent-soft-bg)] bg-[color:var(--ui-accent-soft-bg)] px-3 py-1 font-medium text-[color:var(--ui-accent-soft-text)]"
+            >
               {key}: {typeof value === "object" ? messages.objectValueLabel : String(value)}
             </span>
           ))}
@@ -45,7 +50,7 @@ export function AdminDataPage({ title, description, endpoint, payload, messages 
                 <CardTitle className="text-lg">{formatRecordTitle(messages.recordTitleTemplate, index + 1)}</CardTitle>
               </CardHeader>
               <CardContent>
-                <pre className="overflow-auto rounded-2xl bg-slate-950 p-4 text-xs leading-6 text-slate-100">
+                <pre className="overflow-auto rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] p-4 text-xs leading-6 text-[color:var(--ui-text-primary)]">
                   {JSON.stringify(item, null, 2)}
                 </pre>
               </CardContent>
@@ -58,7 +63,7 @@ export function AdminDataPage({ title, description, endpoint, payload, messages 
             <CardTitle>{messages.responsePayloadTitle}</CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="overflow-auto rounded-2xl bg-slate-950 p-4 text-xs leading-6 text-slate-100">
+            <pre className="overflow-auto rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-card-muted-bg)] p-4 text-xs leading-6 text-[color:var(--ui-text-primary)]">
               {JSON.stringify(payload, null, 2)}
             </pre>
           </CardContent>

@@ -17,7 +17,7 @@ import {
   resolveProtectedNavigationSidebarState
 } from "@/src/lib/navigation/protectedNavigationRegistry";
 import { marketplaceHomeRoute } from "@/src/lib/routing/protectedSurfaceLinks";
-import { buildMarketplaceHrefForTheme } from "@/src/lib/theme/sharedThemePreference";
+import { buildMarketplaceHrefForTheme, type SharedThemePreference } from "@/src/lib/theme/sharedThemePreference";
 
 import { buildAccountCenterMenuConfig } from "./protectedTopbarConfigs";
 import { ProtectedSectionSidebar } from "./ProtectedSectionSidebar";
@@ -26,6 +26,7 @@ import { ProtectedConsoleShell } from "./ProtectedConsoleShell";
 
 interface WorkspaceShellProps {
   children: ReactNode;
+  initialTheme: SharedThemePreference;
   session: SessionContext;
   workspaceMessages: WorkspaceMessages;
   messages: {
@@ -35,7 +36,7 @@ interface WorkspaceShellProps {
   };
 }
 
-export function WorkspaceShell({ children, session, workspaceMessages, messages }: WorkspaceShellProps) {
+export function WorkspaceShell({ children, initialTheme, session, workspaceMessages, messages }: WorkspaceShellProps) {
   const pathname = usePathname();
   const registry = buildWorkspaceShellNavigationRegistry({
     adminNavigation: messages.navigation,
@@ -48,6 +49,7 @@ export function WorkspaceShell({ children, session, workspaceMessages, messages 
   return (
     <ProtectedConsoleShell
       key={pathname}
+      initialTheme={initialTheme}
       scope="workspace-shell"
       shellTestId="workspace-shell"
       sideNavTestId="workspace-side-nav"

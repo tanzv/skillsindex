@@ -3,7 +3,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { buildWorkspacePageModel } from "@/src/features/workspace/model";
-import { WorkspaceEntryDetailPane } from "@/src/features/workspace/WorkspaceRouteDetailSurface";
 import { WorkspaceRoutePage } from "@/src/features/workspace/WorkspaceRoutePage";
 import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
 import type { WorkspaceRoutePath } from "@/src/features/workspace/types";
@@ -29,7 +28,7 @@ function renderWorkspaceRoute(route: WorkspaceRoutePath, messages?: Partial<Work
 }
 
 describe("workspace route page", () => {
-  it("renders queue route as backlog plus inline detail entry actions", () => {
+  it("renders queue route as backlog plus detail drawer entry actions", () => {
     const markup = renderWorkspaceRoute("/workspace/queue");
 
     expect(markup).toContain("Queue Backlog");
@@ -37,7 +36,7 @@ describe("workspace route page", () => {
     expect(markup).toContain("Queue Insights");
   });
 
-  it("renders policy route with focused review queue and inline detail triggers", () => {
+  it("renders policy route with focused review queue and detail drawer triggers", () => {
     const markup = renderWorkspaceRoute("/workspace/policy");
 
     expect(markup).toContain("Policy Focus Queue");
@@ -46,7 +45,7 @@ describe("workspace route page", () => {
     expect(markup).toContain("Review Pressure");
   });
 
-  it("renders runbook route with explicit target selection and inline detail triggers", () => {
+  it("renders runbook route with explicit target selection and detail drawer triggers", () => {
     const markup = renderWorkspaceRoute("/workspace/runbook");
 
     expect(markup).toContain("Runbook Targets");
@@ -70,35 +69,12 @@ describe("workspace route page", () => {
     expect(markup).toContain("Open Details Now");
   });
 
-  it("renders the workspace entry detail surface as an inline pane", () => {
-    const model = buildWorkspacePageModel(
-      "/workspace/queue",
-      {
-        user: {
-          id: 7,
-          username: "operator",
-          displayName: "Operator",
-          role: "admin",
-          status: "active"
-        },
-        marketplacePublicAccess: true
-      },
-      workspacePayload
-    );
+  it("renders queue route with drawer entry triggers and supporting panels", () => {
+    const markup = renderWorkspaceRoute("/workspace/queue");
 
-    const markup = renderToStaticMarkup(
-      createElement(WorkspaceEntryDetailPane, {
-        open: true,
-        entry: model.snapshot.queueEntries[0],
-        locale: model.locale,
-        messages: model.messages,
-        onClose: () => undefined
-      })
-    );
-
-    expect(markup).toContain('data-testid="workspace-entry-detail-pane"');
-    expect(markup).not.toContain('role="dialog"');
-    expect(markup).toContain("Open Skill Detail");
-    expect(markup).toContain("Close Panel");
+    expect(markup).toContain("Queue Backlog");
+    expect(markup).toContain("Open Details");
+    expect(markup).toContain("Queue Insights");
+    expect(markup).toContain("Escalation Paths");
   });
 });

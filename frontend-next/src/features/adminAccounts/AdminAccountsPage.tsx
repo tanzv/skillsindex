@@ -14,7 +14,6 @@ import {
   normalizeAdminPresentationTaxonomyPayload,
 } from "@/src/lib/admin/adminAccountSettingsModel";
 import {
-  createAdminOverlayState,
   useAdminOverlayState,
 } from "@/src/lib/admin/useAdminOverlayState";
 import {
@@ -70,13 +69,7 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
     null,
   );
   const { overlay, openOverlay, closeOverlay } =
-    useAdminOverlayState<"accountDetail">(
-      route === "/admin/accounts" ||
-        route === "/admin/roles" ||
-        route === "/admin/roles/new"
-        ? createAdminOverlayState({ kind: "detail", entity: "accountDetail" })
-        : null,
-    );
+    useAdminOverlayState<"accountDetail">();
   const [accountEditor, setAccountEditor] = useState({
     userId: "",
     status: "active",
@@ -215,21 +208,8 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
   });
 
   useEffect(() => {
-    if (
-      route === "/admin/accounts" ||
-      route === "/admin/roles" ||
-      route === "/admin/roles/new"
-    ) {
-      openOverlay({
-        kind: "detail",
-        entity: "accountDetail",
-        entityId: selectedAccountId,
-      });
-      return;
-    }
-
     closeOverlay();
-  }, [closeOverlay, openOverlay, route, selectedAccountId]);
+  }, [closeOverlay, route]);
 
   useEffect(() => {
     const nextSettingsDraft: SaveAdminAccessSettingsInput = {
@@ -269,14 +249,16 @@ export function AdminAccountsPage({ route }: { route: AdminAccountsRoute }) {
 
   useEffect(() => {
     if (!selectedAccount) {
-      setSelectedAccountId(null);
+      if (overlay?.entity === "accountDetail") {
+        closeOverlay();
+      }
       return;
     }
 
     setSelectedAccountId((current) =>
       current === selectedAccount.id ? current : selectedAccount.id,
     );
-  }, [selectedAccount]);
+  }, [closeOverlay, overlay?.entity, selectedAccount]);
 
   useEffect(() => {
     if (!selectedAccount) {

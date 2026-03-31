@@ -45,14 +45,16 @@ test("renders authenticated admin, workspace, and account routes", async ({ page
   await expect(page.getByTestId("account-topbar").getByRole("link", { name: "Marketplace", exact: true })).toBeVisible();
   await expect(page.getByTestId("account-topbar").getByRole("link", { name: "Account", exact: true })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("heading", { name: "Account Center", level: 1 })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Profile", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save Profile" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Profile", level: 2 })).toBeVisible();
 });
 
 test("executes authenticated profile and manual ingestion actions", async ({ page }) => {
   await loginAsAdmin(page, "/account/profile");
 
   await expect(page.getByRole("heading", { name: "Account Center", level: 1 })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Profile", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save Profile" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Profile", level: 2 })).toBeVisible();
   await page.getByRole("button", { name: "Save Profile" }).click();
   await expect(page.getByText("Profile updated.")).toBeVisible();
 

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { type ReactNode, useState } from "react";
 
-import { InlineWorkPaneSurface } from "@/src/components/shared/InlineWorkPaneSurface";
+import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import type { PublicLocale } from "@/src/lib/i18n/publicLocale";
@@ -68,11 +68,13 @@ export function WorkspaceEntryDetailPane({
   }
 
   return (
-    <InlineWorkPaneSurface
+    <DetailFormSurface
+      open
       title={entry.name || messages.queueDetailTitle}
       description={description || messages.queueDetailDescription}
       closeLabel={messages.actionClosePanel}
       onClose={onClose}
+      variant="drawer"
       dataTestId="workspace-entry-detail-pane"
       footer={
         <div className={styles.detailActionRow}>
@@ -133,6 +135,6 @@ export function WorkspaceEntryDetailPane({
 
         {children}
       </div>
-    </InlineWorkPaneSurface>
+    </DetailFormSurface>
   );
 }

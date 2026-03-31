@@ -219,7 +219,7 @@ export function AdminAccountsContent({
               description={detailPaneDescription}
               closeLabel={accountMessages.closePanelAction}
               onClose={onCloseDetailPane}
-              dataTestId="admin-accounts-work-pane"
+              dataTestId="admin-accounts-detail-drawer"
             >
               <div className="space-y-6">
                 <SelectedAccountSnapshot account={selectedAccount} />

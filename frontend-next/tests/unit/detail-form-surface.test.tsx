@@ -29,6 +29,27 @@ describe("DetailFormSurface", () => {
     expect(source).not.toContain("if (!isMounted)");
   });
 
+  it("delegates escape dismissal to the dialog primitive without a window-level keydown listener", () => {
+    const source = readFileSync(
+      path.resolve(process.cwd(), "src/components/shared/DetailFormSurface.tsx"),
+      "utf8"
+    );
+
+    expect(source).not.toContain('window.addEventListener("keydown"');
+    expect(source).toContain("onOpenChange={(nextOpen) => !nextOpen && onClose()}");
+  });
+
+  it("uses dialog auto focus hooks instead of forcing focus onto the panel container", () => {
+    const source = readFileSync(
+      path.resolve(process.cwd(), "src/components/shared/DetailFormSurface.tsx"),
+      "utf8"
+    );
+
+    expect(source).toContain("onOpenAutoFocus");
+    expect(source).not.toContain("panelRef.current");
+    expect(source).toContain("resolveFirstFocusableElement(bodyRef.current)");
+  });
+
   it("uses portaled dialog and sheet primitives so overlays escape local layout contexts", () => {
     const dialogSource = readFileSync(path.resolve(process.cwd(), "src/components/ui/dialog.tsx"), "utf8");
     const sheetSource = readFileSync(path.resolve(process.cwd(), "src/components/ui/sheet.tsx"), "utf8");

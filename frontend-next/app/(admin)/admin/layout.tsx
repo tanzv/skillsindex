@@ -5,19 +5,21 @@ import type { ReactNode } from "react";
 import { AdminShell } from "@/src/components/shared/AdminShell";
 import { loadProtectedLayoutContext } from "@/src/features/protected/loadProtectedLayoutContext";
 import { ProtectedI18nProvider } from "@/src/lib/i18n/ProtectedI18nProvider";
+import { adminOverviewRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 
 interface AdminLayoutProps {
   children: ReactNode;
 }
 
 export default async function AdminLayout({ children }: AdminLayoutProps) {
-  const { session, locale, messages, pageMessages } = await loadProtectedLayoutContext("/admin/overview", {
+  const { session, locale, theme, messages, pageMessages } = await loadProtectedLayoutContext(adminOverviewRoute, {
     requireSession: false
   });
 
   return (
     <ProtectedI18nProvider locale={locale} messages={pageMessages}>
       <AdminShell
+        initialTheme={theme}
         session={session}
         messages={{
           shell: messages.adminShell,

@@ -17,7 +17,7 @@ import {
   resolveProtectedNavigationSidebarState
 } from "@/src/lib/navigation/protectedNavigationRegistry";
 import { marketplaceHomeRoute } from "@/src/lib/routing/protectedSurfaceLinks";
-import { buildMarketplaceHrefForTheme } from "@/src/lib/theme/sharedThemePreference";
+import { buildMarketplaceHrefForTheme, type SharedThemePreference } from "@/src/lib/theme/sharedThemePreference";
 
 import { buildAccountCenterMenuConfig, buildAdminAccountCenterMenuConfig } from "./protectedTopbarConfigs";
 import { ProtectedConsoleShell } from "./ProtectedConsoleShell";
@@ -26,6 +26,7 @@ import { ProtectedTopbar } from "./ProtectedTopbar";
 
 interface AccountShellProps {
   children: ReactNode;
+  initialTheme: SharedThemePreference;
   session: SessionContext;
   messages: {
     shell: AccountShellMessages;
@@ -35,7 +36,7 @@ interface AccountShellProps {
   };
 }
 
-export function AccountShell({ children, session, messages }: AccountShellProps) {
+export function AccountShell({ children, initialTheme, session, messages }: AccountShellProps) {
   const pathname = usePathname();
   const registry = buildAccountShellNavigationRegistry({
     adminNavigation: messages.navigation,
@@ -50,6 +51,7 @@ export function AccountShell({ children, session, messages }: AccountShellProps)
   return (
     <ProtectedConsoleShell
       key={pathname}
+      initialTheme={initialTheme}
       scope="account-shell"
       shellTestId="account-shell"
       sideNavTestId="account-side-nav"

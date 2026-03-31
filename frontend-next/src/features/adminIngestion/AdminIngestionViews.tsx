@@ -8,7 +8,7 @@ import type { ImportsIngestionViewProps, ManualIngestionViewProps, RepositoryIng
 import { ImportJobsCard, ManualGuidanceCard, RecentSyncRunsCard } from "./AdminIngestionPanels";
 import { IngestionTriggerCard, SkillInventoryList } from "./shared";
 
-export function ManualIngestionView(props: ManualIngestionViewProps & { workPane?: ReactNode }) {
+export function ManualIngestionView(props: ManualIngestionViewProps & { detailDrawer?: ReactNode }) {
   const { messages } = useProtectedI18n();
   const ingestionMessages = messages.adminIngestion;
 
@@ -29,14 +29,14 @@ export function ManualIngestionView(props: ManualIngestionViewProps & { workPane
           actionLabel={ingestionMessages.createManualAction}
           onAction={props.onOpenCreate}
         />
-        {props.workPane}
+        {props.detailDrawer}
         <ManualGuidanceCard />
       </div>
     </div>
   );
 }
 
-export function RepositoryIngestionView(props: RepositoryIngestionViewProps & { workPane?: ReactNode }) {
+export function RepositoryIngestionView(props: RepositoryIngestionViewProps & { detailDrawer?: ReactNode }) {
   const { messages } = useProtectedI18n();
   const ingestionMessages = messages.adminIngestion;
 
@@ -63,14 +63,14 @@ export function RepositoryIngestionView(props: RepositoryIngestionViewProps & { 
           actionLabel={ingestionMessages.savePolicyAction}
           onAction={props.onOpenPolicy}
         />
-        {props.workPane}
+        {props.detailDrawer}
         <RecentSyncRunsCard syncRuns={props.syncRuns} onOpenDetail={props.onOpenSyncRunDetail} />
       </div>
     </div>
   );
 }
 
-export function ImportsIngestionView(props: ImportsIngestionViewProps & { workPane?: ReactNode }) {
+export function ImportsIngestionView(props: ImportsIngestionViewProps & { detailDrawer?: ReactNode }) {
   const { messages } = useProtectedI18n();
   const ingestionMessages = messages.adminIngestion;
 
@@ -90,7 +90,7 @@ export function ImportsIngestionView(props: ImportsIngestionViewProps & { workPa
           onAction={props.onOpenSkillMPImport}
         />
       </div>
-      {props.workPane}
+      {props.detailDrawer}
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <SkillInventoryList
           title={ingestionMessages.importedInventoryTitle}

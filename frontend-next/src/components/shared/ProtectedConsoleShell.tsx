@@ -19,6 +19,7 @@ interface ProtectedConsoleShellHeaderControls {
 }
 
 interface ProtectedConsoleShellProps {
+  initialTheme: SharedThemePreference;
   scope: "admin-shell" | "workspace-shell" | "account-shell";
   shellTestId: string;
   sideNavTestId: string;
@@ -31,6 +32,7 @@ interface ProtectedConsoleShellProps {
 const useSynchronizedLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export function ProtectedConsoleShell({
+  initialTheme,
   scope,
   shellTestId,
   sideNavTestId,
@@ -41,7 +43,7 @@ export function ProtectedConsoleShell({
 }: ProtectedConsoleShellProps) {
   const frameClassName = `${scope}-frame`;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState<SharedThemePreference>("dark");
+  const [theme, setTheme] = useState<SharedThemePreference>(initialTheme);
   const [hasResolvedThemePreference, setHasResolvedThemePreference] = useState(false);
   const drawerNavTestId = `${sideNavTestId}-drawer`;
   const drawerPanelId = `${shellTestId}-drawer-panel`;

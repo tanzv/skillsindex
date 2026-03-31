@@ -5,17 +5,19 @@ import type { ReactNode } from "react";
 import { WorkspaceShell } from "@/src/components/shared/WorkspaceShell";
 import { loadProtectedLayoutContext } from "@/src/features/protected/loadProtectedLayoutContext";
 import { ProtectedI18nProvider } from "@/src/lib/i18n/ProtectedI18nProvider";
+import { workspaceOverviewRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 
 interface WorkspaceLayoutProps {
   children: ReactNode;
 }
 
 export default async function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
-  const { session, locale, messages, pageMessages } = await loadProtectedLayoutContext("/workspace");
+  const { session, locale, theme, messages, pageMessages } = await loadProtectedLayoutContext(workspaceOverviewRoute);
 
   return (
     <ProtectedI18nProvider locale={locale} messages={pageMessages}>
       <WorkspaceShell
+        initialTheme={theme}
         session={session}
         workspaceMessages={pageMessages.workspace}
         messages={{ shell: messages.workspaceShell, navigation: messages.adminNavigation, topbar: messages.topbar }}
