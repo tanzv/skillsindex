@@ -7,43 +7,25 @@ import {
 } from "./publicRouteRegistry";
 import { adminRoutePaths } from "./adminRouteRegistry";
 import {
-  accountApiCredentialsRoute,
+  accountSurfaceRoutes,
   accountProfileRoute,
   accountRoutePrefix,
-  accountSecurityRoute,
-  accountSessionsRoute,
   isAccountSurfacePath,
   isAdminSurfacePath,
   isProtectedSurfacePath,
   isWorkspaceSurfacePath,
   adminOverviewRoute,
   adminRoutePrefix,
-  workspaceActionsRoute,
-  workspaceActivityRoute,
   workspaceOverviewRoute,
-  workspacePolicyRoute,
   workspaceRoutePrefix,
-  workspaceQueueRoute,
-  workspaceRunbookRoute
+  workspaceSurfaceRoutes
 } from "./protectedSurfaceLinks";
 
 export const publicRoutes = publicRouteEntries;
 
-export const workspaceRoutes = [
-  workspaceOverviewRoute,
-  workspaceActivityRoute,
-  workspaceQueueRoute,
-  workspacePolicyRoute,
-  workspaceRunbookRoute,
-  workspaceActionsRoute
-] as const;
+export const workspaceRoutes = workspaceSurfaceRoutes;
 
-export const accountRoutes = [
-  accountProfileRoute,
-  accountSecurityRoute,
-  accountSessionsRoute,
-  accountApiCredentialsRoute
-] as const;
+export const accountRoutes = accountSurfaceRoutes;
 
 export const adminRoutes = adminRoutePaths;
 

@@ -95,7 +95,7 @@ describe("workspace model", () => {
     expect(model.railSections.map((section) => section.title)).toEqual(
       expect.arrayContaining(["Escalation Paths", "Current Session"])
     );
-    expect(model.quickActions.some((action) => action.href === "/admin/sync-jobs")).toBe(true);
+    expect(model.quickActions).toHaveLength(0);
     expect(model.primarySections.find((section) => section.title === "Queue Insights")?.variant).toBe("signal-grid");
   });
 
@@ -119,6 +119,37 @@ describe("workspace model", () => {
     expect(checklistSection?.variant).toBe("compact-list");
     expect(checklistSection?.items.length).toBeGreaterThan(0);
     expect(model.summaryMetrics.some((metric) => metric.label === "Marketplace Access")).toBe(true);
+    expect(model.quickActions).toHaveLength(0);
+  });
+
+  it("keeps shared quick actions only on the dedicated actions route", () => {
+    const session = {
+      user: {
+        id: 12,
+        username: "workspace-operator",
+        displayName: "Workspace Operator",
+        role: "admin",
+        status: "active"
+      },
+      marketplacePublicAccess: true
+    } as const;
+
+    const routesWithoutQuickActions = [
+      "/workspace/activity",
+      "/workspace/queue",
+      "/workspace/policy",
+      "/workspace/runbook"
+    ] as const;
+
+    for (const route of routesWithoutQuickActions) {
+      const model = buildWorkspacePageModel(route, session, workspacePayload);
+
+      expect(model.quickActions).toHaveLength(0);
+    }
+
+    const actionsModel = buildWorkspacePageModel("/workspace/actions", session, workspacePayload);
+
+    expect(actionsModel.quickActions.length).toBeGreaterThan(0);
   });
 
   it("applies injected workspace messages to the page model", () => {

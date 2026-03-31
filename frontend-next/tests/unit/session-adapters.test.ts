@@ -71,6 +71,7 @@ describe("session adapters", () => {
     const [, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
     const headers = new Headers(init.headers);
 
+    expect(init.cache).toBe("no-store");
     expect(init.credentials).toBe("include");
     expect(headers.get("accept")).toBe("application/json");
     expect(headers.get("content-type")).toBe("application/json");

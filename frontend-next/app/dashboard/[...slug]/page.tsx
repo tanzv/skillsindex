@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 
+import { adminRoutePrefix, protectedDashboardRoute } from "@/src/lib/routing/protectedSurfaceLinks";
+
 interface DashboardCompatibilityPageProps {
   params: Promise<{
     slug: string[];
@@ -30,6 +32,11 @@ export default async function DashboardCompatibilityPage({
   searchParams
 }: DashboardCompatibilityPageProps) {
   const [{ slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
-  const nextPath = `/admin/${slug.join("/")}${buildQueryString(resolvedSearchParams)}`;
+  const nextPath = `${adminRoutePrefix}/${slug.join("/")}${buildQueryString(resolvedSearchParams)}`;
+
+  if (nextPath === protectedDashboardRoute) {
+    redirect(adminRoutePrefix);
+  }
+
   redirect(nextPath);
 }

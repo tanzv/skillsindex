@@ -1,5 +1,6 @@
+import { adminAPIKeysRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 import { renderAdminPageRoute } from "@/src/features/admin/adminRouteEntry";
 
 export default async function AdminAPIKeysPage() {
-  return renderAdminPageRoute("/admin/apikeys");
+  return renderAdminPageRoute(adminAPIKeysRoute);
 }

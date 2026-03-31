@@ -1,4 +1,12 @@
 import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.workspace";
+import {
+  workspaceActionsRoute,
+  workspaceActivityRoute,
+  workspaceOverviewRoute,
+  workspacePolicyRoute,
+  workspaceQueueRoute,
+  workspaceRunbookRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
 import type { WorkspaceRoute } from "@/src/lib/routing/routes";
 import type { SessionContext } from "@/src/lib/schemas/session";
 
@@ -20,12 +28,12 @@ type WorkspaceRouteSectionsBuilder = (
 ) => WorkspaceRouteSections;
 
 const workspaceRouteSectionBuilders: Record<WorkspaceRoute, WorkspaceRouteSectionsBuilder> = {
-  "/workspace": buildOverviewRouteSections,
-  "/workspace/activity": buildActivityRouteSections,
-  "/workspace/queue": buildQueueRouteSections,
-  "/workspace/policy": buildPolicyRouteSections,
-  "/workspace/runbook": buildRunbookRouteSections,
-  "/workspace/actions": buildActionsRouteSections
+  [workspaceOverviewRoute]: buildOverviewRouteSections,
+  [workspaceActivityRoute]: buildActivityRouteSections,
+  [workspaceQueueRoute]: buildQueueRouteSections,
+  [workspacePolicyRoute]: buildPolicyRouteSections,
+  [workspaceRunbookRoute]: buildRunbookRouteSections,
+  [workspaceActionsRoute]: buildActionsRouteSections
 };
 
 export function resolveRouteSections(

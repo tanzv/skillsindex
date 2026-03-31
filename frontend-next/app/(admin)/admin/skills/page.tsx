@@ -1,3 +1,4 @@
+import { adminSkillsRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 import { renderAdminPageRoute } from "@/src/features/admin/adminRouteEntry";
 
 interface AdminSkillsPageProps {
@@ -15,7 +16,7 @@ function firstSearchParam(value: string | string[] | undefined): string {
 export default async function AdminSkillsPage({ searchParams }: AdminSkillsPageProps) {
   const resolvedSearchParams = await searchParams;
 
-  return renderAdminPageRoute("/admin/skills", {
+  return renderAdminPageRoute(adminSkillsRoute, {
     initialQuery: {
       q: firstSearchParam(resolvedSearchParams.q),
       source: firstSearchParam(resolvedSearchParams.source),

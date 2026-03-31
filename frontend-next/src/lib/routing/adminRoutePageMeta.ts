@@ -3,6 +3,30 @@ import type { AdminAccountsMessages } from "@/src/lib/i18n/protectedPageMessages
 import type { AdminCatalogMessages } from "@/src/lib/i18n/protectedPageMessages.catalog";
 import type { AdminIngestionMessages } from "@/src/lib/i18n/protectedPageMessages.ingestion";
 import type { AdminOperationsMessages } from "@/src/lib/i18n/protectedPageMessages.operations";
+import {
+  adminAccountsNewRoute,
+  adminAccountsRoute,
+  adminAuditExportRoute,
+  adminAuditRoute,
+  adminBackupPlansRoute,
+  adminBackupRunsRoute,
+  adminChangeApprovalsRoute,
+  adminJobsRoute,
+  adminManualIntakeRoute,
+  adminMetricsRoute,
+  adminRecoveryDrillsRoute,
+  adminReleaseGatesRoute,
+  adminReleasesRoute,
+  adminRepositoryIntakeRoute,
+  adminRolesNewRoute,
+  adminRolesRoute,
+  adminSkillsRoute,
+  adminSyncJobsRoute,
+  adminSyncPolicyRoute,
+  adminAlertsRoute,
+  adminImportsRoute
+} from "./protectedSurfaceLinks";
+import { buildBFFPath } from "./protectedSurfaceEndpoints";
 
 import type {
   AdminAccountManagementRoute,
@@ -27,10 +51,6 @@ export interface AdminActionRouteMeta extends AdminDataRouteMeta {
   runEndpoint?: string;
 }
 
-function toBffAdminEndpoint(endpoint: string): string {
-  return endpoint.replace(/^\/api\/v1\//, "/api/bff/");
-}
-
 function resolveAdminBffEndpoint(route: string): string {
   const routeDefinition = resolveAdminRouteDefinition(route);
 
@@ -38,7 +58,7 @@ function resolveAdminBffEndpoint(route: string): string {
     throw new Error(`Missing admin endpoint for route: ${route}`);
   }
 
-  return toBffAdminEndpoint(routeDefinition.endpoint);
+  return buildBFFPath(routeDefinition.endpoint);
 }
 
 type AccountsRouteMetaMessages = Pick<
@@ -103,19 +123,19 @@ const adminAccountsRouteMetaResolvers: Record<
   AdminAccountManagementRoute,
   AdminRouteMetaResolver<AccountsRouteMetaMessages, AdminPageRouteMeta>
 > = {
-  "/admin/accounts": (messages) => ({
+  [adminAccountsRoute]: (messages) => ({
     title: messages.routeAccountsTitle,
     description: messages.routeAccountsDescription
   }),
-  "/admin/accounts/new": (messages) => ({
+  [adminAccountsNewRoute]: (messages) => ({
     title: messages.routeProvisioningTitle,
     description: messages.routeProvisioningDescription
   }),
-  "/admin/roles": (messages) => ({
+  [adminRolesRoute]: (messages) => ({
     title: messages.routeRolesTitle,
     description: messages.routeRolesDescription
   }),
-  "/admin/roles/new": (messages) => ({
+  [adminRolesNewRoute]: (messages) => ({
     title: messages.routeRoleConfigurationTitle,
     description: messages.routeRoleConfigurationDescription
   })
@@ -125,15 +145,15 @@ const adminIngestionRouteMetaResolvers: Record<
   AdminIngestionRoute,
   AdminRouteMetaResolver<IngestionRouteMetaMessages, AdminPageRouteMeta>
 > = {
-  "/admin/ingestion/manual": (messages) => ({
+  [adminManualIntakeRoute]: (messages) => ({
     title: messages.routeManualTitle,
     description: messages.routeManualDescription
   }),
-  "/admin/ingestion/repository": (messages) => ({
+  [adminRepositoryIntakeRoute]: (messages) => ({
     title: messages.routeRepositoryTitle,
     description: messages.routeRepositoryDescription
   }),
-  "/admin/records/imports": (messages) => ({
+  [adminImportsRoute]: (messages) => ({
     title: messages.routeImportsTitle,
     description: messages.routeImportsDescription
   })
@@ -143,22 +163,22 @@ const adminCatalogRouteMetaResolvers: Record<
   AdminCatalogRoute,
   AdminRouteMetaResolver<CatalogRouteMetaMessages, AdminDataRouteMeta>
 > = {
-  "/admin/skills": (messages, route) => ({
+  [adminSkillsRoute]: (messages, route) => ({
     title: messages.routeSkillsTitle,
     description: messages.routeSkillsDescription,
     endpoint: resolveAdminBffEndpoint(route)
   }),
-  "/admin/jobs": (messages, route) => ({
+  [adminJobsRoute]: (messages, route) => ({
     title: messages.routeJobsTitle,
     description: messages.routeJobsDescription,
     endpoint: resolveAdminBffEndpoint(route)
   }),
-  "/admin/sync-jobs": (messages, route) => ({
+  [adminSyncJobsRoute]: (messages, route) => ({
     title: messages.routeSyncJobsTitle,
     description: messages.routeSyncJobsDescription,
     endpoint: resolveAdminBffEndpoint(route)
   }),
-  "/admin/sync-policy/repository": (messages, route) => ({
+  [adminSyncPolicyRoute]: (messages, route) => ({
     title: messages.routePolicyTitle,
     description: messages.routePolicyDescription,
     endpoint: resolveAdminBffEndpoint(route)
@@ -169,17 +189,17 @@ const adminOperationsDashboardRouteMetaResolvers: Record<
   AdminOperationsDashboardRoute,
   AdminRouteMetaResolver<OperationsRouteMetaMessages, AdminActionRouteMeta>
 > = {
-  "/admin/ops/metrics": (messages, route) => ({
+  [adminMetricsRoute]: (messages, route) => ({
     title: messages.routeMetricsTitle,
     description: messages.routeMetricsDescription,
     endpoint: resolveAdminBffEndpoint(route)
   }),
-  "/admin/ops/alerts": (messages, route) => ({
+  [adminAlertsRoute]: (messages, route) => ({
     title: messages.routeAlertsTitle,
     description: messages.routeAlertsDescription,
     endpoint: resolveAdminBffEndpoint(route)
   }),
-  "/admin/ops/release-gates": (messages, route) => {
+  [adminReleaseGatesRoute]: (messages, route) => {
     const endpoint = resolveAdminBffEndpoint(route);
 
     return {
@@ -195,17 +215,17 @@ const adminOperationsRecordsRouteMetaResolvers: Record<
   AdminOperationsRecordsRoute,
   AdminRouteMetaResolver<OperationsRouteMetaMessages, AdminActionRouteMeta>
 > = {
-  "/admin/audit": (messages) => ({
+  [adminAuditRoute]: (messages) => ({
     title: messages.routeAuditExportTitle,
     description: messages.routeAuditExportDescription,
     endpoint: "/api/bff/admin/ops/audit-export?format=json"
   }),
-  "/admin/ops/audit-export": (messages, route) => ({
+  [adminAuditExportRoute]: (messages, route) => ({
     title: messages.routeAuditExportTitle,
     description: messages.routeAuditExportDescription,
     endpoint: `${resolveAdminBffEndpoint(route)}?format=json`
   }),
-  "/admin/ops/recovery-drills": (messages, route) => {
+  [adminRecoveryDrillsRoute]: (messages, route) => {
     const endpoint = resolveAdminBffEndpoint(route);
 
     return {
@@ -215,7 +235,7 @@ const adminOperationsRecordsRouteMetaResolvers: Record<
       createEndpoint: `${endpoint}/run`
     };
   },
-  "/admin/ops/releases": (messages, route) => {
+  [adminReleasesRoute]: (messages, route) => {
     const endpoint = resolveAdminBffEndpoint(route);
 
     return {
@@ -225,7 +245,7 @@ const adminOperationsRecordsRouteMetaResolvers: Record<
       createEndpoint: endpoint
     };
   },
-  "/admin/ops/change-approvals": (messages, route) => {
+  [adminChangeApprovalsRoute]: (messages, route) => {
     const endpoint = resolveAdminBffEndpoint(route);
 
     return {
@@ -235,7 +255,7 @@ const adminOperationsRecordsRouteMetaResolvers: Record<
       createEndpoint: endpoint
     };
   },
-  "/admin/ops/backup/plans": (messages, route) => {
+  [adminBackupPlansRoute]: (messages, route) => {
     const endpoint = resolveAdminBffEndpoint(route);
 
     return {
@@ -245,7 +265,7 @@ const adminOperationsRecordsRouteMetaResolvers: Record<
       createEndpoint: endpoint
     };
   },
-  "/admin/ops/backup/runs": (messages, route) => {
+  [adminBackupRunsRoute]: (messages, route) => {
     const endpoint = resolveAdminBffEndpoint(route);
 
     return {

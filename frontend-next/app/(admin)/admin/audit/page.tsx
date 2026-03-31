@@ -1,5 +1,6 @@
+import { adminAuditRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 import { renderAdminPageRoute } from "@/src/features/admin/adminRouteEntry";
 
 export default async function AdminAuditPage() {
-  return renderAdminPageRoute("/admin/audit");
+  return renderAdminPageRoute(adminAuditRoute);
 }

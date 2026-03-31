@@ -5,6 +5,11 @@ import {
   loadAccountRouteData,
   resolveAccountRouteDataRequirements
 } from "@/src/features/accountCenter/accountRouteDataLoader";
+import {
+  accountAPIKeysBFFEndpoint,
+  accountProfileBFFEndpoint,
+  accountSessionsBFFEndpoint
+} from "@/src/lib/routing/protectedSurfaceEndpoints";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
@@ -22,13 +27,13 @@ describe("account route data loader", () => {
     await loadAccountRouteData("/account/api-credentials", fetchJSON);
 
     expect(fetchJSON.mock.calls.map(([input]) => input)).toEqual([
-      "/api/bff/account/profile",
-      "/api/bff/account/profile",
-      "/api/bff/account/sessions",
-      "/api/bff/account/profile",
-      "/api/bff/account/sessions",
-      "/api/bff/account/profile",
-      "/api/bff/account/apikeys"
+      accountProfileBFFEndpoint,
+      accountProfileBFFEndpoint,
+      accountSessionsBFFEndpoint,
+      accountProfileBFFEndpoint,
+      accountSessionsBFFEndpoint,
+      accountProfileBFFEndpoint,
+      accountAPIKeysBFFEndpoint
     ]);
   });
 

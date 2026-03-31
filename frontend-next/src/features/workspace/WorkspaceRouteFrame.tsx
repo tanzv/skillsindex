@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { workspaceActionsRoute, workspaceOverviewRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 import { cn } from "@/src/lib/utils";
 
 import { WorkspaceSummaryGrid } from "./WorkspaceRouteShared";
@@ -12,7 +13,8 @@ interface WorkspaceRouteFrameProps {
 }
 
 export function WorkspaceRouteFrame({ model, children }: WorkspaceRouteFrameProps) {
-  const isOverview = model.route === "/workspace";
+  const isOverview = model.route === workspaceOverviewRoute;
+  const showHeroQuickActions = model.route === workspaceActionsRoute && model.quickActions.length > 0;
 
   return (
     <div className={cn("workspace-stage", isOverview && "is-overview")} data-testid="workspace-route-stage">
@@ -23,17 +25,19 @@ export function WorkspaceRouteFrame({ model, children }: WorkspaceRouteFrameProp
 
         <WorkspaceSummaryGrid model={model} />
 
-        <div className="workspace-stage-action-row">
-          {model.quickActions.map((action) => (
-            <Link
-              key={action.href}
-              href={action.href}
-              className={cn("workspace-stage-action", resolveWorkspaceActionVariantClassName(action.variant))}
-            >
-              {action.label}
-            </Link>
-          ))}
-        </div>
+        {showHeroQuickActions ? (
+          <div className="workspace-stage-action-row">
+            {model.quickActions.map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className={cn("workspace-stage-action", resolveWorkspaceActionVariantClassName(action.variant))}
+              >
+                {action.label}
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </section>
 
       {children}

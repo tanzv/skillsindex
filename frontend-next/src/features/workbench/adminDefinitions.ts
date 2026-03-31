@@ -1,3 +1,32 @@
+import {
+  adminAccessRoute,
+  adminAccountsNewRoute,
+  adminAccountsRoute,
+  adminIntegrationsRoute,
+  adminJobsRoute,
+  adminRolesNewRoute,
+  adminRolesRoute,
+  adminSkillsRoute,
+  adminSyncJobsRoute,
+  adminSyncPolicyRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
+import {
+  adminAccountsEndpoint,
+  adminAuthProvidersSettingsEndpoint,
+  adminIntegrationsEndpoint,
+  adminJobsEndpoint,
+  adminRegistrationSettingsEndpoint,
+  adminSkillsEndpoint,
+  adminSyncJobsEndpoint,
+  adminSyncPolicyEndpoint,
+  buildAdminAccountForceSignoutEndpoint,
+  buildAdminAccountPasswordResetEndpoint,
+  buildAdminAccountStatusEndpoint,
+  buildAdminJobCancelEndpoint,
+  buildAdminJobRetryEndpoint,
+  buildAdminUserRoleEndpoint
+} from "@/src/lib/routing/protectedSurfaceEndpoints";
+
 import type { ActionDefinition, ResourceDefinition, WorkbenchDefinition } from "./types";
 import { asNumber, asObject, buildPathWithQuery, parseScopes, requiredID } from "./utils";
 
@@ -21,7 +50,7 @@ function accountDirectoryResource(title = "Account Directory", description = "Cu
     key: "accounts",
     title,
     description,
-    buildPath: () => "/api/v1/admin/accounts"
+    buildPath: () => adminAccountsEndpoint
   };
 }
 
@@ -30,7 +59,7 @@ function registrationPolicyResource(): ResourceDefinition {
     key: "registration",
     title: "Registration Policy",
     description: "Current self-registration and marketplace access posture.",
-    buildPath: () => "/api/v1/admin/settings/registration"
+    buildPath: () => adminRegistrationSettingsEndpoint
   };
 }
 
@@ -39,7 +68,7 @@ function authProvidersResource(): ResourceDefinition {
     key: "authProviders",
     title: "Auth Providers",
     description: "Enabled and available login providers.",
-    buildPath: () => "/api/v1/admin/settings/auth-providers"
+    buildPath: () => adminAuthProvidersSettingsEndpoint
   };
 }
 
@@ -52,7 +81,7 @@ function updateRegistrationPolicyAction(): ActionDefinition {
       { key: "allow_registration", label: "Allow Registration", type: "switch", defaultValue: false },
       { key: "marketplace_public_access", label: "Marketplace Public Access", type: "switch", defaultValue: true }
     ],
-    buildPath: () => "/api/v1/admin/settings/registration",
+    buildPath: () => adminRegistrationSettingsEndpoint,
     refreshResources: ["registration"]
   };
 }
@@ -65,7 +94,7 @@ function updateAuthProvidersAction(): ActionDefinition {
     fields: [
       { key: "auth_providers", label: "Enabled Providers", type: "textarea", placeholder: "github,google,wecom" }
     ],
-    buildPath: () => "/api/v1/admin/settings/auth-providers",
+    buildPath: () => adminAuthProvidersSettingsEndpoint,
     buildPayload: (values) => ({
       auth_providers: parseScopes(values.auth_providers)
     }),
@@ -93,7 +122,7 @@ function updateAccountStatusAction(): ActionDefinition {
     ],
     buildPath: (values) => {
       const userID = requiredID(values.user_id);
-      return userID ? `/api/v1/admin/accounts/${userID}/status` : null;
+      return userID ? buildAdminAccountStatusEndpoint(userID) : null;
     },
     buildPayload: (values) => ({
       status: String(values.status || "active").trim()
@@ -109,7 +138,7 @@ function forceSignoutAction(): ActionDefinition {
     fields: [{ key: "user_id", label: "User ID", type: "number", required: true, min: 1 }],
     buildPath: (values) => {
       const userID = requiredID(values.user_id);
-      return userID ? `/api/v1/admin/accounts/${userID}/force-signout` : null;
+      return userID ? buildAdminAccountForceSignoutEndpoint(userID) : null;
     },
     refreshResources: ["accounts"]
   };
@@ -126,7 +155,7 @@ function resetPasswordAction(): ActionDefinition {
     ],
     buildPath: (values) => {
       const userID = requiredID(values.user_id);
-      return userID ? `/api/v1/admin/accounts/${userID}/password-reset` : null;
+      return userID ? buildAdminAccountPasswordResetEndpoint(userID) : null;
     },
     buildPayload: (values) => ({
       new_password: String(values.new_password || "").trim()
@@ -157,7 +186,7 @@ function updateUserRoleAction(): ActionDefinition {
     ],
     buildPath: (values) => {
       const userID = requiredID(values.user_id);
-      return userID ? `/api/v1/admin/users/${userID}/role` : null;
+      return userID ? buildAdminUserRoleEndpoint(userID) : null;
     },
     buildPayload: (values) => ({
       role: String(values.role || "member").trim()
@@ -184,7 +213,7 @@ function adminSkillListResource(key: string, title: string, defaults: Record<str
       { key: "visibility", label: "Visibility", type: "text", placeholder: "public or private", defaultValue: defaultFields.visibility as string },
       { key: "page", label: "Page", type: "number", defaultValue: defaultFields.page as number, min: 1 }
     ],
-    buildPath: (values) => buildPathWithQuery("/api/v1/admin/skills", { ...defaultFields, ...values })
+    buildPath: (values) => buildPathWithQuery(adminSkillsEndpoint, { ...defaultFields, ...values })
   };
 }
 
@@ -199,13 +228,13 @@ function syncPolicyAction(): ActionDefinition {
       { key: "timeout", label: "Timeout", type: "text", placeholder: "10m" },
       { key: "batch_size", label: "Batch Size", type: "number", min: 1, max: 500 }
     ],
-    buildPath: () => "/api/v1/admin/sync-policy/repository",
+    buildPath: () => adminSyncPolicyEndpoint,
     refreshResources: ["syncPolicy"]
   };
 }
 
 export const adminWorkbenchDefinitions: Record<string, WorkbenchDefinition> = {
-  "/admin/access": {
+  [adminAccessRoute]: {
     title: "Access Governance",
     subtitle: "Monitor registration posture, provider visibility, and account control signals from one view.",
     resources: [accountDirectoryResource(), registrationPolicyResource(), authProvidersResource()],
@@ -221,14 +250,14 @@ export const adminWorkbenchDefinitions: Record<string, WorkbenchDefinition> = {
       ];
     }
   },
-  "/admin/accounts": {
+  [adminAccountsRoute]: {
     title: "Account Management",
     subtitle: "Inspect account inventory, disable or re-enable access, force sign-out, and rotate credentials.",
     resources: [accountDirectoryResource()],
     actions: [updateAccountStatusAction(), forceSignoutAction(), resetPasswordAction()],
     summary: buildAccountsSummary
   },
-  "/admin/accounts/new": {
+  [adminAccountsNewRoute]: {
     title: "Account Provisioning Policy",
     subtitle: "Configure how new accounts enter the platform and which login providers remain visible.",
     resources: [registrationPolicyResource(), authProvidersResource(), accountDirectoryResource("Recent Accounts", "Current account roster for provisioning context.")],
@@ -241,26 +270,26 @@ export const adminWorkbenchDefinitions: Record<string, WorkbenchDefinition> = {
       ];
     }
   },
-  "/admin/roles": {
+  [adminRolesRoute]: {
     title: "Role Management",
     subtitle: "Review role coverage across accounts and apply role changes through the unified admin contract.",
     resources: [accountDirectoryResource("Role Coverage", "Account role assignments sourced from the admin account directory.")],
     actions: [updateUserRoleAction()],
     summary: buildAccountsSummary
   },
-  "/admin/roles/new": {
+  [adminRolesNewRoute]: {
     title: "Role Configuration",
     subtitle: "Stage role changes for existing accounts while keeping directory-wide role distribution visible.",
     resources: [accountDirectoryResource("Assignable Accounts", "Accounts eligible for role review and reassignment.")],
     actions: [updateUserRoleAction()],
     summary: buildAccountsSummary
   },
-  "/admin/skills": {
+  [adminSkillsRoute]: {
     title: "Skill Governance",
     subtitle: "Query skill inventory with source, owner, and visibility controls.",
     resources: [adminSkillListResource("skills", "Skill List")]
   },
-  "/admin/integrations": {
+  [adminIntegrationsRoute]: {
     title: "Integration Operations",
     subtitle: "Connector catalog and webhook delivery telemetry.",
     resources: [
@@ -271,11 +300,11 @@ export const adminWorkbenchDefinitions: Record<string, WorkbenchDefinition> = {
           { key: "provider", label: "Provider", type: "text", placeholder: "github, dingtalk, webhook" },
           { key: "include_disabled", label: "Include Disabled", type: "switch", defaultValue: true }
         ],
-        buildPath: (values) => buildPathWithQuery("/api/v1/admin/integrations", values)
+        buildPath: (values) => buildPathWithQuery(adminIntegrationsEndpoint, values)
       }
     ]
   },
-  "/admin/jobs": {
+  [adminJobsRoute]: {
     title: "Asynchronous Jobs",
     subtitle: "Inspect queue status, read job detail, retry failed jobs, or cancel active jobs.",
     resources: [
@@ -286,7 +315,7 @@ export const adminWorkbenchDefinitions: Record<string, WorkbenchDefinition> = {
           { key: "status", label: "Status", type: "text", placeholder: "pending, running, failed" },
           { key: "job_type", label: "Job Type", type: "text", placeholder: "repo_sync, import" }
         ],
-        buildPath: (values) => buildPathWithQuery("/api/v1/admin/jobs", values)
+        buildPath: (values) => buildPathWithQuery(adminJobsEndpoint, values)
       }
     ],
     actions: [
@@ -296,7 +325,7 @@ export const adminWorkbenchDefinitions: Record<string, WorkbenchDefinition> = {
         fields: [{ key: "job_id", label: "Job ID", type: "number", required: true }],
         buildPath: (values) => {
           const jobID = requiredID(values.job_id);
-          return jobID ? `/api/v1/admin/jobs/${jobID}/retry` : null;
+          return jobID ? buildAdminJobRetryEndpoint(jobID) : null;
         },
         refreshResources: ["jobs"]
       },
@@ -306,27 +335,27 @@ export const adminWorkbenchDefinitions: Record<string, WorkbenchDefinition> = {
         fields: [{ key: "job_id", label: "Job ID", type: "number", required: true }],
         buildPath: (values) => {
           const jobID = requiredID(values.job_id);
-          return jobID ? `/api/v1/admin/jobs/${jobID}/cancel` : null;
+          return jobID ? buildAdminJobCancelEndpoint(jobID) : null;
         },
         refreshResources: ["jobs"]
       }
     ]
   },
-  "/admin/sync-jobs": {
+  [adminSyncJobsRoute]: {
     title: "Repository Sync Jobs",
     subtitle: "Inspect sync run timeline and query per-run detail.",
     resources: [
       {
         key: "syncJobs",
         title: "Sync Run List",
-        buildPath: (values) => buildPathWithQuery("/api/v1/admin/sync-jobs", values)
+        buildPath: (values) => buildPathWithQuery(adminSyncJobsEndpoint, values)
       }
     ]
   },
-  "/admin/sync-policy/repository": {
+  [adminSyncPolicyRoute]: {
     title: "Repository Sync Policy",
     subtitle: "Read and update scheduler policy for repository synchronization.",
-    resources: [{ key: "syncPolicy", title: "Current Policy", buildPath: () => "/api/v1/admin/sync-policy/repository" }],
+    resources: [{ key: "syncPolicy", title: "Current Policy", buildPath: () => adminSyncPolicyEndpoint }],
     actions: [syncPolicyAction()]
   },
   ...adminOperationsWorkbenchDefinitions

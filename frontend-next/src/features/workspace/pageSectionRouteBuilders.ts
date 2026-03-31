@@ -11,7 +11,7 @@ import {
 } from "@/src/lib/routing/protectedSurfaceLinks";
 import type { SessionContext } from "@/src/lib/schemas/session";
 
-import { buildCommonQuickActions, buildOverviewQuickActions } from "./pageMetrics";
+import { buildActionsRouteQuickActions, buildWorkspaceOverviewQuickActions } from "./pageMetrics";
 import {
   buildActivityItems,
   buildCurrentSessionSection,
@@ -36,7 +36,7 @@ export function buildOverviewRouteSections(
   messages: WorkspaceMessages
 ): WorkspaceRouteSections {
   return {
-    quickActions: buildOverviewQuickActions(snapshot, messages),
+    quickActions: buildWorkspaceOverviewQuickActions(snapshot, messages),
     primarySections: [
       buildWorkspaceSignalsSection(snapshot, session, messages),
       buildExecutionSpotlightSection(snapshot, messages),
@@ -83,7 +83,7 @@ export function buildActivityRouteSections(
   messages: WorkspaceMessages
 ): WorkspaceRouteSections {
   return {
-    quickActions: buildCommonQuickActions(messages),
+    quickActions: [],
     primarySections: [
       {
         id: "activity-feed",
@@ -119,7 +119,7 @@ export function buildQueueRouteSections(
   messages: WorkspaceMessages
 ): WorkspaceRouteSections {
   return {
-    quickActions: buildCommonQuickActions(messages),
+    quickActions: [],
     primarySections: [buildQueueSpotlightSection(snapshot, messages), buildQueueInsightsSection(snapshot, messages)],
     railSections: [
       {
@@ -157,7 +157,7 @@ export function buildPolicyRouteSections(
   messages: WorkspaceMessages
 ): WorkspaceRouteSections {
   return {
-    quickActions: buildCommonQuickActions(messages),
+    quickActions: [],
     primarySections: [
       {
         id: "governance-priorities",
@@ -187,7 +187,7 @@ export function buildRunbookRouteSections(
   messages: WorkspaceMessages
 ): WorkspaceRouteSections {
   return {
-    quickActions: buildCommonQuickActions(messages),
+    quickActions: [],
     primarySections: [buildRunbookResponseScriptSection(snapshot.runbookEntry, messages)],
     railSections: [
       {
@@ -222,7 +222,7 @@ export function buildActionsRouteSections(
 ): WorkspaceRouteSections {
   return {
     quickActions: [
-      ...buildCommonQuickActions(messages),
+      ...buildActionsRouteQuickActions(messages),
       { label: messages.quickActionOpenAccountCenter, href: accountProfileRoute, variant: "outline" }
     ],
     primarySections: [

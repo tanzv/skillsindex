@@ -14,6 +14,7 @@ import {
   resolveAdminRouteDefinition
 } from "@/src/lib/routing/adminRouteRegistry";
 import type { AdminIngestionRepositorySnapshot } from "@/src/features/adminIngestion/model";
+import { adminRepositoryIntakeRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 
 import { renderAdminDataRoute } from "./renderAdminDataRoute";
 
@@ -32,7 +33,7 @@ async function renderIngestionRoute(pathname: AdminIngestionRoute, options: Rend
   return (
     <AdminIngestionPage
       route={pathname}
-      initialRepositorySnapshot={pathname === "/admin/ingestion/repository" ? options.initialRepositorySnapshot || null : null}
+      initialRepositorySnapshot={pathname === adminRepositoryIntakeRoute ? options.initialRepositorySnapshot || null : null}
     />
   );
 }

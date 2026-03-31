@@ -1,8 +1,26 @@
+import {
+  accountApiCredentialsRoute,
+  accountProfileRoute,
+  accountSecurityRoute,
+  accountSessionsRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
+import {
+  accountAPIKeysEndpoint,
+  accountProfileEndpoint,
+  accountSecurityPasswordEndpoint,
+  accountSessionsEndpoint,
+  accountSessionsRevokeOthersEndpoint,
+  buildAccountAPIKeyRevokeEndpoint,
+  buildAccountAPIKeyRotateEndpoint,
+  buildAccountAPIKeyScopesEndpoint,
+  buildAccountSessionRevokeEndpoint
+} from "@/src/lib/routing/protectedSurfaceEndpoints";
+
 import type { WorkbenchDefinition } from "./types";
 import { asNumber, asObject, parseScopes, requiredID } from "./utils";
 
 export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = {
-  "/account/profile": {
+  [accountProfileRoute]: {
     title: "Account Profile",
     subtitle: "Read and update identity metadata for the current session account.",
     resources: [
@@ -10,7 +28,7 @@ export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = 
         key: "profile",
         title: "Profile Detail",
         description: "User identity and profile metadata.",
-        buildPath: () => "/api/v1/account/profile"
+        buildPath: () => accountProfileEndpoint
       }
     ],
     actions: [
@@ -23,12 +41,12 @@ export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = 
           { key: "avatar_url", label: "Avatar URL", type: "text", placeholder: "https://..." },
           { key: "bio", label: "Bio", type: "textarea", placeholder: "Short profile bio" }
         ],
-        buildPath: () => "/api/v1/account/profile",
+        buildPath: () => accountProfileEndpoint,
         refreshResources: ["profile"]
       }
     ]
   },
-  "/account/security": {
+  [accountSecurityRoute]: {
     title: "Account Security",
     subtitle: "Rotate password and optionally revoke other active sessions.",
     resources: [
@@ -36,7 +54,7 @@ export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = 
         key: "profile",
         title: "Current Account",
         description: "Identity context before credential rotation.",
-        buildPath: () => "/api/v1/account/profile"
+        buildPath: () => accountProfileEndpoint
       }
     ],
     actions: [
@@ -49,12 +67,12 @@ export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = 
           { key: "new_password", label: "New Password", type: "password", required: true },
           { key: "revoke_other_sessions", label: "Revoke Other Sessions", type: "switch", defaultValue: false }
         ],
-        buildPath: () => "/api/v1/account/security/password",
+        buildPath: () => accountSecurityPasswordEndpoint,
         refreshResources: ["profile"]
       }
     ]
   },
-  "/account/sessions": {
+  [accountSessionsRoute]: {
     title: "Session Management",
     subtitle: "List active sessions, revoke one session, or revoke all others.",
     resources: [
@@ -62,7 +80,7 @@ export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = 
         key: "sessions",
         title: "Active Sessions",
         description: "Current and historical active sessions for this account.",
-        buildPath: () => "/api/v1/account/sessions"
+        buildPath: () => accountSessionsEndpoint
       }
     ],
     actions: [
@@ -72,7 +90,7 @@ export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = 
         fields: [{ key: "session_id", label: "Session ID", type: "text", required: true }],
         buildPath: (values) => {
           const sessionID = String(values.session_id || "").trim();
-          return sessionID ? `/api/v1/account/sessions/${encodeURIComponent(sessionID)}/revoke` : null;
+          return sessionID ? buildAccountSessionRevokeEndpoint(sessionID) : null;
         },
         refreshResources: ["sessions"]
       },
@@ -80,7 +98,7 @@ export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = 
         key: "revokeOthers",
         title: "Revoke Other Sessions",
         submitText: "Revoke Others",
-        buildPath: () => "/api/v1/account/sessions/revoke-others",
+        buildPath: () => accountSessionsRevokeOthersEndpoint,
         refreshResources: ["sessions"]
       }
     ],
@@ -92,7 +110,7 @@ export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = 
       ];
     }
   },
-  "/account/api-credentials": {
+  [accountApiCredentialsRoute]: {
     title: "API Credentials",
     subtitle: "Issue, rotate, revoke, and scope personal OpenAPI credentials.",
     resources: [
@@ -100,7 +118,7 @@ export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = 
         key: "credentials",
         title: "Personal Credentials",
         description: "Current account API credential inventory and scope catalog.",
-        buildPath: () => "/api/v1/account/apikeys"
+        buildPath: () => accountAPIKeysEndpoint
       }
     ],
     actions: [
@@ -114,7 +132,7 @@ export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = 
           { key: "expires_in_days", label: "Expires In Days", type: "number", placeholder: "90" },
           { key: "scopes", label: "Scopes", type: "textarea", placeholder: "skills.search.read,skills.ai_search.read" }
         ],
-        buildPath: () => "/api/v1/account/apikeys",
+        buildPath: () => accountAPIKeysEndpoint,
         buildPayload: (values) => ({
           name: String(values.name || "").trim(),
           purpose: String(values.purpose || "").trim(),
@@ -129,7 +147,7 @@ export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = 
         fields: [{ key: "key_id", label: "Credential ID", type: "number", required: true }],
         buildPath: (values) => {
           const keyID = requiredID(values.key_id);
-          return keyID ? `/api/v1/account/apikeys/${keyID}/rotate` : null;
+          return keyID ? buildAccountAPIKeyRotateEndpoint(keyID) : null;
         },
         refreshResources: ["credentials"]
       },
@@ -139,7 +157,7 @@ export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = 
         fields: [{ key: "key_id", label: "Credential ID", type: "number", required: true }],
         buildPath: (values) => {
           const keyID = requiredID(values.key_id);
-          return keyID ? `/api/v1/account/apikeys/${keyID}/revoke` : null;
+          return keyID ? buildAccountAPIKeyRevokeEndpoint(keyID) : null;
         },
         refreshResources: ["credentials"]
       },
@@ -153,7 +171,7 @@ export const accountWorkbenchDefinitions: Record<string, WorkbenchDefinition> = 
         ],
         buildPath: (values) => {
           const keyID = requiredID(values.key_id);
-          return keyID ? `/api/v1/account/apikeys/${keyID}/scopes` : null;
+          return keyID ? buildAccountAPIKeyScopesEndpoint(keyID) : null;
         },
         buildPayload: (values) => ({ scopes: parseScopes(values.scopes) }),
         refreshResources: ["credentials"]

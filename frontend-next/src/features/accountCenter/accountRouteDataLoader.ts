@@ -1,5 +1,10 @@
 import { clientFetchJSON, type ClientFetchJSONOptions } from "@/src/lib/http/clientFetch";
 import { resolveAccountRouteDataRequirements } from "@/src/lib/routing/accountRouteMeta";
+import {
+  accountAPIKeysBFFEndpoint,
+  accountProfileBFFEndpoint,
+  accountSessionsBFFEndpoint
+} from "@/src/lib/routing/protectedSurfaceEndpoints";
 
 import type {
   AccountAPIKeysPayload,
@@ -45,9 +50,9 @@ export async function loadAccountRouteData(
 ): Promise<AccountRouteDataSnapshot> {
   const requirements = resolveAccountRouteDataRequirements(route);
   const [profilePayload, sessionsPayload, credentialsPayload] = await Promise.all([
-    fetchJSON<AccountProfilePayload>("/api/bff/account/profile"),
-    requirements.sessions ? fetchJSON<AccountSessionsPayload>("/api/bff/account/sessions") : Promise.resolve(null),
-    requirements.credentials ? fetchJSON<AccountAPIKeysPayload>("/api/bff/account/apikeys") : Promise.resolve(null)
+    fetchJSON<AccountProfilePayload>(accountProfileBFFEndpoint),
+    requirements.sessions ? fetchJSON<AccountSessionsPayload>(accountSessionsBFFEndpoint) : Promise.resolve(null),
+    requirements.credentials ? fetchJSON<AccountAPIKeysPayload>(accountAPIKeysBFFEndpoint) : Promise.resolve(null)
   ]);
 
   return {

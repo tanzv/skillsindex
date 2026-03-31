@@ -2,6 +2,58 @@ import type {
   AdminRouteDescriptorDefinition,
   AdminRouteGroupDefinition
 } from "./adminRouteRegistry.contracts";
+import {
+  adminAlertsEndpoint,
+  adminAPIKeysEndpoint,
+  adminAuditExportEndpoint,
+  adminBackupPlansEndpoint,
+  adminBackupRunsEndpoint,
+  adminChangeApprovalsEndpoint,
+  adminIntegrationsEndpoint,
+  adminJobsEndpoint,
+  adminManualIntakeEndpoint,
+  adminMetricsEndpoint,
+  adminModerationEndpoint,
+  adminOrganizationsEndpoint,
+  adminOverviewEndpoint,
+  adminRecoveryDrillsEndpoint,
+  adminReleaseGatesEndpoint,
+  adminReleasesEndpoint,
+  adminRepositoryIntakeEndpoint,
+  adminSkillsEndpoint,
+  adminSyncJobsEndpoint,
+  adminSyncPolicyEndpoint,
+  adminAccountsEndpoint
+} from "./protectedSurfaceEndpoints";
+import {
+  adminAccessRoute,
+  adminAccountsNewRoute,
+  adminAccountsRoute,
+  adminAlertsRoute,
+  adminAPIKeysRoute,
+  adminAuditExportRoute,
+  adminAuditRoute,
+  adminBackupPlansRoute,
+  adminBackupRunsRoute,
+  adminChangeApprovalsRoute,
+  adminImportsRoute,
+  adminIntegrationsRoute,
+  adminJobsRoute,
+  adminManualIntakeRoute,
+  adminMetricsRoute,
+  adminModerationRoute,
+  adminOrganizationsRoute,
+  adminOverviewRoute,
+  adminRecoveryDrillsRoute,
+  adminReleaseGatesRoute,
+  adminReleasesRoute,
+  adminRepositoryIntakeRoute,
+  adminRolesNewRoute,
+  adminRolesRoute,
+  adminSkillsRoute,
+  adminSyncJobsRoute,
+  adminSyncPolicyRoute
+} from "./protectedSurfaceLinks";
 
 export const adminRouteGroupDefinitions: AdminRouteGroupDefinition[] = [
   {
@@ -28,33 +80,33 @@ export const adminRouteGroupDefinitions: AdminRouteGroupDefinition[] = [
 
 export const adminRouteDefinitions = [
   {
-    path: "/admin/overview",
+    path: adminOverviewRoute,
     groupId: "overview",
     label: (messages) => messages.itemOverviewLabel,
     description: (messages) => messages.itemOverviewDescription,
     renderTarget: "overview",
-    endpoint: "/api/v1/admin/overview",
+    endpoint: adminOverviewEndpoint,
     quickLink: true
   },
   {
-    path: "/admin/ingestion/manual",
+    path: adminManualIntakeRoute,
     groupId: "catalog",
     label: (messages) => messages.itemManualIntakeLabel,
     description: (messages) => messages.itemManualIntakeDescription,
     renderTarget: "ingestion",
-    endpoint: "/api/v1/admin/ingestion/manual"
+    endpoint: adminManualIntakeEndpoint
   },
   {
-    path: "/admin/ingestion/repository",
+    path: adminRepositoryIntakeRoute,
     groupId: "catalog",
     label: (messages) => messages.itemRepositoryIntakeLabel,
     description: (messages) => messages.itemRepositoryIntakeDescription,
     renderTarget: "ingestion",
-    endpoint: "/api/v1/admin/ingestion/repository",
+    endpoint: adminRepositoryIntakeEndpoint,
     quickLink: true
   },
   {
-    path: "/admin/records/imports",
+    path: adminImportsRoute,
     groupId: "catalog",
     label: (messages) => messages.itemImportsLabel,
     description: (messages) => messages.itemImportsDescription,
@@ -62,151 +114,151 @@ export const adminRouteDefinitions = [
     quickLink: true
   },
   {
-    path: "/admin/skills",
+    path: adminSkillsRoute,
     groupId: "catalog",
     label: (messages) => messages.itemSkillsLabel,
     description: (messages) => messages.itemSkillsDescription,
     renderTarget: "catalog",
-    endpoint: "/api/v1/admin/skills",
+    endpoint: adminSkillsEndpoint,
     quickLink: true
   },
   {
-    path: "/admin/jobs",
+    path: adminJobsRoute,
     groupId: "catalog",
     label: (messages) => messages.itemJobsLabel,
     description: (messages) => messages.itemJobsDescription,
     renderTarget: "catalog",
-    endpoint: "/api/v1/admin/jobs"
+    endpoint: adminJobsEndpoint
   },
   {
-    path: "/admin/sync-jobs",
+    path: adminSyncJobsRoute,
     groupId: "catalog",
     label: (messages) => messages.itemSyncJobsLabel,
     description: (messages) => messages.itemSyncJobsDescription,
     renderTarget: "catalog",
-    endpoint: "/api/v1/admin/sync-jobs",
+    endpoint: adminSyncJobsEndpoint,
     quickLink: true
   },
   {
-    path: "/admin/sync-policy/repository",
+    path: adminSyncPolicyRoute,
     groupId: "catalog",
     label: (messages) => messages.itemSyncPolicyLabel,
     description: (messages) => messages.itemSyncPolicyDescription,
     renderTarget: "catalog",
-    endpoint: "/api/v1/admin/sync-policy/repository"
+    endpoint: adminSyncPolicyEndpoint
   },
   {
-    path: "/admin/ops/metrics",
+    path: adminMetricsRoute,
     groupId: "operations",
     label: (messages) => messages.itemOpsMetricsLabel,
     description: (messages) => messages.itemOpsMetricsDescription,
     renderTarget: "ops-dashboard",
     requiredCapability: "view_all_admin",
-    endpoint: "/api/v1/admin/ops/metrics"
+    endpoint: adminMetricsEndpoint
   },
   {
-    path: "/admin/integrations",
+    path: adminIntegrationsRoute,
     groupId: "operations",
     label: (messages) => messages.itemIntegrationsLabel,
     description: (messages) => messages.itemIntegrationsDescription,
     renderTarget: "integrations",
     requiredCapability: "view_all_admin",
-    endpoint: "/api/v1/admin/integrations",
+    endpoint: adminIntegrationsEndpoint,
     quickLink: true
   },
   {
-    path: "/admin/ops/alerts",
+    path: adminAlertsRoute,
     groupId: "operations",
     label: (messages) => messages.itemOpsAlertsLabel,
     description: (messages) => messages.itemOpsAlertsDescription,
     renderTarget: "ops-dashboard",
     requiredCapability: "view_all_admin",
-    endpoint: "/api/v1/admin/ops/alerts"
+    endpoint: adminAlertsEndpoint
   },
   {
-    path: "/admin/audit",
+    path: adminAuditRoute,
     groupId: "security",
     label: (messages) => messages.itemAuditExportLabel,
     description: (messages) => messages.itemAuditExportDescription,
     renderTarget: "ops-records",
     requiredCapability: "view_all_admin",
-    endpoint: "/api/v1/admin/ops/audit-export"
+    endpoint: adminAuditExportEndpoint
   },
   {
-    path: "/admin/ops/audit-export",
+    path: adminAuditExportRoute,
     groupId: "security",
     label: (messages) => messages.itemAuditExportLabel,
     description: (messages) => messages.itemAuditExportDescription,
     renderTarget: "ops-records",
     requiredCapability: "view_all_admin",
-    endpoint: "/api/v1/admin/ops/audit-export",
+    endpoint: adminAuditExportEndpoint,
     hiddenFromNavigation: true
   },
   {
-    path: "/admin/ops/release-gates",
+    path: adminReleaseGatesRoute,
     groupId: "operations",
     label: (messages) => messages.itemReleaseGatesLabel,
     description: (messages) => messages.itemReleaseGatesDescription,
     renderTarget: "ops-dashboard",
     requiredCapability: "view_all_admin",
-    endpoint: "/api/v1/admin/ops/release-gates"
+    endpoint: adminReleaseGatesEndpoint
   },
   {
-    path: "/admin/ops/recovery-drills",
+    path: adminRecoveryDrillsRoute,
     groupId: "operations",
     label: (messages) => messages.itemRecoveryDrillsLabel,
     description: (messages) => messages.itemRecoveryDrillsDescription,
     renderTarget: "ops-records",
     requiredCapability: "view_all_admin",
-    endpoint: "/api/v1/admin/ops/recovery-drills"
+    endpoint: adminRecoveryDrillsEndpoint
   },
   {
-    path: "/admin/ops/releases",
+    path: adminReleasesRoute,
     groupId: "operations",
     label: (messages) => messages.itemReleasesLabel,
     description: (messages) => messages.itemReleasesDescription,
     renderTarget: "ops-records",
     requiredCapability: "view_all_admin",
-    endpoint: "/api/v1/admin/ops/releases"
+    endpoint: adminReleasesEndpoint
   },
   {
-    path: "/admin/ops/change-approvals",
+    path: adminChangeApprovalsRoute,
     groupId: "operations",
     label: (messages) => messages.itemChangeApprovalsLabel,
     description: (messages) => messages.itemChangeApprovalsDescription,
     renderTarget: "ops-records",
     requiredCapability: "view_all_admin",
-    endpoint: "/api/v1/admin/ops/change-approvals"
+    endpoint: adminChangeApprovalsEndpoint
   },
   {
-    path: "/admin/ops/backup/plans",
+    path: adminBackupPlansRoute,
     groupId: "operations",
     label: (messages) => messages.itemBackupPlansLabel,
     description: (messages) => messages.itemBackupPlansDescription,
     renderTarget: "ops-records",
     requiredCapability: "view_all_admin",
-    endpoint: "/api/v1/admin/ops/backup/plans"
+    endpoint: adminBackupPlansEndpoint
   },
   {
-    path: "/admin/ops/backup/runs",
+    path: adminBackupRunsRoute,
     groupId: "operations",
     label: (messages) => messages.itemBackupRunsLabel,
     description: (messages) => messages.itemBackupRunsDescription,
     renderTarget: "ops-records",
     requiredCapability: "view_all_admin",
-    endpoint: "/api/v1/admin/ops/backup/runs"
+    endpoint: adminBackupRunsEndpoint
   },
   {
-    path: "/admin/accounts",
+    path: adminAccountsRoute,
     groupId: "users",
     label: (messages) => messages.itemAccountsLabel,
     description: (messages) => messages.itemAccountsDescription,
     renderTarget: "accounts",
     requiredCapability: "manage_users",
-    endpoint: "/api/v1/admin/accounts"
+    endpoint: adminAccountsEndpoint
   },
   {
-    path: "/admin/accounts/new",
+    path: adminAccountsNewRoute,
     groupId: "users",
     label: (messages) => messages.itemAccountsLabel,
     description: (messages) => messages.itemAccountsDescription,
@@ -215,7 +267,7 @@ export const adminRouteDefinitions = [
     hiddenFromNavigation: true
   },
   {
-    path: "/admin/roles",
+    path: adminRolesRoute,
     groupId: "users",
     label: (messages) => messages.itemRolesLabel,
     description: (messages) => messages.itemRolesDescription,
@@ -223,7 +275,7 @@ export const adminRouteDefinitions = [
     requiredCapability: "manage_users"
   },
   {
-    path: "/admin/roles/new",
+    path: adminRolesNewRoute,
     groupId: "users",
     label: (messages) => messages.itemRolesLabel,
     description: (messages) => messages.itemRolesDescription,
@@ -232,7 +284,7 @@ export const adminRouteDefinitions = [
     hiddenFromNavigation: true
   },
   {
-    path: "/admin/access",
+    path: adminAccessRoute,
     groupId: "users",
     label: (messages) => messages.itemAccessLabel,
     description: (messages) => messages.itemAccessDescription,
@@ -241,29 +293,29 @@ export const adminRouteDefinitions = [
     quickLink: true
   },
   {
-    path: "/admin/organizations",
+    path: adminOrganizationsRoute,
     groupId: "users",
     label: (messages) => messages.itemOrganizationsLabel,
     description: (messages) => messages.itemOrganizationsDescription,
     renderTarget: "organizations",
     requiredCapability: "view_all_admin",
-    endpoint: "/api/v1/admin/organizations"
+    endpoint: adminOrganizationsEndpoint
   },
   {
-    path: "/admin/apikeys",
+    path: adminAPIKeysRoute,
     groupId: "security",
     label: (messages) => messages.itemApiKeysLabel,
     description: (messages) => messages.itemApiKeysDescription,
     renderTarget: "apikeys",
-    endpoint: "/api/v1/admin/apikeys"
+    endpoint: adminAPIKeysEndpoint
   },
   {
-    path: "/admin/moderation",
+    path: adminModerationRoute,
     groupId: "security",
     label: (messages) => messages.itemModerationLabel,
     description: (messages) => messages.itemModerationDescription,
     renderTarget: "moderation",
     requiredCapability: "view_all_admin",
-    endpoint: "/api/v1/admin/moderation"
+    endpoint: adminModerationEndpoint
   }
 ] as const satisfies readonly AdminRouteDescriptorDefinition[];

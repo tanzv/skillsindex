@@ -8,23 +8,14 @@ import type { WorkspaceMessages } from "@/src/lib/i18n/protectedPageMessages.wor
 import type { ProtectedTopbarConfig } from "@/src/lib/navigation/protectedTopbarContracts";
 import { listAdminRoutePathsByCapability } from "@/src/lib/routing/adminRouteRegistry";
 import {
+  adminAdministrationModuleMatchPrefixes,
+  adminOrganizationManagementSurfaceRoutes,
+  adminSkillManagementSurfaceRoutes,
   accountProfileRoute,
   accountRoutePrefix,
-  adminAccessRoute,
-  adminAccountsRoute,
-  adminImportsRoute,
-  adminIntegrationsRoute,
-  adminJobsRoute,
-  adminManualIntakeRoute,
   adminOrganizationsRoute,
   adminOverviewRoute,
-  adminReleaseGatesRoute,
-  adminRepositoryIntakeRoute,
-  adminRolesRoute,
-  adminRoutePrefix,
   adminSkillsRoute,
-  adminSyncJobsRoute,
-  adminSyncPolicyRoute,
   workspaceOverviewRoute,
   workspaceRoutePrefix
 } from "@/src/lib/routing/protectedSurfaceLinks";
@@ -199,15 +190,7 @@ function createSkillManagementTopLevelNavigationModule(
       href: adminSkillsRoute,
       label: messages.adminNavigation.itemSkillsLabel,
       description: messages.adminNavigation.itemSkillsDescription,
-      matchPrefixes: [
-        adminManualIntakeRoute,
-        adminRepositoryIntakeRoute,
-        adminImportsRoute,
-        adminSkillsRoute,
-        adminJobsRoute,
-        adminSyncJobsRoute,
-        adminSyncPolicyRoute
-      ]
+      matchPrefixes: [...adminSkillManagementSurfaceRoutes]
     }
   });
 }
@@ -224,7 +207,7 @@ function createOrganizationManagementTopLevelNavigationModule(
       href: adminOrganizationsRoute,
       label: messages.adminNavigation.itemOrganizationsLabel,
       description: messages.adminNavigation.itemOrganizationsDescription,
-      matchPrefixes: [adminAccountsRoute, adminOrganizationsRoute, adminRolesRoute, adminAccessRoute]
+      matchPrefixes: [...adminOrganizationManagementSurfaceRoutes]
     }
   });
 }
@@ -241,7 +224,7 @@ function createAdministrationTopLevelNavigationModule(
       href: adminOverviewRoute,
       label: messages.adminNavigation.moduleAdministrationLabel,
       description: messages.adminNavigation.moduleAdministrationDescription,
-      matchPrefixes: [adminRoutePrefix, adminIntegrationsRoute, adminReleaseGatesRoute]
+      matchPrefixes: [...adminAdministrationModuleMatchPrefixes]
     }
   });
 }

@@ -1,5 +1,6 @@
+import { adminChangeApprovalsRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 import { renderAdminPageRoute } from "@/src/features/admin/adminRouteEntry";
 
 export default async function AdminOpsChangeApprovalsPage() {
-  return renderAdminPageRoute("/admin/ops/change-approvals");
+  return renderAdminPageRoute(adminChangeApprovalsRoute);
 }

@@ -1,5 +1,6 @@
+import { adminAccountsNewRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 import { renderAdminPageRoute } from "@/src/features/admin/adminRouteEntry";
 
 export default async function AdminAccountsNewPage() {
-  return renderAdminPageRoute("/admin/accounts/new");
+  return renderAdminPageRoute(adminAccountsNewRoute);
 }

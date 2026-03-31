@@ -7,7 +7,11 @@ import { Badge } from "@/src/components/ui/badge";
 import {
   adminSyncJobsRoute,
   isWorkspaceSurfaceRoute,
-  workspaceQueueRoute
+  workspaceActionsRoute,
+  workspaceActivityRoute,
+  workspacePolicyRoute,
+  workspaceQueueRoute,
+  workspaceRunbookRoute
 } from "@/src/lib/routing/protectedSurfaceLinks";
 import type { WorkspaceRoute } from "@/src/lib/routing/routes";
 
@@ -197,11 +201,11 @@ function ActionsView({ model }: { model: WorkspacePageModel }) {
 type WorkspaceRouteViewRenderer = (props: { model: WorkspacePageModel }) => ReactElement;
 
 const workspaceRouteViewRenderers: Partial<Record<WorkspaceRoute, WorkspaceRouteViewRenderer>> = {
-  "/workspace/activity": ActivityFeedView,
-  "/workspace/queue": QueueExecutionView,
-  "/workspace/policy": PolicyView,
-  "/workspace/runbook": RunbookView,
-  "/workspace/actions": ActionsView
+  [workspaceActivityRoute]: ActivityFeedView,
+  [workspaceQueueRoute]: QueueExecutionView,
+  [workspacePolicyRoute]: PolicyView,
+  [workspaceRunbookRoute]: RunbookView,
+  [workspaceActionsRoute]: ActionsView
 };
 
 export function WorkspaceRouteContent({ model }: { model: WorkspacePageModel }) {

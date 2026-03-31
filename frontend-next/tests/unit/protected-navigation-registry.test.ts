@@ -12,6 +12,13 @@ import {
   workspaceShellMessageFallbacks
 } from "@/src/lib/i18n/protectedMessages";
 import { workspaceMessageFallbacks } from "@/src/lib/i18n/protectedPageMessages.workspace";
+import {
+  accountRoutePrefix,
+  adminAdministrationModuleMatchPrefixes,
+  adminOrganizationManagementSurfaceRoutes,
+  adminSkillManagementSurfaceRoutes,
+  workspaceRoutePrefix
+} from "@/src/lib/routing/protectedSurfaceLinks";
 
 describe("protected navigation registry", () => {
   it("keeps skill management sidebar grouped by intake, governance, and synchronization", () => {
@@ -99,6 +106,26 @@ describe("protected navigation registry", () => {
     ]);
     expect(registry.modules.find((module) => module.id === "workspace")?.sidebar.groups[0]?.items).toHaveLength(6);
     expect(registry.modules.filter((module) => module.id !== "workspace").every((module) => module.sidebar.groups.length === 0)).toBe(true);
+  });
+
+  it("derives top-level shell match prefixes from shared protected route contracts", () => {
+    const registry = buildWorkspaceShellNavigationRegistry({
+      adminNavigation: adminNavigationMessageFallbacks,
+      workspacePage: workspaceMessageFallbacks,
+      workspaceShell: workspaceShellMessageFallbacks
+    });
+
+    expect(registry.modules.find((module) => module.id === "workspace")?.topLevel.matchPrefixes).toEqual([workspaceRoutePrefix]);
+    expect(registry.modules.find((module) => module.id === "skill-management")?.topLevel.matchPrefixes).toEqual(
+      adminSkillManagementSurfaceRoutes
+    );
+    expect(registry.modules.find((module) => module.id === "organization-management")?.topLevel.matchPrefixes).toEqual(
+      adminOrganizationManagementSurfaceRoutes
+    );
+    expect(registry.modules.find((module) => module.id === "administration")?.topLevel.matchPrefixes).toEqual(
+      adminAdministrationModuleMatchPrefixes
+    );
+    expect(registry.modules.find((module) => module.id === "account")?.topLevel.matchPrefixes).toEqual([accountRoutePrefix]);
   });
 
   it("keeps admin shell registry scoped to admin sidebars", () => {

@@ -1,3 +1,5 @@
+import { buildBFFPath as buildProtectedSurfaceBFFPath } from "@/src/lib/routing/protectedSurfaceEndpoints";
+
 export function buildPathWithQuery(basePath: string, values: Record<string, unknown>): string {
   const params = new URLSearchParams();
 
@@ -21,14 +23,7 @@ export function buildPathWithQuery(basePath: string, values: Record<string, unkn
 }
 
 export function buildBFFPath(apiPath: string): string {
-  const normalizedPath = apiPath.startsWith("/") ? apiPath : `/${apiPath}`;
-  if (normalizedPath.startsWith("/api/v1/")) {
-    return `/api/bff/${normalizedPath.slice("/api/v1/".length)}`;
-  }
-  if (normalizedPath === "/api/v1") {
-    return "/api/bff";
-  }
-  return normalizedPath;
+  return buildProtectedSurfaceBFFPath(apiPath);
 }
 
 export function requiredID(rawValue: unknown): number | null {

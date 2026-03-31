@@ -75,7 +75,7 @@ export function buildSummaryMetrics(
   ];
 }
 
-export function buildCommonQuickActions(messages: WorkspaceMessages): WorkspaceAction[] {
+export function buildActionsRouteQuickActions(messages: WorkspaceMessages): WorkspaceAction[] {
   return [
     { label: messages.quickActionReviewQueue, href: workspaceQueueRoute, variant: "default" },
     { label: messages.quickActionOpenPolicy, href: workspacePolicyRoute, variant: "outline" },
@@ -84,7 +84,10 @@ export function buildCommonQuickActions(messages: WorkspaceMessages): WorkspaceA
   ];
 }
 
-export function buildOverviewQuickActions(snapshot: WorkspaceSnapshot, messages: WorkspaceMessages): WorkspaceAction[] {
+export function buildWorkspaceOverviewQuickActions(
+  snapshot: WorkspaceSnapshot,
+  messages: WorkspaceMessages
+): WorkspaceAction[] {
   const spotlight = snapshot.spotlightEntry;
 
   return [

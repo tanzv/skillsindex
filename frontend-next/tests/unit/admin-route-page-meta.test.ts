@@ -2,6 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import { adminNavigationMessageFallbacks } from "@/src/lib/i18n/protectedMessages";
 import {
+  adminAuditRoute,
+  adminBackupPlansRoute,
+  adminJobsRoute,
+  adminReleaseGatesRoute,
+  adminRepositoryIntakeRoute,
+  adminRolesNewRoute
+} from "@/src/lib/routing/protectedSurfaceLinks";
+import {
   buildAdminDataPageRouteMetaMap,
   resolveAdminAccountsPageRouteMeta,
   resolveAdminCatalogPageRouteMeta,
@@ -64,14 +72,14 @@ const pageMessages = createProtectedPageTestMessages({
 
 describe("admin route page meta", () => {
   it("resolves ingestion route copy from centralized routing adapter", () => {
-    expect(resolveAdminIngestionPageRouteMeta("/admin/ingestion/repository", pageMessages.adminIngestion)).toEqual({
+    expect(resolveAdminIngestionPageRouteMeta(adminRepositoryIntakeRoute, pageMessages.adminIngestion)).toEqual({
       title: "Repository Intake",
       description: "Repository intake description"
     });
   });
 
   it("resolves catalog route copy and endpoint from centralized routing adapter", () => {
-    expect(resolveAdminCatalogPageRouteMeta("/admin/jobs", pageMessages.adminCatalog)).toEqual({
+    expect(resolveAdminCatalogPageRouteMeta(adminJobsRoute, pageMessages.adminCatalog)).toEqual({
       title: "Jobs",
       description: "Jobs description",
       endpoint: "/api/bff/admin/jobs"
@@ -79,7 +87,7 @@ describe("admin route page meta", () => {
   });
 
   it("resolves operations dashboard actions from centralized routing adapter", () => {
-    expect(resolveAdminOperationsDashboardRouteMeta("/admin/ops/release-gates", pageMessages.adminOperations)).toEqual({
+    expect(resolveAdminOperationsDashboardRouteMeta(adminReleaseGatesRoute, pageMessages.adminOperations)).toEqual({
       title: "Release Gates",
       description: "Release gates description",
       endpoint: "/api/bff/admin/ops/release-gates",
@@ -88,7 +96,7 @@ describe("admin route page meta", () => {
   });
 
   it("resolves operations records actions from centralized routing adapter", () => {
-    expect(resolveAdminOperationsRecordsRouteMeta("/admin/ops/backup/plans", pageMessages.adminOperations)).toEqual({
+    expect(resolveAdminOperationsRecordsRouteMeta(adminBackupPlansRoute, pageMessages.adminOperations)).toEqual({
       title: "Backup Plans",
       description: "Backup plans description",
       endpoint: "/api/bff/admin/ops/backup/plans",
@@ -97,7 +105,7 @@ describe("admin route page meta", () => {
   });
 
   it("maps the dedicated audit route to the shared audit backend endpoint", () => {
-    expect(resolveAdminOperationsRecordsRouteMeta("/admin/audit", pageMessages.adminOperations)).toEqual({
+    expect(resolveAdminOperationsRecordsRouteMeta(adminAuditRoute, pageMessages.adminOperations)).toEqual({
       title: "Audit",
       description: "Audit description",
       endpoint: "/api/bff/admin/ops/audit-export?format=json"
@@ -105,14 +113,14 @@ describe("admin route page meta", () => {
   });
 
   it("resolves admin accounts route copy from centralized routing adapter", () => {
-    expect(resolveAdminAccountsPageRouteMeta("/admin/roles/new", pageMessages.adminAccounts)).toEqual({
+    expect(resolveAdminAccountsPageRouteMeta(adminRolesNewRoute, pageMessages.adminAccounts)).toEqual({
       title: "Role Configuration",
       description: "Role configuration description"
     });
   });
 
   it("builds fallback admin data-page meta from centralized route descriptors", () => {
-    expect(buildAdminDataPageRouteMetaMap(adminNavigationMessageFallbacks)["/admin/jobs"]).toEqual({
+    expect(buildAdminDataPageRouteMetaMap(adminNavigationMessageFallbacks)[adminJobsRoute]).toEqual({
       title: adminNavigationMessageFallbacks.itemJobsLabel,
       description: adminNavigationMessageFallbacks.itemJobsDescription,
       endpoint: "/api/v1/admin/jobs"

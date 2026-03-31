@@ -13,9 +13,10 @@ describe("protected layout context loader", () => {
     const sessionSource = readSourceFile("src/lib/auth/session.ts");
     const localeSource = readSourceFile("src/lib/i18n/serverLocale.ts");
 
-    expect(loaderSource).toContain("await Promise.all([getServerSessionContext(), resolveServerLocale()])");
+    expect(loaderSource).toContain("await Promise.all([getServerSessionContext(), resolveServerLocale(), cookies()])");
     expect(loaderSource).toContain("requireRouteSession(session, requiredRoute);");
     expect(loaderSource).toContain("await Promise.all([loadProtectedMessages(locale), loadProtectedPageMessages(locale)])");
+    expect(loaderSource).toContain("resolveThemePreferenceFromCookieValue(cookieStore.get(sharedThemeCookieName)?.value)");
 
     expect(sessionSource).toContain('import { cache } from "react";');
     expect(sessionSource).toContain("export const getServerSessionContext = cache(async (): Promise<SessionContext> => {");
