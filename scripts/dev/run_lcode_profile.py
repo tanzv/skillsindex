@@ -20,6 +20,7 @@ class RuntimeGuard:
     listen_arg_flag: str | None = None
     listen_env_key: str | None = None
     fallback_port: int | None = None
+    artifact_relative_paths: tuple[str, ...] = ()
 
 
 RUNTIME_GUARDS: dict[str, RuntimeGuard] = {
@@ -29,6 +30,11 @@ RUNTIME_GUARDS: dict[str, RuntimeGuard] = {
         prohibited_commands=("npm run dev", "next dev", "next start"),
         listen_arg_flag="--port",
         fallback_port=3400,
+        artifact_relative_paths=(
+            "frontend-next/.next/BUILD_ID",
+            "frontend-next/.next/build-manifest.json",
+            "frontend-next/.next/server/middleware-build-manifest.js",
+        ),
     ),
     "skillsindex-backend": RuntimeGuard(
         profile_name="skillsindex-backend",
@@ -83,6 +89,40 @@ def _print_runtime_policy(profile_name: str) -> None:
         return
     prohibited = ", ".join(guard.prohibited_commands)
     print(f"Do not keep the repository {guard.service_label} alive with unmanaged commands such as {prohibited}.")
+
+
+def _resolve_session_timestamp(session: dict[str, Any]) -> int | None:
+    for field_name in ("updated_at", "created_at"):
+        raw_value = session.get(field_name)
+        if isinstance(raw_value, int):
+            return raw_value
+    return None
+
+
+def _iter_artifact_paths(repo_root: Path, profile_name: str) -> tuple[Path, ...]:
+    guard = RUNTIME_GUARDS.get(profile_name)
+    if guard is None:
+        return ()
+
+    return tuple(repo_root / relative_path for relative_path in guard.artifact_relative_paths)
+
+
+def _has_artifact_drift(repo_root: Path, profile_name: str, session: dict[str, Any]) -> bool:
+    session_timestamp = _resolve_session_timestamp(session)
+    if session_timestamp is None:
+        return False
+
+    artifact_paths = _iter_artifact_paths(repo_root, profile_name)
+    if not artifact_paths:
+        return False
+
+    for artifact_path in artifact_paths:
+        if not artifact_path.exists():
+            continue
+        if artifact_path.stat().st_mtime > session_timestamp:
+            return True
+
+    return False
 
 
 def _load_session_spec(session_id: str) -> dict[str, Any]:
@@ -270,16 +310,18 @@ def _assert_runtime_guard(
     repo_root: Path,
     profile_name: str,
     profile_spec: LcodeProfileSpec,
-    allowed_pids: set[int] | None = None,
+    allowed_process_pids: set[int] | None = None,
+    allowed_listen_pids: set[int] | None = None,
 ) -> None:
     guard = RUNTIME_GUARDS.get(profile_name)
     if guard is None:
         return
 
-    allowed = allowed_pids or set()
+    allowed_processes = allowed_process_pids or set()
+    allowed_listeners = allowed_listen_pids or set()
     listen_port = _resolve_listen_port(profile_spec, guard)
     port_pids = _find_listening_pids(listen_port)
-    conflicting_pids = [pid for pid in port_pids if pid not in allowed]
+    conflicting_pids = [pid for pid in port_pids if pid not in allowed_listeners]
     if conflicting_pids:
         pid = conflicting_pids[0]
         command = _load_process_command(pid)
@@ -294,7 +336,7 @@ def _assert_runtime_guard(
             )
         )
 
-    unmanaged_processes = _find_unmanaged_repo_processes(repo_root, profile_name, allowed)
+    unmanaged_processes = _find_unmanaged_repo_processes(repo_root, profile_name, allowed_processes)
     if unmanaged_processes:
         pid, command = unmanaged_processes[0]
         raise SystemExit(
@@ -334,19 +376,33 @@ def main(argv: list[str]) -> int:
             return 1
         session_spec = _load_session_spec(session_id)
         if _session_matches_contract(session_spec, expected_spec):
-            session_pid = existing_session.get("pid")
-            allowed_for_reuse = set(allowed_lcode_pids)
-            if isinstance(session_pid, int):
-                allowed_for_reuse.add(session_pid)
-            _assert_runtime_guard(repo_root, profile_name, expected_spec, allowed_for_reuse)
-            _print_existing_session(existing_session)
-            return 0
-        print(
-            f"Session config drift detected: name={profile_name} id={session_id}. Restarting with repository contract."
-        )
-        _stop_session(session_id)
+            if _has_artifact_drift(repo_root, profile_name, existing_session):
+                print(
+                    f"Runtime artifact drift detected: name={profile_name} id={session_id}. Restarting to load the latest build output."
+                )
+                _stop_session(session_id)
+            else:
+                session_pid = existing_session.get("pid")
+                allowed_processes_for_reuse = set(allowed_lcode_pids)
+                allowed_listeners_for_reuse: set[int] = set()
+                if isinstance(session_pid, int):
+                    allowed_listeners_for_reuse.update(_collect_process_tree_pids(session_pid))
+                _assert_runtime_guard(
+                    repo_root,
+                    profile_name,
+                    expected_spec,
+                    allowed_process_pids=allowed_processes_for_reuse,
+                    allowed_listen_pids=allowed_listeners_for_reuse,
+                )
+                _print_existing_session(existing_session)
+                return 0
+        else:
+            print(
+                f"Session config drift detected: name={profile_name} id={session_id}. Restarting with repository contract."
+            )
+            _stop_session(session_id)
 
-    _assert_runtime_guard(repo_root, profile_name, expected_spec, allowed_lcode_pids)
+    _assert_runtime_guard(repo_root, profile_name, expected_spec, allowed_process_pids=allowed_lcode_pids)
     return _start_profile(profile_name)
 
 

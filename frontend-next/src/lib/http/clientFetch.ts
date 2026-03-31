@@ -47,6 +47,7 @@ export async function clientFetchJSON<T>(path: string, options: ClientFetchJSONO
     method,
     headers,
     body,
+    cache: options.cache ?? "no-store",
     credentials: "include"
   });
 

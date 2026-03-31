@@ -15,8 +15,8 @@ const messages: PublicAuthMessages = {
   localeZhAriaLabel: "Switch to Chinese",
   brandText: "SkillsIndex",
   heading: "Account Sign In",
-  note: "Use your workspace credentials to continue.",
-  divider: "Use your workspace credentials",
+  note: "Choose the sign-in method assigned to your account.",
+  divider: "Workspace password",
   usernameLabel: "Username",
   usernamePlaceholder: "you@company.com",
   passwordLabel: "Password",
@@ -38,14 +38,14 @@ const messages: PublicAuthMessages = {
 const infoPanelModel: LoginInfoPanelModel = {
   eyebrow: "Private Access",
   title: "Welcome Back",
-  lead: "Use one secure entry point for internal skill access.",
+  lead: "Access stays aligned with your workspace provider and redirect policy.",
   cards: [
     {
-      id: "credentials",
-      accent: "primary",
-      eyebrow: "Credential Mode",
-      title: "Password Sign-In",
-      description: "Use your existing local account credentials.",
+      id: "providers",
+      accent: "secondary",
+      eyebrow: "Provider Policy",
+      title: "Controlled by Admin",
+      description: "Third-party providers follow the current admin configuration.",
     },
     {
       id: "redirect",
@@ -83,7 +83,9 @@ describe("LoginForm", () => {
     expect(markup).toContain('data-testid="login-locale-en"');
     expect(markup).toContain('data-testid="login-locale-zh"');
     expect(markup).toContain("Welcome Back");
+    expect(markup).toContain("Controlled by Admin");
     expect(markup).toContain("/admin/overview");
+    expect(markup).not.toContain('data-testid="login-info-card-item-credentials"');
     expect(markup).toContain("--motion-delay:160ms");
     expect(markup).toContain("--motion-delay:240ms");
     expect(markup).toContain("--motion-delay:320ms");

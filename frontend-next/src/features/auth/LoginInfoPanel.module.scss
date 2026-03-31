@@ -1,8 +1,8 @@
 .infoCard {
   position: relative;
   isolation: isolate;
-  width: min(100%, 400px);
-  padding: 24px 0;
+  width: min(100%, 360px);
+  padding: 8px 0;
   display: grid;
   align-content: start;
   gap: 0;
@@ -15,26 +15,15 @@
 }
 
 .infoCard[data-has-cards="true"] {
-  width: min(100%, 468px);
+  width: min(100%, 380px);
 }
 
 .infoCard::before {
-  content: "";
-  position: absolute;
-  left: -72px;
-  top: -92px;
-  width: 260px;
-  height: 260px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(214, 214, 214, 0.18) 0%, transparent 72%);
-  opacity: 0.32;
-  filter: blur(18px);
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 :global([data-theme="light"]) .infoCard::before {
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.16) 0%, transparent 72%);
+  display: none;
 }
 
 .infoHero,
@@ -46,7 +35,7 @@
 
 .infoHero {
   display: grid;
-  gap: 18px;
+  gap: 14px;
   position: relative;
 }
 
@@ -54,11 +43,11 @@
   content: "";
   position: absolute;
   left: 0;
-  bottom: -18px;
-  width: min(100%, 220px);
+  bottom: -14px;
+  width: min(100%, 180px);
   height: 1px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--login-text-primary) 22%, transparent) 0%, transparent 100%);
-  opacity: 0.7;
+  background: linear-gradient(90deg, var(--login-divider-tone) 0%, transparent 100%);
+  opacity: 1;
 }
 
 .infoEyebrow,
@@ -72,10 +61,10 @@
 .infoEyebrow {
   width: fit-content;
   margin: 0;
-  padding: 7px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--login-surface-border) 48%, transparent);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--login-surface-softer);
   color: var(--login-text-secondary);
   font-family: var(--login-font-mono);
   font-size: 11px;
@@ -86,62 +75,58 @@
 }
 
 :global([data-theme="light"]) .infoEyebrow {
-  border-color: rgba(148, 163, 184, 0.26);
-  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .infoTitle {
   margin: 0;
-  max-width: 8ch;
+  max-width: 10ch;
   color: var(--login-text-primary);
-  font-size: clamp(42px, 4.8vw, 68px);
-  font-weight: 780;
-  line-height: 0.92;
-  letter-spacing: -0.028em;
+  font-size: clamp(36px, 4vw, 54px);
+  font-weight: 760;
+  line-height: 0.96;
+  letter-spacing: -0.024em;
   text-wrap: balance;
 }
 
 .infoLead {
   margin: 0;
-  max-width: 26ch;
+  max-width: 28ch;
   color: var(--login-text-secondary);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
-  line-height: 1.7;
+  line-height: 1.6;
   letter-spacing: 0.01em;
 }
 
 .infoList {
-  width: min(100%, 460px);
-  margin: 28px 0 0;
+  width: min(100%, 380px);
+  margin: 22px 0 0;
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 10px;
+  gap: 8px;
   position: relative;
 }
 
 .infoListItem {
   position: relative;
-  overflow: hidden;
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
   gap: 14px;
-  padding: 15px 16px;
-  border: 1px solid color-mix(in srgb, var(--login-surface-border) 24%, transparent);
-  border-radius: 18px;
-  background: linear-gradient(180deg, var(--login-surface-soft) 0%, var(--login-surface-softer) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--login-surface-border) 42%, transparent);
+  border-radius: 16px;
+  background: var(--login-surface-softer);
   transition:
-    transform var(--login-motion-duration-medium) var(--login-motion-ease-standard),
     border-color var(--login-motion-duration-medium) var(--login-motion-ease-standard),
-    background-color var(--login-motion-duration-medium) var(--login-motion-ease-standard),
-    box-shadow var(--login-motion-duration-medium) var(--login-motion-ease-standard);
+    background-color var(--login-motion-duration-medium) var(--login-motion-ease-standard);
 }
 
 .infoListItem[data-accent="primary"] {
-  border-color: color-mix(in srgb, var(--login-glass-highlight) 54%, transparent);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.06) 100%);
+  border-color: color-mix(in srgb, var(--login-surface-border) 42%, transparent);
+  background: var(--login-surface-softer);
 }
 
 .infoListItem::before {
@@ -151,47 +136,20 @@
   top: 12px;
   bottom: 12px;
   width: 1px;
-  background: linear-gradient(180deg, rgba(214, 214, 214, 0.44) 0%, transparent 100%);
-  opacity: 0.36;
+  background: linear-gradient(180deg, var(--login-divider-tone) 0%, transparent 100%);
+  opacity: 1;
 }
 
 .infoListItem::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, transparent 18%, rgba(255, 255, 255, 0.08) 50%, transparent 82%);
-  opacity: 0;
-  transform: translate3d(-10%, 0, 0);
-  transition:
-    opacity var(--login-motion-duration-medium) var(--login-motion-ease-standard),
-    transform var(--motion-duration-slow) var(--login-motion-ease-emphasized);
-  pointer-events: none;
+  display: none;
 }
 
 :global([data-theme="light"]) .infoListItem::before {
-  background: linear-gradient(180deg, rgba(59, 130, 246, 0.42) 0%, transparent 100%);
-}
-
-.infoListItem:first-child {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
-}
-
-.infoListItem:first-child::before {
-  width: 2px;
-  opacity: 0.7;
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.28) 0%, transparent 100%);
 }
 
 .infoListItem:hover {
-  transform: translate3d(0, -2px, 0);
-  border-color: color-mix(in srgb, var(--login-glass-highlight) 72%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 14px 30px rgba(0, 0, 0, 0.14);
-}
-
-.infoListItem:hover::after {
-  opacity: 1;
-  transform: translate3d(8%, 0, 0);
+  border-color: color-mix(in srgb, var(--login-surface-border) 58%, transparent);
 }
 
 .infoIndex {

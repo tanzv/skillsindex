@@ -3,10 +3,11 @@ import {
   resolvePreferredPublicLocale,
   type PublicLocale
 } from "@/src/lib/i18n/publicLocale";
+import { workspaceOverviewRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 
 export type LoginRouteSearchParams = Record<string, string | string[] | undefined>;
 
-export const defaultLoginRedirectTarget = "/workspace";
+export const defaultLoginRedirectTarget = workspaceOverviewRoute;
 
 export function resolveLoginRedirectTarget(searchParams: LoginRouteSearchParams): string {
   return typeof searchParams.redirect === "string" ? searchParams.redirect : defaultLoginRedirectTarget;

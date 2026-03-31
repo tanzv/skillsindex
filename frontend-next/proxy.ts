@@ -12,22 +12,7 @@ import {
   splitPublicPathPrefix
 } from "@/src/lib/routing/publicCompat";
 
-function buildLoopbackCanonicalRedirectURL(request: NextRequest): URL | null {
-  const url = request.nextUrl.clone();
-  if (url.hostname !== "localhost") {
-    return null;
-  }
-
-  url.hostname = "127.0.0.1";
-  return url;
-}
-
 export function proxy(request: NextRequest) {
-  const loopbackCanonicalRedirectURL = buildLoopbackCanonicalRedirectURL(request);
-  if (loopbackCanonicalRedirectURL) {
-    return NextResponse.redirect(loopbackCanonicalRedirectURL);
-  }
-
   const { pathname, search } = request.nextUrl;
   const originalPublicPathname = request.headers.get("x-public-original-pathname") || pathname;
   const requestHeaders = new Headers(request.headers);

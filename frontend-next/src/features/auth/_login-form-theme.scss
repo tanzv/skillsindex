@@ -3,14 +3,14 @@
   --login-font-mono: "JetBrains Mono", monospace;
   --login-root-bg: #101010;
   --login-root-bg-accent: #171717;
-  --login-topbar-bg: #171717;
+  --login-topbar-bg: rgba(17, 17, 17, 0.96);
   --login-topbar-border: #2b2b2b;
   --login-panel-border: #2b2b2b;
-  --login-panel-form-bg: rgba(17, 17, 17, 0.84);
-  --login-panel-shadow: 0 24px 40px rgba(0, 0, 0, 0.34);
-  --login-glass-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
-  --login-glass-highlight: rgba(255, 255, 255, 0.1);
-  --login-surface-soft: rgba(255, 255, 255, 0.06);
+  --login-panel-form-bg: #171717;
+  --login-panel-shadow: 0 22px 44px rgba(0, 0, 0, 0.24);
+  --login-glass-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
+  --login-glass-highlight: rgba(255, 255, 255, 0.06);
+  --login-surface-soft: rgba(255, 255, 255, 0.04);
   --login-surface-softer: rgba(255, 255, 255, 0.02);
   --login-surface-border: #3a3a3a;
   --login-control-bg: #242424;
@@ -52,16 +52,6 @@
   isolation: isolate;
   overflow: hidden;
   background:
-    radial-gradient(
-      circle at 12% 14%,
-      rgba(255, 255, 255, 0.05),
-      transparent 24%
-    ),
-    radial-gradient(
-      circle at 48% 72%,
-      rgba(255, 255, 255, 0.04),
-      transparent 32%
-    ),
     linear-gradient(
       135deg,
       var(--login-root-bg) 0%,
@@ -72,54 +62,21 @@
 
 .stage::before,
 .stage::after {
-  content: "";
-  position: absolute;
-  inset: auto;
-  border-radius: 999px;
-  pointer-events: none;
-  z-index: 0;
-  filter: blur(18px);
-  opacity: 0.4;
-  animation: loginAmbientFloat var(--login-motion-duration-ambient-slow) var(--login-motion-ease-standard) infinite;
-}
-
-.stage::before {
-  top: 88px;
-  left: clamp(-42px, -2vw, -12px);
-  width: clamp(220px, 28vw, 360px);
-  height: clamp(220px, 28vw, 360px);
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.14) 0%,
-    transparent 68%
-  );
-}
-
-.stage::after {
-  right: clamp(-52px, -2vw, -20px);
-  bottom: 56px;
-  width: clamp(240px, 24vw, 340px);
-  height: clamp(240px, 24vw, 340px);
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.08) 0%,
-    transparent 72%
-  );
-  animation-delay: var(--login-motion-delay-ambient-phase);
+  display: none;
 }
 
 .stage[data-theme="light"] {
   --login-root-bg: #f4f7fb;
   --login-root-bg-accent: #e9eef6;
-  --login-topbar-bg: rgba(255, 255, 255, 0.9);
+  --login-topbar-bg: rgba(255, 255, 255, 0.96);
   --login-topbar-border: rgba(148, 163, 184, 0.34);
   --login-panel-border: rgba(148, 163, 184, 0.24);
-  --login-panel-form-bg: rgba(255, 255, 255, 0.78);
-  --login-panel-shadow: 0 24px 40px rgba(15, 23, 42, 0.12);
-  --login-glass-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
-  --login-glass-highlight: rgba(255, 255, 255, 0.8);
-  --login-surface-soft: rgba(255, 255, 255, 0.72);
-  --login-surface-softer: rgba(255, 255, 255, 0.46);
+  --login-panel-form-bg: #ffffff;
+  --login-panel-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  --login-glass-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+  --login-glass-highlight: rgba(255, 255, 255, 0.72);
+  --login-surface-soft: rgba(255, 255, 255, 0.78);
+  --login-surface-softer: rgba(248, 250, 252, 0.96);
   --login-surface-border: rgba(148, 163, 184, 0.24);
   --login-control-bg: rgba(255, 255, 255, 0.74);
   --login-control-border: rgba(148, 163, 184, 0.26);
@@ -137,28 +94,5 @@
   --login-button-text: #ffffff;
   --login-divider-tone: rgba(15, 23, 42, 0.08);
   --login-orbit-tone: rgba(59, 130, 246, 0.18);
-  background:
-    radial-gradient(circle at 10% 16%, rgba(15, 23, 42, 0.08), transparent 24%),
-    radial-gradient(
-      circle at 54% 72%,
-      rgba(59, 130, 246, 0.06),
-      transparent 30%
-    ),
-    linear-gradient(135deg, #f8fafc 0%, #eaf0f8 100%);
-}
-
-.stage[data-theme="light"]::before {
-  background: radial-gradient(
-    circle,
-    rgba(37, 99, 235, 0.12) 0%,
-    transparent 70%
-  );
-}
-
-.stage[data-theme="light"]::after {
-  background: radial-gradient(
-    circle,
-    rgba(15, 23, 42, 0.08) 0%,
-    transparent 72%
-  );
+  background: linear-gradient(135deg, #f8fafc 0%, #edf2f8 100%);
 }

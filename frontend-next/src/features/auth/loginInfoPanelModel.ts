@@ -30,15 +30,8 @@ function isLoginInfoPanelCardModel(
 const fallbackLoginInfoPanelModel: LoginInfoPanelModel = {
   eyebrow: "Private Access",
   title: "Welcome Back",
-  lead: "Use one secure entry point for internal skill access.",
+  lead: "Access stays aligned with your workspace provider and redirect policy.",
   cards: [
-    {
-      id: "credentials",
-      accent: "primary",
-      eyebrow: "Credential Mode",
-      title: "Password Sign-In",
-      description: "Use your existing local account credentials."
-    },
     {
       id: "providers",
       accent: "secondary",
