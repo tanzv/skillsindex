@@ -19,7 +19,7 @@ describe("frontend-next bootstrap", () => {
       dev: "next dev --webpack",
       "dev:turbopack": "next dev",
       "dev:webpack": "next dev --webpack",
-      build: "next build --webpack",
+      build: "node ./scripts/run-managed-build.mjs",
       start: "next start",
       lint: "eslint .",
       "test:unit": "vitest run",
