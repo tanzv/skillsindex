@@ -42,15 +42,18 @@ interface SheetContentProps
     VariantProps<typeof sheetVariants> {
   hideClose?: boolean;
   overlayClassName?: string;
+  overlayStyle?: React.CSSProperties;
+  trapFocus?: boolean;
+  disableOutsidePointerEvents?: boolean;
 }
 
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   SheetContentProps
->(({ children, className, hideClose = false, overlayClassName, side = "right", ...props }, ref) => {
+>(({ children, className, hideClose = false, overlayClassName, overlayStyle, side = "right", ...props }, ref) => {
   const content = (
     <>
-      <DialogOverlay className={overlayClassName} />
+      <DialogOverlay className={overlayClassName} style={overlayStyle} />
       <DialogPrimitive.Content
         ref={ref}
         data-slot="sheet-content"

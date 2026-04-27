@@ -1,10 +1,20 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { X } from "lucide-react";
 
-import { Dialog, DialogContent } from "@/src/components/ui/dialog";
-import { Sheet, SheetContent } from "@/src/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle
+} from "@/src/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle
+} from "@/src/components/ui/sheet";
 import { MOTION_EXIT_DURATION_MS } from "@/src/lib/motion/contracts";
 import { usePresenceMotion } from "@/src/lib/motion/usePresenceMotion";
 import { useReducedMotion } from "@/src/lib/motion/useReducedMotion";
@@ -68,6 +78,8 @@ export interface DetailFormSurfaceProps {
   panelClassName?: string;
   bodyClassName?: string;
   dataTestId?: string;
+  viewportTopOffset?: string;
+  interactionMode?: "modal" | "modeless";
 }
 
 export function DetailFormSurface({
@@ -85,10 +97,10 @@ export function DetailFormSurface({
   initialFocusRef,
   panelClassName,
   bodyClassName,
-  dataTestId
+  dataTestId,
+  viewportTopOffset,
+  interactionMode
 }: DetailFormSurfaceProps) {
-  const titleId = useId();
-  const descriptionId = useId();
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const reducedMotion = useReducedMotion();
   const isCompactViewport = useCompactDetailDrawerViewport();
@@ -97,7 +109,21 @@ export function DetailFormSurface({
     reducedMotion,
     exitDurationMs: MOTION_EXIT_DURATION_MS
   });
+  const resolvedInteractionMode = interactionMode ?? (variant === "modal" ? "modal" : "modeless");
+  const isBlockingSurface = resolvedInteractionMode === "modal";
   const drawerSide = isCompactViewport ? "bottom" : "right";
+  const shouldPreventOutsideDismiss = !isBlockingSurface || !closeOnBackdrop;
+  const drawerViewportStyle = variant === "drawer" && drawerSide === "right" && viewportTopOffset
+    ? {
+      top: viewportTopOffset,
+      height: `calc(100dvh - ${viewportTopOffset})`
+    }
+    : undefined;
+  const drawerViewportOverlayStyle = variant === "drawer" && drawerSide === "right" && viewportTopOffset
+    ? {
+      top: viewportTopOffset
+    }
+    : undefined;
 
   useEffect(() => {
     if (!isPresent) {
@@ -125,22 +151,21 @@ export function DetailFormSurface({
 
   const panelContent = (
     <div
-      aria-labelledby={titleId}
-      aria-describedby={description ? descriptionId : undefined}
       data-variant={variant}
       data-size={size}
       data-sheet-side={variant === "drawer" ? drawerSide : undefined}
       data-motion-state={motionState}
+      data-interaction-mode={resolvedInteractionMode}
       data-testid={dataTestId}
       className={sharedPanelClassName}
     >
       <div className={styles.header}>
         <div className={styles.headerCopy}>
-          <h2 id={titleId} className={styles.title}>
+          <h2 className={styles.title}>
             {title}
           </h2>
           {description ? (
-            <p id={descriptionId} className={styles.description}>
+            <p className={styles.description}>
               {description}
             </p>
           ) : null}
@@ -161,48 +186,68 @@ export function DetailFormSurface({
     </div>
   );
 
-  const overlayClassName = cn(styles.backdrop, variant === "modal" ? styles.isModalBackdrop : styles.isDrawerBackdrop);
+  const overlayClassName = cn(
+    styles.backdrop,
+    variant === "modal" ? styles.isModalBackdrop : styles.isDrawerBackdrop,
+    !isBlockingSurface && styles.isModelessBackdrop
+  );
 
   if (variant === "modal") {
     return (
-      <Dialog open={isPresent} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <Dialog modal={isBlockingSurface} open={isPresent} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
         <DialogContent
           hideClose
           overlayClassName={overlayClassName}
-          aria-labelledby={titleId}
-          aria-describedby={description ? descriptionId : undefined}
+          overlayStyle={drawerViewportOverlayStyle}
+          trapFocus={isBlockingSurface}
+          disableOutsidePointerEvents={isBlockingSurface}
           data-variant={variant}
           data-size={size}
           data-motion-state={motionState}
-        onPointerDownOutside={(event) => {
-          if (!closeOnBackdrop) {
-            event.preventDefault();
-          }
-        }}
-        onOpenAutoFocus={(event) => {
-          const nextFocusTarget = initialFocusRef?.current ?? resolveFirstFocusableElement(bodyRef.current);
-          if (!nextFocusTarget) {
-            return;
-          }
+          onPointerDownOutside={(event) => {
+            if (!closeOnBackdrop) {
+              event.preventDefault();
+            }
+          }}
+          onInteractOutside={(event) => {
+            if (shouldPreventOutsideDismiss) {
+              event.preventDefault();
+            }
+          }}
+          onOpenAutoFocus={(event) => {
+            const nextFocusTarget = initialFocusRef?.current ?? resolveFirstFocusableElement(bodyRef.current);
+            if (!nextFocusTarget) {
+              return;
+            }
 
-          event.preventDefault();
-          nextFocusTarget.focus();
-        }}
-      >
-        {panelContent}
-      </DialogContent>
+            event.preventDefault();
+            nextFocusTarget.focus();
+          }}
+        >
+          <DialogTitle className="sr-only">
+            {title}
+          </DialogTitle>
+          {description ? (
+            <DialogDescription className="sr-only">
+              {description}
+            </DialogDescription>
+          ) : null}
+          {panelContent}
+        </DialogContent>
       </Dialog>
     );
   }
 
   return (
-    <Sheet open={isPresent} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+    <Sheet modal={isBlockingSurface} open={isPresent} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <SheetContent
         side={drawerSide}
         hideClose
         overlayClassName={overlayClassName}
-        aria-labelledby={titleId}
-        aria-describedby={description ? descriptionId : undefined}
+        overlayStyle={drawerViewportOverlayStyle}
+        trapFocus={isBlockingSurface}
+        disableOutsidePointerEvents={isBlockingSurface}
+        style={drawerViewportStyle}
         data-variant={variant}
         data-size={size}
         data-motion-state={motionState}
@@ -211,6 +256,11 @@ export function DetailFormSurface({
             event.preventDefault();
           }
         }}
+        onInteractOutside={(event) => {
+          if (shouldPreventOutsideDismiss) {
+            event.preventDefault();
+          }
+        }}
         onOpenAutoFocus={(event) => {
           const nextFocusTarget = initialFocusRef?.current ?? resolveFirstFocusableElement(bodyRef.current);
           if (!nextFocusTarget) {
@@ -221,6 +271,14 @@ export function DetailFormSurface({
           nextFocusTarget.focus();
         }}
       >
+        <SheetTitle className="sr-only">
+          {title}
+        </SheetTitle>
+        {description ? (
+          <SheetDescription className="sr-only">
+            {description}
+          </SheetDescription>
+        ) : null}
         {panelContent}
       </SheetContent>
     </Sheet>

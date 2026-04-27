@@ -32,15 +32,18 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
   hideClose?: boolean;
   overlayClassName?: string;
+  overlayStyle?: React.CSSProperties;
+  trapFocus?: boolean;
+  disableOutsidePointerEvents?: boolean;
 }
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ children, className, hideClose = false, overlayClassName, ...props }, ref) => {
+>(({ children, className, hideClose = false, overlayClassName, overlayStyle, ...props }, ref) => {
   const content = (
     <>
-      <DialogOverlay className={overlayClassName} />
+      <DialogOverlay className={overlayClassName} style={overlayStyle} />
       <DialogPrimitive.Content
         ref={ref}
         data-slot="dialog-content"

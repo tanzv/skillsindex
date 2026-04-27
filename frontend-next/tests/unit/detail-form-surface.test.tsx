@@ -6,15 +6,25 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/src/components/ui/dialog", () => ({
-  Dialog: ({ children }: { children: ReactNode }) => createElement("div", null, children),
+  Dialog: ({ children, modal = true }: { children: ReactNode; modal?: boolean }) =>
+    createElement("div", { "data-slot": "dialog-root", "data-modal": String(modal) }, children),
   DialogContent: ({ children, ...props }: HTMLAttributes<HTMLDivElement>) =>
-    createElement("div", { role: "dialog", "aria-modal": "true", ...props }, children)
+    createElement("div", { role: "dialog", "aria-modal": "true", ...props }, children),
+  DialogTitle: ({ children, ...props }: HTMLAttributes<HTMLDivElement>) =>
+    createElement("div", { "data-slot": "dialog-title", ...props }, children),
+  DialogDescription: ({ children, ...props }: HTMLAttributes<HTMLDivElement>) =>
+    createElement("div", { "data-slot": "dialog-description", ...props }, children)
 }));
 
 vi.mock("@/src/components/ui/sheet", () => ({
-  Sheet: ({ children }: { children: ReactNode }) => createElement("div", null, children),
+  Sheet: ({ children, modal = true }: { children: ReactNode; modal?: boolean }) =>
+    createElement("div", { "data-slot": "sheet-root", "data-modal": String(modal) }, children),
   SheetContent: ({ children, ...props }: HTMLAttributes<HTMLDivElement>) =>
-    createElement("div", { role: "dialog", "aria-modal": "true", ...props }, children)
+    createElement("div", { role: "dialog", "aria-modal": "true", ...props }, children),
+  SheetTitle: ({ children, ...props }: HTMLAttributes<HTMLDivElement>) =>
+    createElement("div", { "data-slot": "sheet-title", ...props }, children),
+  SheetDescription: ({ children, ...props }: HTMLAttributes<HTMLDivElement>) =>
+    createElement("div", { "data-slot": "sheet-description", ...props }, children)
 }));
 
 import { DetailFormSurface } from "@/src/components/shared/DetailFormSurface";
@@ -58,6 +68,19 @@ describe("DetailFormSurface", () => {
     expect(sheetSource).toContain("<SheetPortal>");
   });
 
+  it("lets Radix own hidden title and description ids for accessibility warnings", () => {
+    const source = readFileSync(
+      path.resolve(process.cwd(), "src/components/shared/DetailFormSurface.tsx"),
+      "utf8"
+    );
+
+    expect(source).not.toContain("useId");
+    expect(source).not.toContain("aria-labelledby={titleId}");
+    expect(source).not.toContain("aria-describedby={description ? descriptionId : undefined}");
+    expect(source).not.toContain("<DialogTitle id={titleId}");
+    expect(source).not.toContain("<SheetTitle id={titleId}");
+  });
+
   it("renders nothing when closed", () => {
     const markup = renderToStaticMarkup(
       createElement(
@@ -96,6 +119,8 @@ describe("DetailFormSurface", () => {
 
     expect(markup).toContain('role="dialog"');
     expect(markup).toContain('aria-modal="true"');
+    expect(markup).toContain('data-slot="sheet-root"');
+    expect(markup).toContain('data-modal="false"');
     expect(markup).toContain('data-variant="drawer"');
     expect(markup).toContain('data-size="wide"');
     expect(markup).toContain('data-motion-state="open"');
@@ -105,6 +130,8 @@ describe("DetailFormSurface", () => {
     expect(markup).toContain("Drawer body");
     expect(markup).toContain('aria-label="Close panel"');
     expect(markup).toContain("Save");
+    expect(markup).toContain('data-slot="sheet-title"');
+    expect(markup).toContain('data-slot="sheet-description"');
   });
 
   it("renders the modal variant contract when requested", () => {
@@ -124,9 +151,32 @@ describe("DetailFormSurface", () => {
     );
 
     expect(markup).toContain('data-variant="modal"');
+    expect(markup).toContain('data-slot="dialog-root"');
+    expect(markup).toContain('data-modal="true"');
     expect(markup).toContain('data-motion-state="open"');
     expect(markup).toContain("Confirm rotation");
     expect(markup).toContain("Status");
     expect(markup).toContain("Modal body");
+    expect(markup).toContain('data-slot="dialog-title"');
+  });
+
+  it("applies a desktop drawer top offset when requested", () => {
+    const markup = renderToStaticMarkup(
+      createElement(
+        DetailFormSurface,
+        {
+          open: true,
+          title: "Policy",
+          closeLabel: "Close panel",
+          onClose: () => {},
+          variant: "drawer",
+          viewportTopOffset: "108px"
+        },
+        "Drawer body"
+      )
+    );
+
+    expect(markup).toContain("top:108px");
+    expect(markup).toContain("height:calc(100dvh - 108px)");
   });
 });

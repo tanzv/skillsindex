@@ -9,6 +9,10 @@
   transition: opacity var(--motion-duration-medium) var(--motion-ease-standard);
 }
 
+.isModelessBackdrop {
+  pointer-events: none;
+}
+
 .backdrop[data-motion-state="open"] {
   opacity: 1;
 }
@@ -35,6 +39,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  pointer-events: auto;
   border: 1px solid var(--detail-form-surface-border, var(--ui-border));
   background: var(--detail-form-surface-bg, var(--ui-card-bg));
   color: var(--ui-text-primary);

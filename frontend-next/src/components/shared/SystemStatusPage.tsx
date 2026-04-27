@@ -3,8 +3,6 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/src/lib/utils";
 
-import styles from "./SystemStatusPage.module.scss";
-
 export type SystemStatusTone = "neutral" | "warning" | "danger" | "loading";
 export type SystemStatusLayout = "fullscreen" | "embedded";
 export type SystemStatusActionVariant = "primary" | "secondary";
@@ -38,8 +36,8 @@ interface SystemStatusButtonActionProps extends SystemStatusActionProps {
 
 function buildActionClassName(variant: SystemStatusActionVariant, className?: string): string {
   return cn(
-    styles.action,
-    variant === "primary" ? styles.actionPrimary : styles.actionSecondary,
+    "system-status-page__action",
+    variant === "primary" ? "is-primary" : "is-secondary",
     className
   );
 }
@@ -74,25 +72,25 @@ export function SystemStatusButtonAction({
 function renderTelemetryRail(tone: SystemStatusTone): ReactNode {
   if (tone === "loading") {
     return (
-      <div className={styles.skeletonRail} aria-hidden="true">
-        <span className={styles.skeletonLine} />
-        <span className={styles.skeletonLine} />
-        <span className={cn(styles.skeletonLine, styles.skeletonLineShort)} />
-        <div className={styles.skeletonPulseRow}>
-          <span className={styles.skeletonPulseDot} />
-          <span className={styles.skeletonPulseDot} />
-          <span className={styles.skeletonPulseDot} />
+      <div className="system-status-page__skeleton-rail" aria-hidden="true">
+        <span className="system-status-page__skeleton-line" />
+        <span className="system-status-page__skeleton-line" />
+        <span className="system-status-page__skeleton-line is-short" />
+        <div className="system-status-page__skeleton-pulse-row">
+          <span className="system-status-page__skeleton-pulse-dot" />
+          <span className="system-status-page__skeleton-pulse-dot" />
+          <span className="system-status-page__skeleton-pulse-dot" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className={styles.telemetryRail} aria-hidden="true">
-      <div className={styles.telemetryBar} />
-      <div className={styles.telemetryBar} />
-      <div className={cn(styles.telemetryBar, styles.telemetryBarMuted)} />
-      <div className={styles.telemetryGrid}>
+    <div className="system-status-page__telemetry-rail" aria-hidden="true">
+      <div className="system-status-page__telemetry-bar" />
+      <div className="system-status-page__telemetry-bar" />
+      <div className="system-status-page__telemetry-bar is-muted" />
+      <div className="system-status-page__telemetry-grid">
         <span />
         <span />
         <span />
@@ -116,41 +114,41 @@ export function SystemStatusPage({
   return (
     <div
       className={cn(
-        styles.page,
-        layout === "embedded" ? styles.pageEmbedded : styles.pageFullscreen,
-        tone === "warning" && styles.pageWarning,
-        tone === "danger" && styles.pageDanger,
-        tone === "loading" && styles.pageLoading
+        "system-status-page",
+        layout === "embedded" ? "is-embedded" : "is-fullscreen",
+        tone === "warning" && "tone-warning",
+        tone === "danger" && "tone-danger",
+        tone === "loading" && "tone-loading"
       )}
       data-testid={testId}
     >
-      <section className={styles.panel}>
-        <div className={styles.copyColumn}>
-          <p className={styles.eyebrow}>{eyebrow}</p>
-          <div className={styles.headlineRow}>
+      <section className="system-status-page__panel">
+        <div className="system-status-page__copy-column">
+          <p className="system-status-page__eyebrow">{eyebrow}</p>
+          <div className="system-status-page__headline-row">
             {statusCode ? (
-              <span className={styles.code} data-testid="system-status-code">
+              <span className="system-status-page__code" data-testid="system-status-code">
                 {statusCode}
               </span>
             ) : null}
-            <h1 className={styles.title}>{title}</h1>
+            <h1 className="system-status-page__title">{title}</h1>
           </div>
-          <p className={styles.description}>{description}</p>
-          {detail ? <p className={styles.detail}>{detail}</p> : null}
-          {actions ? <div className={styles.actions}>{actions}</div> : null}
+          <p className="system-status-page__description">{description}</p>
+          {detail ? <p className="system-status-page__detail">{detail}</p> : null}
+          {actions ? <div className="system-status-page__actions">{actions}</div> : null}
         </div>
 
-        <aside className={styles.insightColumn}>
-          <div className={styles.insightCard}>
-            <span className={styles.insightLabel}>Recovery Window</span>
-            <strong className={styles.insightValue}>{tone === "loading" ? "In Progress" : "Ready"}</strong>
-            <p className={styles.insightText}>
+        <aside className="system-status-page__insight-column">
+          <div className="system-status-page__insight-card">
+            <span className="system-status-page__insight-label">Recovery Window</span>
+            <strong className="system-status-page__insight-value">{tone === "loading" ? "In Progress" : "Ready"}</strong>
+            <p className="system-status-page__insight-text">
               {tone === "loading"
                 ? "The route shell is still negotiating data and layout slots."
                 : "Primary navigation remains available while you recover or redirect."}
             </p>
           </div>
-          <div className={styles.telemetryCard}>{renderTelemetryRail(tone)}</div>
+          <div className="system-status-page__telemetry-card">{renderTelemetryRail(tone)}</div>
         </aside>
       </section>
     </div>

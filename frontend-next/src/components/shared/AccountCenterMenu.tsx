@@ -10,7 +10,7 @@ import {
   Languages
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import {
   DropdownMenu,
@@ -79,6 +79,7 @@ export function AccountCenterMenu({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState("");
+  const suppressNextMenuCloseRef = useRef(false);
   const menuId = `${dataTestId}-account-menu-region`;
   const {
     closeProfileEditor,
@@ -110,6 +111,29 @@ export function AccountCenterMenu({
     onExpandedChange?.(nextExpanded);
   }
 
+  function requestExpandedState(nextExpanded: boolean) {
+    if (nextExpanded) {
+      suppressNextMenuCloseRef.current = true;
+      queueMicrotask(() => {
+        suppressNextMenuCloseRef.current = false;
+      });
+    }
+
+    setExpandedState(nextExpanded);
+  }
+
+  function toggleExpandedState() {
+    requestExpandedState(!isExpanded);
+  }
+
+  function handleExpandedChange(nextExpanded: boolean) {
+    if (!nextExpanded && suppressNextMenuCloseRef.current) {
+      return;
+    }
+
+    setExpandedState(nextExpanded);
+  }
+
   async function handleSignOut() {
     if (isSigningOut) {
       return;
@@ -137,7 +161,7 @@ export function AccountCenterMenu({
   }
 
   return (
-    <DropdownMenu modal={false} open={isExpanded} onOpenChange={setExpandedState}>
+    <DropdownMenu modal={false} open={isExpanded} onOpenChange={handleExpandedChange}>
       <div className={styles.accountAnchor}>
         <DropdownMenuTrigger asChild>
           <button
@@ -153,6 +177,23 @@ export function AccountCenterMenu({
             data-testid={`${dataTestId}-account-trigger`}
             data-trigger-variant={triggerVariant}
             title={userName}
+            onPointerDownCapture={(event) => {
+              event.stopPropagation();
+            }}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              toggleExpandedState();
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" && event.key !== " ") {
+                return;
+              }
+
+              event.preventDefault();
+              event.stopPropagation();
+              toggleExpandedState();
+            }}
           >
             {triggerVariant === "pill" ? (
               <>

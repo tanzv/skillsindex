@@ -1,4 +1,4 @@
-.page {
+.system-status-page {
   --status-canvas: var(--marketplace-home-background, #0f172a);
   --status-surface: var(--marketplace-section-background, rgba(15, 23, 42, 0.84));
   --status-surface-alt: var(--marketplace-section-emphasis-background, rgba(15, 23, 42, 0.62));
@@ -15,7 +15,7 @@
   position: relative;
 }
 
-.page::before {
+.system-status-page::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -27,7 +27,7 @@
   opacity: 0.9;
 }
 
-.pageFullscreen {
+.system-status-page.is-fullscreen {
   min-height: 100vh;
   padding: clamp(24px, 4vw, 48px);
   display: grid;
@@ -36,26 +36,26 @@
     linear-gradient(180deg, color-mix(in srgb, var(--status-canvas) 92%, #020617 8%) 0%, var(--status-canvas) 100%);
 }
 
-.pageEmbedded {
+.system-status-page.is-embedded {
   padding: 8px 0 20px;
 }
 
-.pageWarning {
+.system-status-page.tone-warning {
   --status-accent: #f8d27b;
   --status-accent-contrast: #2a2111;
 }
 
-.pageDanger {
+.system-status-page.tone-danger {
   --status-accent: #f3b4b4;
   --status-accent-contrast: #2c1414;
 }
 
-.pageLoading {
+.system-status-page.tone-loading {
   --status-accent: #c9d8f7;
   --status-accent-contrast: #13213d;
 }
 
-.panel {
+.system-status-page__panel {
   position: relative;
   z-index: 1;
   width: min(100%, 1120px);
@@ -69,33 +69,33 @@
   overflow: hidden;
 }
 
-.pageFullscreen .panel {
+.system-status-page.is-fullscreen .system-status-page__panel {
   grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
   padding: clamp(24px, 4vw, 42px);
 }
 
-.pageEmbedded .panel {
+.system-status-page.is-embedded .system-status-page__panel {
   grid-template-columns: minmax(0, 1fr);
   padding: clamp(20px, 3vw, 28px);
 }
 
-.copyColumn,
-.insightColumn,
-.insightCard,
-.telemetryCard,
-.telemetryRail,
-.telemetryGrid,
-.skeletonRail,
-.actions {
+.system-status-page__copy-column,
+.system-status-page__insight-column,
+.system-status-page__insight-card,
+.system-status-page__telemetry-card,
+.system-status-page__telemetry-rail,
+.system-status-page__telemetry-grid,
+.system-status-page__skeleton-rail,
+.system-status-page__actions {
   display: grid;
 }
 
-.copyColumn {
+.system-status-page__copy-column {
   gap: 16px;
   align-content: start;
 }
 
-.eyebrow {
+.system-status-page__eyebrow {
   margin: 0;
   color: var(--status-text-muted);
   font-size: 11px;
@@ -104,12 +104,12 @@
   text-transform: uppercase;
 }
 
-.headlineRow {
+.system-status-page__headline-row {
   display: grid;
   gap: 12px;
 }
 
-.code {
+.system-status-page__code {
   width: fit-content;
   min-height: 34px;
   padding: 0 14px;
@@ -126,7 +126,7 @@
   letter-spacing: 0.18em;
 }
 
-.title {
+.system-status-page__title {
   margin: 0;
   color: var(--status-text);
   font-size: clamp(32px, 5vw, 56px);
@@ -134,27 +134,27 @@
   letter-spacing: -0.05em;
 }
 
-.description,
-.detail,
-.insightText {
+.system-status-page__description,
+.system-status-page__detail,
+.system-status-page__insight-text {
   margin: 0;
   color: var(--status-text-muted);
   font-size: 14px;
   line-height: 1.7;
 }
 
-.detail {
+.system-status-page__detail {
   max-width: 66ch;
 }
 
-.actions {
+.system-status-page__actions {
   gap: 10px;
   grid-auto-flow: column;
   justify-content: start;
   align-items: center;
 }
 
-.action {
+.system-status-page__action {
   min-height: 42px;
   padding: 0 18px;
   border-radius: 999px;
@@ -170,34 +170,34 @@
     color var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
-.action:hover {
+.system-status-page__action:hover {
   transform: translateY(-1px);
 }
 
-.action:focus-visible {
+.system-status-page__action:focus-visible {
   outline: 2px solid var(--status-accent);
   outline-offset: 3px;
 }
 
-.actionPrimary {
+.system-status-page__action.is-primary {
   border: 1px solid transparent;
   background: var(--status-accent);
   color: var(--status-accent-contrast);
 }
 
-.actionSecondary {
+.system-status-page__action.is-secondary {
   border: 1px solid var(--status-border);
   background: color-mix(in srgb, var(--status-surface-alt) 74%, transparent);
   color: var(--status-text);
 }
 
-.insightColumn {
+.system-status-page__insight-column {
   gap: 14px;
   align-content: start;
 }
 
-.insightCard,
-.telemetryCard {
+.system-status-page__insight-card,
+.system-status-page__telemetry-card {
   gap: 10px;
   border: 1px solid var(--status-border-soft);
   border-radius: 24px;
@@ -205,7 +205,7 @@
   background: color-mix(in srgb, var(--status-surface-alt) 86%, transparent);
 }
 
-.insightLabel {
+.system-status-page__insight-label {
   color: var(--status-text-muted);
   font-size: 11px;
   font-weight: 700;
@@ -213,106 +213,106 @@
   text-transform: uppercase;
 }
 
-.insightValue {
+.system-status-page__insight-value {
   color: var(--status-text);
   font-size: 26px;
   line-height: 1;
   letter-spacing: -0.04em;
 }
 
-.telemetryRail,
-.skeletonRail {
+.system-status-page__telemetry-rail,
+.system-status-page__skeleton-rail {
   gap: 12px;
 }
 
-.telemetryBar,
-.skeletonLine,
-.skeletonPulseDot,
-.telemetryGrid span {
+.system-status-page__telemetry-bar,
+.system-status-page__skeleton-line,
+.system-status-page__skeleton-pulse-dot,
+.system-status-page__telemetry-grid span {
   border-radius: 999px;
   background: color-mix(in srgb, var(--status-accent) 28%, transparent);
 }
 
-.telemetryBar,
-.skeletonLine {
+.system-status-page__telemetry-bar,
+.system-status-page__skeleton-line {
   height: 10px;
 }
 
-.telemetryBarMuted,
-.skeletonLineShort {
+.system-status-page__telemetry-bar.is-muted,
+.system-status-page__skeleton-line.is-short {
   width: 62%;
 }
 
-.telemetryGrid {
+.system-status-page__telemetry-grid {
   gap: 10px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.telemetryGrid span {
+.system-status-page__telemetry-grid span {
   height: 68px;
   border-radius: 18px;
   background: color-mix(in srgb, var(--status-accent) 18%, transparent);
 }
 
-.skeletonLine,
-.skeletonPulseDot {
+.system-status-page__skeleton-line,
+.system-status-page__skeleton-pulse-dot {
   position: relative;
   overflow: hidden;
 }
 
-.skeletonLine::after,
-.skeletonPulseDot::after {
+.system-status-page__skeleton-line::after,
+.system-status-page__skeleton-pulse-dot::after {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.24) 50%, transparent 100%);
   transform: translateX(-100%);
-  animation: statusShimmer var(--motion-duration-loading-loop) var(--motion-ease-standard) infinite;
+  animation: system-status-page-shimmer var(--motion-duration-loading-loop) var(--motion-ease-standard) infinite;
 }
 
-.skeletonPulseRow {
+.system-status-page__skeleton-pulse-row {
   display: flex;
   gap: 10px;
 }
 
-.skeletonPulseDot {
+.system-status-page__skeleton-pulse-dot {
   width: 44px;
   height: 44px;
   border-radius: 14px;
 }
 
-@keyframes statusShimmer {
+@keyframes system-status-page-shimmer {
   to {
     transform: translateX(100%);
   }
 }
 
 @media (max-width: 860px) {
-  .pageFullscreen .panel {
+  .system-status-page.is-fullscreen .system-status-page__panel {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .actions {
+  .system-status-page__actions {
     grid-auto-flow: row;
     justify-content: stretch;
   }
 
-  .action {
+  .system-status-page__action {
     width: 100%;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .action {
+  .system-status-page__action {
     transition: none;
   }
 
-  .action:hover {
+  .system-status-page__action:hover {
     transform: none;
   }
 
-  .skeletonLine::after,
-  .skeletonPulseDot::after {
+  .system-status-page__skeleton-line::after,
+  .system-status-page__skeleton-pulse-dot::after {
     animation: none;
   }
 }

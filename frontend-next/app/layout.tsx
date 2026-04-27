@@ -9,6 +9,7 @@ import {
 } from "@/src/lib/i18n/publicLocale";
 import { resolveThemePreferenceFromCookieValue, sharedThemeCookieName } from "@/src/lib/theme/sharedThemePreference";
 import "./globals.css";
+import "./system-status-page.scss";
 
 export const metadata: Metadata = {
   title: "SkillsIndex",
