@@ -1,19 +1,13 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-
 import { describe, expect, it } from "vitest";
-
-function readAppFile(relativePath: string): string {
-  return readFileSync(path.join(process.cwd(), relativePath), "utf8");
-}
+import { expectRouteEntrypoint } from "./routeEntrypointTestUtils";
 
 describe("public skill detail route entrypoint", () => {
   it("routes skill detail pages through the shared route entry helper", () => {
-    const routeSource = readAppFile("app/(public)/skills/[skillId]/page.tsx");
+    const routeSource = expectRouteEntrypoint("app/(public)/skills/[skillId]/page.tsx", {
+      requiredSnippets: ['from "@/src/features/public/publicSkillDetailRouteEntry"'],
+      forbiddenSnippets: ["loadInitialSkillDetailPageData", "PublicSkillInteractiveDetail", "next/headers"]
+    });
 
-    expect(routeSource).toContain('from "@/src/features/public/publicSkillDetailRouteEntry"');
-    expect(routeSource).not.toContain("loadInitialSkillDetailPageData");
-    expect(routeSource).not.toContain("PublicSkillInteractiveDetail");
-    expect(routeSource).not.toContain("next/headers");
+    expect(routeSource).toContain("renderPublicSkillDetailRoute");
   });
 });

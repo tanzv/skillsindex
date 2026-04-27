@@ -5,7 +5,7 @@ import path from "node:path";
 import { loadWorkspaceRouteData, resolveWorkspaceMarketplaceQuery } from "@/src/features/workspace/workspaceRouteDataLoader";
 import type { PublicMarketplaceResponse } from "@/src/lib/schemas/public";
 
-function readSourceFile(relativePath: string): string {
+function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(process.cwd(), relativePath), "utf8");
 }
 
@@ -77,7 +77,7 @@ describe("workspaceRouteDataLoader", () => {
   });
 
   it("keeps route query selection delegated to the shared workspace route contract", () => {
-    const source = readSourceFile("src/features/workspace/workspaceRouteDataLoader.ts");
+    const source = readRepoFile("src/features/workspace/workspaceRouteDataLoader.ts");
 
     expect(source).toContain('from "@/src/lib/routing/workspaceRouteMeta"');
     expect(source).not.toContain("const workspaceMarketplaceQueries");

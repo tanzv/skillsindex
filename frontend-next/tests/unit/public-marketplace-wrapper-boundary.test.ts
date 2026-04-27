@@ -1,34 +1,30 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-
-import { describe, expect, it } from "vitest";
-
-function readSourceFile(relativePath: string): string {
-  return readFileSync(path.join(process.cwd(), relativePath), "utf8");
-}
+import { describe, it } from "vitest";
+import {
+  expectFileOmits,
+  readRepoFile
+} from "./routeEntrypointTestUtils";
 
 describe("public marketplace wrapper boundary", () => {
   it("keeps direct public feature consumers on shared marketplace contracts instead of wrapper re-exports", () => {
-    const rankingModelSource = readSourceFile("src/features/public/publicRankingModel.ts");
-    const comparePageModelSource = readSourceFile("src/features/public/publicComparePageModel.ts");
-    const categoryDetailPageModelSource = readSourceFile("src/features/public/publicCategoryDetailPageModel.ts");
-    const rankingPageModelSource = readSourceFile("src/features/public/publicRankingPageModel.ts");
-    const rankingPageSource = readSourceFile("src/features/public/PublicRankingPage.tsx");
-    const skillDetailTaxonomySource = readSourceFile("src/features/public/skill-detail/skillDetailTaxonomy.ts");
-    const categoryCollectionsSource = readSourceFile("src/features/public/marketplace/marketplaceCategoryCollections.ts");
-    const batchWarmupSource = readSourceFile("src/features/public/marketplace/usePublicSkillBatchWarmup.ts");
+    const rankingModelSource = readRepoFile("src/features/public/publicRankingModel.ts");
+    const comparePageModelSource = readRepoFile("src/features/public/publicComparePageModel.ts");
+    const categoryDetailPageModelSource = readRepoFile("src/features/public/publicCategoryDetailPageModel.ts");
+    const rankingPageModelSource = readRepoFile("src/features/public/publicRankingPageModel.ts");
+    const rankingPageSource = readRepoFile("src/features/public/PublicRankingPage.tsx");
+    const skillDetailTaxonomySource = readRepoFile("src/features/public/skill-detail/skillDetailTaxonomy.ts");
+    const categoryCollectionsSource = readRepoFile("src/features/public/marketplace/marketplaceCategoryCollections.ts");
+    const batchWarmupSource = readRepoFile("src/features/public/marketplace/usePublicSkillBatchWarmup.ts");
 
-    expect(rankingModelSource).not.toContain('from "./publicMarketplaceFallback"');
-    expect(rankingModelSource).not.toContain('from "./marketplace/marketplaceTaxonomy"');
-    expect(comparePageModelSource).not.toContain('from "./marketplace/marketplaceTaxonomy"');
-    expect(categoryDetailPageModelSource).not.toContain('from "./marketplace/marketplaceTaxonomy"');
-    expect(rankingPageModelSource).not.toContain('from "./marketplace/marketplaceTaxonomy"');
-    expect(rankingPageSource).not.toContain('from "./marketplace/marketplaceTaxonomy"');
-    expect(skillDetailTaxonomySource).not.toContain('from "../marketplace/marketplaceTaxonomyText"');
-    expect(skillDetailTaxonomySource).not.toContain('from "../marketplace/marketplaceTaxonomyDefinitions"');
-    expect(categoryCollectionsSource).not.toContain('from "./marketplaceTaxonomyText"');
-    expect(categoryCollectionsSource).not.toContain('from "./marketplaceTaxonomy"');
-    expect(batchWarmupSource).not.toContain('from "./publicSkillWarmupPolicy"');
-    expect(batchWarmupSource).not.toContain("from './publicSkillWarmupPolicy'");
+    expectFileOmits(rankingModelSource, ['from "./publicMarketplaceFallback"', 'from "./marketplace/marketplaceTaxonomy"']);
+    expectFileOmits(comparePageModelSource, ['from "./marketplace/marketplaceTaxonomy"']);
+    expectFileOmits(categoryDetailPageModelSource, ['from "./marketplace/marketplaceTaxonomy"']);
+    expectFileOmits(rankingPageModelSource, ['from "./marketplace/marketplaceTaxonomy"']);
+    expectFileOmits(rankingPageSource, ['from "./marketplace/marketplaceTaxonomy"']);
+    expectFileOmits(skillDetailTaxonomySource, [
+      'from "../marketplace/marketplaceTaxonomyText"',
+      'from "../marketplace/marketplaceTaxonomyDefinitions"'
+    ]);
+    expectFileOmits(categoryCollectionsSource, ['from "./marketplaceTaxonomyText"', 'from "./marketplaceTaxonomy"']);
+    expectFileOmits(batchWarmupSource, ['from "./publicSkillWarmupPolicy"', "from './publicSkillWarmupPolicy'"]);
   });
 });

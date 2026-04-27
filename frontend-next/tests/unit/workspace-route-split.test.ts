@@ -1,15 +1,9 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-
 import { describe, expect, it } from "vitest";
-
-function readSourceFile(relativePath: string): string {
-  return readFileSync(path.join(process.cwd(), relativePath), "utf8");
-}
+import { readRepoFile } from "./routeEntrypointTestUtils";
 
 describe("workspace route split", () => {
   it("keeps route rendering on the server and lazy-loads the overview and interactive pages after the server model resolves", () => {
-    const source = readSourceFile("src/features/workspace/renderWorkspaceRoute.tsx");
+    const source = readRepoFile("src/features/workspace/renderWorkspaceRoute.tsx");
 
     expect(source).not.toContain('from "./WorkspaceRouteScene"');
     expect(source).toContain('from "./loadWorkspaceRouteModel"');

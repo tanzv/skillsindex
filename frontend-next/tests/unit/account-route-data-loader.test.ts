@@ -13,7 +13,7 @@ import {
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-function readSourceFile(relativePath: string): string {
+function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(process.cwd(), relativePath), "utf8");
 }
 
@@ -80,7 +80,7 @@ describe("account route data loader", () => {
   });
 
   it("keeps account route data requirements delegated to the shared account route contract", () => {
-    const source = readSourceFile("src/features/accountCenter/accountRouteDataLoader.ts");
+    const source = readRepoFile("src/features/accountCenter/accountRouteDataLoader.ts");
 
     expect(source).toContain('from "@/src/lib/routing/accountRouteMeta"');
     expect(source).not.toContain("route === accountSecurityRoute");

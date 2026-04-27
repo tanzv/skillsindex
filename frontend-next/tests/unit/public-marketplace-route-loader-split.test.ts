@@ -1,18 +1,12 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-
 import { describe, expect, it } from "vitest";
-
-function readSourceFile(relativePath: string): string {
-  return readFileSync(path.join(process.cwd(), relativePath), "utf8");
-}
+import { readRepoFile } from "./routeEntrypointTestUtils";
 
 describe("public marketplace route loader split", () => {
   it("keeps marketplace route entries on the shared loader instead of duplicating fetch and fallback wiring", () => {
-    const landingSource = readSourceFile("src/features/public/publicLandingRouteEntry.tsx");
-    const resultsSource = readSourceFile("src/features/public/publicResultsRouteEntry.tsx");
-    const categorySource = readSourceFile("src/features/public/publicCategoryRouteEntry.tsx");
-    const detailSource = readSourceFile("src/features/public/publicCategoryDetailRouteEntry.tsx");
+    const landingSource = readRepoFile("src/features/public/publicLandingRouteEntry.tsx");
+    const resultsSource = readRepoFile("src/features/public/publicResultsRouteEntry.tsx");
+    const categorySource = readRepoFile("src/features/public/publicCategoryRouteEntry.tsx");
+    const detailSource = readRepoFile("src/features/public/publicCategoryDetailRouteEntry.tsx");
 
     for (const source of [landingSource, resultsSource, categorySource, detailSource]) {
       expect(source).toContain('from "./publicMarketplaceRouteLoader"');

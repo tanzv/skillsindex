@@ -1,3 +1,4 @@
+import "../../../account-center.css";
 import { accountProfileRoute } from "@/src/lib/routing/protectedSurfaceLinks";
 import { renderAccountRoute } from "@/src/features/accountCenter/renderAccountRoute";
 

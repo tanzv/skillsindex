@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-
 import { describe, expect, it } from "vitest";
 
 import {
@@ -9,18 +6,16 @@ import {
   accountSecurityRoute,
   accountSessionsRoute
 } from "@/src/lib/routing/protectedSurfaceLinks";
-
-function readAppFile(relativePath: string): string {
-  return readFileSync(path.join(process.cwd(), relativePath), "utf8");
-}
+import { expectRouteEntrypoint } from "./routeEntrypointTestUtils";
 
 describe("account route entrypoints", () => {
   it("keeps the account index redirect aligned with the protected route contract", () => {
-    const routeSource = readAppFile("app/(account)/account/page.tsx");
+    const routeSource = expectRouteEntrypoint("app/(account)/account/page.tsx", {
+      requiredSnippets: ['from "@/src/lib/routing/protectedSurfaceLinks"', "accountProfileRoute"],
+      forbiddenSnippets: ['redirect("/account/profile")']
+    });
 
-    expect(routeSource).toContain('from "@/src/lib/routing/protectedSurfaceLinks"');
-    expect(routeSource).toContain("accountProfileRoute");
-    expect(routeSource).not.toContain('redirect("/account/profile")');
+    expect(routeSource).toContain("redirect(accountProfileRoute)");
   });
 
   it("routes account pages through the shared account route helper and protected route contract", () => {
@@ -32,12 +27,15 @@ describe("account route entrypoints", () => {
     ];
 
     for (const { file, route } of routeFiles) {
-      const routeSource = readAppFile(file);
+      const routeSource = expectRouteEntrypoint(file, {
+        requiredSnippets: [
+          'from "@/src/features/accountCenter/renderAccountRoute"',
+          'from "@/src/lib/routing/protectedSurfaceLinks"'
+        ],
+        forbiddenSnippets: ["AccountCenterPage", `renderAccountRoute("${route}")`]
+      });
 
-      expect(routeSource).toContain('from "@/src/features/accountCenter/renderAccountRoute"');
-      expect(routeSource).toContain('from "@/src/lib/routing/protectedSurfaceLinks"');
-      expect(routeSource).not.toContain("AccountCenterPage");
-      expect(routeSource).not.toContain(`renderAccountRoute("${route}")`);
+      expect(routeSource).toContain("renderAccountRoute(");
     }
   });
 });

@@ -1,28 +1,27 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-
 import { describe, expect, it } from "vitest";
-
-function readAppFile(relativePath: string): string {
-  return readFileSync(path.join(process.cwd(), relativePath), "utf8");
-}
+import {
+  expectFileContains,
+  readRepoFile
+} from "./routeEntrypointTestUtils";
 
 describe("motion contract", () => {
   it("defines shared motion tokens in the global foundation", () => {
-    const globals = readAppFile("app/globals.css");
+    const globals = readRepoFile("app/globals.css");
 
-    expect(globals).toContain("--motion-duration-fast");
-    expect(globals).toContain("--motion-duration-medium");
-    expect(globals).toContain("--motion-duration-slow");
-    expect(globals).toContain("--motion-delay-xs");
-    expect(globals).toContain("--motion-delay-stagger-step");
-    expect(globals).toContain("--motion-ease-standard");
-    expect(globals).toContain("--motion-ease-emphasized");
+    expectFileContains(globals, [
+      "--motion-duration-fast",
+      "--motion-duration-medium",
+      "--motion-duration-slow",
+      "--motion-delay-xs",
+      "--motion-delay-stagger-step",
+      "--motion-ease-standard",
+      "--motion-ease-emphasized"
+    ]);
   });
 
   it("keeps reduced-motion fallbacks for continuous and shared shell animations", () => {
-    const marketplaceAutoLoad = readAppFile("app/public-marketplace-home-auto-load.css");
-    const topbarOverflow = readAppFile("src/components/shared/ProtectedTopbarOverflow.module.scss");
+    const marketplaceAutoLoad = readRepoFile("app/public-marketplace-home-auto-load.css");
+    const topbarOverflow = readRepoFile("src/components/shared/ProtectedTopbarOverflow.module.scss");
 
     expect(marketplaceAutoLoad).toContain("@media (prefers-reduced-motion: reduce)");
     expect(topbarOverflow).toContain("@media (prefers-reduced-motion: reduce)");
@@ -47,7 +46,7 @@ describe("motion contract", () => {
     ];
 
     for (const relativePath of appFiles) {
-      const source = readAppFile(relativePath);
+      const source = readRepoFile(relativePath);
 
       expect(source).toContain("var(--motion-duration-fast)");
       expect(source).toContain("var(--motion-ease-standard)");
@@ -56,12 +55,10 @@ describe("motion contract", () => {
   });
 
   it("uses shared loading-loop tokens for shimmer-based loading surfaces", () => {
-    const rootLoading = readAppFile("app/RootLoadingPage.module.scss");
-    const skillDetailLoading = readAppFile("app/public-skill-detail-loading.css");
+    const rootLoading = readRepoFile("app/RootLoadingPage.module.scss");
+    const skillDetailLoading = readRepoFile("app/public-skill-detail-loading.css");
 
-    expect(rootLoading).toContain("var(--motion-duration-loading-loop)");
-    expect(rootLoading).toContain("var(--motion-ease-standard)");
-    expect(skillDetailLoading).toContain("var(--motion-duration-loading-loop)");
-    expect(skillDetailLoading).toContain("var(--motion-ease-standard)");
+    expectFileContains(rootLoading, ["var(--motion-duration-loading-loop)", "var(--motion-ease-standard)"]);
+    expectFileContains(skillDetailLoading, ["var(--motion-duration-loading-loop)", "var(--motion-ease-standard)"]);
   });
 });

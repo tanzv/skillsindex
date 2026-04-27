@@ -1,15 +1,9 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-
 import { describe, expect, it } from "vitest";
-
-function readAppFile(relativePath: string): string {
-  return readFileSync(path.join(process.cwd(), relativePath), "utf8");
-}
+import { readRepoFile } from "./routeEntrypointTestUtils";
 
 describe("route style imports", () => {
   it("keeps protected route family styles out of the root globals stylesheet", () => {
-    const globalsCSS = readAppFile("app/globals.css");
+    const globalsCSS = readRepoFile("app/globals.css");
 
     expect(globalsCSS).not.toContain('@import "./workspace-shell.scss";');
     expect(globalsCSS).not.toContain('@import "./workspace-topbar.css";');
@@ -59,15 +53,15 @@ describe("route style imports", () => {
   });
 
   it("loads protected route family styles from the route layouts", () => {
-    const workspaceLayout = readAppFile("app/(workspace)/workspace/layout.tsx");
-    const adminLayout = readAppFile("app/(admin)/admin/layout.tsx");
-    const accountLayout = readAppFile("app/(account)/account/layout.tsx");
-    const publicLayout = readAppFile("app/(public)/layout.tsx");
-    const publicLandingPage = readAppFile("app/(public)/page.tsx");
-    const loginPage = readAppFile("app/login/page.tsx");
-    const publicCategoriesLayout = readAppFile("app/(public)/categories/layout.tsx");
-    const publicRankingsLayout = readAppFile("app/(public)/rankings/layout.tsx");
-    const publicSkillDetailLayout = readAppFile("app/(public)/skills/[skillId]/layout.tsx");
+    const workspaceLayout = readRepoFile("app/(workspace)/workspace/layout.tsx");
+    const adminLayout = readRepoFile("app/(admin)/admin/layout.tsx");
+    const accountLayout = readRepoFile("app/(account)/account/layout.tsx");
+    const publicLayout = readRepoFile("app/(public)/layout.tsx");
+    const publicLandingPage = readRepoFile("app/(public)/page.tsx");
+    const loginPage = readRepoFile("app/login/page.tsx");
+    const publicCategoriesLayout = readRepoFile("app/(public)/categories/layout.tsx");
+    const publicRankingsLayout = readRepoFile("app/(public)/rankings/layout.tsx");
+    const publicSkillDetailLayout = readRepoFile("app/(public)/skills/[skillId]/layout.tsx");
 
     expect(workspaceLayout).toContain('import "../../protected-shell-route.scss";');
     expect(workspaceLayout).toContain('import "../../workspace-shell-route.scss";');
@@ -86,22 +80,51 @@ describe("route style imports", () => {
     expect(publicSkillDetailLayout).toContain('import "../../../public-skill-detail-route.css";');
   });
 
-  it("uses SCSS-native imports for protected shell route entry files", () => {
-    const adminRouteStyles = readAppFile("app/admin-shell-route.scss");
-    const workspaceRouteStyles = readAppFile("app/workspace-shell-route.scss");
-    const accountRouteStyles = readAppFile("app/account-shell-route.scss");
-    const protectedRouteStyles = readAppFile("app/protected-shell-route.scss");
+  it("keeps protected shell route entry files focused on shell foundations only", () => {
+    const adminRouteStyles = readRepoFile("app/admin-shell-route.scss");
+    const workspaceRouteStyles = readRepoFile("app/workspace-shell-route.scss");
+    const accountRouteStyles = readRepoFile("app/account-shell-route.scss");
+    const protectedRouteStyles = readRepoFile("app/protected-shell-route.scss");
 
     expect(adminRouteStyles).toContain('@use "./admin-shell";');
     expect(workspaceRouteStyles).toContain('@use "./workspace-shell";');
     expect(accountRouteStyles).toContain('@use "./account-shell";');
+    expect(adminRouteStyles).not.toContain('@import "./admin-overview.css";');
+    expect(workspaceRouteStyles).not.toContain('@import "./workspace-overview.css";');
+    expect(accountRouteStyles).not.toContain('@import "./account-center.css";');
     expect(protectedRouteStyles).toContain('@use "./protected-shell-layout";');
     expect(protectedRouteStyles).toContain('@use "./protected-theme";');
-    expect(protectedRouteStyles).toContain('@use "./protected-content-theme";');
+    expect(protectedRouteStyles).not.toContain('@use "./protected-content-theme";');
+  });
+
+  it("loads protected page-family styles from page entries instead of shell route bundles", () => {
+    const adminOverviewPage = readRepoFile("app/(admin)/admin/overview/page.tsx");
+    const accountProfilePage = readRepoFile("app/(account)/account/profile/page.tsx");
+    const accountSecurityPage = readRepoFile("app/(account)/account/security/page.tsx");
+    const accountSessionsPage = readRepoFile("app/(account)/account/sessions/page.tsx");
+    const accountApiCredentialsPage = readRepoFile("app/(account)/account/api-credentials/page.tsx");
+    const workspaceOverviewPage = readRepoFile("app/(workspace)/workspace/page.tsx");
+    const workspaceActivityPage = readRepoFile("app/(workspace)/workspace/activity/page.tsx");
+    const workspaceQueuePage = readRepoFile("app/(workspace)/workspace/queue/page.tsx");
+    const workspaceActionsPage = readRepoFile("app/(workspace)/workspace/actions/page.tsx");
+    const workspacePolicyPage = readRepoFile("app/(workspace)/workspace/policy/page.tsx");
+    const workspaceRunbookPage = readRepoFile("app/(workspace)/workspace/runbook/page.tsx");
+
+    expect(adminOverviewPage).toContain('import "../../../admin-overview.css";');
+    expect(accountProfilePage).toContain('import "../../../account-center.css";');
+    expect(accountSecurityPage).toContain('import "../../../account-center.css";');
+    expect(accountSessionsPage).toContain('import "../../../account-center.css";');
+    expect(accountApiCredentialsPage).toContain('import "../../../account-center.css";');
+    expect(workspaceOverviewPage).toContain('import "../../workspace-overview.css";');
+    expect(workspaceActivityPage).toContain('import "../../../workspace-overview.css";');
+    expect(workspaceQueuePage).toContain('import "../../../workspace-overview.css";');
+    expect(workspaceActionsPage).toContain('import "../../../workspace-overview.css";');
+    expect(workspacePolicyPage).toContain('import "../../../workspace-overview.css";');
+    expect(workspaceRunbookPage).toContain('import "../../../workspace-overview.css";');
   });
 
   it("keeps protected shell layout focused on structure instead of sidebar visuals", () => {
-    const protectedShellLayout = readAppFile("app/protected-shell-layout.scss");
+    const protectedShellLayout = readRepoFile("app/protected-shell-layout.scss");
 
     expect(protectedShellLayout).not.toContain(".workspace-shell-panel");
     expect(protectedShellLayout).not.toContain(".admin-shell-panel");

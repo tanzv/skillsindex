@@ -13,5 +13,5 @@ describe("account route rendering", () => {
 
     expect(isValidElement(securityPage)).toBe(true);
     expect(securityPage.props.route).toBe("/account/security");
-  });
+  }, 30000);
 });

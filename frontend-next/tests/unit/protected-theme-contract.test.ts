@@ -1,15 +1,9 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-
 import { describe, expect, it } from "vitest";
-
-function readAppFile(relativePath: string): string {
-  return readFileSync(path.join(process.cwd(), relativePath), "utf8");
-}
+import { readRepoFile } from "./routeEntrypointTestUtils";
 
 describe("protected theme contract", () => {
   it("defines protected themes through SCSS maps and neutral dark tokens", () => {
-    const protectedTheme = readAppFile("app/protected-theme.scss");
+    const protectedTheme = readRepoFile("app/protected-theme.scss");
 
     expect(protectedTheme).toContain('@use "sass:map";');
     expect(protectedTheme).toContain("$protected-theme-light");

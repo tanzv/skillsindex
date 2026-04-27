@@ -21,7 +21,7 @@ const snapshot = buildWorkspaceSnapshot(buildPublicMarketplaceFallback(), {
   marketplacePublicAccess: true
 }, messages);
 
-function readSourceFile(relativePath: string): string {
+function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(process.cwd(), relativePath), "utf8");
 }
 
@@ -71,7 +71,7 @@ describe("workspace route sections", () => {
   });
 
   it("keeps workspace section selection centralized in a route-to-builder map", () => {
-    const source = readSourceFile("src/features/workspace/pageSections.ts");
+    const source = readRepoFile("src/features/workspace/pageSections.ts");
 
     expect(source).toContain("workspaceRouteSectionBuilders");
     expect(source).not.toContain("switch (route)");

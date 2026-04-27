@@ -49,7 +49,7 @@ const accountMessages = createProtectedPageTestMessages({
   }
 }).accountCenter;
 
-function readSourceFile(relativePath: string): string {
+function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(process.cwd(), relativePath), "utf8");
 }
 
@@ -86,7 +86,7 @@ describe("account route meta", () => {
   });
 
   it("keeps account route meta centralized in descriptor-based resolvers instead of route switches", () => {
-    const source = readSourceFile("src/lib/routing/accountRouteMeta.ts");
+    const source = readRepoFile("src/lib/routing/accountRouteMeta.ts");
 
     expect(source).toContain("accountRouteDescriptors");
     expect(source).not.toContain("switch (route)");
