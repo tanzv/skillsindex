@@ -35,17 +35,22 @@ export function RepositoryIngestionView(props: RepositoryIngestionViewProps & { 
   const ingestionMessages = messages.adminIngestion;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-      <SkillInventoryList
-        title={ingestionMessages.repositoryInventoryTitle}
-        description={ingestionMessages.repositoryInventoryDescription}
-        items={props.skills}
-        emptyText={ingestionMessages.repositoryInventoryEmpty}
-        actionLabel={ingestionMessages.openDetailAction}
-        onOpenItem={props.onOpenSkillDetail}
-      />
-      <div className="space-y-6">
-        {props.detailDrawer}
+    <div className="space-y-6">
+      {props.detailDrawer}
+      <div data-testid="admin-ingestion-repository-main">
+        <SkillInventoryList
+          title={ingestionMessages.repositoryInventoryTitle}
+          description={ingestionMessages.repositoryInventoryDescription}
+          items={props.skills}
+          emptyText={ingestionMessages.repositoryInventoryEmpty}
+          actionLabel={ingestionMessages.openDetailAction}
+          onOpenItem={props.onOpenSkillDetail}
+        />
+      </div>
+      <div
+        data-testid="admin-ingestion-repository-secondary-sections"
+        className="grid gap-6 xl:grid-cols-2"
+      >
         <RepositoryPolicySummaryCard policy={props.policy} onOpenPolicy={props.onOpenPolicy} />
         <RecentSyncRunsCard syncRuns={props.syncRuns} onOpenDetail={props.onOpenSyncRunDetail} />
       </div>

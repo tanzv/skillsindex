@@ -13,14 +13,19 @@ function firstSearchParam(value: string | string[] | undefined): string {
   return String(value || "").trim();
 }
 
-export default async function AdminSkillsPage({ searchParams }: AdminSkillsPageProps) {
+export default async function AdminSkillsPage({
+  searchParams,
+}: AdminSkillsPageProps) {
   const resolvedSearchParams = await searchParams;
 
   return renderAdminPageRoute(adminSkillsRoute, {
     initialQuery: {
       q: firstSearchParam(resolvedSearchParams.q),
+      owner: firstSearchParam(resolvedSearchParams.owner),
+      page: firstSearchParam(resolvedSearchParams.page),
+      limit: firstSearchParam(resolvedSearchParams.limit),
       source: firstSearchParam(resolvedSearchParams.source),
-      visibility: firstSearchParam(resolvedSearchParams.visibility)
-    }
+      visibility: firstSearchParam(resolvedSearchParams.visibility),
+    },
   });
 }

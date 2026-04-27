@@ -117,30 +117,38 @@ export interface AdminCatalogRow {
   syncable?: boolean;
 }
 
+export interface AdminCatalogPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
 export interface AdminCatalogViewModel {
   metrics: AdminCatalogMetric[];
   sidePanel: AdminCatalogSidePanel[];
   table: {
     title: string;
     rows: AdminCatalogRow[];
+    pagination?: AdminCatalogPagination | null;
   } | null;
   editor: RepositorySyncPolicy | null;
 }
 
-export interface SkillsPayload {
+export interface CollectionPayload<TItem> {
   total: number;
-  items: AdminSkillItem[];
+  page: number;
+  limit: number;
+  items: TItem[];
 }
 
-export interface JobsPayload {
-  total: number;
-  items: AsyncJobItem[];
-}
+export type SkillsPayload = CollectionPayload<AdminSkillItem>;
 
-export interface SyncJobsPayload {
-  total: number;
-  items: SyncJobRunItem[];
-}
+export type JobsPayload = CollectionPayload<AsyncJobItem>;
+
+export type SyncJobsPayload = CollectionPayload<SyncJobRunItem>;
 
 export interface AdminCatalogModelMessages {
   metricTotalSkills: string;

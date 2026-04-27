@@ -162,10 +162,13 @@ test("executes account security and credential management actions", async ({ pag
 
 test("executes admin governance actions and renders additional admin routes", async ({ page }) => {
   await loginAsAdmin(page, "/admin/accounts/new");
+  const provisioningDrawer = page.getByTestId("admin-accounts-provisioning-drawer");
 
   await expect(page.getByTestId("admin-topbar")).toBeVisible();
   await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Marketplace", exact: true })).toBeVisible();
   await expect(page.getByTestId("admin-topbar").getByRole("link", { name: "Organizations", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect(provisioningDrawer).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeVisible();
   await page.getByTestId("admin-topbar-account-trigger").click();
   const accountCenterMenu = page.getByTestId("admin-topbar-account-menu");
   const accessLink = accountCenterMenu.getByRole("link", { name: /^Access\b/i });
@@ -184,7 +187,6 @@ test("executes admin governance actions and renders additional admin routes", as
 
   await gotoProtectedRoute(page, "/admin/accounts/new");
   await expect(page.locator("h1").filter({ hasText: "Accounts" })).toBeVisible();
-  const provisioningDrawer = page.getByTestId("admin-accounts-provisioning-drawer");
   await expect(provisioningDrawer).toBeVisible();
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(provisioningDrawer.getByText("Registration enabled · Marketplace public")).toBeVisible();
@@ -240,7 +242,7 @@ test("executes admin governance actions and renders additional admin routes", as
   const rolePlaybookDrawer = page.getByTestId("admin-accounts-role-playbook-drawer");
   await expect(rolePlaybookDrawer).toBeVisible();
   await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(rolePlaybookDrawer.getByRole("heading", { name: "Role Playbook" })).toBeVisible();
+  await expect(rolePlaybookDrawer.getByRole("heading", { name: "Role Playbook", level: 2 })).toBeVisible();
 
   await gotoProtectedRoute(page, "/admin/records/imports");
   await expect(page.getByRole("heading", { name: "Import Records", level: 1 })).toBeVisible();

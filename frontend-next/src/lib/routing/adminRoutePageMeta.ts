@@ -26,7 +26,10 @@ import {
   adminAlertsRoute,
   adminImportsRoute
 } from "./protectedSurfaceLinks";
-import { buildBFFPath } from "./protectedSurfaceEndpoints";
+import {
+  buildAdminAuditExportBFFEndpoint,
+  buildBFFPath
+} from "./protectedSurfaceEndpoints";
 
 import type {
   AdminAccountManagementRoute,
@@ -218,12 +221,12 @@ const adminOperationsRecordsRouteMetaResolvers: Record<
   [adminAuditRoute]: (messages) => ({
     title: messages.routeAuditExportTitle,
     description: messages.routeAuditExportDescription,
-    endpoint: "/api/bff/admin/ops/audit-export?format=json"
+    endpoint: buildAdminAuditExportBFFEndpoint("json")
   }),
-  [adminAuditExportRoute]: (messages, route) => ({
+  [adminAuditExportRoute]: (messages) => ({
     title: messages.routeAuditExportTitle,
     description: messages.routeAuditExportDescription,
-    endpoint: `${resolveAdminBffEndpoint(route)}?format=json`
+    endpoint: buildAdminAuditExportBFFEndpoint("json")
   }),
   [adminRecoveryDrillsRoute]: (messages, route) => {
     const endpoint = resolveAdminBffEndpoint(route);

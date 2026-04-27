@@ -63,6 +63,21 @@
   grid-column: 1 / -1;
 }
 
+.paginationBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.paginationSummary {
+  color: var(--ui-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 .loadingCardContent {
   padding: 20px 24px;
   color: var(--ui-text-secondary);
@@ -71,12 +86,20 @@
 
 .rowCard {
   border-radius: 18px;
-  background: color-mix(in srgb, var(--ui-card-bg) 78%, var(--ui-card-muted-bg) 22%);
+  background: color-mix(
+    in srgb,
+    var(--ui-card-bg) 78%,
+    var(--ui-card-muted-bg) 22%
+  );
 }
 
 .rowCardSelected {
   border-color: color-mix(in srgb, var(--ui-accent) 42%, var(--ui-border) 58%);
-  background: color-mix(in srgb, var(--ui-card-highlight-bg) 58%, var(--ui-card-bg) 42%);
+  background: color-mix(
+    in srgb,
+    var(--ui-card-highlight-bg) 58%,
+    var(--ui-card-bg) 42%
+  );
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--ui-accent) 18%, transparent),
     0 14px 32px color-mix(in srgb, var(--ui-text-primary) 8%, transparent);
@@ -149,7 +172,11 @@
   gap: 12px;
   border-radius: 18px;
   border: 1px solid var(--ui-border);
-  background: linear-gradient(180deg, var(--ui-card-bg) 0%, var(--ui-card-muted-bg) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--ui-card-bg) 0%,
+    var(--ui-card-muted-bg) 100%
+  );
   padding: 18px;
 }
 
@@ -188,9 +215,14 @@
   display: grid;
   gap: 14px;
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--ui-accent) 18%, var(--ui-border) 82%);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--ui-card-highlight-bg) 55%, var(--ui-card-bg) 45%) 0%, var(--ui-card-bg) 100%);
+  border: 1px solid
+    color-mix(in srgb, var(--ui-accent) 18%, var(--ui-border) 82%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ui-card-highlight-bg) 55%, var(--ui-card-bg) 45%)
+      0%,
+    var(--ui-card-bg) 100%
+  );
   padding: 16px;
 }
 
@@ -226,8 +258,13 @@
   gap: 4px;
   min-width: min(100%, 280px);
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--ui-accent) 34%, var(--ui-border) 66%);
-  background: color-mix(in srgb, var(--ui-card-bg) 62%, var(--ui-card-highlight-bg) 38%);
+  border: 1px solid
+    color-mix(in srgb, var(--ui-accent) 34%, var(--ui-border) 66%);
+  background: color-mix(
+    in srgb,
+    var(--ui-card-bg) 62%,
+    var(--ui-card-highlight-bg) 38%
+  );
   padding: 14px 16px;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
 }
@@ -333,7 +370,11 @@
   gap: 4px;
   border-radius: 14px;
   border: 1px solid var(--ui-border);
-  background: color-mix(in srgb, var(--ui-card-muted-bg) 86%, var(--ui-card-bg) 14%);
+  background: color-mix(
+    in srgb,
+    var(--ui-card-muted-bg) 86%,
+    var(--ui-card-bg) 14%
+  );
   padding: 12px 13px;
 }
 
@@ -347,7 +388,11 @@
   gap: 10px;
   border-radius: 16px;
   border: 1px solid var(--ui-border);
-  background: color-mix(in srgb, var(--ui-card-muted-bg) 84%, var(--ui-card-bg) 16%);
+  background: color-mix(
+    in srgb,
+    var(--ui-card-muted-bg) 84%,
+    var(--ui-card-bg) 16%
+  );
   padding: 14px 16px;
 }
 
@@ -534,6 +579,7 @@
   .rowActions {
     justify-content: flex-start;
   }
+
 }
 
 @media (min-width: 1281px) {

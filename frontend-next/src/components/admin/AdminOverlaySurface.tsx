@@ -6,6 +6,8 @@ import { DetailFormSurface, type DetailFormSurfaceProps } from "@/src/components
 
 import styles from "./AdminOverlaySurface.module.scss";
 
+const ADMIN_DRAWER_TOP_OFFSET = "108px";
+
 interface AdminOverlayBaseProps extends Omit<DetailFormSurfaceProps, "variant"> {
   variant?: "drawer" | "modal";
 }
@@ -21,6 +23,7 @@ export function AdminOverlaySurface({
     <DetailFormSurface
       {...props}
       variant={variant}
+      viewportTopOffset={variant === "drawer" ? ADMIN_DRAWER_TOP_OFFSET : undefined}
       panelClassName={cn(styles.panel, variant === "modal" ? styles.panelModal : styles.panelDrawer, panelClassName)}
       bodyClassName={cn(styles.body, bodyClassName)}
       footer={footer ? <div className={styles.footer}>{footer}</div> : undefined}

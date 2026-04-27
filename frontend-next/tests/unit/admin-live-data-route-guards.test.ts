@@ -1,11 +1,5 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-
 import { describe, expect, it } from "vitest";
-
-function readSourceFile(relativePath: string) {
-  return readFileSync(path.join(process.cwd(), relativePath), "utf8");
-}
+import { readRepoFile } from "./routeEntrypointTestUtils";
 
 const guardedPageFiles = [
   "src/features/adminOverview/AdminOverviewPage.tsx",
@@ -23,7 +17,7 @@ const guardedPageFiles = [
 
 describe("admin live data route guards", () => {
   it.each(guardedPageFiles)("uses the shared load-state guard in %s", (relativePath) => {
-    const source = readSourceFile(relativePath);
+    const source = readRepoFile(relativePath);
 
     expect(source).toContain("resolveAdminPageLoadState");
     expect(source).toContain("AdminPageLoadStateFrame");

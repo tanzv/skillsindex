@@ -47,6 +47,8 @@ describe("admin ingestion content", () => {
     expect(markup).toContain("Save Policy");
     expect(markup).toContain("Recent Sync Runs");
     expect(countOccurrences(markup, "Repository Intake")).toBe(1);
+    expect(markup).toContain('data-testid="admin-ingestion-repository-main"');
+    expect(markup).toContain('data-testid="admin-ingestion-repository-secondary-sections"');
   });
 
   it("renders the imports route with source triggers and import jobs", () => {

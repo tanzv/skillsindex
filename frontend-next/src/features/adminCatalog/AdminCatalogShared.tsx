@@ -4,20 +4,34 @@ import Link from "next/link";
 import { type ReactNode, useMemo, useState } from "react";
 
 import { AdminDetailDrawer } from "@/src/components/admin/AdminOverlaySurface";
-import { AdminEmptyBlock, AdminMetaChipList, AdminSelectableRecordCard } from "@/src/components/admin/AdminPrimitives";
+import {
+  AdminEmptyBlock,
+  AdminMetaChipList,
+  AdminSelectableRecordCard,
+} from "@/src/components/admin/AdminPrimitives";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
-import { adminJobsRoute, adminSkillsRoute } from "@/src/lib/routing/protectedSurfaceLinks";
+import {
+  adminJobsRoute,
+  adminSkillsRoute,
+} from "@/src/lib/routing/protectedSurfaceLinks";
 
 import type {
+  AdminCatalogPagination,
   AdminCatalogDetailSection,
   AdminCatalogDetailTopology,
   AdminCatalogRoute,
   AdminCatalogRow,
-  AdminCatalogViewModel
+  AdminCatalogViewModel,
 } from "./model";
 import styles from "./AdminCatalogSurface.module.scss";
 
@@ -26,14 +40,20 @@ export function statusTone(status: string) {
   if (normalized.includes("fail") || normalized.includes("error")) {
     return "default";
   }
-  if (normalized.includes("running") || normalized.includes("active") || normalized.includes("success")) {
+  if (
+    normalized.includes("running") ||
+    normalized.includes("active") ||
+    normalized.includes("success")
+  ) {
     return "soft";
   }
   return "outline";
 }
 
 export function useSelectedRow(rows: AdminCatalogRow[]) {
-  const [selectedRowId, setSelectedRowId] = useState<number | null>(rows[0]?.id ?? null);
+  const [selectedRowId, setSelectedRowId] = useState<number | null>(
+    rows[0]?.id ?? null,
+  );
 
   const selectedRow = useMemo(() => {
     return resolveSelectedCatalogRow(rows, selectedRowId);
@@ -42,11 +62,14 @@ export function useSelectedRow(rows: AdminCatalogRow[]) {
   return {
     selectedRow,
     selectedRowId: selectedRow?.id || null,
-    setSelectedRowId
+    setSelectedRowId,
   };
 }
 
-export function resolveSelectedCatalogRow<TRow extends AdminCatalogRow>(rows: TRow[], selectedRowId: number | null): TRow | null {
+export function resolveSelectedCatalogRow<TRow extends AdminCatalogRow>(
+  rows: TRow[],
+  selectedRowId: number | null,
+): TRow | null {
   if (rows.length === 0) {
     return null;
   }
@@ -73,7 +96,7 @@ export function QueryFilters({
   query,
   onQueryChange,
   onResetQuery,
-  onRefresh
+  onRefresh,
 }: QueryFiltersProps) {
   const { messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
@@ -87,7 +110,9 @@ export function QueryFilters({
     <Card className={styles.sectionCard}>
       <CardHeader className={styles.sectionHeader}>
         <CardTitle>{adminCatalogMessages.filtersTitle}</CardTitle>
-        <CardDescription className={styles.sectionDescription}>{adminCatalogMessages.filtersDescription}</CardDescription>
+        <CardDescription className={styles.sectionDescription}>
+          {adminCatalogMessages.filtersDescription}
+        </CardDescription>
       </CardHeader>
       <CardContent className={styles.filtersContent}>
         <Input
@@ -97,17 +122,51 @@ export function QueryFilters({
           onChange={(event) => onQueryChange("q", event.target.value)}
         />
         <Input
-          aria-label={isSkillsRoute ? adminCatalogMessages.sourceLabel : adminCatalogMessages.statusLabel}
+          aria-label={
+            isSkillsRoute
+              ? adminCatalogMessages.sourceLabel
+              : adminCatalogMessages.statusLabel
+          }
           value={isSkillsRoute ? query.source || "" : query.status || ""}
-          placeholder={isSkillsRoute ? adminCatalogMessages.sourcePlaceholder : adminCatalogMessages.statusPlaceholder}
-          onChange={(event) => onQueryChange(isSkillsRoute ? "source" : "status", event.target.value)}
+          placeholder={
+            isSkillsRoute
+              ? adminCatalogMessages.sourcePlaceholder
+              : adminCatalogMessages.statusPlaceholder
+          }
+          onChange={(event) =>
+            onQueryChange(
+              isSkillsRoute ? "source" : "status",
+              event.target.value,
+            )
+          }
         />
         <Input
-          aria-label={isSkillsRoute ? adminCatalogMessages.visibilityLabel : adminCatalogMessages.jobTypeLabel}
+          aria-label={
+            isSkillsRoute
+              ? adminCatalogMessages.visibilityLabel
+              : adminCatalogMessages.jobTypeLabel
+          }
           value={isSkillsRoute ? query.visibility || "" : query.job_type || ""}
-          placeholder={isSkillsRoute ? adminCatalogMessages.visibilityPlaceholder : adminCatalogMessages.jobTypePlaceholder}
-          onChange={(event) => onQueryChange(isSkillsRoute ? "visibility" : "job_type", event.target.value)}
+          placeholder={
+            isSkillsRoute
+              ? adminCatalogMessages.visibilityPlaceholder
+              : adminCatalogMessages.jobTypePlaceholder
+          }
+          onChange={(event) =>
+            onQueryChange(
+              isSkillsRoute ? "visibility" : "job_type",
+              event.target.value,
+            )
+          }
         />
+        {isSkillsRoute ? (
+          <Input
+            aria-label={adminCatalogMessages.ownerLabel}
+            value={query.owner || ""}
+            placeholder={adminCatalogMessages.ownerPlaceholder}
+            onChange={(event) => onQueryChange("owner", event.target.value)}
+          />
+        ) : null}
         <div className={styles.filterActions}>
           <Button onClick={onRefresh} disabled={loading}>
             {adminCatalogMessages.applyFiltersAction}
@@ -121,6 +180,51 @@ export function QueryFilters({
   );
 }
 
+interface CatalogPaginationControlsProps {
+  pagination?: AdminCatalogPagination | null;
+  loading: boolean;
+  onPageChange: (page: number) => void;
+}
+
+export function CatalogPaginationControls({
+  pagination,
+  loading,
+  onPageChange,
+}: CatalogPaginationControlsProps) {
+  const { messages } = useProtectedI18n();
+  const adminCatalogMessages = messages.adminCatalog;
+
+  if (!pagination || pagination.totalPages <= 1) {
+    return null;
+  }
+
+  return (
+    <div className={styles.paginationBar}>
+      <Button
+        variant="outline"
+        onClick={() => onPageChange(Math.max(pagination.page - 1, 1))}
+        disabled={loading || !pagination.hasPreviousPage}
+      >
+        {adminCatalogMessages.previousPageAction}
+      </Button>
+      <div className={styles.paginationSummary}>
+        {adminCatalogMessages.paginationSummaryTemplate
+          .replace("{page}", String(pagination.page))
+          .replace("{totalPages}", String(pagination.totalPages))}
+      </div>
+      <Button
+        variant="outline"
+        onClick={() =>
+          onPageChange(Math.min(pagination.page + 1, pagination.totalPages))
+        }
+        disabled={loading || !pagination.hasNextPage}
+      >
+        {adminCatalogMessages.nextPageAction}
+      </Button>
+    </div>
+  );
+}
+
 interface RowSelectionButtonProps {
   row: AdminCatalogRow;
   selected: boolean;
@@ -129,7 +233,13 @@ interface RowSelectionButtonProps {
   children?: ReactNode;
 }
 
-export function RowSelectionButton({ row, selected, buttonLabel, onSelect, children }: RowSelectionButtonProps) {
+export function RowSelectionButton({
+  row,
+  selected,
+  buttonLabel,
+  onSelect,
+  children,
+}: RowSelectionButtonProps) {
   const { messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
   const statusLabel = row.statusLabel || row.status;
@@ -137,7 +247,11 @@ export function RowSelectionButton({ row, selected, buttonLabel, onSelect, child
   return (
     <AdminSelectableRecordCard
       selected={selected}
-      className={selected ? `${styles.rowCard} ${styles.rowCardSelected}` : styles.rowCard}
+      className={
+        selected
+          ? `${styles.rowCard} ${styles.rowCardSelected}`
+          : styles.rowCard
+      }
       data-testid={`admin-catalog-row-${row.id}`}
     >
       <div className={styles.rowLayout}>
@@ -148,10 +262,16 @@ export function RowSelectionButton({ row, selected, buttonLabel, onSelect, child
           </div>
           <div className={styles.rowSummary}>{row.summary}</div>
           <AdminMetaChipList items={row.meta} />
-          {row.detail ? <div className={styles.rowDetail}>{row.detail}</div> : null}
+          {row.detail ? (
+            <div className={styles.rowDetail}>{row.detail}</div>
+          ) : null}
         </div>
         <div className={styles.rowActions}>
-          <Button size="sm" variant={selected ? "soft" : "outline"} onClick={onSelect}>
+          <Button
+            size="sm"
+            variant={selected ? "soft" : "outline"}
+            onClick={onSelect}
+          >
             {selected ? adminCatalogMessages.selectedAction : buttonLabel}
           </Button>
           {children}
@@ -178,7 +298,7 @@ export function CatalogDetailPane({
   closeLabel,
   onClose,
   actions,
-  dataTestId = "admin-catalog-detail-pane"
+  dataTestId = "admin-catalog-detail-pane",
 }: CatalogDetailPaneProps) {
   if (!open || !row) {
     return null;
@@ -194,7 +314,11 @@ export function CatalogDetailPane({
       closeLabel={closeLabel}
       onClose={onClose}
       dataTestId={dataTestId}
-      footer={actions ? <div className={styles.detailActions}>{actions}</div> : undefined}
+      footer={
+        actions ? (
+          <div className={styles.detailActions}>{actions}</div>
+        ) : undefined
+      }
     >
       <div className={styles.detailContent}>
         <div className={styles.detailSurface}>
@@ -204,7 +328,9 @@ export function CatalogDetailPane({
           </div>
           <p className={styles.detailSummary}>{row.summary}</p>
           <AdminMetaChipList items={row.meta} tone="control" />
-          {row.detail ? <div className={styles.rowDetail}>{row.detail}</div> : null}
+          {row.detail ? (
+            <div className={styles.rowDetail}>{row.detail}</div>
+          ) : null}
           <DetailTopology topology={row.detailTopology} />
           <DetailSections sections={row.detailSections} />
         </div>
@@ -222,14 +348,23 @@ interface DetailCardProps {
   testId?: string;
 }
 
-export function DetailCard({ title, description, row, emptyText, actions, testId }: DetailCardProps) {
+export function DetailCard({
+  title,
+  description,
+  row,
+  emptyText,
+  actions,
+  testId,
+}: DetailCardProps) {
   const statusLabel = row?.statusLabel || row?.status || "";
 
   return (
     <Card className={styles.sectionCard} data-testid={testId}>
       <CardHeader className={styles.sectionHeader}>
         <CardTitle>{title}</CardTitle>
-        <CardDescription className={styles.sectionDescription}>{description}</CardDescription>
+        <CardDescription className={styles.sectionDescription}>
+          {description}
+        </CardDescription>
       </CardHeader>
       <CardContent className={styles.detailContent}>
         {row ? (
@@ -241,11 +376,15 @@ export function DetailCard({ title, description, row, emptyText, actions, testId
               </div>
               <p className={styles.detailSummary}>{row.summary}</p>
               <AdminMetaChipList items={row.meta} tone="control" />
-              {row.detail ? <div className={styles.rowDetail}>{row.detail}</div> : null}
+              {row.detail ? (
+                <div className={styles.rowDetail}>{row.detail}</div>
+              ) : null}
               <DetailTopology topology={row.detailTopology} />
               <DetailSections sections={row.detailSections} />
             </div>
-            {actions ? <div className={styles.detailActions}>{actions}</div> : null}
+            {actions ? (
+              <div className={styles.detailActions}>{actions}</div>
+            ) : null}
           </>
         ) : (
           <AdminEmptyBlock>{emptyText}</AdminEmptyBlock>
@@ -255,7 +394,11 @@ export function DetailCard({ title, description, row, emptyText, actions, testId
   );
 }
 
-function DetailTopology({ topology }: { topology?: AdminCatalogDetailTopology }) {
+function DetailTopology({
+  topology,
+}: {
+  topology?: AdminCatalogDetailTopology;
+}) {
   if (!topology) {
     return null;
   }
@@ -277,15 +420,27 @@ function DetailTopology({ topology }: { topology?: AdminCatalogDetailTopology })
           <section key={lane.title} className={styles.topologyLane}>
             <div className={styles.topologyLaneTitle}>{lane.title}</div>
             <div className={styles.topologyLaneNodes}>
-              {(lane.nodes.length ? lane.nodes : [{ value: lane.emptyValue }]).map((node, index) => (
-                <div key={`${lane.title}-${node.label || node.value}-${index}`} className={styles.topologyNode}>
-                  {node.label ? <span className={styles.topologyNodeLabel}>{node.label}</span> : null}
+              {(lane.nodes.length
+                ? lane.nodes
+                : [{ value: lane.emptyValue }]
+              ).map((node, index) => (
+                <div
+                  key={`${lane.title}-${node.label || node.value}-${index}`}
+                  className={styles.topologyNode}
+                >
+                  {node.label ? (
+                    <span className={styles.topologyNodeLabel}>
+                      {node.label}
+                    </span>
+                  ) : null}
                   {node.href ? (
                     <Link href={node.href} className={styles.topologyNodeLink}>
                       {node.value}
                     </Link>
                   ) : (
-                    <span className={styles.topologyNodeValue}>{node.value}</span>
+                    <span className={styles.topologyNodeValue}>
+                      {node.value}
+                    </span>
                   )}
                 </div>
               ))}
@@ -297,7 +452,11 @@ function DetailTopology({ topology }: { topology?: AdminCatalogDetailTopology })
   );
 }
 
-function DetailSections({ sections }: { sections?: AdminCatalogDetailSection[] }) {
+function DetailSections({
+  sections,
+}: {
+  sections?: AdminCatalogDetailSection[];
+}) {
   if (!sections?.length) {
     return null;
   }
@@ -309,14 +468,23 @@ function DetailSections({ sections }: { sections?: AdminCatalogDetailSection[] }
           <div className={styles.detailSectionTitle}>{section.title}</div>
           <div className={styles.detailSectionList}>
             {section.items.map((item, index) => (
-              <div key={`${section.title}-${item.label || item.value}-${index}`} className={styles.detailSectionItem}>
-                {item.label ? <span className={styles.detailSectionLabel}>{item.label}</span> : null}
+              <div
+                key={`${section.title}-${item.label || item.value}-${index}`}
+                className={styles.detailSectionItem}
+              >
+                {item.label ? (
+                  <span className={styles.detailSectionLabel}>
+                    {item.label}
+                  </span>
+                ) : null}
                 {item.href ? (
                   <Link href={item.href} className={styles.detailSectionLink}>
                     {item.value}
                   </Link>
                 ) : (
-                  <span className={styles.detailSectionValue}>{item.value}</span>
+                  <span className={styles.detailSectionValue}>
+                    {item.value}
+                  </span>
                 )}
               </div>
             ))}
@@ -341,7 +509,10 @@ export function SidePanels({ panels }: SidePanelsProps) {
           </CardHeader>
           <CardContent className={styles.panelContent}>
             {panel.items.map((item) => (
-              <div key={`${panel.title}-${item.label}`} className={styles.panelItem}>
+              <div
+                key={`${panel.title}-${item.label}`}
+                className={styles.panelItem}
+              >
                 <div className={styles.panelItemLabel}>{item.label}</div>
                 <div className={styles.panelItemValue}>{item.value}</div>
               </div>

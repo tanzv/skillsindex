@@ -9,6 +9,11 @@ import { useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
+import {
+  adminModerationBFFEndpoint,
+  buildAdminModerationRejectBFFEndpoint,
+  buildAdminModerationResolveBFFEndpoint
+} from "@/src/lib/routing/protectedSurfaceEndpoints";
 
 import { AdminModerationContent } from "./AdminModerationContent";
 import type { CreateModerationDraft, ResolveModerationDraft } from "./AdminModerationForms";
@@ -23,7 +28,7 @@ function buildPath(query: ModerationQueryState) {
     }
   });
   const suffix = params.toString();
-  return suffix ? `/api/bff/admin/moderation?${suffix}` : "/api/bff/admin/moderation";
+  return suffix ? `${adminModerationBFFEndpoint}?${suffix}` : adminModerationBFFEndpoint;
 }
 
 export function AdminModerationPage() {
@@ -113,7 +118,7 @@ export function AdminModerationPage() {
     setError("");
     setMessage("");
     try {
-      await clientFetchJSON("/api/bff/admin/moderation", {
+      await clientFetchJSON(adminModerationBFFEndpoint, {
         method: "POST",
         body: {
           reporter_user_id: Number(createDraft.reporterUserId || 0) || undefined,
@@ -151,7 +156,7 @@ export function AdminModerationPage() {
     setError("");
     setMessage("");
     try {
-      await clientFetchJSON(`/api/bff/admin/moderation/${selectedCase.id}/resolve`, {
+      await clientFetchJSON(buildAdminModerationResolveBFFEndpoint(selectedCase.id), {
         method: "POST",
         body: {
           action: resolveDraft.action,
@@ -177,7 +182,7 @@ export function AdminModerationPage() {
     setError("");
     setMessage("");
     try {
-      await clientFetchJSON(`/api/bff/admin/moderation/${selectedCase.id}/reject`, {
+      await clientFetchJSON(buildAdminModerationRejectBFFEndpoint(selectedCase.id), {
         method: "POST",
         body: {
           rejection_note: resolveDraft.rejectionNote.trim()

@@ -1,4 +1,9 @@
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
+import {
+  adminAuthProviderConfigsBFFEndpoint,
+  buildAdminAuthProviderConfigBFFEndpoint,
+  buildAdminAuthProviderConfigDisableBFFEndpoint
+} from "@/src/lib/routing/protectedSurfaceEndpoints";
 
 type ClientFetchJSON = typeof clientFetchJSON;
 
@@ -28,11 +33,11 @@ export interface SaveManagedAuthProviderInput {
 }
 
 export async function loadManagedAuthProviderConfigs(fetchJSON: ClientFetchJSON = clientFetchJSON): Promise<unknown> {
-  return fetchJSON("/api/bff/admin/auth-provider-configs");
+  return fetchJSON(adminAuthProviderConfigsBFFEndpoint);
 }
 
 export async function loadManagedAuthProviderDetail(provider: string, fetchJSON: ClientFetchJSON = clientFetchJSON): Promise<unknown> {
-  return fetchJSON(`/api/bff/admin/auth-provider-configs/${encodeURIComponent(provider)}`);
+  return fetchJSON(buildAdminAuthProviderConfigBFFEndpoint(provider));
 }
 
 export async function saveManagedAuthProvider(
@@ -41,14 +46,14 @@ export async function saveManagedAuthProvider(
 ): Promise<unknown> {
   const payload: Record<string, unknown> = { ...input };
 
-  return fetchJSON("/api/bff/admin/auth-provider-configs", {
+  return fetchJSON(adminAuthProviderConfigsBFFEndpoint, {
     method: "POST",
     body: payload
   });
 }
 
 export async function disableManagedAuthProvider(provider: string, fetchJSON: ClientFetchJSON = clientFetchJSON): Promise<unknown> {
-  return fetchJSON(`/api/bff/admin/auth-provider-configs/${encodeURIComponent(provider)}/disable`, {
+  return fetchJSON(buildAdminAuthProviderConfigDisableBFFEndpoint(provider), {
     method: "POST"
   });
 }

@@ -33,6 +33,9 @@ func (a *App) registerAdminPageRoutes(r chi.Router) {
 func (a *App) registerAdminOverviewRoutes(r chi.Router) {
 	r.Get("/api/v1/admin/overview", a.handleAPIAdminOverview)
 	r.Get("/api/v1/admin/skills", a.handleAPIAdminSkills)
+	r.Post("/api/v1/admin/skills/{skillID}/sync", a.handleAPIAdminSkillSync)
+	r.Post("/api/v1/admin/skills/{skillID}/visibility", a.handleAPIAdminSkillVisibilityUpdate)
+	r.Post("/api/v1/admin/skills/{skillID}/delete", a.handleAPIAdminSkillDelete)
 	r.Get("/api/v1/admin/integrations", a.handleAPIAdminIntegrations)
 }
 

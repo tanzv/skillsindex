@@ -7,11 +7,13 @@ import type {
   RepositorySyncPolicy,
   SkillsPayload,
   SyncJobRunItem,
-  SyncJobsPayload
+  SyncJobsPayload,
 } from "./model.types";
 
 function asRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : {};
 }
 
 function asNumber(value: unknown): number {
@@ -36,7 +38,7 @@ function normalizeSourceDependency(value: unknown): AdminSourceDependency {
 
   return {
     kind: asString(record.kind),
-    target: asString(record.target)
+    target: asString(record.target),
   };
 }
 
@@ -48,17 +50,28 @@ function normalizeSourceAnalysis(value: unknown): AdminSourceAnalysis {
     mechanism: asString(record.mechanism),
     metadataSources: asStringArray(record.metadata_sources),
     referencePaths: asStringArray(record.reference_paths),
-    dependencies: Array.isArray(record.dependencies) ? record.dependencies.map(normalizeSourceDependency) : []
+    dependencies: Array.isArray(record.dependencies)
+      ? record.dependencies.map(normalizeSourceDependency)
+      : [],
   };
 }
 
-function normalizeCollectionPayload<T>(payload: unknown, normalizeItem: (item: unknown) => T) {
+function normalizeCollectionPayload<T>(
+  payload: unknown,
+  normalizeItem: (item: unknown) => T,
+) {
   const record = asRecord(payload);
-  const items = Array.isArray(record.items) ? record.items.map(normalizeItem) : [];
+  const items = Array.isArray(record.items)
+    ? record.items.map(normalizeItem)
+    : [];
+  const limit = Math.max(asNumber(record.limit) || items.length || 20, 1);
+  const page = Math.max(asNumber(record.page) || 1, 1);
 
   return {
     total: asNumber(record.total) || items.length,
-    items
+    page,
+    limit,
+    items,
   };
 }
 
@@ -75,7 +88,7 @@ function normalizeSkillItem(item: unknown): AdminSkillItem {
     starCount: asNumber(entry.star_count),
     qualityScore: asNumber(entry.quality_score),
     updatedAt: asString(entry.updated_at),
-    sourceAnalysis: normalizeSourceAnalysis(entry.source_analysis)
+    sourceAnalysis: normalizeSourceAnalysis(entry.source_analysis),
   };
 }
 
@@ -93,7 +106,7 @@ function normalizeJobItem(item: unknown): AsyncJobItem {
     attempt: asNumber(entry.attempt),
     maxAttempts: asNumber(entry.max_attempts),
     createdAt: asString(entry.created_at),
-    updatedAt: asString(entry.updated_at)
+    updatedAt: asString(entry.updated_at),
   };
 }
 
@@ -110,7 +123,7 @@ function normalizeSyncJobRunItem(item: unknown): SyncJobRunItem {
     failed: asNumber(entry.failed),
     durationMs: asNumber(entry.duration_ms),
     startedAt: asString(entry.started_at),
-    finishedAt: asString(entry.finished_at)
+    finishedAt: asString(entry.finished_at),
   };
 }
 
@@ -126,13 +139,15 @@ export function normalizeSyncJobsPayload(payload: unknown): SyncJobsPayload {
   return normalizeCollectionPayload(payload, normalizeSyncJobRunItem);
 }
 
-export function normalizeSyncPolicyPayload(payload: unknown): RepositorySyncPolicy {
+export function normalizeSyncPolicyPayload(
+  payload: unknown,
+): RepositorySyncPolicy {
   const record = asRecord(payload);
 
   return {
     enabled: Boolean(record.enabled),
     interval: asString(record.interval) || "30m",
     timeout: asString(record.timeout) || "10m",
-    batchSize: asNumber(record.batch_size) || 20
+    batchSize: asNumber(record.batch_size) || 20,
   };
 }

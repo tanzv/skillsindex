@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-
 import { describe, expect, it } from "vitest";
 
 import {
@@ -32,18 +29,16 @@ import {
   adminSyncPolicyRoute,
   adminImportsRoute
 } from "@/src/lib/routing/protectedSurfaceLinks";
-
-function readAppFile(relativePath: string): string {
-  return readFileSync(path.join(process.cwd(), relativePath), "utf8");
-}
+import { expectRouteEntrypoint } from "./routeEntrypointTestUtils";
 
 describe("admin route entrypoints", () => {
   it("keeps the admin index redirect aligned with the protected route contract", () => {
-    const routeSource = readAppFile("app/(admin)/admin/page.tsx");
+    const routeSource = expectRouteEntrypoint("app/(admin)/admin/page.tsx", {
+      requiredSnippets: ['from "@/src/lib/routing/protectedSurfaceLinks"', "adminOverviewRoute"],
+      forbiddenSnippets: ['redirect("/admin/overview")']
+    });
 
-    expect(routeSource).toContain('from "@/src/lib/routing/protectedSurfaceLinks"');
-    expect(routeSource).toContain("adminOverviewRoute");
-    expect(routeSource).not.toContain('redirect("/admin/overview")');
+    expect(routeSource).toContain("redirect(adminOverviewRoute)");
   });
 
   it("routes admin pages through the shared admin route helper and protected route contract", () => {
@@ -78,13 +73,19 @@ describe("admin route entrypoints", () => {
     ];
 
     for (const { file, route } of routeFiles) {
-      const routeSource = readAppFile(file);
+      const routeSource = expectRouteEntrypoint(file, {
+        requiredSnippets: [
+          'from "@/src/features/admin/adminRouteEntry"',
+          'from "@/src/lib/routing/protectedSurfaceLinks"'
+        ],
+        forbiddenSnippets: [
+          'from "@/src/features/admin/renderAdminRoute"',
+          "renderAdminRoute(",
+          `renderAdminPageRoute("${route}")`
+        ]
+      });
 
-      expect(routeSource).toContain('from "@/src/features/admin/adminRouteEntry"');
-      expect(routeSource).toContain('from "@/src/lib/routing/protectedSurfaceLinks"');
-      expect(routeSource).not.toContain('from "@/src/features/admin/renderAdminRoute"');
-      expect(routeSource).not.toContain("renderAdminRoute(");
-      expect(routeSource).not.toContain(`renderAdminPageRoute("${route}")`);
+      expect(routeSource).toContain("renderAdminPageRoute(");
     }
   });
 });

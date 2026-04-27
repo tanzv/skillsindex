@@ -9,6 +9,12 @@ import { useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
+import {
+  adminAPIKeysBFFEndpoint,
+  buildAdminAPIKeyRevokeBFFEndpoint,
+  buildAdminAPIKeyRotateBFFEndpoint,
+  buildAdminAPIKeyScopesBFFEndpoint
+} from "@/src/lib/routing/protectedSurfaceEndpoints";
 
 import { AdminAPIKeysContent } from "./AdminAPIKeysContent";
 import { buildAdminAPIKeyOverview, normalizeAdminAPIKeysPayload, resolveSelectedAdminAPIKey } from "./model";
@@ -22,7 +28,7 @@ function buildPath(filters: { owner: string; status: string }) {
     params.set("status", filters.status.trim());
   }
   const suffix = params.toString();
-  return suffix ? `/api/bff/admin/apikeys?${suffix}` : "/api/bff/admin/apikeys";
+  return suffix ? `${adminAPIKeysBFFEndpoint}?${suffix}` : adminAPIKeysBFFEndpoint;
 }
 
 export function AdminAPIKeysPage() {
@@ -113,7 +119,7 @@ export function AdminAPIKeysPage() {
     clearFeedback();
     setBusyAction("create-key");
     try {
-      const payload = await clientFetchJSON<{ plaintext_key?: string }>("/api/bff/admin/apikeys", {
+      const payload = await clientFetchJSON<{ plaintext_key?: string }>(adminAPIKeysBFFEndpoint, {
         method: "POST",
         body: {
           name: createDraft.name.trim(),
@@ -148,7 +154,7 @@ export function AdminAPIKeysPage() {
     clearFeedback();
     setBusyAction(`revoke-${keyId}`);
     try {
-      await clientFetchJSON(`/api/bff/admin/apikeys/${keyId}/revoke`, { method: "POST" });
+      await clientFetchJSON(buildAdminAPIKeyRevokeBFFEndpoint(keyId), { method: "POST" });
       setMessage(formatProtectedMessage(apiKeyMessages.revokeSuccess, { keyId }));
       await loadData();
     } catch (actionError) {
@@ -162,7 +168,9 @@ export function AdminAPIKeysPage() {
     clearFeedback();
     setBusyAction(`rotate-${keyId}`);
     try {
-      const payload = await clientFetchJSON<{ plaintext_key?: string }>(`/api/bff/admin/apikeys/${keyId}/rotate`, { method: "POST" });
+      const payload = await clientFetchJSON<{ plaintext_key?: string }>(buildAdminAPIKeyRotateBFFEndpoint(keyId), {
+        method: "POST"
+      });
       setMessage(formatProtectedMessage(apiKeyMessages.rotateSuccess, { keyId }));
       setPlaintextSecret(payload.plaintext_key || "");
       await loadData();
@@ -177,7 +185,7 @@ export function AdminAPIKeysPage() {
     clearFeedback();
     setBusyAction(`scopes-${keyId}`);
     try {
-      await clientFetchJSON(`/api/bff/admin/apikeys/${keyId}/scopes`, {
+      await clientFetchJSON(buildAdminAPIKeyScopesBFFEndpoint(keyId), {
         method: "POST",
         body: {
           scopes: (scopeDrafts[keyId] || "")

@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/button";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
+import { adminIntegrationsBFFEndpoint } from "@/src/lib/routing/protectedSurfaceEndpoints";
 import {
   disableManagedAuthProvider,
   loadManagedAuthProviderConfigs,
@@ -116,7 +117,7 @@ export function AdminIntegrationsPage() {
     setAuthProviderError("");
     try {
       const [nextPayload, nextAuthProvidersPayload] = await Promise.all([
-        clientFetchJSON("/api/bff/admin/integrations"),
+        clientFetchJSON(adminIntegrationsBFFEndpoint),
         loadManagedAuthProviderConfigs()
       ]);
       setRawPayload(nextPayload);

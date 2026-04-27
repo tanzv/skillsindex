@@ -1,198 +1,44 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 
-import { AdminPageLoadStateFrame, resolveAdminPageLoadState } from "@/src/features/admin/adminPageLoadState";
-import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
-import { clientFetchJSON } from "@/src/lib/http/clientFetch";
-import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
-import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
-import { resolveAdminCatalogPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 import {
-  adminJobsRoute,
-  adminSkillsRoute,
-  adminSyncJobsRoute,
-  adminSyncPolicyRoute
-} from "@/src/lib/routing/protectedSurfaceLinks";
+  AdminPageLoadStateFrame,
+  resolveAdminPageLoadState,
+} from "@/src/features/admin/adminPageLoadState";
+import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
+import { resolveAdminCatalogPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 import { Button } from "@/src/components/ui/button";
 
 import { AdminCatalogContent } from "./AdminCatalogContent";
-import {
-  buildAdminCatalogViewModel,
-  normalizeJobsPayload,
-  normalizeSkillsPayload,
-  normalizeSyncJobsPayload,
-  normalizeSyncPolicyPayload,
-  type AdminCatalogRoute,
-  type RepositorySyncPolicy
-} from "./model";
-
-function buildPath(endpoint: string, query: Record<string, string>) {
-  const params = new URLSearchParams();
-  Object.entries(query).forEach(([key, value]) => {
-    if (value.trim()) {
-      params.set(key, value.trim());
-    }
-  });
-  const suffix = params.toString();
-  return suffix ? `${endpoint}?${suffix}` : endpoint;
-}
+import { type AdminCatalogRoute } from "./model";
+import { useAdminCatalogController } from "./useAdminCatalogController";
 
 export function AdminCatalogPage({
   route,
-  initialQuery
+  initialQuery,
 }: {
   route: AdminCatalogRoute;
   initialQuery?: Record<string, string>;
 }) {
   const { locale, messages } = useProtectedI18n();
   const adminCatalogMessages = messages.adminCatalog;
-  const meta = useMemo(() => resolveAdminCatalogPageRouteMeta(route, adminCatalogMessages), [adminCatalogMessages, route]);
-  const policyMeta = useMemo(
-    () => resolveAdminCatalogPageRouteMeta(adminSyncPolicyRoute, adminCatalogMessages),
-    [adminCatalogMessages]
+  const meta = useMemo(
+    () => resolveAdminCatalogPageRouteMeta(route, adminCatalogMessages),
+    [adminCatalogMessages, route],
   );
-
-  const [loading, setLoading] = useState(true);
-  const [busyAction, setBusyAction] = useState("");
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-  const [query, setQuery] = useState<Record<string, string>>(initialQuery || {});
-  const [rawPayload, setRawPayload] = useState<unknown>(null);
-  const [policyDraft, setPolicyDraft] = useState<RepositorySyncPolicy>({
-    enabled: false,
-    interval: "30m",
-    timeout: "10m",
-    batchSize: 20
+  const controller = useAdminCatalogController({
+    route,
+    initialQuery,
+    locale,
+    messages: adminCatalogMessages,
   });
-  const policyDraftRef = useRef(policyDraft);
 
-  const commitPolicyDraft = useCallback((nextPolicyDraft: RepositorySyncPolicy) => {
-    policyDraftRef.current = nextPolicyDraft;
-    setPolicyDraft(nextPolicyDraft);
-  }, []);
-
-  const patchPolicyDraft = useCallback(
-    (patch: Partial<RepositorySyncPolicy>) => {
-      commitPolicyDraft({
-        ...policyDraftRef.current,
-        ...patch
-      });
-    },
-    [commitPolicyDraft]
-  );
-
-  const normalizedPolicy = useMemo(() => normalizeSyncPolicyPayload(rawPayload), [rawPayload]);
-  const viewModel = useMemo(() => {
-    if (route === adminSkillsRoute) {
-      return buildAdminCatalogViewModel(route, normalizeSkillsPayload(rawPayload), {
-        locale,
-        messages: adminCatalogMessages
-      });
-    }
-    if (route === adminJobsRoute) {
-      return buildAdminCatalogViewModel(route, normalizeJobsPayload(rawPayload), {
-        locale,
-        messages: adminCatalogMessages
-      });
-    }
-    if (route === adminSyncJobsRoute) {
-      return buildAdminCatalogViewModel(route, normalizeSyncJobsPayload(rawPayload), {
-        locale,
-        messages: adminCatalogMessages
-      });
-    }
-    return buildAdminCatalogViewModel(route, normalizedPolicy, {
-      locale,
-      messages: adminCatalogMessages
-    });
-  }, [adminCatalogMessages, locale, normalizedPolicy, rawPayload, route]);
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const payload = await clientFetchJSON(buildPath(meta.endpoint, query));
-      setRawPayload(payload);
-      if (route === adminSyncPolicyRoute) {
-        commitPolicyDraft(normalizeSyncPolicyPayload(payload));
-      }
-    } catch (loadError) {
-      setError(resolveRequestErrorDisplayMessage(loadError, adminCatalogMessages.loadError));
-      setRawPayload(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [adminCatalogMessages.loadError, commitPolicyDraft, meta.endpoint, query, route]);
-
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
-
-  useEffect(() => {
-    setQuery(initialQuery || {});
-  }, [initialQuery, route]);
-
-  const loadState = resolveAdminPageLoadState({ loading, error, hasData: rawPayload !== null });
-
-  async function runJobAction(jobId: number, action: "retry" | "cancel") {
-    setBusyAction(`${action}-${jobId}`);
-    setMessage("");
-    setError("");
-    try {
-      await clientFetchJSON(`/api/bff/admin/jobs/${jobId}/${action}`, { method: "POST" });
-      setMessage(
-        formatProtectedMessage(
-          action === "retry" ? adminCatalogMessages.retryJobSuccess : adminCatalogMessages.cancelJobSuccess,
-          { jobId }
-        )
-      );
-      await loadData();
-    } catch (actionError) {
-      setError(resolveRequestErrorDisplayMessage(actionError, adminCatalogMessages.actionError));
-    } finally {
-      setBusyAction("");
-    }
-  }
-
-  async function syncSkill(skillId: number) {
-    setBusyAction(`sync-skill-${skillId}`);
-    setMessage("");
-    setError("");
-    try {
-      await clientFetchJSON(`/api/bff/admin/skills/${skillId}/sync`, { method: "POST" });
-      setMessage(adminCatalogMessages.skillSyncSuccess);
-      await loadData();
-    } catch (actionError) {
-      setError(resolveRequestErrorDisplayMessage(actionError, adminCatalogMessages.actionError));
-    } finally {
-      setBusyAction("");
-    }
-  }
-
-  async function savePolicy() {
-    const nextPolicyDraft = policyDraftRef.current;
-    setBusyAction("save-policy");
-    setMessage("");
-    setError("");
-    try {
-      await clientFetchJSON(policyMeta.endpoint, {
-        method: "POST",
-        body: {
-          enabled: nextPolicyDraft.enabled,
-          interval: nextPolicyDraft.interval,
-          timeout: nextPolicyDraft.timeout,
-          batch_size: nextPolicyDraft.batchSize
-        }
-      });
-      setMessage(adminCatalogMessages.policySaveSuccess);
-      await loadData();
-    } catch (actionError) {
-      setError(resolveRequestErrorDisplayMessage(actionError, adminCatalogMessages.actionError));
-    } finally {
-      setBusyAction("");
-    }
-  }
+  const loadState = resolveAdminPageLoadState({
+    loading: controller.loading,
+    error: controller.error,
+    hasData: controller.hasData,
+  });
 
   if (loadState !== "ready") {
     return (
@@ -200,8 +46,14 @@ export function AdminCatalogPage({
         eyebrow={messages.adminCommon.adminEyebrow}
         title={meta.title}
         description={meta.description}
-        error={loadState === "error" ? error : undefined}
-        actions={<Button onClick={() => void loadData()}>{loading ? messages.adminCommon.refreshing : messages.adminCommon.refresh}</Button>}
+        error={loadState === "error" ? controller.error : undefined}
+        actions={
+          <Button onClick={controller.refresh}>
+            {controller.loading
+              ? messages.adminCommon.refreshing
+              : messages.adminCommon.refresh}
+          </Button>
+        }
       />
     );
   }
@@ -211,21 +63,26 @@ export function AdminCatalogPage({
       route={route}
       title={meta.title}
       description={meta.description}
-      loading={loading}
-      busyAction={busyAction}
-      error={error}
-      message={message}
-      query={query}
-      viewModel={viewModel}
-      policyDraft={policyDraft}
-      onQueryChange={(key, value) => setQuery((current) => ({ ...current, [key]: value }))}
-      onResetQuery={() => setQuery({})}
-      onRefresh={() => void loadData()}
-      onSyncSkill={(skillId) => void syncSkill(skillId)}
-      onRunJobAction={(jobId, action) => void runJobAction(jobId, action)}
-      onPolicyDraftChange={patchPolicyDraft}
-      onResetPolicyDraft={() => commitPolicyDraft(normalizedPolicy)}
-      onSavePolicy={() => void savePolicy()}
+      loading={controller.loading}
+      busyAction={controller.busyAction}
+      error={controller.error}
+      message={controller.message}
+      query={controller.query}
+      viewModel={controller.viewModel}
+      policyDraft={controller.policyDraft}
+      onQueryChange={controller.updateQuery}
+      onResetQuery={controller.resetQuery}
+      onRefresh={controller.refresh}
+      onPageChange={controller.changePage}
+      onSyncSkill={controller.syncSkill}
+      onUpdateSkillVisibility={controller.updateSkillVisibility}
+      onDeleteSkill={controller.deleteSkill}
+      onRollbackSkillVersion={controller.rollbackSkillVersion}
+      onRestoreSkillVersion={controller.restoreSkillVersion}
+      onRunJobAction={controller.runJobAction}
+      onPolicyDraftChange={controller.patchPolicyDraft}
+      onResetPolicyDraft={controller.resetPolicyDraft}
+      onSavePolicy={controller.savePolicy}
     />
   );
 }

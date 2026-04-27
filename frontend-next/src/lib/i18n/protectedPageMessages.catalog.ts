@@ -12,6 +12,10 @@ export interface AdminCatalogMessages {
   retryJobSuccess: string;
   cancelJobSuccess: string;
   skillSyncSuccess: string;
+  visibilityUpdateSuccess: string;
+  skillDeleteSuccess: string;
+  rollbackVersionSuccess: string;
+  restoreVersionSuccess: string;
   policySaveSuccess: string;
   loadingData: string;
   emptyRows: string;
@@ -25,10 +29,15 @@ export interface AdminCatalogMessages {
   statusPlaceholder: string;
   visibilityLabel: string;
   visibilityPlaceholder: string;
+  ownerLabel: string;
+  ownerPlaceholder: string;
   jobTypeLabel: string;
   jobTypePlaceholder: string;
   applyFiltersAction: string;
   resetFiltersAction: string;
+  previousPageAction: string;
+  nextPageAction: string;
+  paginationSummaryTemplate: string;
   inspectAction: string;
   selectedAction: string;
   openDetailAction: string;
@@ -41,6 +50,24 @@ export interface AdminCatalogMessages {
   selectedSkillEmpty: string;
   syncNowAction: string;
   syncingAction: string;
+  updatingVisibilityAction: string;
+  makePublicAction: string;
+  makePrivateAction: string;
+  openVersionHistoryAction: string;
+  deleteSkillAction: string;
+  deletingSkillAction: string;
+  deleteSkillConfirmTitle: string;
+  deleteSkillConfirmDescription: string;
+  deleteSkillConfirmBody: string;
+  versionsSectionTitle: string;
+  versionsSectionDescription: string;
+  versionsLoading: string;
+  versionsLoadError: string;
+  versionsEmpty: string;
+  rollbackVersionAction: string;
+  rollingBackVersionAction: string;
+  restoreVersionAction: string;
+  restoringVersionAction: string;
   openSkillDetailAction: string;
   openIntakeAction: string;
   jobsQueueTitle: string;
@@ -68,15 +95,21 @@ export interface AdminCatalogMessages {
   schedulerEnabledHelp: string;
   intervalLabel: string;
   intervalPlaceholder: string;
+  intervalHelp: string;
   timeoutLabel: string;
   timeoutPlaceholder: string;
+  timeoutHelp: string;
   batchSizeLabel: string;
   batchSizePlaceholder: string;
+  batchSizeHelp: string;
   savePolicyAction: string;
   savingPolicyAction: string;
   resetDraftAction: string;
   policyPostureTitle: string;
   policyPostureDescription: string;
+  policySaveImpactTitle: string;
+  policySaveImpactDescription: string;
+  policySaveImpactBody: string;
   metricTotalSkills: string;
   metricListedRows: string;
   metricPublicSkills: string;
@@ -172,6 +205,10 @@ export const adminCatalogMessageKeyMap = {
   retryJobSuccess: "admin_catalog_retry_job_success",
   cancelJobSuccess: "admin_catalog_cancel_job_success",
   skillSyncSuccess: "admin_catalog_skill_sync_success",
+  visibilityUpdateSuccess: "admin_catalog_visibility_update_success",
+  skillDeleteSuccess: "admin_catalog_skill_delete_success",
+  rollbackVersionSuccess: "admin_catalog_rollback_version_success",
+  restoreVersionSuccess: "admin_catalog_restore_version_success",
   policySaveSuccess: "admin_catalog_policy_save_success",
   loadingData: "admin_catalog_loading_data",
   emptyRows: "admin_catalog_empty_rows",
@@ -185,10 +222,15 @@ export const adminCatalogMessageKeyMap = {
   statusPlaceholder: "admin_catalog_status_placeholder",
   visibilityLabel: "admin_catalog_visibility_label",
   visibilityPlaceholder: "admin_catalog_visibility_placeholder",
+  ownerLabel: "admin_catalog_owner_label",
+  ownerPlaceholder: "admin_catalog_owner_placeholder",
   jobTypeLabel: "admin_catalog_job_type_label",
   jobTypePlaceholder: "admin_catalog_job_type_placeholder",
   applyFiltersAction: "admin_catalog_apply_filters_action",
   resetFiltersAction: "admin_catalog_reset_filters_action",
+  previousPageAction: "admin_catalog_previous_page_action",
+  nextPageAction: "admin_catalog_next_page_action",
+  paginationSummaryTemplate: "admin_catalog_pagination_summary_template",
   inspectAction: "admin_catalog_inspect_action",
   selectedAction: "admin_catalog_selected_action",
   openDetailAction: "admin_catalog_open_detail_action",
@@ -201,6 +243,25 @@ export const adminCatalogMessageKeyMap = {
   selectedSkillEmpty: "admin_catalog_selected_skill_empty",
   syncNowAction: "admin_catalog_sync_now_action",
   syncingAction: "admin_catalog_syncing_action",
+  updatingVisibilityAction: "admin_catalog_updating_visibility_action",
+  makePublicAction: "admin_catalog_make_public_action",
+  makePrivateAction: "admin_catalog_make_private_action",
+  openVersionHistoryAction: "admin_catalog_open_version_history_action",
+  deleteSkillAction: "admin_catalog_delete_skill_action",
+  deletingSkillAction: "admin_catalog_deleting_skill_action",
+  deleteSkillConfirmTitle: "admin_catalog_delete_skill_confirm_title",
+  deleteSkillConfirmDescription:
+    "admin_catalog_delete_skill_confirm_description",
+  deleteSkillConfirmBody: "admin_catalog_delete_skill_confirm_body",
+  versionsSectionTitle: "admin_catalog_versions_section_title",
+  versionsSectionDescription: "admin_catalog_versions_section_description",
+  versionsLoading: "admin_catalog_versions_loading",
+  versionsLoadError: "admin_catalog_versions_load_error",
+  versionsEmpty: "admin_catalog_versions_empty",
+  rollbackVersionAction: "admin_catalog_rollback_version_action",
+  rollingBackVersionAction: "admin_catalog_rolling_back_version_action",
+  restoreVersionAction: "admin_catalog_restore_version_action",
+  restoringVersionAction: "admin_catalog_restoring_version_action",
   openSkillDetailAction: "admin_catalog_open_skill_detail_action",
   openIntakeAction: "admin_catalog_open_intake_action",
   jobsQueueTitle: "admin_catalog_jobs_queue_title",
@@ -228,15 +289,21 @@ export const adminCatalogMessageKeyMap = {
   schedulerEnabledHelp: "admin_catalog_scheduler_enabled_help",
   intervalLabel: "admin_catalog_interval_label",
   intervalPlaceholder: "admin_catalog_interval_placeholder",
+  intervalHelp: "admin_catalog_interval_help",
   timeoutLabel: "admin_catalog_timeout_label",
   timeoutPlaceholder: "admin_catalog_timeout_placeholder",
+  timeoutHelp: "admin_catalog_timeout_help",
   batchSizeLabel: "admin_catalog_batch_size_label",
   batchSizePlaceholder: "admin_catalog_batch_size_placeholder",
+  batchSizeHelp: "admin_catalog_batch_size_help",
   savePolicyAction: "admin_catalog_save_policy_action",
   savingPolicyAction: "admin_catalog_saving_policy_action",
   resetDraftAction: "admin_catalog_reset_draft_action",
   policyPostureTitle: "admin_catalog_policy_posture_title",
   policyPostureDescription: "admin_catalog_policy_posture_description",
+  policySaveImpactTitle: "admin_catalog_policy_save_impact_title",
+  policySaveImpactDescription: "admin_catalog_policy_save_impact_description",
+  policySaveImpactBody: "admin_catalog_policy_save_impact_body",
   metricTotalSkills: "admin_catalog_metric_total_skills",
   metricListedRows: "admin_catalog_metric_listed_rows",
   metricPublicSkills: "admin_catalog_metric_public_skills",
@@ -254,17 +321,24 @@ export const adminCatalogMessageKeyMap = {
   metricTimeout: "admin_catalog_metric_timeout",
   metricBatchSize: "admin_catalog_metric_batch_size",
   panelCatalogSignalsTitle: "admin_catalog_panel_catalog_signals_title",
-  panelCatalogSignalsRepositoryBacked: "admin_catalog_panel_catalog_signals_repository_backed",
-  panelCatalogSignalsManualOther: "admin_catalog_panel_catalog_signals_manual_other",
+  panelCatalogSignalsRepositoryBacked:
+    "admin_catalog_panel_catalog_signals_repository_backed",
+  panelCatalogSignalsManualOther:
+    "admin_catalog_panel_catalog_signals_manual_other",
   panelExecutionSignalsTitle: "admin_catalog_panel_execution_signals_title",
-  panelExecutionSignalsLatestRunning: "admin_catalog_panel_execution_signals_latest_running",
-  panelExecutionSignalsMaxRetrySpan: "admin_catalog_panel_execution_signals_max_retry_span",
+  panelExecutionSignalsLatestRunning:
+    "admin_catalog_panel_execution_signals_latest_running",
+  panelExecutionSignalsMaxRetrySpan:
+    "admin_catalog_panel_execution_signals_max_retry_span",
   panelRunDistributionTitle: "admin_catalog_panel_run_distribution_title",
-  panelRunDistributionScheduledRuns: "admin_catalog_panel_run_distribution_scheduled_runs",
-  panelRunDistributionManualRuns: "admin_catalog_panel_run_distribution_manual_runs",
+  panelRunDistributionScheduledRuns:
+    "admin_catalog_panel_run_distribution_scheduled_runs",
+  panelRunDistributionManualRuns:
+    "admin_catalog_panel_run_distribution_manual_runs",
   panelPolicyNotesTitle: "admin_catalog_panel_policy_notes_title",
   panelPolicyExecutionMode: "admin_catalog_panel_policy_execution_mode",
-  panelPolicyRecommendedPosture: "admin_catalog_panel_policy_recommended_posture",
+  panelPolicyRecommendedPosture:
+    "admin_catalog_panel_policy_recommended_posture",
   summarySkillPrefix: "admin_catalog_summary_skill_prefix",
   summaryOwnerPrefix: "admin_catalog_summary_owner_prefix",
   summaryActorPrefix: "admin_catalog_summary_actor_prefix",
@@ -315,5 +389,5 @@ export const adminCatalogMessageKeyMap = {
   jobTypeRepositorySync: "admin_catalog_job_type_repository_sync",
   jobTypeImportArchive: "admin_catalog_job_type_import_archive",
   jobTypeImportSkillmp: "admin_catalog_job_type_import_skillmp",
-  jobTypeImportZip: "admin_catalog_job_type_import_zip"
+  jobTypeImportZip: "admin_catalog_job_type_import_zip",
 } as const satisfies { [K in keyof AdminCatalogMessages]: string };

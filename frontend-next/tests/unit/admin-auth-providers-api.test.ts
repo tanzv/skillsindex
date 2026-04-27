@@ -6,6 +6,11 @@ import {
   loadManagedAuthProviderDetail,
   saveManagedAuthProvider
 } from "@/src/lib/api/adminAuthProviders";
+import {
+  adminAuthProviderConfigsBFFEndpoint,
+  buildAdminAuthProviderConfigBFFEndpoint,
+  buildAdminAuthProviderConfigDisableBFFEndpoint
+} from "@/src/lib/routing/protectedSurfaceEndpoints";
 
 describe("admin auth providers api", () => {
   it("loads provider inventory and detail through the shared bff boundary", async () => {
@@ -13,8 +18,8 @@ describe("admin auth providers api", () => {
       <T>(path: string, options?: unknown) => Promise<T>
     >(async <T>(path: string) => {
       const payloadByPath: Record<string, unknown> = {
-        "/api/bff/admin/auth-provider-configs": { items: [{ key: "feishu" }] },
-        "/api/bff/admin/auth-provider-configs/feishu": { item: { key: "feishu", provider: "feishu" } }
+        [adminAuthProviderConfigsBFFEndpoint]: { items: [{ key: "feishu" }] },
+        [buildAdminAuthProviderConfigBFFEndpoint("feishu")]: { item: { key: "feishu", provider: "feishu" } }
       };
 
       return payloadByPath[path] as T;
@@ -58,14 +63,14 @@ describe("admin auth providers api", () => {
     );
     await disableManagedAuthProvider("feishu", fetchJSON);
 
-    expect(fetchJSON).toHaveBeenNthCalledWith(1, "/api/bff/admin/auth-provider-configs", {
+    expect(fetchJSON).toHaveBeenNthCalledWith(1, adminAuthProviderConfigsBFFEndpoint, {
       method: "POST",
       body: expect.objectContaining({
         provider: "feishu",
         name: "Feishu Workspace"
       })
     });
-    expect(fetchJSON).toHaveBeenNthCalledWith(2, "/api/bff/admin/auth-provider-configs/feishu/disable", {
+    expect(fetchJSON).toHaveBeenNthCalledWith(2, buildAdminAuthProviderConfigDisableBFFEndpoint("feishu"), {
       method: "POST"
     });
   });

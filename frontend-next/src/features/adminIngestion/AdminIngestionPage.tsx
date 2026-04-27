@@ -12,6 +12,18 @@ import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
 import { resolveAdminIngestionPageRouteMeta } from "@/src/lib/routing/adminRoutePageMeta";
 import type { AdminIngestionRoute } from "@/src/lib/routing/adminRouteRegistry";
 import {
+  adminManualIntakeBFFEndpoint,
+  adminRepositoryIntakeBFFEndpoint,
+  adminSkillMPIntakeBFFEndpoint,
+  adminSyncPolicyBFFEndpoint,
+  adminUploadIntakeBFFEndpoint,
+  buildAdminJobCancelBFFEndpoint,
+  buildAdminJobRetryBFFEndpoint,
+  buildAdminJobsCollectionBFFEndpoint,
+  buildAdminSkillsCollectionBFFEndpoint,
+  buildAdminSyncJobsCollectionBFFEndpoint
+} from "@/src/lib/routing/protectedSurfaceEndpoints";
+import {
   adminManualIntakeRoute,
   adminRepositoryIntakeRoute
 } from "@/src/lib/routing/protectedSurfaceLinks";
@@ -102,7 +114,7 @@ export function AdminIngestionPage({
 
     try {
       if (isManualRoute) {
-        const payload = await clientFetchJSON("/api/bff/admin/skills?source=manual");
+        const payload = await clientFetchJSON(buildAdminSkillsCollectionBFFEndpoint("manual"));
         setSkills(normalizeSkillInventoryPayload(payload).items);
         setImportJobs([]);
         setSyncRuns([]);
@@ -113,9 +125,9 @@ export function AdminIngestionPage({
 
       if (isRepositoryRoute) {
         const [skillsPayload, policyPayload, syncRunsPayload] = await Promise.all([
-          clientFetchJSON("/api/bff/admin/skills?source=repository"),
-          clientFetchJSON("/api/bff/admin/sync-policy/repository"),
-          clientFetchJSON("/api/bff/admin/sync-jobs?limit=6")
+          clientFetchJSON(buildAdminSkillsCollectionBFFEndpoint("repository")),
+          clientFetchJSON(adminSyncPolicyBFFEndpoint),
+          clientFetchJSON(buildAdminSyncJobsCollectionBFFEndpoint(6))
         ]);
         const snapshot = createAdminIngestionRepositorySnapshot({
           skillsPayload,
@@ -131,9 +143,9 @@ export function AdminIngestionPage({
       }
 
       const [archivePayload, skillMPPayload, jobsPayload] = await Promise.all([
-        clientFetchJSON("/api/bff/admin/skills?source=upload"),
-        clientFetchJSON("/api/bff/admin/skills?source=skillmp"),
-        clientFetchJSON("/api/bff/admin/jobs?limit=20")
+        clientFetchJSON(buildAdminSkillsCollectionBFFEndpoint("upload")),
+        clientFetchJSON(buildAdminSkillsCollectionBFFEndpoint("skillmp")),
+        clientFetchJSON(buildAdminJobsCollectionBFFEndpoint(20))
       ]);
       const archiveSkills = normalizeSkillInventoryPayload(archivePayload).items;
       const skillMPSkills = normalizeSkillInventoryPayload(skillMPPayload).items;
@@ -198,7 +210,11 @@ export function AdminIngestionPage({
       actionKey: "manual",
       successMessage: ingestionMessages.manualCreateSuccess,
       failureMessage: ingestionMessages.manualCreateError,
-      request: () => clientFetchJSON("/api/bff/admin/ingestion/manual", { method: "POST", body: buildManualPayload(manualDraft) }),
+      request: () =>
+        clientFetchJSON(adminManualIntakeBFFEndpoint, {
+          method: "POST",
+          body: buildManualPayload(manualDraft)
+        }),
       afterSuccess: () => {
         setManualDraft(createManualDraft());
         closeOverlay();
@@ -211,7 +227,11 @@ export function AdminIngestionPage({
       actionKey: "repository",
       successMessage: ingestionMessages.repositorySubmitSuccess,
       failureMessage: ingestionMessages.repositorySubmitError,
-      request: () => clientFetchJSON("/api/bff/admin/ingestion/repository", { method: "POST", body: buildRepositoryPayload(repositoryDraft) }),
+      request: () =>
+        clientFetchJSON(adminRepositoryIntakeBFFEndpoint, {
+          method: "POST",
+          body: buildRepositoryPayload(repositoryDraft)
+        }),
       afterSuccess: () => {
         setRepositoryDraft(createRepositoryDraft());
         closeOverlay();
@@ -225,7 +245,7 @@ export function AdminIngestionPage({
       successMessage: ingestionMessages.policySaveSuccess,
       failureMessage: ingestionMessages.policySaveError,
       request: () =>
-        clientFetchJSON("/api/bff/admin/sync-policy/repository", {
+        clientFetchJSON(adminSyncPolicyBFFEndpoint, {
           method: "POST",
           body: {
             enabled: repositoryPolicy.enabled,
@@ -254,7 +274,10 @@ export function AdminIngestionPage({
         formData.set("tags", importsDraft.archive_tags);
         formData.set("visibility", importsDraft.archive_visibility);
         formData.set("install_command", importsDraft.archive_install_command);
-        await clientFetchJSON("/api/bff/admin/ingestion/upload", { method: "POST", body: formData });
+        await clientFetchJSON(adminUploadIntakeBFFEndpoint, {
+          method: "POST",
+          body: formData
+        });
       },
       afterSuccess: () => {
         setArchiveFile(null);
@@ -274,7 +297,11 @@ export function AdminIngestionPage({
       actionKey: "skillmp",
       successMessage: ingestionMessages.skillmpSubmitSuccess,
       failureMessage: ingestionMessages.skillmpSubmitError,
-      request: () => clientFetchJSON("/api/bff/admin/ingestion/skillmp", { method: "POST", body: buildSkillMPPayload(importsDraft) }),
+      request: () =>
+        clientFetchJSON(adminSkillMPIntakeBFFEndpoint, {
+          method: "POST",
+          body: buildSkillMPPayload(importsDraft)
+        }),
       afterSuccess: () => {
         setImportsDraft((current) => ({
           ...current,
@@ -298,7 +325,13 @@ export function AdminIngestionPage({
         { jobId }
       ),
       failureMessage: ingestionMessages.importJobActionError,
-      request: () => clientFetchJSON(`/api/bff/admin/jobs/${jobId}/${action}`, { method: "POST" })
+      request: () =>
+        clientFetchJSON(
+          action === "retry"
+            ? buildAdminJobRetryBFFEndpoint(jobId)
+            : buildAdminJobCancelBFFEndpoint(jobId),
+          { method: "POST" }
+        )
     });
   }
 

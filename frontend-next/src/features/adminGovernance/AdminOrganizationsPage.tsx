@@ -9,6 +9,12 @@ import { useAdminOverlayState } from "@/src/lib/admin/useAdminOverlayState";
 import { clientFetchJSON } from "@/src/lib/http/clientFetch";
 import { resolveRequestErrorDisplayMessage } from "@/src/lib/http/requestErrors";
 import { formatProtectedMessage } from "@/src/lib/i18n/protectedMessages";
+import {
+  adminOrganizationsBFFEndpoint,
+  buildAdminOrganizationMemberRemoveBFFEndpoint,
+  buildAdminOrganizationMemberRoleBFFEndpoint,
+  buildAdminOrganizationMembersBFFEndpoint
+} from "@/src/lib/routing/protectedSurfaceEndpoints";
 
 import { AdminOrganizationsContent } from "./AdminOrganizationsContent";
 import {
@@ -85,7 +91,7 @@ export function AdminOrganizationsPage() {
 
   const loadOrganizations = useCallback(
     async (preferredOrgId?: number) => {
-      const payload = await clientFetchJSON("/api/bff/admin/organizations");
+      const payload = await clientFetchJSON(adminOrganizationsBFFEndpoint);
       const normalized = normalizeOrganizationsPayload(payload, organizationNormalizationMessages);
       setRawOrganizations(payload);
       const nextOrgId = preferredOrgId || selectedOrgId || normalized.items[0]?.id || 0;
@@ -103,7 +109,7 @@ export function AdminOrganizationsPage() {
     }
     setMembersLoading(true);
     try {
-      const payload = await clientFetchJSON(`/api/bff/admin/organizations/${orgId}/members`);
+      const payload = await clientFetchJSON(buildAdminOrganizationMembersBFFEndpoint(orgId));
       const normalized = normalizeOrganizationMembersPayload(payload, organizationNormalizationMessages);
       setRawMembers(payload);
       setRowRoleDrafts(
@@ -179,7 +185,7 @@ export function AdminOrganizationsPage() {
     setError("");
     setMessage("");
     try {
-      const payload = await clientFetchJSON<{ item?: { id?: number } }>("/api/bff/admin/organizations", {
+      const payload = await clientFetchJSON<{ item?: { id?: number } }>(adminOrganizationsBFFEndpoint, {
         method: "POST",
         body: { name }
       });
@@ -205,7 +211,7 @@ export function AdminOrganizationsPage() {
     setError("");
     setMessage("");
     try {
-      await clientFetchJSON(`/api/bff/admin/organizations/${selectedOrgId}/members`, {
+      await clientFetchJSON(buildAdminOrganizationMembersBFFEndpoint(selectedOrgId), {
         method: "POST",
         body: { user_id: userId, role: targetRole }
       });
@@ -226,7 +232,7 @@ export function AdminOrganizationsPage() {
     setError("");
     setMessage("");
     try {
-      await clientFetchJSON(`/api/bff/admin/organizations/${selectedOrgId}/members/${userId}/role`, {
+      await clientFetchJSON(buildAdminOrganizationMemberRoleBFFEndpoint(selectedOrgId, userId), {
         method: "POST",
         body: { role: rowRoleDrafts[userId] || "member" }
       });
@@ -244,7 +250,7 @@ export function AdminOrganizationsPage() {
     setError("");
     setMessage("");
     try {
-      await clientFetchJSON(`/api/bff/admin/organizations/${selectedOrgId}/members/${userId}/remove`, {
+      await clientFetchJSON(buildAdminOrganizationMemberRemoveBFFEndpoint(selectedOrgId, userId), {
         method: "POST"
       });
       setSelectedMemberId(null);

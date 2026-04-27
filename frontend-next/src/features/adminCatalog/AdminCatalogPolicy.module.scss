@@ -1,0 +1,173 @@
+.policyPage {
+  display: grid;
+  gap: 24px;
+}
+
+.policyWorkbench {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1.18fr) minmax(300px, 0.82fr);
+  align-items: start;
+}
+
+.policyStatusGrid {
+  display: grid;
+  gap: 12px;
+  padding-top: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.policyStatusItem {
+  display: grid;
+  gap: 6px;
+  border-radius: 18px;
+  border: 1px solid var(--ui-border);
+  background: color-mix(in srgb, var(--ui-card-muted-bg) 88%, var(--ui-card-bg) 12%);
+  padding: 16px 18px;
+}
+
+.policyStatusLabel {
+  color: var(--ui-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.policyStatusValue {
+  color: var(--ui-text-primary);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.policyEditorContent {
+  display: grid;
+  gap: 18px;
+  padding-top: 0;
+}
+
+.policyToggleCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--ui-border);
+  background: color-mix(in srgb, var(--ui-card-muted-bg) 86%, var(--ui-card-bg) 14%);
+  padding: 16px 18px;
+}
+
+.policyToggleCopy {
+  display: grid;
+  gap: 6px;
+}
+
+.policyFieldGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.policyField {
+  display: grid;
+  gap: 8px;
+}
+
+.policyFieldLabel {
+  color: var(--ui-text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.policyFieldHelp {
+  color: var(--ui-text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.policyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.policyGuidanceContent {
+  display: grid;
+  gap: 16px;
+  padding-top: 0;
+}
+
+.policyImpactNote {
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--ui-accent) 16%, var(--ui-border) 84%);
+  background: color-mix(in srgb, var(--ui-card-highlight-bg) 52%, var(--ui-card-bg) 48%);
+  padding: 14px 16px;
+  color: var(--ui-text-secondary);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.policyGuidanceSection {
+  display: grid;
+  gap: 10px;
+}
+
+.policyGuidanceSectionTitle {
+  color: var(--ui-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.policyGuidanceList {
+  display: grid;
+  gap: 10px;
+}
+
+.policyGuidanceItem {
+  display: grid;
+  gap: 6px;
+  border-radius: 16px;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-card-muted-bg);
+  padding: 14px 16px;
+}
+
+.policyGuidanceItemLabel {
+  color: var(--ui-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.policyGuidanceItemValue {
+  color: var(--ui-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+@media (max-width: 1280px) {
+  .policyWorkbench {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .policyStatusGrid,
+  .policyFieldGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .policyToggleCard {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

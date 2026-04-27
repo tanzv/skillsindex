@@ -34,6 +34,67 @@ func openAPIPathsAdminOpsDashboardCore() map[string]any {
 				},
 			},
 		},
+		"/api/v1/admin/skills/{skillID}/sync": map[string]any{
+			"post": map[string]any{
+				"tags":        []string{"dashboard"},
+				"summary":     "Sync one admin managed skill",
+				"description": "Session endpoint for owner/admin/super_admin to sync one repository or SkillMP skill.",
+				"security":    sessionSecurity(),
+				"parameters": []map[string]any{
+					pathParam("skillID", "Skill ID"),
+				},
+				"responses": map[string]any{
+					"200": jsonResponse("Skill sync result", "ObjectResponse"),
+					"400": jsonResponse("Invalid request or unsupported source type", "ErrorResponse"),
+					"401": jsonResponse("Unauthorized", "ErrorResponse"),
+					"403": jsonResponse("Permission denied", "ErrorResponse"),
+					"404": jsonResponse("Skill not found", "ErrorResponse"),
+					"409": jsonResponse("Matching sync job already running", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
+				},
+			},
+		},
+		"/api/v1/admin/skills/{skillID}/visibility": map[string]any{
+			"post": map[string]any{
+				"tags":        []string{"dashboard"},
+				"summary":     "Update one admin managed skill visibility",
+				"description": "Session endpoint for owner/admin/super_admin to change one skill visibility.",
+				"security":    sessionSecurity(),
+				"parameters": []map[string]any{
+					pathParam("skillID", "Skill ID"),
+				},
+				"requestBody": jsonRequestBody("ObjectRequest", true),
+				"responses": map[string]any{
+					"200": jsonResponse("Visibility updated", "ObjectResponse"),
+					"400": jsonResponse("Invalid payload", "ErrorResponse"),
+					"401": jsonResponse("Unauthorized", "ErrorResponse"),
+					"403": jsonResponse("Permission denied", "ErrorResponse"),
+					"404": jsonResponse("Skill not found", "ErrorResponse"),
+					"500": jsonResponse("Visibility update failed", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
+				},
+			},
+		},
+		"/api/v1/admin/skills/{skillID}/delete": map[string]any{
+			"post": map[string]any{
+				"tags":        []string{"dashboard"},
+				"summary":     "Delete one admin managed skill",
+				"description": "Session endpoint for owner/admin/super_admin to delete one managed skill.",
+				"security":    sessionSecurity(),
+				"parameters": []map[string]any{
+					pathParam("skillID", "Skill ID"),
+				},
+				"responses": map[string]any{
+					"200": jsonResponse("Skill deleted", "ObjectResponse"),
+					"400": jsonResponse("Invalid skill id", "ErrorResponse"),
+					"401": jsonResponse("Unauthorized", "ErrorResponse"),
+					"403": jsonResponse("Permission denied", "ErrorResponse"),
+					"404": jsonResponse("Skill not found", "ErrorResponse"),
+					"500": jsonResponse("Delete failed", "ErrorResponse"),
+					"503": jsonResponse("Service unavailable", "ErrorResponse"),
+				},
+			},
+		},
 		"/api/v1/admin/integrations": map[string]any{
 			"get": map[string]any{
 				"tags":        []string{"dashboard"},

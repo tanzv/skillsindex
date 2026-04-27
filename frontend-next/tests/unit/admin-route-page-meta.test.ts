@@ -17,6 +17,7 @@ import {
   resolveAdminOperationsDashboardRouteMeta,
   resolveAdminOperationsRecordsRouteMeta
 } from "@/src/lib/routing/adminRoutePageMeta";
+import { buildAdminAuditExportBFFEndpoint } from "@/src/lib/routing/protectedSurfaceEndpoints";
 import { createProtectedPageTestMessages } from "./protected-page-test-messages";
 
 const pageMessages = createProtectedPageTestMessages({
@@ -108,7 +109,7 @@ describe("admin route page meta", () => {
     expect(resolveAdminOperationsRecordsRouteMeta(adminAuditRoute, pageMessages.adminOperations)).toEqual({
       title: "Audit",
       description: "Audit description",
-      endpoint: "/api/bff/admin/ops/audit-export?format=json"
+      endpoint: buildAdminAuditExportBFFEndpoint("json")
     });
   });
 

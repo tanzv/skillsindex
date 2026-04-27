@@ -1,0 +1,54 @@
+.versionSectionContent {
+  display: grid;
+  gap: 12px;
+  padding-top: 0;
+}
+
+.versionSectionState {
+  color: var(--ui-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.versionCard {
+  display: grid;
+  gap: 10px;
+  border-radius: 18px;
+  border: 1px solid var(--ui-border);
+  background: color-mix(
+    in srgb,
+    var(--ui-card-bg) 72%,
+    var(--ui-card-muted-bg) 28%
+  );
+  padding: 16px;
+}
+
+.versionCardHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.versionCardTitle {
+  color: var(--ui-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.versionCardMeta {
+  color: var(--ui-text-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.versionCardSummary {
+  color: var(--ui-text-primary);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.versionCardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

@@ -14,8 +14,11 @@ import {
   adminAccountsBFFEndpoint,
   adminAuthProvidersSettingsEndpoint,
   adminAuthProvidersSettingsBFFEndpoint,
+  adminAuthProviderConfigsBFFEndpoint,
+  adminAuthProviderConfigsEndpoint,
   adminAccountsEndpoint,
   adminAlertsEndpoint,
+  adminAPIKeysBFFEndpoint,
   adminAPIKeysEndpoint,
   adminAuditExportEndpoint,
   adminCategoryCatalogSettingsBFFEndpoint,
@@ -24,12 +27,17 @@ import {
   adminBackupRunsEndpoint,
   adminChangeApprovalsEndpoint,
   adminIntegrationsEndpoint,
+  adminIntegrationsBFFEndpoint,
+  adminJobsBFFEndpoint,
   adminJobsEndpoint,
   adminMarketplaceRankingSettingsBFFEndpoint,
   adminMarketplaceRankingSettingsEndpoint,
   adminMetricsEndpoint,
+  adminModerationBFFEndpoint,
   adminModerationEndpoint,
   adminManualIntakeEndpoint,
+  adminManualIntakeBFFEndpoint,
+  adminOrganizationsBFFEndpoint,
   adminOrganizationsEndpoint,
   adminOverviewBFFEndpoint,
   adminOverviewEndpoint,
@@ -41,14 +49,34 @@ import {
   adminReleaseGatesEndpoint,
   adminReleasesEndpoint,
   adminRepositoryIntakeEndpoint,
+  adminRepositoryIntakeBFFEndpoint,
   adminRunRecoveryDrillEndpoint,
   adminRunReleaseGatesEndpoint,
+  adminSkillMPIntakeEndpoint,
+  adminSkillMPIntakeBFFEndpoint,
   adminSkillsEndpoint,
+  adminSkillsBFFEndpoint,
   adminSyncJobsEndpoint,
+  adminSyncJobsBFFEndpoint,
   adminSyncPolicyEndpoint,
+  adminSyncPolicyBFFEndpoint,
+  adminUploadIntakeEndpoint,
+  adminUploadIntakeBFFEndpoint,
   buildAdminAccountForceSignoutBFFEndpoint,
   buildAdminAccountPasswordResetBFFEndpoint,
   buildAdminAccountStatusBFFEndpoint,
+  buildAdminSkillDeleteBFFEndpoint,
+  buildAdminSkillDeleteEndpoint,
+  buildAdminSkillSyncBFFEndpoint,
+  buildAdminSkillSyncEndpoint,
+  buildAdminSkillVisibilityBFFEndpoint,
+  buildAdminSkillVisibilityEndpoint,
+  buildSkillVersionRollbackBFFEndpoint,
+  buildSkillVersionRollbackEndpoint,
+  buildSkillVersionRestoreBFFEndpoint,
+  buildSkillVersionRestoreEndpoint,
+  buildSkillVersionsBFFEndpoint,
+  buildSkillVersionsEndpoint,
   buildAdminUserRoleBFFEndpoint,
   buildBFFPath,
   buildAccountAPIKeyRevokeEndpoint,
@@ -63,101 +91,328 @@ import {
   buildAdminAccountPasswordResetEndpoint,
   buildAdminAccountStatusEndpoint,
   buildAdminAPIKeyRevokeEndpoint,
+  buildAdminAPIKeyRevokeBFFEndpoint,
+  buildAdminAPIKeyRotateEndpoint,
+  buildAdminAPIKeyRotateBFFEndpoint,
+  buildAdminAPIKeyScopesEndpoint,
+  buildAdminAPIKeyScopesBFFEndpoint,
+  buildAdminAuthProviderConfigBFFEndpoint,
+  buildAdminAuthProviderConfigDisableBFFEndpoint,
+  buildAdminAuthProviderConfigDisableEndpoint,
+  buildAdminAuthProviderConfigEndpoint,
   buildAdminJobCancelEndpoint,
+  buildAdminJobsCollectionBFFEndpoint,
+  buildAdminJobsCollectionEndpoint,
   buildAdminJobRetryEndpoint,
   buildAdminModerationRejectEndpoint,
+  buildAdminModerationRejectBFFEndpoint,
   buildAdminModerationResolveEndpoint,
+  buildAdminModerationResolveBFFEndpoint,
+  buildAdminOrganizationMemberRemoveBFFEndpoint,
+  buildAdminOrganizationMemberRemoveEndpoint,
+  buildAdminOrganizationMemberRoleBFFEndpoint,
+  buildAdminOrganizationMemberRoleEndpoint,
+  buildAdminOrganizationMembersBFFEndpoint,
   buildAdminOrganizationMembersEndpoint,
-  buildAdminUserRoleEndpoint
+  buildAdminSkillsCollectionBFFEndpoint,
+  buildAdminSkillsCollectionEndpoint,
+  buildAdminSyncJobsCollectionBFFEndpoint,
+  buildAdminSyncJobsCollectionEndpoint,
+  buildAdminUserRoleEndpoint,
 } from "@/src/lib/routing/protectedSurfaceEndpoints";
 
 describe("protected surface endpoints", () => {
   it("exposes stable collection endpoints for admin workbench surfaces", () => {
     expect(adminOverviewEndpoint).toBe("/api/v1/admin/overview");
     expect(adminManualIntakeEndpoint).toBe("/api/v1/admin/ingestion/manual");
-    expect(adminRepositoryIntakeEndpoint).toBe("/api/v1/admin/ingestion/repository");
+    expect(adminRepositoryIntakeEndpoint).toBe(
+      "/api/v1/admin/ingestion/repository",
+    );
+    expect(adminUploadIntakeEndpoint).toBe("/api/v1/admin/ingestion/upload");
+    expect(adminSkillMPIntakeEndpoint).toBe("/api/v1/admin/ingestion/skillmp");
     expect(adminAccountsEndpoint).toBe("/api/v1/admin/accounts");
-    expect(adminRegistrationSettingsEndpoint).toBe("/api/v1/admin/settings/registration");
-    expect(adminMarketplaceRankingSettingsEndpoint).toBe("/api/v1/admin/settings/marketplace-ranking");
-    expect(adminCategoryCatalogSettingsEndpoint).toBe("/api/v1/admin/settings/category-catalog");
-    expect(adminPresentationTaxonomySettingsEndpoint).toBe("/api/v1/admin/settings/presentation-taxonomy");
-    expect(adminAuthProvidersSettingsEndpoint).toBe("/api/v1/admin/settings/auth-providers");
+    expect(adminRegistrationSettingsEndpoint).toBe(
+      "/api/v1/admin/settings/registration",
+    );
+    expect(adminMarketplaceRankingSettingsEndpoint).toBe(
+      "/api/v1/admin/settings/marketplace-ranking",
+    );
+    expect(adminCategoryCatalogSettingsEndpoint).toBe(
+      "/api/v1/admin/settings/category-catalog",
+    );
+    expect(adminPresentationTaxonomySettingsEndpoint).toBe(
+      "/api/v1/admin/settings/presentation-taxonomy",
+    );
+    expect(adminAuthProvidersSettingsEndpoint).toBe(
+      "/api/v1/admin/settings/auth-providers",
+    );
     expect(adminSkillsEndpoint).toBe("/api/v1/admin/skills");
     expect(adminJobsEndpoint).toBe("/api/v1/admin/jobs");
     expect(adminSyncJobsEndpoint).toBe("/api/v1/admin/sync-jobs");
-    expect(adminSyncPolicyEndpoint).toBe("/api/v1/admin/sync-policy/repository");
+    expect(adminSyncPolicyEndpoint).toBe(
+      "/api/v1/admin/sync-policy/repository",
+    );
     expect(adminIntegrationsEndpoint).toBe("/api/v1/admin/integrations");
     expect(adminReleaseGatesEndpoint).toBe("/api/v1/admin/ops/release-gates");
     expect(adminMetricsEndpoint).toBe("/api/v1/admin/ops/metrics");
     expect(adminAlertsEndpoint).toBe("/api/v1/admin/ops/alerts");
     expect(adminAuditExportEndpoint).toBe("/api/v1/admin/ops/audit-export");
-    expect(adminRecoveryDrillsEndpoint).toBe("/api/v1/admin/ops/recovery-drills");
+    expect(adminRecoveryDrillsEndpoint).toBe(
+      "/api/v1/admin/ops/recovery-drills",
+    );
     expect(adminReleasesEndpoint).toBe("/api/v1/admin/ops/releases");
-    expect(adminChangeApprovalsEndpoint).toBe("/api/v1/admin/ops/change-approvals");
+    expect(adminChangeApprovalsEndpoint).toBe(
+      "/api/v1/admin/ops/change-approvals",
+    );
     expect(adminBackupPlansEndpoint).toBe("/api/v1/admin/ops/backup/plans");
     expect(adminBackupRunsEndpoint).toBe("/api/v1/admin/ops/backup/runs");
     expect(adminAPIKeysEndpoint).toBe("/api/v1/admin/apikeys");
+    expect(adminAuthProviderConfigsEndpoint).toBe(
+      "/api/v1/admin/auth-provider-configs",
+    );
     expect(adminOrganizationsEndpoint).toBe("/api/v1/admin/organizations");
     expect(adminModerationEndpoint).toBe("/api/v1/admin/moderation");
   });
 
   it("exposes stable bff endpoints for protected admin settings and overview pages", () => {
     expect(adminOverviewBFFEndpoint).toBe("/api/bff/admin/overview");
+    expect(adminManualIntakeBFFEndpoint).toBe("/api/bff/admin/ingestion/manual");
+    expect(adminRepositoryIntakeBFFEndpoint).toBe(
+      "/api/bff/admin/ingestion/repository",
+    );
+    expect(adminUploadIntakeBFFEndpoint).toBe("/api/bff/admin/ingestion/upload");
+    expect(adminSkillMPIntakeBFFEndpoint).toBe("/api/bff/admin/ingestion/skillmp");
     expect(adminAccountsBFFEndpoint).toBe("/api/bff/admin/accounts");
-    expect(adminRegistrationSettingsBFFEndpoint).toBe("/api/bff/admin/settings/registration");
-    expect(adminMarketplaceRankingSettingsBFFEndpoint).toBe("/api/bff/admin/settings/marketplace-ranking");
-    expect(adminCategoryCatalogSettingsBFFEndpoint).toBe("/api/bff/admin/settings/category-catalog");
-    expect(adminPresentationTaxonomySettingsBFFEndpoint).toBe("/api/bff/admin/settings/presentation-taxonomy");
-    expect(adminAuthProvidersSettingsBFFEndpoint).toBe("/api/bff/admin/settings/auth-providers");
+    expect(adminRegistrationSettingsBFFEndpoint).toBe(
+      "/api/bff/admin/settings/registration",
+    );
+    expect(adminMarketplaceRankingSettingsBFFEndpoint).toBe(
+      "/api/bff/admin/settings/marketplace-ranking",
+    );
+    expect(adminCategoryCatalogSettingsBFFEndpoint).toBe(
+      "/api/bff/admin/settings/category-catalog",
+    );
+    expect(adminPresentationTaxonomySettingsBFFEndpoint).toBe(
+      "/api/bff/admin/settings/presentation-taxonomy",
+    );
+    expect(adminAuthProvidersSettingsBFFEndpoint).toBe(
+      "/api/bff/admin/settings/auth-providers",
+    );
+    expect(adminIntegrationsBFFEndpoint).toBe("/api/bff/admin/integrations");
+    expect(adminAPIKeysBFFEndpoint).toBe("/api/bff/admin/apikeys");
+    expect(adminAuthProviderConfigsBFFEndpoint).toBe(
+      "/api/bff/admin/auth-provider-configs",
+    );
+    expect(adminOrganizationsBFFEndpoint).toBe("/api/bff/admin/organizations");
+    expect(adminModerationBFFEndpoint).toBe("/api/bff/admin/moderation");
+    expect(adminSkillsBFFEndpoint).toBe("/api/bff/admin/skills");
+    expect(adminJobsBFFEndpoint).toBe("/api/bff/admin/jobs");
+    expect(adminSyncPolicyBFFEndpoint).toBe("/api/bff/admin/sync-policy/repository");
+    expect(adminSyncJobsBFFEndpoint).toBe("/api/bff/admin/sync-jobs");
   });
 
   it("builds stable admin mutation endpoints from shared helpers", () => {
-    expect(buildAdminAccountStatusEndpoint(7)).toBe("/api/v1/admin/accounts/7/status");
-    expect(buildAdminAccountForceSignoutEndpoint(7)).toBe("/api/v1/admin/accounts/7/force-signout");
-    expect(buildAdminAccountPasswordResetEndpoint(7)).toBe("/api/v1/admin/accounts/7/password-reset");
+    expect(buildAdminAccountStatusEndpoint(7)).toBe(
+      "/api/v1/admin/accounts/7/status",
+    );
+    expect(buildAdminAccountForceSignoutEndpoint(7)).toBe(
+      "/api/v1/admin/accounts/7/force-signout",
+    );
+    expect(buildAdminAccountPasswordResetEndpoint(7)).toBe(
+      "/api/v1/admin/accounts/7/password-reset",
+    );
     expect(buildAdminUserRoleEndpoint(7)).toBe("/api/v1/admin/users/7/role");
+    expect(buildAdminSkillsCollectionEndpoint("repository")).toBe(
+      "/api/v1/admin/skills?source=repository",
+    );
+    expect(buildAdminSkillsCollectionEndpoint("skill mp")).toBe(
+      "/api/v1/admin/skills?source=skill+mp",
+    );
+    expect(buildAdminJobsCollectionEndpoint(20)).toBe(
+      "/api/v1/admin/jobs?limit=20",
+    );
+    expect(buildAdminSyncJobsCollectionEndpoint(6)).toBe(
+      "/api/v1/admin/sync-jobs?limit=6",
+    );
     expect(buildAdminJobRetryEndpoint(12)).toBe("/api/v1/admin/jobs/12/retry");
-    expect(buildAdminJobCancelEndpoint(12)).toBe("/api/v1/admin/jobs/12/cancel");
-    expect(adminRunReleaseGatesEndpoint).toBe("/api/v1/admin/ops/release-gates/run");
-    expect(adminRunRecoveryDrillEndpoint).toBe("/api/v1/admin/ops/recovery-drills/run");
-    expect(buildAdminAPIKeyRevokeEndpoint(5)).toBe("/api/v1/admin/apikeys/5/revoke");
-    expect(buildAdminOrganizationMembersEndpoint(4)).toBe("/api/v1/admin/organizations/4/members");
-    expect(buildAdminModerationResolveEndpoint(8)).toBe("/api/v1/admin/moderation/8/resolve");
-    expect(buildAdminModerationRejectEndpoint(8)).toBe("/api/v1/admin/moderation/8/reject");
-    expect(buildAdminAccountStatusBFFEndpoint(7)).toBe("/api/bff/admin/accounts/7/status");
-    expect(buildAdminAccountForceSignoutBFFEndpoint(7)).toBe("/api/bff/admin/accounts/7/force-signout");
-    expect(buildAdminAccountPasswordResetBFFEndpoint(7)).toBe("/api/bff/admin/accounts/7/password-reset");
-    expect(buildAdminUserRoleBFFEndpoint(7)).toBe("/api/bff/admin/users/7/role");
+    expect(buildAdminJobCancelEndpoint(12)).toBe(
+      "/api/v1/admin/jobs/12/cancel",
+    );
+    expect(buildAdminSkillSyncEndpoint(12)).toBe(
+      "/api/v1/admin/skills/12/sync",
+    );
+    expect(buildAdminSkillVisibilityEndpoint(12)).toBe(
+      "/api/v1/admin/skills/12/visibility",
+    );
+    expect(buildAdminSkillDeleteEndpoint(12)).toBe(
+      "/api/v1/admin/skills/12/delete",
+    );
+    expect(adminRunReleaseGatesEndpoint).toBe(
+      "/api/v1/admin/ops/release-gates/run",
+    );
+    expect(adminRunRecoveryDrillEndpoint).toBe(
+      "/api/v1/admin/ops/recovery-drills/run",
+    );
+    expect(buildAdminAPIKeyRevokeEndpoint(5)).toBe(
+      "/api/v1/admin/apikeys/5/revoke",
+    );
+    expect(buildAdminAPIKeyRotateEndpoint(5)).toBe(
+      "/api/v1/admin/apikeys/5/rotate",
+    );
+    expect(buildAdminAPIKeyScopesEndpoint(5)).toBe(
+      "/api/v1/admin/apikeys/5/scopes",
+    );
+    expect(buildAdminAuthProviderConfigEndpoint("feishu workspace")).toBe(
+      "/api/v1/admin/auth-provider-configs/feishu%20workspace",
+    );
+    expect(
+      buildAdminAuthProviderConfigDisableEndpoint("feishu workspace"),
+    ).toBe("/api/v1/admin/auth-provider-configs/feishu%20workspace/disable");
+    expect(buildAdminOrganizationMembersEndpoint(4)).toBe(
+      "/api/v1/admin/organizations/4/members",
+    );
+    expect(buildAdminOrganizationMemberRoleEndpoint(4, 9)).toBe(
+      "/api/v1/admin/organizations/4/members/9/role",
+    );
+    expect(buildAdminOrganizationMemberRemoveEndpoint(4, 9)).toBe(
+      "/api/v1/admin/organizations/4/members/9/remove",
+    );
+    expect(buildAdminModerationResolveEndpoint(8)).toBe(
+      "/api/v1/admin/moderation/8/resolve",
+    );
+    expect(buildAdminModerationRejectEndpoint(8)).toBe(
+      "/api/v1/admin/moderation/8/reject",
+    );
+    expect(buildAdminAccountStatusBFFEndpoint(7)).toBe(
+      "/api/bff/admin/accounts/7/status",
+    );
+    expect(buildAdminAccountForceSignoutBFFEndpoint(7)).toBe(
+      "/api/bff/admin/accounts/7/force-signout",
+    );
+    expect(buildAdminAccountPasswordResetBFFEndpoint(7)).toBe(
+      "/api/bff/admin/accounts/7/password-reset",
+    );
+    expect(buildAdminUserRoleBFFEndpoint(7)).toBe(
+      "/api/bff/admin/users/7/role",
+    );
+    expect(buildAdminSkillsCollectionBFFEndpoint("repository")).toBe(
+      "/api/bff/admin/skills?source=repository",
+    );
+    expect(buildAdminJobsCollectionBFFEndpoint(20)).toBe(
+      "/api/bff/admin/jobs?limit=20",
+    );
+    expect(buildAdminSyncJobsCollectionBFFEndpoint(6)).toBe(
+      "/api/bff/admin/sync-jobs?limit=6",
+    );
+    expect(buildAdminAPIKeyRevokeBFFEndpoint(5)).toBe(
+      "/api/bff/admin/apikeys/5/revoke",
+    );
+    expect(buildAdminAPIKeyRotateBFFEndpoint(5)).toBe(
+      "/api/bff/admin/apikeys/5/rotate",
+    );
+    expect(buildAdminAPIKeyScopesBFFEndpoint(5)).toBe(
+      "/api/bff/admin/apikeys/5/scopes",
+    );
+    expect(buildAdminAuthProviderConfigBFFEndpoint("feishu workspace")).toBe(
+      "/api/bff/admin/auth-provider-configs/feishu%20workspace",
+    );
+    expect(
+      buildAdminAuthProviderConfigDisableBFFEndpoint("feishu workspace"),
+    ).toBe("/api/bff/admin/auth-provider-configs/feishu%20workspace/disable");
+    expect(buildAdminOrganizationMembersBFFEndpoint(4)).toBe(
+      "/api/bff/admin/organizations/4/members",
+    );
+    expect(buildAdminOrganizationMemberRoleBFFEndpoint(4, 9)).toBe(
+      "/api/bff/admin/organizations/4/members/9/role",
+    );
+    expect(buildAdminOrganizationMemberRemoveBFFEndpoint(4, 9)).toBe(
+      "/api/bff/admin/organizations/4/members/9/remove",
+    );
+    expect(buildAdminModerationResolveBFFEndpoint(8)).toBe(
+      "/api/bff/admin/moderation/8/resolve",
+    );
+    expect(buildAdminModerationRejectBFFEndpoint(8)).toBe(
+      "/api/bff/admin/moderation/8/reject",
+    );
+    expect(buildAdminSkillSyncBFFEndpoint(12)).toBe(
+      "/api/bff/admin/skills/12/sync",
+    );
+    expect(buildAdminSkillVisibilityBFFEndpoint(12)).toBe(
+      "/api/bff/admin/skills/12/visibility",
+    );
+    expect(buildAdminSkillDeleteBFFEndpoint(12)).toBe(
+      "/api/bff/admin/skills/12/delete",
+    );
+    expect(buildSkillVersionsEndpoint(12, { limit: 6, includeArchived: true })).toBe(
+      "/api/v1/skills/12/versions?limit=6&include_archived=true",
+    );
+    expect(buildSkillVersionsBFFEndpoint(12, { limit: 6, includeArchived: true })).toBe(
+      "/api/bff/skills/12/versions?limit=6&include_archived=true",
+    );
+    expect(buildSkillVersionRollbackEndpoint(12, 4)).toBe(
+      "/api/v1/skills/12/versions/4/rollback",
+    );
+    expect(buildSkillVersionRestoreEndpoint(12, 4)).toBe(
+      "/api/v1/skills/12/versions/4/restore",
+    );
+    expect(buildSkillVersionRollbackBFFEndpoint(12, 4)).toBe(
+      "/api/bff/skills/12/versions/4/rollback",
+    );
+    expect(buildSkillVersionRestoreBFFEndpoint(12, 4)).toBe(
+      "/api/bff/skills/12/versions/4/restore",
+    );
   });
 
   it("exposes stable account endpoints and builders", () => {
     expect(accountProfileEndpoint).toBe("/api/v1/account/profile");
-    expect(accountSecurityPasswordEndpoint).toBe("/api/v1/account/security/password");
+    expect(accountSecurityPasswordEndpoint).toBe(
+      "/api/v1/account/security/password",
+    );
     expect(accountSessionsEndpoint).toBe("/api/v1/account/sessions");
-    expect(accountSessionsRevokeOthersEndpoint).toBe("/api/v1/account/sessions/revoke-others");
+    expect(accountSessionsRevokeOthersEndpoint).toBe(
+      "/api/v1/account/sessions/revoke-others",
+    );
     expect(accountAPIKeysEndpoint).toBe("/api/v1/account/apikeys");
     expect(accountProfileBFFEndpoint).toBe("/api/bff/account/profile");
-    expect(accountSecurityPasswordBFFEndpoint).toBe("/api/bff/account/security/password");
+    expect(accountSecurityPasswordBFFEndpoint).toBe(
+      "/api/bff/account/security/password",
+    );
     expect(accountSessionsBFFEndpoint).toBe("/api/bff/account/sessions");
-    expect(accountSessionsRevokeOthersBFFEndpoint).toBe("/api/bff/account/sessions/revoke-others");
+    expect(accountSessionsRevokeOthersBFFEndpoint).toBe(
+      "/api/bff/account/sessions/revoke-others",
+    );
     expect(accountAPIKeysBFFEndpoint).toBe("/api/bff/account/apikeys");
     expect(buildAccountSessionRevokeEndpoint("session:alpha/1")).toBe(
-      "/api/v1/account/sessions/session%3Aalpha%2F1/revoke"
+      "/api/v1/account/sessions/session%3Aalpha%2F1/revoke",
     );
-    expect(buildAccountAPIKeyRotateEndpoint(3)).toBe("/api/v1/account/apikeys/3/rotate");
-    expect(buildAccountAPIKeyRevokeEndpoint(3)).toBe("/api/v1/account/apikeys/3/revoke");
-    expect(buildAccountAPIKeyScopesEndpoint(3)).toBe("/api/v1/account/apikeys/3/scopes");
+    expect(buildAccountAPIKeyRotateEndpoint(3)).toBe(
+      "/api/v1/account/apikeys/3/rotate",
+    );
+    expect(buildAccountAPIKeyRevokeEndpoint(3)).toBe(
+      "/api/v1/account/apikeys/3/revoke",
+    );
+    expect(buildAccountAPIKeyScopesEndpoint(3)).toBe(
+      "/api/v1/account/apikeys/3/scopes",
+    );
     expect(buildAccountSessionRevokeBFFEndpoint("session:alpha/1")).toBe(
-      "/api/bff/account/sessions/session%3Aalpha%2F1/revoke"
+      "/api/bff/account/sessions/session%3Aalpha%2F1/revoke",
     );
-    expect(buildAccountAPIKeyRotateBFFEndpoint(3)).toBe("/api/bff/account/apikeys/3/rotate");
-    expect(buildAccountAPIKeyRevokeBFFEndpoint(3)).toBe("/api/bff/account/apikeys/3/revoke");
-    expect(buildAccountAPIKeyScopesBFFEndpoint(3)).toBe("/api/bff/account/apikeys/3/scopes");
+    expect(buildAccountAPIKeyRotateBFFEndpoint(3)).toBe(
+      "/api/bff/account/apikeys/3/rotate",
+    );
+    expect(buildAccountAPIKeyRevokeBFFEndpoint(3)).toBe(
+      "/api/bff/account/apikeys/3/revoke",
+    );
+    expect(buildAccountAPIKeyScopesBFFEndpoint(3)).toBe(
+      "/api/bff/account/apikeys/3/scopes",
+    );
   });
 
   it("converts backend collection paths to bff paths through one shared helper", () => {
     expect(buildBFFPath(adminJobsEndpoint)).toBe("/api/bff/admin/jobs");
-    expect(buildBFFPath(`${adminJobsEndpoint}?limit=20`)).toBe("/api/bff/admin/jobs?limit=20");
+    expect(buildBFFPath(`${adminJobsEndpoint}?limit=20`)).toBe(
+      "/api/bff/admin/jobs?limit=20",
+    );
     expect(buildBFFPath("/api/v1")).toBe("/api/bff");
   });
 });

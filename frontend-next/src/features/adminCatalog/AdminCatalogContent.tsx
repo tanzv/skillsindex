@@ -1,6 +1,9 @@
 "use client";
 
-import { AdminEmptyBlock, AdminPageScaffold } from "@/src/components/admin/AdminPrimitives";
+import {
+  AdminEmptyBlock,
+  AdminPageScaffold,
+} from "@/src/components/admin/AdminPrimitives";
 import { useProtectedI18n } from "@/src/features/protected/i18n/ProtectedI18nProvider";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
@@ -8,11 +11,21 @@ import {
   adminJobsRoute,
   adminSkillsRoute,
   adminSyncJobsRoute,
-  adminSyncPolicyRoute
+  adminSyncPolicyRoute,
 } from "@/src/lib/routing/protectedSurfaceLinks";
 
-import type { AdminCatalogRoute, AdminCatalogViewModel, RepositorySyncPolicy } from "./model";
-import { JobsView, PolicyView, QueryFilters, SkillsView, SyncRunsView } from "./AdminCatalogViews";
+import type {
+  AdminCatalogRoute,
+  AdminCatalogViewModel,
+  RepositorySyncPolicy,
+} from "./model";
+import { QueryFilters } from "./AdminCatalogShared";
+import { SkillsView } from "./AdminCatalogSkillsView";
+import {
+  JobsView,
+  PolicyView,
+  SyncRunsView,
+} from "./AdminCatalogViews";
 import styles from "./AdminCatalogSurface.module.scss";
 
 interface AdminCatalogContentProps {
@@ -29,7 +42,21 @@ interface AdminCatalogContentProps {
   onQueryChange: (key: string, value: string) => void;
   onResetQuery: () => void;
   onRefresh: () => void;
+  onPageChange: (page: number) => void;
   onSyncSkill: (skillId: number) => void;
+  onUpdateSkillVisibility: (
+    skillId: number,
+    visibility: "public" | "private",
+  ) => Promise<void> | void;
+  onDeleteSkill: (skillId: number) => Promise<void> | void;
+  onRollbackSkillVersion: (
+    skillId: number,
+    versionId: number,
+  ) => Promise<void> | void;
+  onRestoreSkillVersion: (
+    skillId: number,
+    versionId: number,
+  ) => Promise<void> | void;
   onRunJobAction: (jobId: number, action: "retry" | "cancel") => void;
   onPolicyDraftChange: (patch: Partial<RepositorySyncPolicy>) => void;
   onResetPolicyDraft: () => void;
@@ -50,11 +77,16 @@ export function AdminCatalogContent({
   onQueryChange,
   onResetQuery,
   onRefresh,
+  onPageChange,
   onSyncSkill,
+  onUpdateSkillVisibility,
+  onDeleteSkill,
+  onRollbackSkillVersion,
+  onRestoreSkillVersion,
   onRunJobAction,
   onPolicyDraftChange,
   onResetPolicyDraft,
-  onSavePolicy
+  onSavePolicy,
 }: AdminCatalogContentProps) {
   const { messages } = useProtectedI18n();
   const commonMessages = messages.adminCommon;
@@ -70,8 +102,12 @@ export function AdminCatalogContent({
       eyebrow={commonMessages.adminEyebrow}
       title={title}
       description={description}
-      actions={<Button onClick={onRefresh}>{loading ? commonMessages.refreshing : commonMessages.refresh}</Button>}
-      metrics={viewModel.metrics}
+      actions={
+        <Button onClick={onRefresh}>
+          {loading ? commonMessages.refreshing : commonMessages.refresh}
+        </Button>
+      }
+      metrics={isSyncPolicyRoute ? undefined : viewModel.metrics}
       error={error}
       message={message}
     >
@@ -86,7 +122,9 @@ export function AdminCatalogContent({
 
       {loading ? (
         <Card className={styles.sectionCard}>
-          <CardContent className={styles.loadingCardContent}>{catalogMessages.loadingData}</CardContent>
+          <CardContent className={styles.loadingCardContent}>
+            {catalogMessages.loadingData}
+          </CardContent>
         </Card>
       ) : null}
 
@@ -95,12 +133,31 @@ export function AdminCatalogContent({
       ) : null}
 
       {isSkillsRoute ? (
-        <SkillsView rows={rows} busyAction={busyAction} sidePanels={viewModel.sidePanel} onSyncSkill={onSyncSkill} />
+        <SkillsView
+          rows={rows}
+          loading={loading}
+          busyAction={busyAction}
+          pagination={viewModel.table?.pagination}
+          sidePanels={viewModel.sidePanel}
+          onPageChange={onPageChange}
+          onSyncSkill={onSyncSkill}
+          onUpdateSkillVisibility={onUpdateSkillVisibility}
+          onDeleteSkill={onDeleteSkill}
+          onRollbackSkillVersion={onRollbackSkillVersion}
+          onRestoreSkillVersion={onRestoreSkillVersion}
+        />
       ) : null}
       {isJobsRoute ? (
-        <JobsView rows={rows} busyAction={busyAction} sidePanels={viewModel.sidePanel} onRunJobAction={onRunJobAction} />
+        <JobsView
+          rows={rows}
+          busyAction={busyAction}
+          sidePanels={viewModel.sidePanel}
+          onRunJobAction={onRunJobAction}
+        />
       ) : null}
-      {isSyncJobsRoute ? <SyncRunsView rows={rows} sidePanels={viewModel.sidePanel} /> : null}
+      {isSyncJobsRoute ? (
+        <SyncRunsView rows={rows} sidePanels={viewModel.sidePanel} />
+      ) : null}
       {isSyncPolicyRoute ? (
         <PolicyView
           busyAction={busyAction}

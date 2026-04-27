@@ -99,6 +99,10 @@ test("executes repository intake and import source actions", async ({ page }) =>
   const repositoryPane = page.getByTestId("admin-ingestion-repository-pane");
   await expect(repositoryPane).toBeVisible();
   await expect(page.getByRole("dialog")).toBeVisible();
+  const accountTrigger = page.getByTestId("admin-topbar-account-trigger");
+  await accountTrigger.click();
+  await expect(page.getByTestId("admin-topbar-account-menu")).toBeVisible();
+  await accountTrigger.click();
   await repositoryPane.getByLabel("Repository URL").fill(`https://github.com/example/repository-intake-${suffix}`);
   await repositoryPane.getByLabel("Repository Branch").fill("release");
   await repositoryPane.getByLabel("Repository Path").fill("skills/catalog");

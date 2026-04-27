@@ -3,14 +3,14 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-function readSourceFile(relativePath: string): string {
+function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(process.cwd(), relativePath), "utf8");
 }
 
 describe("admin operations records module split", () => {
   it("keeps the records page and display helpers on the stable kebab-case config module", () => {
-    const pageSource = readSourceFile("src/features/adminOperations/AdminOperationsRecordsPage.tsx");
-    const displaySource = readSourceFile("src/features/adminOperations/display.ts");
+    const pageSource = readRepoFile("src/features/adminOperations/AdminOperationsRecordsPage.tsx");
+    const displaySource = readRepoFile("src/features/adminOperations/display.ts");
 
     expect(pageSource).toContain('from "./records-config"');
     expect(displaySource).toContain('from "./records-config"');

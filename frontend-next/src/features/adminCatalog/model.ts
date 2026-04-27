@@ -1,5 +1,7 @@
 export type {
+  AdminCatalogPagination,
   AdminCatalogMetric,
+  CollectionPayload,
   AdminCatalogDetailSection,
   AdminCatalogDetailSectionItem,
   AdminCatalogDetailTopology,
@@ -19,12 +21,12 @@ export type {
   RepositorySyncPolicy,
   SkillsPayload,
   SyncJobRunItem,
-  SyncJobsPayload
+  SyncJobsPayload,
 } from "./model.types";
 export {
   normalizeJobsPayload,
   normalizeSkillsPayload,
   normalizeSyncJobsPayload,
-  normalizeSyncPolicyPayload
+  normalizeSyncPolicyPayload,
 } from "./model.normalizers";
 export { buildAdminCatalogViewModel } from "./model.viewModel";
